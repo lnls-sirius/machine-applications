@@ -136,7 +136,8 @@ class HL_Event(_HL_Base):
         """Initialize object."""
         super().__init__(prefix, callback, code)
         self._interface_props = {'delay', 'mode', 'delay_type'}
-        self._hl_props = {'delay': 0, 'mode': 0, 'delay_type': 0}
+        self._hl_props = {'delay': 0, 'mode': 0,
+                          'delay_type': 0, 'ext_trig': 0}
 
     def _get_HLPROP_2_PVRB(self):
         return {
@@ -249,7 +250,6 @@ class HL_Trigger(_HL_Base):
         self._interface_props = hl_props
         self._EVENTS = events
         self._hl_props = init_vals
-        self._hl_props['ext_trig'] = 0
         self._set_EVGParams_ENUMS()
         self._connect_kwargs = {'evg_params': self._EVGParam_ENUMS}
 
@@ -268,6 +268,7 @@ class HL_Trigger(_HL_Base):
         self._EVGParam_ENUMS = list(self._EVENTS)
         if all(has_clock):
             self._EVGParam_ENUMS += sorted(Clocks.HL2LL_MAP.keys())
+            return
         if any(has_clock):
             _log.warning('Some triggers of ' + self.prefix +
                          ' are connected to unsimiliar low level devices.')
@@ -296,7 +297,7 @@ class HL_Trigger(_HL_Base):
                 up_dev = _PVName(list(twds_evg[up_dev.dev_name +
                                                ':' + conn_up])[0])
             channels |= {up_dev}
-        print(channels)
+        # print(channels)
         return sorted(channels)
 
     def _get_LL_OBJ(self, **kwargs):
