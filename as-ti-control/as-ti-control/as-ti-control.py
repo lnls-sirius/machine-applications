@@ -56,7 +56,7 @@ class _PCASDriver(_pcaspy.Driver):
 
 def run():
     """Start the IOC."""
-    level = _log.INFO
+    level = _log.DEBUG
     fmt = ('%(levelname)7s | %(asctime)s | ' +
            '%(module)15s.%(funcName)20s[%(lineno)4d] ::: %(message)s')
     _log.basicConfig(format=fmt, datefmt='%F %T',
