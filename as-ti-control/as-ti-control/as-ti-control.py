@@ -11,7 +11,7 @@ INTERVAL = 0.1
 stop_event = False
 PREFIX = ''
 DB_FILENAME = 'my_pvs.txt'
-LOG_FILENAME = 'as-hl-timing.log'
+LOG_FILENAME = 'as-ti-control.log'
 
 
 def _stop_now(signum, frame):
