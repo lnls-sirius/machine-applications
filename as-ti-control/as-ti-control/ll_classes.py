@@ -302,7 +302,7 @@ class _LL_TrigEVROUT(_LL_Base):
         map_ = {
             'evg_param': self._set_evg_param,
             'delay': self._set_delay,
-            'pulses': lambda x: self._set_simple('pulses', x),
+            'pulses': self._set_pulses,
             'duration': self._set_duration,
             'state': lambda x: self._set_simple('state', x),
             'polarity': lambda x: self._set_simple('polarity', x),
@@ -403,6 +403,11 @@ class _LL_TrigEVROUT(_LL_Base):
     def _set_duration(self, value):
         self._hl_props['duration'] = value
         self._ll_props['width'] = value*1e3/self._hl_props['pulses']
+
+    def _set_pulses(self, value):
+        self._hl_props['pulses'] = value
+        self._ll_props['pulses'] = value
+        self._ll_props['width'] = self._hl_props['duration']*1e3/value
 
 
 class _LL_TrigEVROTP(_LL_TrigEVROUT):

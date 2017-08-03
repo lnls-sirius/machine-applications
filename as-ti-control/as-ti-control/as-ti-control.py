@@ -1,17 +1,33 @@
 #!/usr/local/bin/python-sirius -u
 """IOC Module."""
+import sys as _sys
 import logging as _log
+import signal as _signal
+import argparse as _argparse
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-import signal as _signal
 import main as _main
-
+from siriuspy.timesys.time_data import Triggers
 
 INTERVAL = 0.1
 stop_event = False
 PREFIX = ''
 DB_FILENAME = 'my_pvs.txt'
-LOG_FILENAME = 'as-ti-control.log'
+
+_hl_trig = Triggers().hl_triggers
+TRIG_LISTS = {
+    'si-dip-quads': ['SI-Glob:TI-Quads:', 'SI-Glob:TI-Dips:'],
+    'si-sexts-skews': ['SI-Glob:TI-Sexts:', 'SI-Glob:TI-Skews:'],
+    'si-corrs': ['SI-Glob:TI-Corrs:'],
+    'bo-mags': ['BO-Glob:TI-Mags:'],
+    'bo-si-bpms': ['BO-Fam:TI-BPM:', 'SI-Fam:TI-BPM:'],
+    }
+_tr_list = set(_hl_trig.keys())
+for v in TRIG_LISTS.values():
+    _tr_list -= set(v)
+TRIG_LISTS['others'] = sorted(_tr_list)
+TRIG_LISTS['all'] = sorted(_hl_trig.keys())
+TRIG_LISTS['none'] = []
 
 
 def _stop_now(signum, frame):
@@ -54,13 +70,17 @@ class _PCASDriver(_pcaspy.Driver):
         return app_ret
 
 
-def run():
+def run(events=True, clocks=True, triggers='all'):
     """Start the IOC."""
-    level = _log.DEBUG
+
+    trig_list = TRIG_LISTS.get(triggers, [])
+
+    level = _log.INFO
     fmt = ('%(levelname)7s | %(asctime)s | ' +
            '%(module)15s.%(funcName)20s[%(lineno)4d] ::: %(message)s')
-    _log.basicConfig(format=fmt, datefmt='%F %T',
-                     filename=LOG_FILENAME, filemode='w', level=level)
+    _log.basicConfig(format=fmt, datefmt='%F %T', level=level,
+                     stream=_sys.stdout)
+    #  filename=LOG_FILENAME, filemode='w')
     _log.info('Starting...')
 
     # define abort function
@@ -69,7 +89,7 @@ def run():
 
     # Creates App object
     _log.info('Creating App.')
-    app = _main.App()
+    app = _main.App(events=events, clocks=clocks, triggers_list=trig_list)
     _log.info('Generating database file.')
     db = app.get_database()
     _print_pvs_in_file(db)
@@ -105,4 +125,13 @@ def run():
 
 
 if __name__ == '__main__':
-    run()
+    parser = _argparse.ArgumentParser(description="Run Timing IOC.")
+    parser.add_argument('-e', '--events', action='store_true', default=False,
+                        help="Manage High Level Events")
+    parser.add_argument('-c', '--clocks', action='store_true', default=False,
+                        help="Manage High Level Clocks")
+    parser.add_argument('-t', "--triggers", type=str, default='none',
+                        help="Which Triggers to manage",
+                        choices=sorted(TRIG_LISTS.keys()))
+    args = parser.parse_args()
+    run(**args)
