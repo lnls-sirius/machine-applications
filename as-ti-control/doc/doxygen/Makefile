@@ -1,9 +1,9 @@
 # Makefile for Doxygen documentation
 
 DOXYFILE = Doxyfile
-LOCAL_DIR = as-high-level-timing
-PROJECT_DIR = $(LNLS_SIRIUS)/hla/machine_apps/$(LOCAL_DIR)/$(LOCAL_DIR)
-DOC_DIR = $(LNLS_SIRIUS)/hla/machine_apps/$(LOCAL_DIR)/doc/doxygen
+LOCAL_DIR = as-ti-control
+PROJECT_DIR = $(LNLS_SIRIUS)/machine-applications/$(LOCAL_DIR)/$(LOCAL_DIR)
+DOC_DIR = $(LNLS_SIRIUS)/machine-applications/$(LOCAL_DIR)/doc/doxygen
 PROJECT_NUMBER = $(shell cat $(PROJECT_DIR)/VERSION)
 
 html:

@@ -2,12 +2,11 @@
 
 import time as _time
 import logging as _log
+from siriuspy.util import get_last_commit_hash as _get_version
 from siriuspy.timesys.time_data import Events, Clocks, Triggers
-from hl_classes import HL_Event, HL_Clock, HL_Trigger
+from as_ti_control.hl_classes import HL_Event, HL_Clock, HL_Trigger
 
-with open('VERSION', 'r') as _f:
-    __version__ = _f.read().strip()
-
+__version__ = _get_version()
 _TIMEOUT = 0.05
 
 
@@ -25,25 +24,38 @@ class App:
             db.update(trig.get_database())
         return db
 
-    def __init__(self, driver=None):
-        """Initialize the instance."""
+    def __init__(self, driver=None, triggers_list=[],
+                 events=True, clocks=True):
+        """Initialize the instance.
+
+        driver : is the driver associated with this app;
+        triggers_list: is the list of the high level triggers to be managed;
+        events : define if this app will manage events;
+        clocks : define if this app will manage clocks.
+        """
         _log.info('Starting App...')
         self._driver = driver
-        _log.info('Creating High Level Clocks:')
         self._clocks = dict()
-        for cl_hl, cl_ll in Clocks.HL2LL_MAP.items():
-            clock = Clocks.HL_PREF + cl_hl
-            self._clocks[clock] = HL_Clock(clock, self._update_driver, cl_ll)
-        _log.info('Creating High Level Events:')
         self._events = dict()
-        for ev_hl, ev_ll in Events.HL2LL_MAP.items():
-            event = Events.HL_PREF + ev_hl
-            self._events[event] = HL_Event(event, self._update_driver, ev_ll)
-        _log.info('Creating High Level Triggers:')
         self._triggers = dict()
-        for pref, prop in Triggers().hl_triggers.items():
-            self._triggers[pref] = HL_Trigger(
-                                            pref, self._update_driver, **prop)
+        if clocks:
+            _log.info('Creating High Level Clocks:')
+            for cl_hl, cl_ll in Clocks.HL2LL_MAP.items():
+                clock = Clocks.HL_PREF + cl_hl
+                self._clocks[clock] = HL_Clock(clock, self._update_driver,
+                                               cl_ll)
+        if events:
+            _log.info('Creating High Level Events:')
+            for ev_hl, ev_ll in Events.HL2LL_MAP.items():
+                event = Events.HL_PREF + ev_hl
+                self._events[event] = HL_Event(event, self._update_driver,
+                                               ev_ll)
+        if triggers_list:
+            _log.info('Creating High Level Triggers:')
+            for pref in triggers_list:
+                prop = Triggers().hl_triggers[pref]
+                self._triggers[pref] = HL_Trigger(pref, self._update_driver,
+                                                  **prop)
         self._database = self.get_database()
 
     def connect(self):
