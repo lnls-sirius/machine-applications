@@ -4,7 +4,7 @@ import time as _time
 import logging as _log
 from siriuspy.util import get_last_commit_hash as _get_version
 from siriuspy.timesys.time_data import Events, Clocks, Triggers
-from hl_classes import HL_Event, HL_Clock, HL_Trigger
+from as_ti_control.hl_classes import HL_Event, HL_Clock, HL_Trigger
 
 __version__ = _get_version()
 _TIMEOUT = 0.05

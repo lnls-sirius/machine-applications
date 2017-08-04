@@ -18,8 +18,8 @@ setup(
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering'
     ],
-    packages=['as-ti-control'],
-    package_data={'as-ti-control': ['VERSION']},
-    scripts=[],
+    packages=['as_ti_control'],
+    package_data={'as_ti_control': ['VERSION']},
+    scripts=['scripts/as-ti-control.py'],
     zip_safe=False
 )
