@@ -5,8 +5,8 @@ import copy as _copy
 from siriuspy.timesys.time_data import Connections, IOs, Triggers
 from siriuspy.timesys.time_data import Clocks, Events
 from siriuspy.namesys import SiriusPVName as _PVName
-from ll_classes import get_ll_trigger_object
-from ll_classes import LL_Event, LL_Clock
+from as_ti_control.ll_classes import get_ll_trigger_object
+from as_ti_control.ll_classes import LL_Event, LL_Clock
 
 Connections.add_bbb_info()
 Connections.add_crates_info()
@@ -113,21 +113,25 @@ class HL_Event(_HL_Base):
         db = dict()
         pre = self.prefix
         db[pre + 'Delay-SP'] = {
-            'type': 'float', 'value': 0.0, 'unit': 'us',
+            'type': 'float', 'value': self._hl_props['delay'], 'unit': 'us',
             'prec': 3, 'fun_set_pv': lambda x: self.set_propty('delay', x)}
         db[pre + 'Delay-RB'] = {
-            'type': 'float', 'value': 0.0, 'unit': 'us', 'prec': 3}
+            'type': 'float', 'value': self._hl_props['delay'],
+            'unit': 'us', 'prec': 3}
         db[pre + 'Mode-Sel'] = {
-            'type': 'enum', 'enums': Events.MODES, 'value': 1,
+            'type': 'enum', 'enums': Events.MODES,
+            'value': self._hl_props['mode'],
             'fun_set_pv': lambda x: self.set_propty('mode', x)}
-        db[pre + 'Mode-Sts'] = {'type': 'int', 'value': 1}
+        db[pre + 'Mode-Sts'] = {
+            'type': 'int', 'value': self._hl_props['mode']}
         db[pre + 'DelayType-Sel'] = {
-            'type': 'enum', 'enums': Events.DELAY_TYPES, 'value': 1,
+            'type': 'enum', 'enums': Events.DELAY_TYPES,
+            'value': self._hl_props['delay_type'],
             'fun_set_pv': lambda x: self.set_propty('delay_type', x)}
         db[pre + 'DelayType-Sts'] = {
-            'type': 'int', 'value': 1}
+            'type': 'int', 'value': self._hl_props['delay_type']}
         db[pre + 'ExtTrig-Cmd'] = {
-            'type': 'int', 'value': 0,
+            'type': 'int', 'value': self._hl_props['ext_trig'],
             'unit': 'When in External Mode generates Event.',
             'fun_set_pv': lambda x: self.set_propty('ext_trig', x)}
         return db
@@ -135,8 +139,9 @@ class HL_Event(_HL_Base):
     def __init__(self, prefix, callback, code):
         """Initialize object."""
         super().__init__(prefix, callback, code)
-        self._interface_props = {'delay', 'mode', 'delay_type'}
-        self._hl_props = {'delay': 0, 'mode': 0, 'delay_type': 0}
+        self._interface_props = {'delay', 'mode', 'delay_type', 'ext_trig'}
+        self._hl_props = {'delay': 0, 'mode': 1,
+                          'delay_type': 1, 'ext_trig': 0}
 
     def _get_HLPROP_2_PVRB(self):
         return {
@@ -161,22 +166,25 @@ class HL_Clock(_HL_Base):
         db = dict()
         pre = self.prefix
         db[pre + 'Freq-SP'] = {
-            'type': 'float', 'value': 1.0, 'unit': 'kHz', 'prec': 10,
+            'type': 'float', 'value': self._hl_props['frequency'],
+            'unit': 'kHz', 'prec': 10,
             'fun_set_pv': lambda x: self.set_propty('frequency', x)}
         db[pre + 'Freq-RB'] = {
-            'type': 'float', 'value': 0.0, 'unit': 'kHz', 'prec': 10}
+            'type': 'float', 'value': self._hl_props['frequency'],
+            'unit': 'kHz', 'prec': 10}
         db[pre + 'State-Sel'] = {
-            'type': 'enum', 'enums': Clocks.STATES, 'value': 0,
+            'type': 'enum', 'enums': Clocks.STATES,
+            'value': self._hl_props['state'],
             'fun_set_pv': lambda x: self.set_propty('state', x)}
         db[pre + 'State-Sts'] = {
-            'type': 'int', 'value': 1}
+            'type': 'int', 'value': self._hl_props['state']}
         return db
 
     def __init__(self, prefix, callback, number):
         """Initialize the instance."""
         super().__init__(prefix, callback, number)
         self._interface_props = {'frequency', 'state'}
-        self._hl_props = {'frequency': 0, 'state': 0}
+        self._hl_props = {'frequency': 1.0, 'state': 0}
 
     def _get_HLPROP_2_PVRB(self):
         return {'frequency': 'Freq-RB', 'state': 'State-Sts'}
@@ -196,35 +204,43 @@ class HL_Trigger(_HL_Base):
         db = dict()
         pre = self.prefix
         db[pre + 'State-Sel'] = {
-            'type': 'enum', 'value': 0, 'enums': Triggers.STATES,
+            'type': 'enum', 'value': self._hl_props['state'],
+            'enums': Triggers.STATES,
             'fun_set_pv': lambda x: self.set_propty('state', x)}
         db[pre + 'State-Sts'] = {
-            'type': 'int',  'value': 0}
+            'type': 'int',  'value': self._hl_props['state']}
         db[pre + 'EVGParam-Sel'] = {
-            'type': 'enum', 'value': 0, 'enums': self._EVGParam_ENUMS,
+            'type': 'enum', 'value': self._hl_props['evg_param'],
+            'enums': self._EVGParam_ENUMS,
             'fun_set_pv': lambda x: self.set_propty('evg_param', x)}
         db[pre + 'EVGParam-Sts'] = {
-            'type': 'enum',  'value': 0, 'enums': self._EVGParam_ENUMS}
+            'type': 'enum',  'value': self._hl_props['evg_param'],
+            'enums': self._EVGParam_ENUMS}
         db[pre + 'Delay-SP'] = {
-            'type': 'float', 'value': 0.0, 'unit': 'us', 'prec': 4,
+            'type': 'float', 'value': self._hl_props['delay'],
+            'unit': 'us', 'prec': 4,
             'fun_set_pv': lambda x: self.set_propty('delay', x)}
         db[pre + 'Delay-RB'] = {
-            'type': 'float', 'value': 0.0, 'unit': 'us', 'prec': 4}
+            'type': 'float', 'value': self._hl_props['delay'],
+            'unit': 'us', 'prec': 4}
         db[pre + 'Pulses-SP'] = {
-            'type': 'int',  'value': 1,
+            'type': 'int',  'value': self._hl_props['pulses'],
             'fun_set_pv': lambda x: self.set_propty('pulses', x)}
         db[pre + 'Pulses-RB'] = {
-            'type': 'int',  'value': 1}
+            'type': 'int',  'value': self._hl_props['pulses']}
         db[pre + 'Duration-SP'] = {
-            'type': 'float', 'value': 0.0, 'unit': 'ms', 'prec': 4,
+            'type': 'float', 'value': self._hl_props['duration'],
+            'unit': 'ms', 'prec': 4,
             'fun_set_pv': lambda x: self.set_propty('duration', x)}
         db[pre + 'Duration-RB'] = {
-            'type': 'float', 'value': 0.0, 'unit': 'ms', 'prec': 4}
+            'type': 'float', 'value': self._hl_props['duration'],
+            'unit': 'ms', 'prec': 4}
         db[pre + 'Polrty-Sel'] = {
-            'type': 'enum', 'value': 0, 'enums': Triggers.POLARITIES,
+            'type': 'enum', 'value': self._hl_props['polarity'],
+            'enums': Triggers.POLARITIES,
             'fun_set_pv': lambda x: self.set_propty('polarity', x)}
         db[pre + 'Polrty-Sts'] = {
-            'type': 'int',  'value': 0}
+            'type': 'int',  'value': self._hl_props['polarity']}
         db2 = dict()
         for prop in self._interface_props:
             rb_name = self._HLPROP_2_PVRB[prop]
@@ -249,7 +265,6 @@ class HL_Trigger(_HL_Base):
         self._interface_props = hl_props
         self._EVENTS = events
         self._hl_props = init_vals
-        self._hl_props['ext_trig'] = 0
         self._set_EVGParams_ENUMS()
         self._connect_kwargs = {'evg_params': self._EVGParam_ENUMS}
 
@@ -268,6 +283,7 @@ class HL_Trigger(_HL_Base):
         self._EVGParam_ENUMS = list(self._EVENTS)
         if all(has_clock):
             self._EVGParam_ENUMS += sorted(Clocks.HL2LL_MAP.keys())
+            return
         if any(has_clock):
             _log.warning('Some triggers of ' + self.prefix +
                          ' are connected to unsimiliar low level devices.')
@@ -296,7 +312,7 @@ class HL_Trigger(_HL_Base):
                 up_dev = _PVName(list(twds_evg[up_dev.dev_name +
                                                ':' + conn_up])[0])
             channels |= {up_dev}
-        print(channels)
+        # print(channels)
         return sorted(channels)
 
     def _get_LL_OBJ(self, **kwargs):

@@ -9,7 +9,7 @@ from threading import Event as _Event
 from threading import Thread as _Thread
 
 _TIMEOUT = 0.05
-_FORCE_EQUAL = False
+_FORCE_EQUAL = True
 _INTERVAL = 0.1
 
 LL_PREFIX = 'VAF-'
@@ -43,7 +43,7 @@ def get_ll_trigger_object(channel, callback, init_hl_props, evg_params):
         ('EVR', 'OUT'): _LL_TrigEVROUT,
         ('EVR', 'OTP'): _LL_TrigEVROTP,
         ('EVE', 'OUT'): _LL_TrigEVEOUT,
-        ('AFC', 'OUT'): _LL_TrigAFCOUT,
+        ('AFC', 'CRT'): _LL_TrigAFCCRT,
         ('AFC', 'FMC'): _LL_TrigAFCFMC,
         }
     chan = _PVName(channel)
@@ -71,6 +71,8 @@ class _LL_Base:
                                for key, val in self._LLPROP_2_PVRB.items()}
         self.callback = callback
         self._hl_props = init_hl_props
+        self._ll_props = dict()
+        self._initialize_ll_props()
         self._pvs_sp = dict()
         self._pvs_rb = dict()
         self._pvs_sp_canput = dict()
@@ -83,15 +85,16 @@ class _LL_Base:
                 callback=self._on_change_pvs_rb,
                 connection_timeout=_TIMEOUT)
             # Now the setpoints
-            _log.debug(self.channel + ' -> creating {0:s}'.format(pv_name))
-            self._pvs_sp_canput[pv_name] = True
+            pv_name_sp = self._get_setpoint_name(pv_name)
+            _log.debug(self.channel + ' -> creating {0:s}'.format(pv_name_sp))
+            self._pvs_sp_canput[pv_name_sp] = True
             self._pvs_sp[prop] = _epics.PV(
-                self._get_setpoint_name(pv_name),
+                pv_name_sp,
                 connection_timeout=_TIMEOUT)
         _log.info(self.channel + ': Done.')
-        if _FORCE_EQUAL:
-            self.timer = _Timer(_INTERVAL, self._force_equal)
-            self.timer.start()
+        # Timer to force equality between high and low level:
+        self.timer = _Timer(_INTERVAL, self._force_equal)
+        self.timer.start()
 
     def _get_setpoint_name(self, pvname):
         """Convert readback PV names to setpoint PV names."""
@@ -125,19 +128,39 @@ class _LL_Base:
         """
         return dict()
 
+    def _initialize_ll_props(self):
+        for hl_prop, val in self._hl_props.items():
+            self.set_propty(hl_prop, val)
+
     def _force_equal(self):
         for ll_prop, pv in self._pvs_sp.items():
             if not pv.connected or not self._pvs_sp_canput[pv.pvname]:
                 continue
-            v = pv.get(timeout=_TIMEOUT)
+            v = pv.get()
             if v is None:
                 _log.debug(self.channel +
                            ' propty = {0:s} is None '.format(ll_prop))
                 continue
-            my_val = self._ll_props[ll_prop]
+            my_val = self._ll_props.get(ll_prop)
+            if my_val is None:
+                raise Exception(self.prefix + ' ll_prop = ' +
+                                ll_prop + ' not in dict.')
             if my_val == v:
                 continue
             self._put_on_pv(pv, my_val)
+
+    def _put_complete(self, pvname, **kwargs):
+        self._pvs_sp_canput[pvname] = True
+
+    def _put_on_pv(self, pv, value):
+        if not pv.connected:
+            _log.debug(self.channel + ' PV ' +
+                       pv.pvname + ' NOT connected.')
+            return
+        self._pvs_sp_canput[pv.pvname] = False
+        _log.debug(self.channel + ' Setting PV ' + pv.pvname +
+                   ', value = {0:s}.'.format(str(value)))
+        pv.put(value, callback=self._put_complete)
 
     def _on_change_pvs_rb(self, pvname, value, **kwargs):
         if value is None:
@@ -153,29 +176,14 @@ class _LL_Base:
                 'propty = {0:s} Value = {1:s} '.format(hl_prop, str(val)))
             self.callback(self.channel, hl_prop, val)
 
-    def _put_complete(self, pvname, **kwargs):
-        self._pvs_sp_canput[pvname] = True
-
-    def _put_on_pv(self, pv, value):
-        if not pv.connected:
-            _log.debug(self.channel + ' PV ' +
-                       pv.pvname + ' NOT connected.')
-            return
-        self._pvs_sp_canput[pv.pvname] = False
-        pv.put(value, callback=self._put_complete)
-
     def _set_simple(self, prop, value):
         """Simple setting of Low Level IOC PVs.
 
         Function called by set_propty when no convertion is needed between
         high and low level properties.
         """
-        pv = self._pvs_sp[prop]
         self._hl_props[prop] = value
         self._ll_props[prop] = value
-        _log.debug(self.channel + ' Setting PV ' + pv.pvname +
-                   ', value = {0:s}.'.format(str(value)))
-        self._put_on_pv(pv, value)
 
     def set_propty(self, prop, value):
         """Set property values in low level IOCS.
@@ -189,7 +197,7 @@ class _LL_Base:
         fun = self._HLPROP_FUNS.get(prop)
         if fun is None:
             return False
-        _Thread(target=fun, args=(value,), daemon=True).start()
+        fun(value)
         return True
 
 
@@ -294,7 +302,7 @@ class _LL_TrigEVROUT(_LL_Base):
         map_ = {
             'evg_param': self._set_evg_param,
             'delay': self._set_delay,
-            'pulses': lambda x: self._set_simple('pulses', x),
+            'pulses': self._set_pulses,
             'duration': self._set_duration,
             'state': lambda x: self._set_simple('state', x),
             'polarity': lambda x: self._set_simple('polarity', x),
@@ -319,9 +327,9 @@ class _LL_TrigEVROUT(_LL_Base):
 
     def _get_delay(self, value, ty=None):
         pvs = self._pvs_rb
-        delay = pvs['delay1'].get(timeout=_TIMEOUT) or 0.0
-        delay += pvs['delay2'].get(timeout=_TIMEOUT) or 0.0
-        delay += (pvs['delay3'].get(timeout=_TIMEOUT) or 0.0)*1e-6  # psec
+        delay = pvs['delay1'].get() or 0.0
+        delay += pvs['delay2'].get() or 0.0
+        delay += (pvs['delay3'].get() or 0.0)*1e-6  # psec
         return {'delay': delay}
 
     def _set_delay(self, value):
@@ -332,34 +340,43 @@ class _LL_TrigEVROUT(_LL_Base):
         delay2 = (value // D2_STEP) * D2_STEP
         value -= delay2
         delay3 = (value // D3_STEP) * D3_STEP * 1e3  # in nanoseconds
-
         self._hl_props['delay'] = delay1 + delay2 + delay3/1e3
-        pv1 = self._pvs_sp['delay1']
-        pv2 = self._pvs_sp['delay2']
-        pv3 = self._pvs_sp['delay3']
-        if pv1.connected and pv2.connected and pv3.connected:
-            _log.debug(self.channel+' Delay1 = {}, Delay2 = {}, Delay3 = {}.'
-                       .format(str(delay1), str(delay2), str(delay3)))
-            self._put_on_pv(pv1, delay1)
-            self._put_on_pv(pv2, delay2)
-            self._put_on_pv(pv3, delay3)
+        self._ll_props['delay1'] = delay1
+        self._ll_props['delay2'] = delay2
+        self._ll_props['delay3'] = delay3
 
     def _process_int_trig(self, value):
         if value == self._INTLB:
-            return {'evg_param': self.pvs_rb['event'].get(timeout=_TIMEOUT)}
+            val = self._pvs_rb['event'].get()
+            if val is None:
+                _log.debug(self.channel + 'read None from PV ' +
+                           self._pvs_rb['event'].pvname)
+                return dict()
+            hl_val = Events.LL2HL_MAP[val]
         elif value.startswith('Clock'):
-            return {'evg_param': Clocks.LL2HL_MAP[value]}
+            hl_val = Clocks.LL2HL_MAP.get(value)
         else:
             _log.warning(self.prefix + ' Low Level Event set is not allowed.')
             return dict()
 
-    def _process_event(self, x):
-        if self._hl_props['evg_param'].startswith('Clock'):
+        if hl_val is None:
+            _log.warning(self.channel + val + ' not in LL2HL_MAP.')
             return dict()
+        if hl_val not in self._EVGParam_ENUMS:
+            _log.warning(self.channel + hl_val + ' is not allowed.')
+            return dict()
+        return {'evg_param': self._EVGParam_ENUMS.index(hl_val)}
+
+    def _process_event(self, x):
         _log.debug(self.prefix + ' ll_event = ' + str(x))
+        pname = self._EVGParam_ENUMS[self._hl_props['evg_param']]
+        if pname.startswith('Clock'):
+            _log.debug(self.prefix + ' a clock is set in evg_param: ' + pname)
+            return dict()
         if x not in Events.LL2HL_MAP.keys():
             _log.warning(self.prefix + 'Low Level event not in ' +
-                         'High Level list os possible events.')
+                         'High Level list of possible events.')
+            return dict()
         pname = Events.LL2HL_MAP[x]
         _log.debug(self.prefix + ' hl_event = ' + pname)
         if pname not in self._EVGParam_ENUMS:
@@ -374,18 +391,11 @@ class _LL_TrigEVROUT(_LL_Base):
         self._hl_props['evg_param'] = value
         pname = self._EVGParam_ENUMS[value]
         if pname.startswith('Clock'):
-            int_trig = self._pvs_sp['int_trig']
             self._ll_props['int_trig'] = Clocks.HL2LL_MAP[pname]
-            self._put_on_pv(int_trig, self._ll_props['int_trig'])
         else:
-            ev = Events.HL2LL_MAP[pname]
-            self._ll_props['event'] = ev
-            event_pv = self._pvs_sp['event']
-            self._put_on_pv(event_pv, ev)
-            int_trig = self._pvs_sp.get('int_trig')
-            if int_trig is not None:
+            self._ll_props['event'] = Events.HL2LL_MAP[pname]
+            if 'int_trig' in self._LLPROP_FUNS.keys():
                 self._ll_props['int_trig'] = self._INTLB
-                self._put_on_pv(int_trig, self._INTLB)
 
     def _get_duration(self, width):
         return {'duration': width / 1e3 * self._hl_props['pulses']}
@@ -393,7 +403,11 @@ class _LL_TrigEVROUT(_LL_Base):
     def _set_duration(self, value):
         self._hl_props['duration'] = value
         self._ll_props['width'] = value*1e3/self._hl_props['pulses']
-        self.put_on_pv(self._pvs_sp['width'], self._ll_props['width'])
+
+    def _set_pulses(self, value):
+        self._hl_props['pulses'] = value
+        self._ll_props['pulses'] = value
+        self._ll_props['width'] = self._hl_props['duration']*1e3/value
 
 
 class _LL_TrigEVROTP(_LL_TrigEVROUT):
@@ -412,14 +426,10 @@ class _LL_TrigEVROTP(_LL_TrigEVROUT):
     def _set_delay(self, value):
         _log.debug(self.channel+' Setting propty = {0:s}, value = {1:s}.'
                    .format('delay', str(value)))
-        pv = self._pvs_sp['delay1']
-        if not pv.connected:
-            _log.debug(self.channel+' PV '+pv.pvname+' NOT connected.')
-            return
         delay1 = (value // D1_STEP) * D1_STEP
         _log.debug(self.channel+' Delay1 = {}.'.format(str(delay1)))
         self._hl_props['delay'] = delay1
-        self._put_on_pv(pv, delay1)
+        self._ll_props['delay1'] = delay1
 
 
 class _LL_TrigEVEOUT(_LL_TrigEVROUT):
@@ -428,9 +438,9 @@ class _LL_TrigEVEOUT(_LL_TrigEVROUT):
     _OUTTMP = 'OUT{0:d}'
 
 
-class _LL_TrigAFCOUT(_LL_TrigEVROUT):
+class _LL_TrigAFCCRT(_LL_TrigEVROUT):
     _NUM_OPT = 0
-    _INTTMP = 'OUT{0:d}'
+    _INTTMP = 'CRT{0:d}'
     _REMOVE_PROPS = {'delay2', 'delay3', 'int_trig'}
 
     def _get_LLPROP_2_PVRB(self):
@@ -453,15 +463,10 @@ class _LL_TrigAFCOUT(_LL_TrigEVROUT):
     def _set_delay(self, value):
         _log.debug(self.channel+' Setting propty = {0:s}, value = {1:s}.'
                    .format('delay', str(value)))
-        pv = self._pvs_sp['delay1']
-        if not pv.connected:
-            _log.debug(self.channel+' PV '+pv.pvname+' NOT connected.')
-            return
         delay1 = (value // D1_STEP) * D1_STEP
         _log.debug(self.channel+' Delay1 = {}.'.format(str(delay1)))
         self._hl_props['delay'] = delay1
         self._ll_props['delay1'] = delay1
-        self._put_on_pv(pv, delay1)
 
     def _process_event(self, evg_par_str):
         if evg_par_str.startswith('Clock'):
@@ -469,13 +474,13 @@ class _LL_TrigAFCOUT(_LL_TrigEVROUT):
         else:
             if evg_par_str not in Events.LL2HL_MAP.keys():
                 _log.warning(self.prefix + 'Low Level event not in ' +
-                             'High Level list os possible events.')
-                return
+                             'High Level list of possible events.')
+                return dict()
             val = Events.LL2HL_MAP[evg_par_str]
         if val not in self._EVGParam_ENUMS:
             _log.warning(self.prefix + 'EVG param ' + val +
                          ' Not allowed for this trigger.')
-            return
+            return dict()
         return {'evg_param': self._EVGParam_ENUMS.index(val)}
 
     def _set_evg_param(self, value):
@@ -488,9 +493,7 @@ class _LL_TrigAFCOUT(_LL_TrigEVROUT):
         else:
             val = Events.HL2LL_MAP[pname]
         self._ll_props['event'] = val
-        event_pv = self._pvs_sp['event']
-        self._put_on_pv(event_pv, val)
 
 
-class _LL_TrigAFCFMC(_LL_TrigAFCOUT):
+class _LL_TrigAFCFMC(_LL_TrigAFCCRT):
     _INTTMP = 'FMC{0:d}'

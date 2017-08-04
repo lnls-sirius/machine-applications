@@ -1,17 +1,30 @@
-#!/usr/bin/env python-sirius
 """IOC Module."""
+import sys as _sys
 import logging as _log
+import signal as _signal
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-import signal as _signal
-import main as _main
-
+from as_ti_control import main as _main
+from siriuspy.timesys.time_data import Triggers
 
 INTERVAL = 0.1
 stop_event = False
 PREFIX = ''
-DB_FILENAME = 'my_pvs.txt'
-LOG_FILENAME = 'as-hl-timing.log'
+
+_hl_trig = Triggers().hl_triggers
+TRIG_LISTS = {
+    'si-dip-quads': ['SI-Glob:TI-Quads:', 'SI-Glob:TI-Dips:'],
+    'si-sexts-skews': ['SI-Glob:TI-Sexts:', 'SI-Glob:TI-Skews:'],
+    'si-corrs': ['SI-Glob:TI-Corrs:'],
+    'bo-mags': ['BO-Glob:TI-Mags:'],
+    'bo-si-bpms': ['BO-Fam:TI-BPM:', 'SI-Fam:TI-BPM:'],
+    }
+_tr_list = set(_hl_trig.keys())
+for v in TRIG_LISTS.values():
+    _tr_list -= set(v)
+TRIG_LISTS['others'] = sorted(_tr_list)
+TRIG_LISTS['all'] = sorted(_hl_trig.keys())
+TRIG_LISTS['none'] = []
 
 
 def _stop_now(signum, frame):
@@ -20,11 +33,11 @@ def _stop_now(signum, frame):
     stop_event = True
 
 
-def _print_pvs_in_file(db):
-    with open(DB_FILENAME, 'w') as f:
+def _print_pvs_in_file(db, fname):
+    with open(fname, 'w') as f:
         for key in sorted(db.keys()):
             f.write('{0:20s}\n'.format(key))
-    _log.info(DB_FILENAME+' file generated with {0:d} pvs.'.format(len(db)))
+    _log.info(fname+' file generated with {0:d} pvs.'.format(len(db)))
 
 
 class _PCASDriver(_pcaspy.Driver):
@@ -54,15 +67,16 @@ class _PCASDriver(_pcaspy.Driver):
         return app_ret
 
 
-def run():
+def run(events=True, clocks=True, triggers='all'):
     """Start the IOC."""
+    trig_list = TRIG_LISTS.get(triggers, [])
+
     level = _log.INFO
     fmt = ('%(levelname)7s | %(asctime)s | ' +
            '%(module)15s.%(funcName)20s[%(lineno)4d] ::: %(message)s')
-    _log.basicConfig(format=fmt, datefmt='%F %T',
-                     filename=LOG_FILENAME, filemode='w', level=level)
-    # _log.basicConfig(format=fmt, datefmt='%F %T',
-    #                  filename=LOG_FILENAME, filemode='w', level=_log.INFO)
+    _log.basicConfig(format=fmt, datefmt='%F %T', level=level,
+                     stream=_sys.stdout)
+    #  filename=LOG_FILENAME, filemode='w')
     _log.info('Starting...')
 
     # define abort function
@@ -71,10 +85,13 @@ def run():
 
     # Creates App object
     _log.info('Creating App.')
-    app = _main.App()
+    app = _main.App(events=events, clocks=clocks, triggers_list=trig_list)
     _log.info('Generating database file.')
     db = app.get_database()
-    _print_pvs_in_file(db)
+    fname = 'event_' if events else ''
+    fname += 'clocks_' if clocks else ''
+    fname += triggers + '_' if triggers != 'none' else ''
+    _print_pvs_in_file(db, fname=fname+'pvs.txt')
 
     # create a new simple pcaspy server and driver to respond client's requests
     _log.info('Creating Server.')
@@ -104,7 +121,3 @@ def run():
     server_thread.join()
     _log.info('Server Thread stopped.')
     _log.info('Good Bye.')
-
-
-if __name__ == '__main__':
-    run()
