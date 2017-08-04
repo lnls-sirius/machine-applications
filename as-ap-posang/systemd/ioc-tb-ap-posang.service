@@ -1,0 +1,12 @@
+[Unit]
+Description=Soft IOC for TB Position and Angle Correction
+After=multi-user.target
+
+[Service]
+Group=fac
+User=fac
+Type=simple
+WorkingDirectory=/usr/local/bin/sirius-iocs/as-ap-posang
+StandardOutput=syslog
+StandardError=syslog
+ExecStart=/usr/local/bin/sirius-iocs/as-ap-posang/ioc-tb-ap-posang.bash
