@@ -112,24 +112,27 @@ class HL_Event(_HL_Base):
         """Create the database of the class."""
         db = dict()
         pre = self.prefix
-        db[pre + 'Delay-SP'] = {
-            'type': 'float', 'value': self._hl_props['delay'], 'unit': 'us',
-            'prec': 3, 'fun_set_pv': lambda x: self.set_propty('delay', x)}
-        db[pre + 'Delay-RB'] = {
-            'type': 'float', 'value': self._hl_props['delay'],
-            'unit': 'us', 'prec': 3}
-        db[pre + 'Mode-Sel'] = {
-            'type': 'enum', 'enums': Events.MODES,
-            'value': self._hl_props['mode'],
-            'fun_set_pv': lambda x: self.set_propty('mode', x)}
-        db[pre + 'Mode-Sts'] = {
-            'type': 'int', 'value': self._hl_props['mode']}
-        db[pre + 'DelayType-Sel'] = {
-            'type': 'enum', 'enums': Events.DELAY_TYPES,
-            'value': self._hl_props['delay_type'],
-            'fun_set_pv': lambda x: self.set_propty('delay_type', x)}
-        db[pre + 'DelayType-Sts'] = {
-            'type': 'int', 'value': self._hl_props['delay_type']}
+
+        dic_ = {'type': 'float', 'unit': 'us', 'prec': 3,
+                'value': self._hl_props['delay'],
+                'lolo': 0.0, 'low': 0.0, 'lolim': 0.0,
+                'hilim': 500000, 'high': 1000000, 'hihi': 10000000}
+        db[pre + 'Delay-RB'] = _copy.deepcopy(dic_)
+        dic_['fun_set_pv'] = lambda x: self.set_propty('delay', x)
+        db[pre + 'Delay-SP'] = dic_
+
+        dic_ = {'type': 'enum', 'enums': Events.MODES,
+                'value': self._hl_props['mode']}
+        db[pre + 'Mode-Sts'] = _copy.deepcopy(dic_)
+        dic_['fun_set_pv'] = lambda x: self.set_propty('mode', x)
+        db[pre + 'Mode-Sel'] = dic_
+
+        dic_ = {'type': 'enum', 'enums': Events.DELAY_TYPES,
+                'value': self._hl_props['delay_type']}
+        db[pre + 'DelayType-Sts'] = _copy.deepcopy(dic_)
+        dic_['fun_set_pv'] = lambda x: self.set_propty('delay_type', x)
+        db[pre + 'DelayType-Sel'] = dic_
+
         db[pre + 'ExtTrig-Cmd'] = {
             'type': 'int', 'value': self._hl_props['ext_trig'],
             'unit': 'When in External Mode generates Event.',
@@ -177,7 +180,8 @@ class HL_Clock(_HL_Base):
             'value': self._hl_props['state'],
             'fun_set_pv': lambda x: self.set_propty('state', x)}
         db[pre + 'State-Sts'] = {
-            'type': 'int', 'value': self._hl_props['state']}
+            'type': 'enum', 'enums': Clocks.STATES,
+            'value': self._hl_props['state']}
         return db
 
     def __init__(self, prefix, callback, number):
@@ -203,44 +207,49 @@ class HL_Trigger(_HL_Base):
         """Get the database."""
         db = dict()
         pre = self.prefix
-        db[pre + 'State-Sel'] = {
-            'type': 'enum', 'value': self._hl_props['state'],
-            'enums': Triggers.STATES,
-            'fun_set_pv': lambda x: self.set_propty('state', x)}
-        db[pre + 'State-Sts'] = {
-            'type': 'int',  'value': self._hl_props['state']}
-        db[pre + 'EVGParam-Sel'] = {
-            'type': 'enum', 'value': self._hl_props['evg_param'],
-            'enums': self._EVGParam_ENUMS,
-            'fun_set_pv': lambda x: self.set_propty('evg_param', x)}
-        db[pre + 'EVGParam-Sts'] = {
-            'type': 'enum',  'value': self._hl_props['evg_param'],
-            'enums': self._EVGParam_ENUMS}
-        db[pre + 'Delay-SP'] = {
-            'type': 'float', 'value': self._hl_props['delay'],
-            'unit': 'us', 'prec': 4,
-            'fun_set_pv': lambda x: self.set_propty('delay', x)}
-        db[pre + 'Delay-RB'] = {
-            'type': 'float', 'value': self._hl_props['delay'],
-            'unit': 'us', 'prec': 4}
-        db[pre + 'Pulses-SP'] = {
-            'type': 'int',  'value': self._hl_props['pulses'],
-            'fun_set_pv': lambda x: self.set_propty('pulses', x)}
-        db[pre + 'Pulses-RB'] = {
-            'type': 'int',  'value': self._hl_props['pulses']}
-        db[pre + 'Duration-SP'] = {
-            'type': 'float', 'value': self._hl_props['duration'],
-            'unit': 'ms', 'prec': 4,
-            'fun_set_pv': lambda x: self.set_propty('duration', x)}
-        db[pre + 'Duration-RB'] = {
-            'type': 'float', 'value': self._hl_props['duration'],
-            'unit': 'ms', 'prec': 4}
-        db[pre + 'Polrty-Sel'] = {
-            'type': 'enum', 'value': self._hl_props['polarity'],
-            'enums': Triggers.POLARITIES,
-            'fun_set_pv': lambda x: self.set_propty('polarity', x)}
-        db[pre + 'Polrty-Sts'] = {
-            'type': 'int',  'value': self._hl_props['polarity']}
+
+        dic_ = {'type': 'enum', 'enums': Triggers.STATES}
+        dic_.update(self._ioc_params['state'])
+        db[pre + 'State-Sts'] = _copy.deepcopy(dic_)
+        dic_['fun_set_pv'] = lambda x: self.set_propty('state', x)
+        db[pre + 'State-Sel'] = dic_
+
+        dic_ = {'type': 'enum'}
+        dic_.update(self._ioc_params['evg_param'])
+        db[pre + 'EVGParam-Sts'] = _copy.deepcopy(dic_)
+        dic_['fun_set_pv'] = lambda x: self.set_propty('evg_param', x)
+        db[pre + 'EVGParam-Sel'] = dic_
+
+        dic_ = {'type': 'float', 'unit': 'us', 'prec': 4,
+                'lolo': 0.0, 'low': 0.0, 'lolim': 0.0,
+                'hilim': 500000, 'high': 1000000, 'hihi': 10000000}
+        dic_.update(self._ioc_params['delay'])
+        db[pre + 'Delay-RB'] = _copy.deepcopy(dic_)
+        dic_['fun_set_pv'] = lambda x: self.set_propty('delay', x)
+        db[pre + 'Delay-SP'] = dic_
+
+        dic_ = {'type': 'int', 'unit': 'numer of pulses', 'prec': 0,
+                'lolo': 1, 'low': 1, 'lolim': 1,
+                'hilim': 2001, 'high': 10000, 'hihi': 100000}
+        dic_.update(self._ioc_params['pulses'])
+        db[pre + 'Pulses-RB'] = _copy.deepcopy(dic_)
+        dic_['fun_set_pv'] = lambda x: self.set_propty('pulses', x)
+        db[pre + 'Pulses-SP'] = dic_
+
+        dic_ = {'type': 'float', 'unit': 'ms', 'prec': 6,
+                'lolo': 0.000008, 'low': 0.000008, 'lolim': 0.000008,
+                'hilim': 500, 'high': 1000, 'hihi': 10000}
+        dic_.update(self._ioc_params['duration'])
+        db[pre + 'Duration-RB'] = _copy.deepcopy(dic_)
+        dic_['fun_set_pv'] = lambda x: self.set_propty('duration', x)
+        db[pre + 'Duration-SP'] = dic_
+
+        dic_ = {'type': 'enum', 'enums': Triggers.POLARITIES}
+        dic_.update(self._ioc_params['polarity'])
+        db[pre + 'Polrty-Sts'] = _copy.deepcopy(dic_)
+        dic_['fun_set_pv'] = lambda x: self.set_propty('polarity', x)
+        db[pre + 'Polrty-Sel'] = dic_
+
         db2 = dict()
         for prop in self._interface_props:
             rb_name = self._HLPROP_2_PVRB[prop]
@@ -250,21 +259,19 @@ class HL_Trigger(_HL_Base):
             db2[name] = db[name]
         return db2
 
-    def __init__(self, prefix, callback, channels,
-                 events, hl_props, init_vals):
+    def __init__(self, prefix, callback, channels, hl_props, ioc_params):
         """Appropriately initialize the instance.
 
-        events = is the list of possible high level events of this trigger.
         hl_props = is a set with high level properties that will be available
           for changes in the High Level Interface. All the possible values are:
             {'evg_param', 'delay', 'pulses', 'duration', 'state', 'polarity'}
-        init_vals = initial values for all the high level properties.
+        ioc_params = initial values for all the high level properties.
         """
         super().__init__(prefix, callback, channels)
 
         self._interface_props = hl_props
-        self._EVENTS = events
-        self._hl_props = init_vals
+        self._ioc_params = ioc_params
+        self._hl_props = {k: v['value'] for k, v in ioc_params.items()}
         self._set_EVGParams_ENUMS()
         self._connect_kwargs = {'evg_params': self._EVGParam_ENUMS}
 
@@ -280,10 +287,10 @@ class HL_Trigger(_HL_Base):
                     has_clock.append(False)
             else:
                 raise Exception('Error: ' + name)
-        self._EVGParam_ENUMS = list(self._EVENTS)
+        dic_ = self._ioc_params['evg_param']
         if all(has_clock):
-            self._EVGParam_ENUMS += sorted(Clocks.HL2LL_MAP.keys())
-            return
+            dic_['enums'] += tuple(sorted(Clocks.HL2LL_MAP.keys()))
+        self._EVGParam_ENUMS = list(dic_['enums'])
         if any(has_clock):
             _log.warning('Some triggers of ' + self.prefix +
                          ' are connected to unsimiliar low level devices.')

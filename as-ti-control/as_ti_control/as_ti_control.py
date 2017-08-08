@@ -5,11 +5,13 @@ import signal as _signal
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 from as_ti_control import main as _main
+from siriuspy.util import get_last_commit_hash as _get_version
+from siriuspy.envars import vaca_prefix as PREFIX
 from siriuspy.timesys.time_data import Triggers
 
+__version__ = _get_version()
 INTERVAL = 0.1
 stop_event = False
-PREFIX = ''
 
 _hl_trig = Triggers().hl_triggers
 TRIG_LISTS = {
@@ -34,9 +36,9 @@ def _stop_now(signum, frame):
 
 
 def _print_pvs_in_file(db, fname):
-    with open(fname, 'w') as f:
+    with open('pvs/' + fname, 'w') as f:
         for key in sorted(db.keys()):
-            f.write('{0:20s}\n'.format(key))
+            f.write(PREFIX+'{0:40s}\n'.format(key))
     _log.info(fname+' file generated with {0:d} pvs.'.format(len(db)))
 
 
@@ -87,10 +89,12 @@ def run(events=True, clocks=True, triggers='all'):
     _log.info('Creating App.')
     app = _main.App(events=events, clocks=clocks, triggers_list=trig_list)
     _log.info('Generating database file.')
+    fname = 'AS-TI-'
+    fname += 'EVENTS-' if events else ''
+    fname += 'CLOCKS-' if clocks else ''
+    fname += triggers.upper() + '-' if triggers != 'none' else ''
     db = app.get_database()
-    fname = 'event_' if events else ''
-    fname += 'clocks_' if clocks else ''
-    fname += triggers + '_' if triggers != 'none' else ''
+    db.update({fname+'Version-Cte': {'type': 'string', 'value': __version__}})
     _print_pvs_in_file(db, fname=fname+'pvs.txt')
 
     # create a new simple pcaspy server and driver to respond client's requests

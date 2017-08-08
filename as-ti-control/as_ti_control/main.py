@@ -2,11 +2,9 @@
 
 import time as _time
 import logging as _log
-from siriuspy.util import get_last_commit_hash as _get_version
 from siriuspy.timesys.time_data import Events, Clocks, Triggers
 from as_ti_control.hl_classes import HL_Event, HL_Clock, HL_Trigger
 
-__version__ = _get_version()
 _TIMEOUT = 0.05
 
 
@@ -15,7 +13,7 @@ class App:
 
     def get_database(self):
         """Get the database."""
-        db = {'Version-Cte': {'type': 'string', 'value': __version__}}
+        db = dict()
         for cl in self._clocks.values():
             db.update(cl.get_database())
         for ev in self._events.values():
@@ -54,7 +52,8 @@ class App:
             _log.info('Creating High Level Triggers:')
             for pref in triggers_list:
                 prop = Triggers().hl_triggers[pref]
-                self._triggers[pref] = HL_Trigger(pref, self._update_driver,
+                self._triggers[pref] = HL_Trigger(pref,
+                                                  self._update_driver,
                                                   **prop)
         self._database = self.get_database()
 
