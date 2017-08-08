@@ -1,5 +1,5 @@
 # Destination directory
-SERVICES = $(shell ls | grep -v Makefile)
+SERVICES = $(shell ls *.service | grep -v Makefile)
 
 # test:
 # 	for ser in $(SERVICES) ; do \
