@@ -20,6 +20,6 @@ setup(
     ],
     packages=['as_ti_control'],
     package_data={'as_ti_control': ['VERSION']},
-    scripts=['scripts/as-ti-control.py'],
+    scripts=['scripts/sirius-ioc-as-ti-control.py'],
     zip_safe=False
 )
