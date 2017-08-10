@@ -69,11 +69,11 @@ class _PCASDriver(_pcaspy.Driver):
         return app_ret
 
 
-def run(events=True, clocks=True, triggers='all'):
+def run(events=True, clocks=True, triggers='all', debug=False):
     """Start the IOC."""
     trig_list = TRIG_LISTS.get(triggers, [])
 
-    level = _log.INFO
+    level = _log.DEBUG if debug else _log.INFO
     fmt = ('%(levelname)7s | %(asctime)s | ' +
            '%(module)15s.%(funcName)20s[%(lineno)4d] ::: %(message)s')
     _log.basicConfig(format=fmt, datefmt='%F %T', level=level,
