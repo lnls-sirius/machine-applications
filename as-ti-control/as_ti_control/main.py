@@ -3,7 +3,7 @@
 import time as _time
 import logging as _log
 from siriuspy.timesys.time_data import Events, Clocks, Triggers
-from as_ti_control.hl_classes import HL_Event, HL_Clock, HL_Trigger
+from as_ti_control.hl_classes import HL_Event, HL_Clock, HL_Trigger, HL_EVG
 
 _TIMEOUT = 0.05
 
@@ -14,6 +14,8 @@ class App:
     def get_database(self):
         """Get the database."""
         db = dict()
+        if self._evg is not None:
+            db.update(self._evg.get_database())
         for cl in self._clocks.values():
             db.update(cl.get_database())
         for ev in self._events.values():
@@ -33,10 +35,12 @@ class App:
         """
         _log.info('Starting App...')
         self._driver = driver
+        self._evg = None
         self._clocks = dict()
         self._events = dict()
         self._triggers = dict()
         if clocks:
+            self._evg = HL_EVG(self._update_driver)
             _log.info('Creating High Level Clocks:')
             for cl_hl, cl_ll in Clocks.HL2LL_MAP.items():
                 clock = Clocks.HL_PREF + cl_hl
