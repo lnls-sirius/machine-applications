@@ -13,24 +13,34 @@ _TIMEOUT = 0.05
 _FORCE_EQUAL = True
 _INTERVAL = 0.1
 
+DIV = 4
 RFFREQ = 299792458/518.396*864  # Should be read from the RF generator Setpoint
-RF_PER = 1/RFFREQ * 1e6         # In micro seconds
-D1_STEP = RF_PER * 4
-D2_STEP = RF_PER * 4 / 20
-D3_STEP = 5e-6                  # five picoseconds
+BFREQ = RFFREQ / DIV
+RF_PER = 1/RFFREQ
+BDEL = 1 / BFREQ
+RDEL = BDEL / 20
+FDEL = 5e-12                  # five picoseconds
 
 
 class _Timer(_Thread):
-    def __init__(self, interval, function, args=tuple()):
+    def __init__(self, interval, function, args=tuple(), niter=100):
         super().__init__(daemon=True)
         self.interval = interval
         self.function = function
         self.args = args
+        self.niters = niter
+        self.cur_iter = 0
         self.stopped = _Event()
 
     def run(self):
-        while not self.stopped.wait(self.interval):
+        self.function(*self.args)
+        while ((not self.stopped.wait(self.interval)) and
+               self.niters > self.cur_iter):
+            self.cur_iter += 1
             self.function(*self.args)
+
+    def reset(self):
+        self.cur_iter = 0
 
     def stop(self):
         self.stopped.set()
@@ -71,6 +81,7 @@ class _LL_Base:
         self.callback = callback
         self._hl_props = init_hl_props
         self._ll_props = dict()
+        self.timer = None
         self._initialize_ll_props()
         self._pvs_sp = dict()
         self._pvs_rb = dict()
@@ -89,11 +100,21 @@ class _LL_Base:
             self._pvs_sp_canput[pv_name_sp] = True
             self._pvs_sp[prop] = _epics.PV(
                 pv_name_sp,
+                callback=self._on_change_pvs_sp,
                 connection_timeout=_TIMEOUT)
         _log.info(self.channel + ': Done.')
         # Timer to force equality between high and low level:
         self.timer = _Timer(_INTERVAL, self._force_equal)
-        self.timer.start()
+        self.start_timer()
+
+    def start_timer(self):
+        if self.timer is None:
+            return
+        if self.timer.isAlive():
+            self.timer.reset()
+        else:
+            self.timer = _Timer(_INTERVAL, self._force_equal, niter=10)
+            self.timer.start()
 
     def _get_setpoint_name(self, pvname):
         """Convert readback PV names to setpoint PV names."""
@@ -144,6 +165,13 @@ class _LL_Base:
             if my_val is None:
                 raise Exception(self.prefix + ' ll_prop = ' +
                                 ll_prop + ' not in dict.')
+            # If pv is a command, it must be sent only once
+            if pv.pvname.endswith('-Cmd'):
+                if self._ll_props[ll_prop]:
+                    self._put_on_pv(pv, self._ll_props[ll_prop])
+                    self._ll_props[ll_prop] = 0
+                return
+
             if my_val == v:
                 continue
             self._put_on_pv(pv, my_val)
@@ -160,6 +188,10 @@ class _LL_Base:
         _log.debug(self.channel + ' Setting PV ' + pv.pvname +
                    ', value = {0:s}.'.format(str(value)))
         pv.put(value, callback=self._put_complete)
+
+    def _on_change_pvs_sp(self, pvname, value, **kwargs):
+        _log.debug('PV: '+pvname+'.  Calling Timer.')
+        self.start_timer()
 
     def _on_change_pvs_rb(self, pvname, value, **kwargs):
         if value is None:
@@ -197,6 +229,7 @@ class _LL_Base:
         if fun is None:
             return False
         fun(value)
+        self.start_timer()
         return True
 
 
@@ -211,21 +244,30 @@ class LL_Clock(_LL_Base):
 
     def _get_LLPROP_2_PVRB(self):
         return {
-            'frequency': self.prefix + 'Freq-RB',
-            'state': self.prefix + 'State-Sts',
+            'frequency': self.prefix + 'MuxDiv-RB',
+            'state': self.prefix + 'MuxEnbl-Sts',
             }
 
     def _get_HLPROP_FUNS(self):
         return {
-            'frequency': lambda x: self._set_simple('frequency', x),
+            'frequency': self._set_frequency,
             'state': lambda x: self._set_simple('state', x),
             }
 
     def _get_LLPROP_FUNS(self):
         return {
-            'frequency': lambda x: {'frequency': x},
+            'frequency': self._get_frequency,
             'state': lambda x: {'state': x},
             }
+
+    def _set_frequency(self, value):
+        value *= 1e3 # kHz
+        n = round(BFREQ/value)
+        self._hl_props['frequency'] = n * BFREQ * 1e-3
+        self._ll_props['frequency'] = n
+
+    def _get_frequency(self, value):
+        return {'frequency': value * BFREQ * 1e-3}
 
 
 class LL_Event(_LL_Base):
@@ -260,6 +302,15 @@ class LL_Event(_LL_Base):
             'delay_type': lambda x: {'delay_type': x},
             'ext_trig': lambda x: {'ext_trig': x},
             }
+
+    def _set_delay(self, value):
+        value *= 1e-6  # us
+        n = round(value / BDEL)
+        self._hl_props['delay'] = n * BDEL * 1e6
+        self._ll_props['delay'] = n
+
+    def _get_delay(self, value):
+        return {'delay': value * BDEL * 1e6}
 
 
 class _LL_TrigEVROUT(_LL_Base):
@@ -301,6 +352,7 @@ class _LL_TrigEVROUT(_LL_Base):
         map_ = {
             'evg_param': self._set_evg_param,
             'delay': self._set_delay,
+            'delay_type': self._set_delay_type,
             'pulses': self._set_pulses,
             'duration': self._set_duration,
             'state': lambda x: self._set_simple('state', x),
@@ -324,25 +376,41 @@ class _LL_TrigEVROUT(_LL_Base):
             map_.pop(prop)
         return map_
 
-    def _get_delay(self, value, ty=None):
+    def _get_delay(self, value):
         pvs = self._pvs_rb
-        delay = pvs['delay1'].get() or 0.0
-        delay += pvs['delay2'].get() or 0.0
-        delay += (pvs['delay3'].get() or 0.0)*1e-6  # psec
-        return {'delay': delay}
+        delay1 = pvs['delay1'].get() or 0
+        delay2 = pvs['delay2'].get() or 0
+        delay3 = pvs['delay3'].get() or 0
+        if delay2 == 31:
+            delay = (delay1*BDEL + delay3*FDEL) * 1e6
+            return {'delay': delay, 'delay_type': 1}
+        else:
+            delay = (delay1*BDEL + delay2*FDEL + delay3*FDEL) * 1e6
+            return {'delay': delay, 'delay_type': 0}
 
     def _set_delay(self, value):
         _log.debug(self.channel+' Setting propty = {0:s}, value = {1:s}.'
                    .format('delay', str(value)))
-        delay1 = (value // D1_STEP) * D1_STEP
-        value -= delay1
-        delay2 = (value // D2_STEP) * D2_STEP
-        value -= delay2
-        delay3 = (value // D3_STEP) * D3_STEP * 1e3  # in nanoseconds
-        self._hl_props['delay'] = delay1 + delay2 + delay3/1e3
-        self._ll_props['delay1'] = delay1
-        self._ll_props['delay2'] = delay2
-        self._ll_props['delay3'] = delay3
+       value *= 1e-6  # us
+       delay1 = value // BDEL
+       self._ll_props['delay1'] = delay1
+        if not self._hl_props['delay_type']:
+            value -= delay1 * BDEL
+            delay2 = value // RDEL
+            value -= delay2 * RDEL
+            delay3 = value // FDEL
+            delay = (delay1*BDEL + delay2*FDEL + delay3*FDEL) * 1e6
+            self._hl_props['delay'] = delay
+            self._ll_props['delay2'] = delay2
+            self._ll_props['delay3'] = delay3
+        else:
+            self._hl_props['delay'] = delay1 * BDEL * 1e6
+            self._ll_props['delay2'] = 31
+            self._ll_props['delay3'] = 0
+
+    def _set_delay_type(self, value):
+        self._hl_props['delay_type'] = value
+        self._set_delay(self._hl_props['delay'])
 
     def _process_int_trig(self, value):
         if value == self._INTLB:
@@ -397,11 +465,14 @@ class _LL_TrigEVROUT(_LL_Base):
                 self._ll_props['int_trig'] = self._INTLB
 
     def _get_duration(self, width):
-        return {'duration': width / 1e3 * self._hl_props['pulses']}
+        return {'duration': width * BDEL * self._hl_props['pulses'] * 1e3}
 
     def _set_duration(self, value):
-        self._hl_props['duration'] = value
-        self._ll_props['width'] = value*1e3/self._hl_props['pulses']
+        value *= 1e-3  # ms
+        n = round(value / BDEL / self._hl_props['pulses'])
+        n = n if n >= 1 else 1
+        self._hl_props['duration'] = n * BDEL * self._hl_props['pulses'] * 1e3
+        self._ll_props['width'] = n
 
     def _set_pulses(self, value):
         self._hl_props['pulses'] = value
@@ -425,10 +496,13 @@ class _LL_TrigEVROTP(_LL_TrigEVROUT):
     def _set_delay(self, value):
         _log.debug(self.channel+' Setting propty = {0:s}, value = {1:s}.'
                    .format('delay', str(value)))
-        delay1 = (value // D1_STEP) * D1_STEP
+        delay1 = (value // BDEL) * BDEL
         _log.debug(self.channel+' Delay1 = {}.'.format(str(delay1)))
         self._hl_props['delay'] = delay1
         self._ll_props['delay1'] = delay1
+
+    def _set_delay_type(self, value):
+        self._hl_props['delay_type'] = 0
 
 
 class _LL_TrigEVEOUT(_LL_TrigEVROUT):
@@ -462,10 +536,13 @@ class _LL_TrigAFCCRT(_LL_TrigEVROUT):
     def _set_delay(self, value):
         _log.debug(self.channel+' Setting propty = {0:s}, value = {1:s}.'
                    .format('delay', str(value)))
-        delay1 = (value // D1_STEP) * D1_STEP
+        delay1 = (value // BDEL) * BDEL
         _log.debug(self.channel+' Delay1 = {}.'.format(str(delay1)))
         self._hl_props['delay'] = delay1
         self._ll_props['delay1'] = delay1
+
+    def _set_delay_type(self, value):
+        self._hl_props['delay_type'] = 0
 
     def _process_event(self, evg_par_str):
         if evg_par_str.startswith('Clock'):

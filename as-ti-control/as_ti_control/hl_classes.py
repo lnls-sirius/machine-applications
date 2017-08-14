@@ -19,9 +19,16 @@ twds_evg = Connections.get_connections_twds_evg()
 
 class _HL_Base:
 
-    def get_database(self):
+    def get_database(self, db):
         """Get the database."""
-        return dict()   # dictionary must have key fun_set_pv
+        db2 = dict()
+        for prop in self._interface_props:
+            rb_name = self._HLPROP_2_PVRB[prop]
+            name = self.prefix + rb_name
+            db2[name] = db[name]
+            name = self.prefix + self._get_setpoint_name(rb_name)
+            db2[name] = db[name]
+        return db2      # dictionary must have key fun_set_pv
 
     def __init__(self, prefix, callback, channels):
         """Appropriately initialize the instance.
@@ -136,13 +143,13 @@ class HL_Event(_HL_Base):
         db[pre + 'ExtTrig-Cmd'] = {
             'type': 'int', 'value': self._hl_props['ext_trig'],
             'unit': 'When in External Mode generates Event.',
-            'fun_set_pv': lambda x: self.set_propty('ext_trig', x)}
-        return db
+            'fun_set_pv': self.set_ext_trig}
+        return super().get_database(db)
 
     def __init__(self, prefix, callback, code):
         """Initialize object."""
         super().__init__(prefix, callback, code)
-        self._interface_props = {'delay', 'mode', 'delay_type', 'ext_trig'}
+        self._interface_props = {'delay', 'mode', 'ext_trig'}
         self._hl_props = {'delay': 0, 'mode': 1,
                           'delay_type': 1, 'ext_trig': 0}
 
@@ -159,6 +166,11 @@ class HL_Event(_HL_Base):
 
     def _get_LL_OBJ(self, **kwargs):
         return LL_Event(**kwargs)
+
+    def set_ext_trig(self, value):
+        """Set the external trigger command."""
+        self._hl_props['ext_trig'] = 0
+        return self.set_propty('ext_trig', value)
 
 
 class HL_Clock(_HL_Base):
@@ -182,7 +194,7 @@ class HL_Clock(_HL_Base):
         db[pre + 'State-Sts'] = {
             'type': 'enum', 'enums': Clocks.STATES,
             'value': self._hl_props['state']}
-        return db
+        return super().get_database(db)
 
     def __init__(self, prefix, callback, number):
         """Initialize the instance."""
@@ -228,6 +240,12 @@ class HL_Trigger(_HL_Base):
         dic_['fun_set_pv'] = lambda x: self.set_propty('delay', x)
         db[pre + 'Delay-SP'] = dic_
 
+        dic_ = {'type': 'enum'}
+        dic_.update(self._ioc_params['delay_type'])
+        db[pre + 'DelayType-Sts'] = _copy.deepcopy(dic_)
+        dic_['fun_set_pv'] = lambda x: self.set_propty('delay_type', x)
+        db[pre + 'DelayType-Sel'] = dic_
+
         dic_ = {'type': 'int', 'unit': 'numer of pulses', 'prec': 0,
                 'lolo': 1, 'low': 1, 'lolim': 1,
                 'hilim': 2001, 'high': 10000, 'hihi': 100000}
@@ -250,14 +268,7 @@ class HL_Trigger(_HL_Base):
         dic_['fun_set_pv'] = lambda x: self.set_propty('polarity', x)
         db[pre + 'Polrty-Sel'] = dic_
 
-        db2 = dict()
-        for prop in self._interface_props:
-            rb_name = self._HLPROP_2_PVRB[prop]
-            name = pre + rb_name
-            db2[name] = db[name]
-            name = pre + self._get_setpoint_name(rb_name)
-            db2[name] = db[name]
-        return db2
+        return super().get_database(db)
 
     def __init__(self, prefix, callback, channels, hl_props, ioc_params):
         """Appropriately initialize the instance.
@@ -272,26 +283,43 @@ class HL_Trigger(_HL_Base):
         self._interface_props = hl_props
         self._ioc_params = ioc_params
         self._hl_props = {k: v['value'] for k, v in ioc_params.items()}
-        self._set_EVGParams_ENUMS()
+        self._set_non_homogeneous_params()
         self._connect_kwargs = {'evg_params': self._EVGParam_ENUMS}
 
-    def _set_EVGParams_ENUMS(self):
+    def _has_delay_type(self, name):
+        if name.dev_type in ('EVR', 'EVE') and name.propty.startswith('OUT'):
+            return True
+        else:
+            return False
+
+    def _has_clock(self, name):
+        if name.dev_type in {'EVE', 'AFC'}:
+            return True
+        elif name.dev_type == 'EVR':
+            return True if name.propty.startswith('OUT') else False
+        else:
+            raise Exception('Error: ' + name)
+
+    def _set_non_homogeneous_params(self):
         has_clock = []
+        has_delay_type = []
         for name in self._ll_objs_names:
-            if name.dev_type in {'EVE', 'AFC'}:
-                has_clock.append(True)
-            elif name.dev_type == 'EVR':
-                if name.propty.startswith('OUT'):
-                    has_clock.append(True)
-                else:
-                    has_clock.append(False)
-            else:
-                raise Exception('Error: ' + name)
+            has_clock.append(self._has_clock(name))
+            has_delay_type.append(self._has_delay_type(name))
         dic_ = self._ioc_params['evg_param']
+        # EVG_params_ENUMS
         if all(has_clock):
             dic_['enums'] += tuple(sorted(Clocks.HL2LL_MAP.keys()))
+        elif any(has_clock):
+            _log.warning('Some triggers of ' + self.prefix +
+                         ' are connected to unsimiliar low level devices.')
         self._EVGParam_ENUMS = list(dic_['enums'])
-        if any(has_clock):
+        # Delay Typess
+        dic_ = self._ioc_params['delay_type']
+        dic_['enums'] = (Triggers.DELAY_TYPES[0], )
+        if all(has_delay_type):
+            dic_['enums'] = Triggers.DELAY_TYPES
+        elif any(has_delay_type):
             _log.warning('Some triggers of ' + self.prefix +
                          ' are connected to unsimiliar low level devices.')
 
