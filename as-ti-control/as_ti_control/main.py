@@ -63,6 +63,8 @@ class App:
 
     def connect(self):
         """Trigger connection to external PVs in other classes."""
+        if self._evg is not None:
+            self._evg.connect()
         _log.info('Connecting to Low Level Clocks:')
         for key, val in self._clocks.items():
             val.connect()
