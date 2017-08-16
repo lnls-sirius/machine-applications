@@ -12,7 +12,6 @@ install-services:
 	  cp -rf $$ser /etc/systemd/system/ ; \
 	done
 	systemctl daemon-reload
-	mkdir -p /home/fac/sirius-iocs/as-ap-posang
 	mkdir -p /home/fac/sirius-iocs/pvs
 	chown -R fac.fac /home/fac/sirius-iocs
 
