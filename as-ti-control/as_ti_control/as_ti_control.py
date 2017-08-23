@@ -18,6 +18,21 @@ TRIG_LISTS = {
     'si-dip-quads': ['SI-Glob:TI-Quads:', 'SI-Glob:TI-Dips:'],
     'si-sexts-skews': ['SI-Glob:TI-Sexts:', 'SI-Glob:TI-Skews:'],
     'si-corrs': ['SI-Glob:TI-Corrs:'],
+    'si-dig': [
+        'SI-01SA:TI-HTuneS:', 'SI-01SA:TI-InjK:',
+        'SI-13C4:TI-DCCT:', 'SI-14C4:TI-DCCT:',
+        'SI-16C4:TI-GBPM:', 'SI-17C4:TI-VTuneP:',
+        'SI-17SA:TI-HTuneP:', 'SI-18C4:TI-VTuneS:',
+        'SI-19C4:TI-VPing:', 'SI-19SP:TI-GSL15:',
+        'SI-20SB:TI-GSL07:', 'SI-01SA:TI-HPing:'],
+    'li-all': [
+        'LI-01:TI-EGun:MultBun', 'LI-01:TI-EGun:SglBun',
+        'LI-01:TI-ICT-1:', 'LI-01:TI-ICT-2:',
+        'LI-01:TI-Modltr-1:', 'LI-01:TI-Modltr-2:',
+        'LI-Fam:TI-BPM:', 'LI-Fam:TI-Scrn:',
+        'LI-Glob:TI-LLRF-1:', 'LI-Glob:TI-LLRF-2:',
+        'LI-Glob:TI-LLRF-3:', 'LI-Glob:TI-RFAmp-1:',
+        'LI-Glob:TI-RFAmp-2:', 'LI-Glob:TI-SHAmp:'],
     'bo-mags': ['BO-Glob:TI-Mags:'],
     'bo-si-bpms': ['BO-Fam:TI-BPM:', 'SI-Fam:TI-BPM:'],
     }
@@ -69,11 +84,11 @@ class _PCASDriver(_pcaspy.Driver):
         return app_ret
 
 
-def run(events=True, clocks=True, triggers='all'):
+def run(events=True, clocks=True, triggers='all', debug=False):
     """Start the IOC."""
     trig_list = TRIG_LISTS.get(triggers, [])
 
-    level = _log.INFO
+    level = _log.DEBUG if debug else _log.INFO
     fmt = ('%(levelname)7s | %(asctime)s | ' +
            '%(module)15s.%(funcName)20s[%(lineno)4d] ::: %(message)s')
     _log.basicConfig(format=fmt, datefmt='%F %T', level=level,
