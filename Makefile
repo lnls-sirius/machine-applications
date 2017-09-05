@@ -4,6 +4,7 @@ develop:
 	cd as-ps-test; sudo ./setup.py develop; cd systemd; sudo make install-services
 	cd as-ti-control; sudo ./setup.py develop; cd systemd; sudo make install-services
 	cd si-ap-sofb; sudo ./setup.py develop; cd systemd; sudo make install-services
+	cd si-ap-currinfo; sudo ./setup.py develop; cd system; sudo make install-services
 	sudo systemctl daemon-reload
 
 
@@ -13,6 +14,7 @@ install:
 	cd as-ps-test; sudo ./setup.py install; cd systemd; sudo make install-services
 	cd as-ti-control; sudo ./setup.py install; cd systemd; sudo make install-services
 	cd si-ap-sofb; sudo ./setup.py install; cd systemd; sudo make install-services
+	cd si-ap-currinfo; sudo ./setup.py install; cd systemd; sudo make install-services
 	sudo systemctl daemon-reload
 
 	
