@@ -1,5 +1,5 @@
 [Unit]
-Description=Soft IOC for BO Tune  Correction
+Description=Soft IOC for BO Tune Correction
 After=multi-user.target
 
 [Service]

@@ -10,7 +10,7 @@ setup(
     name='as-ap-opticscorr',
     version=__version__,
     author='lnls-sirius',
-    description='IOCs for High Level Control of Booster Tune and Chromaticity Correction.',
+    description='IOCs for High Level Control Tune and Chromaticity Correction.',
     url='https://github.com/lnls-sirius/machine-applications',
     download_url='https://github.com/lnls-sirius/machine-applications',
     license='GNU GPLv3',
@@ -23,6 +23,8 @@ setup(
     package_data={'as_ap_opticscorr': ['VERSION'], },
     scripts=['scripts/sirius-ioc-bo-ap-opticscorr-tune.py',
              'scripts/sirius-ioc-bo-ap-opticscorr-chrom.py',
+             'scripts/sirius-ioc-si-ap-opticscorr-tune.py',
+             'scripts/sirius-ioc-si-ap-opticscorr-chrom.py',
              ],
     zip_safe=False
 )
