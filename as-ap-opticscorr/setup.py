@@ -21,10 +21,10 @@ setup(
     ],
     packages=['as_ap_opticscorr'],
     package_data={'as_ap_opticscorr': ['VERSION'], },
-    scripts=['scripts/sirius-ioc-bo-ap-opticscorr-tune.py',
-             'scripts/sirius-ioc-bo-ap-opticscorr-chrom.py',
-             'scripts/sirius-ioc-si-ap-opticscorr-tune.py',
-             'scripts/sirius-ioc-si-ap-opticscorr-chrom.py',
+    scripts=['scripts/sirius-ioc-bo-ap-tunecorr.py',
+             'scripts/sirius-ioc-bo-ap-chromcorr.py',
+             'scripts/sirius-ioc-si-ap-tunecorr.py',
+             'scripts/sirius-ioc-si-ap-chromcorr.py',
              ],
     zip_safe=False
 )
