@@ -7,10 +7,10 @@ with open('VERSION', 'r') as _f:
     __version__ = _f.read().strip()
 
 setup(
-    name='si-ap-currinfo',
+    name='as-ap-currinfo',
     version=__version__,
     author='lnls-sirius',
-    description='Soft IOC for SI Electron Beam Current Informations.',
+    description='Soft IOC for Electron Beam Current Informations.',
     url='https://github.com/lnls-sirius/machine-applications',
     download_url='https://github.com/lnls-sirius/machine-applications',
     license='MIT License',
@@ -19,10 +19,12 @@ setup(
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering'
     ],
-    packages=['si_ap_currinfo'],
-    package_data={'si_ap_currinfo': ['VERSION']},
-    scripts=['scripts/sirius-ioc-si-ap-currinfo-lifetime.py',
+    packages=['as_ap_currinfo'],
+    package_data={'as_ap_currinfo': ['VERSION']},
+    scripts=['scripts/sirius-ioc-bo-ap-currinfo-current.py',
+             'scripts/sirius-ioc-bo-ap-currinfo-lifetime.py',
              'scripts/sirius-ioc-si-ap-currinfo-charge.py',
-             'scripts/sirius-ioc-si-ap-currinfo-current.py'],
+             'scripts/sirius-ioc-si-ap-currinfo-current.py',
+             'scripts/sirius-ioc-si-ap-currinfo-lifetime.py'],
     zip_safe=False
 )
