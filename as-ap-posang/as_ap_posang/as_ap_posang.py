@@ -1,12 +1,12 @@
-"""AS-AP-PosAng IOC."""
+"""AS-AP-PosAng Soft IOC."""
 
 import sys as _sys
+import signal as _signal
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-import as_ap_posang.pvs as _pvs
-import signal as _signal
-import as_ap_posang.main as _main
 from siriuspy import util as _util
+import as_ap_posang.pvs as _pvs
+import as_ap_posang.main as _main
 
 
 INTERVAL = 0.1
@@ -53,9 +53,7 @@ def run(transport_line):
 
     # create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
-    # for prefix, database in _main.App.pvs_database.items():
-    #     server.createPV(prefix, database)
-    server.createPV(_pvs._PREFIX, _main.App.pvs_database)
+    server.createPV(_pvs.get_pvs_prefix(), _main.App.pvs_database)
     pcas_driver = _PCASDriver()
 
     # initiate a new thread responsible for listening for client connections
