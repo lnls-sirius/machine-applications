@@ -1,13 +1,13 @@
 #!/usr/local/bin/python-sirius -u
 """AS PS Test IOC executable."""
-import sys
 from multiprocessing import Process
 
-from as_ps_test import as_ps_test as ioc_module
+from as_ps import as_ps as ioc_module
 from siriuspy.search import PSSearch
 
 
 def read_bbbs():
+    """Return all BBB names."""
     PSSearch._reload_bbb_2_psname_dict()
     return list(PSSearch._bbbname_2_psnames_dict.keys())
 

@@ -5,8 +5,8 @@ import signal as _signal
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 import siriuspy.util as _util
-import as_ps_test.main as _main
-import as_ps_test.pvs as _pvs
+import as_ps.main as _main
+import as_ps.pvs as _pvs
 
 INTERVAL = 0.1
 stop_event = False  # _multiprocessing.Event()

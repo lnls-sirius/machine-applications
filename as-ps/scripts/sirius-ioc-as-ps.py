@@ -2,7 +2,7 @@
 """BeagleBone Black IOCs Launcher."""
 import sys
 import os
-from as_ps_test import as_ps_test as ioc_module
+from as_ps import as_ps as ioc_module
 from siriuspy.search import PSSearch
 
 
@@ -19,7 +19,7 @@ def print_help():
     print('       Start execution of BeagleBone Black IOC.')
     print()
     print('       <no arguments>')
-    print('               list all beablebone black names and power supplies.')
+    print('               list all beaglebone black names and power supplies.')
     print()
     print('       --help')
     print('               print this help.')

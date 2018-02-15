@@ -1,6 +1,6 @@
 """Main application."""
 
-import as_ps_test.pvs as _pvs
+import as_ps.pvs as _pvs
 import time as _time
 import siriuspy as _siriuspy
 import numpy as _np
@@ -35,7 +35,7 @@ class App:
             description='BeagleBone Power Supply IOC',
             version=__version__,
             prefix=_pvs._PREFIX)
-        _siriuspy.util.save_ioc_pv_list('as-ps-test',
+        _siriuspy.util.save_ioc_pv_list('as-ps',
                                         ('',
                                          _pvs._PREFIX),
                                         App.pvs_database[_pvs._PREFIX])
