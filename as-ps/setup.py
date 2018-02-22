@@ -7,10 +7,10 @@ with open('VERSION', 'r') as _f:
     __version__ = _f.read().strip()
 
 setup(
-    name='as-ps-test',
+    name='as-ps',
     version=__version__,
     author='lnls-sirius',
-    description='IOC for Simulating Power Supplies.',
+    description='IOC for Power Supplies.',
     url='https://github.com/lnls-sirius/machine-applications',
     download_url='https://github.com/lnls-sirius/machine-applications',
     license='GNU GPLv3',
@@ -19,8 +19,9 @@ setup(
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering'
     ],
-    packages=['as_ps_test'],
-    package_data={'as_ps_test': ['VERSION']},
-    scripts=['scripts/sirius-ioc-as-ps-test.py', ],
+    packages=['as_ps'],
+    package_data={'as_ps': ['VERSION']},
+    scripts=['scripts/sirius-ioc-as-ps.py',
+             'scripts/sirius-ioc-as-ps-all.py'],
     zip_safe=False
 )

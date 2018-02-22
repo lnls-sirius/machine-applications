@@ -5,8 +5,8 @@ import signal as _signal
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 import siriuspy.util as _util
-import as_ps_test.main as _main
-import as_ps_test.pvs as _pvs
+import as_ps.main as _main
+import as_ps.pvs as _pvs
 
 INTERVAL = 0.1
 stop_event = False  # _multiprocessing.Event()
@@ -38,14 +38,14 @@ class _PCASDriver(_pcaspy.Driver):
         return self.app.write(reason, value)
 
 
-def run(bbblist):
+def run(bbblist, simulate=True):
     """Main function."""
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # define IOC and initializes it
-    _main.App.init_class(bbblist)
+    _main.App.init_class(bbblist, simulate=simulate)
 
     # check if IOC is already running
     p = next(iter(_main.App.pvs_database.keys()))

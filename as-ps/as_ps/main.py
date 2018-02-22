@@ -1,6 +1,6 @@
 """Main application."""
 
-import as_ps_test.pvs as _pvs
+import as_ps.pvs as _pvs
 import time as _time
 import siriuspy as _siriuspy
 import numpy as _np
@@ -30,12 +30,12 @@ class App:
     def __init__(self, driver):
         """Init."""
         _siriuspy.util.print_ioc_banner(
-            ioc_name='PS-TEST',
+            ioc_name='BeagleBone',
             db=App.pvs_database[_pvs._PREFIX],
-            description='PS-TEST Test Power Supply Soft IOC',
+            description='BeagleBone Power Supply IOC',
             version=__version__,
             prefix=_pvs._PREFIX)
-        _siriuspy.util.save_ioc_pv_list('as-ps-test',
+        _siriuspy.util.save_ioc_pv_list('as-ps',
                                         ('',
                                          _pvs._PREFIX),
                                         App.pvs_database[_pvs._PREFIX])
@@ -44,10 +44,10 @@ class App:
             _pvs.ps_devices[psname].add_callback(self._mycallback)
 
     @staticmethod
-    def init_class(bbblist):
+    def init_class(bbblist, simulate=True):
         """Init class."""
-        App.ps_devices = _pvs.get_ps_devices(bbblist)
-        App.pvs_database = _pvs.get_pvs_database(bbblist)
+        App.ps_devices = _pvs.get_ps_devices(bbblist, simulate=simulate)
+        App.pvs_database = _pvs.get_pvs_database(bbblist, simulate=simulate)
 
     @staticmethod
     def get_pvs_database():
