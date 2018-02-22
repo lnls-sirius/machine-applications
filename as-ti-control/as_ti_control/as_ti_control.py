@@ -57,24 +57,12 @@ def _print_pvs_in_file(db, fname):
     _log.info(fname+' file generated with {0:d} pvs.'.format(len(db)))
 
 
-class _PCASDriver(_pcaspy.Driver):
+class _Driver(_pcaspy.Driver):
 
     def __init__(self, app):
         super().__init__()
         self.app = app
         self.app.driver = self
-
-    def read(self, reason):
-        _log.debug("Sending read of {0:s} to App.".format(reason))
-        value = self.app.read(reason)
-        if value is None:
-            _log.debug("PV {0:s} read by App. Trying drivers database."
-                       .format(reason))
-            return super().read(reason)
-        else:
-            _log.debug("App returned {0:s} for PV {1:s}."
-                       .format(str(value), reason))
-            return value
 
     def write(self, reason, value):
         app_ret = self.app.write(reason, value)
@@ -84,7 +72,7 @@ class _PCASDriver(_pcaspy.Driver):
         return app_ret
 
 
-def run(events=True, clocks=True, triggers='all', debug=False):
+def run(events=True, clocks_evg=True, triggers='all', debug=False):
     """Start the IOC."""
     trig_list = TRIG_LISTS.get(triggers, [])
 
@@ -102,11 +90,12 @@ def run(events=True, clocks=True, triggers='all', debug=False):
 
     # Creates App object
     _log.info('Creating App.')
-    app = _main.App(events=events, clocks=clocks, triggers_list=trig_list)
+    app = _main.App(events=events, clocks_evg=clocks_evg,
+                    triggers_list=trig_list)
     _log.info('Generating database file.')
     fname = 'AS-TI-'
     fname += 'EVENTS-' if events else ''
-    fname += 'CLOCKS-' if clocks else ''
+    fname += 'CLOCKS-' if clocks_evg else ''
     fname += triggers.upper() + '-' if triggers != 'none' else ''
     db = app.get_database()
     db.update({fname+'Version-Cte': {'type': 'string', 'value': __version__}})
@@ -118,7 +107,7 @@ def run(events=True, clocks=True, triggers='all', debug=False):
     _log.info('Setting Server Database.')
     server.createPV(PREFIX, db)
     _log.info('Creating Driver.')
-    pcas_driver = _PCASDriver(app)
+    pcas_driver = _Driver(app)
 
     # Connects to low level PVs
     _log.info('Openning connections with Low Level IOCs.')

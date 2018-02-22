@@ -25,37 +25,38 @@ class App:
         return db
 
     def __init__(self, driver=None, triggers_list=[],
-                 events=True, clocks=True):
+                 events=True, clocks_evg=True):
         """Initialize the instance.
 
         driver : is the driver associated with this app;
         triggers_list: is the list of the high level triggers to be managed;
         events : define if this app will manage events;
-        clocks : define if this app will manage clocks.
+        clocks_evg : define if this app will manage clocks and evg.
         """
         _log.info('Starting App...')
-        self._driver = driver
+        self.driver = driver
         self._evg = None
         self._clocks = dict()
         self._events = dict()
         self._triggers = dict()
-        if clocks:
+        if clocks_evg:
             self._evg = HL_EVG(self._update_driver)
-            _log.info('Creating High Level Clocks:')
+            _log.info('Creating High Level Interface for Clocks and EVG:')
             for cl_hl, cl_ll in Clocks.HL2LL_MAP.items():
                 clock = Clocks.HL_PREF + cl_hl
                 self._clocks[clock] = HL_Clock(clock, self._update_driver,
                                                cl_ll)
         if events:
-            _log.info('Creating High Level Events:')
+            _log.info('Creating High Level Interface for Events:')
             for ev_hl, ev_ll in Events.HL2LL_MAP.items():
                 event = Events.HL_PREF + ev_hl
                 self._events[event] = HL_Event(event, self._update_driver,
                                                ev_ll)
         if triggers_list:
             _log.info('Creating High Level Triggers:')
+            all_triggers = Triggers().hl_triggers
             for pref in triggers_list:
-                prop = Triggers().hl_triggers[pref]
+                prop = all_triggers[pref]
                 self._triggers[pref] = HL_Trigger(pref,
                                                   self._update_driver,
                                                   **prop)
@@ -65,28 +66,18 @@ class App:
         """Trigger connection to external PVs in other classes."""
         if self._evg is not None:
             self._evg.connect()
-        _log.info('Connecting to Low Level Clocks:')
+        _log.info('Connecting to Low Level Interface for Clocks:')
         for key, val in self._clocks.items():
             val.connect()
         _log.info('All Clocks connection opened.')
-        _log.info('Connecting to Low Level Events:')
+        _log.info('Connecting to Low Level Interface for Events:')
         for key, val in self._events.items():
             val.connect()
         _log.info('All Events connection opened.')
-        _log.info('Connecting to Low Level Triggers:')
+        _log.info('Connecting to Low Level Triggers Controllers:')
         for key, val in self._triggers.items():
             val.connect()
         _log.info('All Triggers connection opened.')
-
-    @property
-    def driver(self):
-        """Set the driver of the App."""
-        return self._driver
-
-    @driver.setter
-    def driver(self, driver):
-        _log.debug("Setting App's driver.")
-        self._driver = driver
 
     def process(self, interval):
         """Run continuously in the main thread."""
@@ -100,39 +91,34 @@ class App:
         if dt > 0:
             _time.sleep(dt)
 
-    def read(self, reason):
-        """Read PV from database."""
-        # _log.debug("PV {0:s} read from App.".format(reason))
-        return None  # Driver will read from database
-
     def write(self, reason, value):
         """Write PV in the model."""
-        _log.debug('App: Writing PV {0:s} with value {1:s}'
+        _log.debug('Writing PV {0:s} with value {1:s}'
                    .format(reason, str(value)))
         if not self._isValid(reason, value):
             return False
         fun_ = self._database[reason].get('fun_set_pv')
         if fun_ is None:
-            _log.warning('App: Write unsuccessful. PV ' +
+            _log.warning('Write unsuccessful. PV ' +
                          '{0:s} does not have a set function.'.format(reason))
             return False
         ret_val = fun_(value)
         if ret_val:
-            _log.debug('App: Write complete.')
+            _log.debug('Write complete.')
         else:
-            _log.warning('App: Unsuccessful write of PV {0:s}; value = {1:s}.'
+            _log.warning('Unsuccessful write of PV {0:s}; value = {1:s}.'
                          .format(reason, str(value)))
         return ret_val
 
     def _update_driver(self, pvname, value, **kwargs):
         _log.debug('PV {0:s} updated in driver database with value {1:s}'
                    .format(pvname, str(value)))
-        self._driver.setParam(pvname, value)
-        self._driver.updatePVs()
+        self.driver.setParam(pvname, value)
+        self.driver.updatePVs()
 
     def _isValid(self, reason, value):
         if reason.endswith(('-Sts', '-RB', '-Mon')):
-            _log.debug('App: PV {0:s} is read only.'.format(reason))
+            _log.debug('PV {0:s} is read only.'.format(reason))
             return False
         enums = (self._database[reason].get('enums') or
                  self._database[reason].get('Enums'))
@@ -140,7 +126,7 @@ class App:
             if isinstance(value, int):
                 len_ = len(enums)
                 if value >= len_:
-                    _log.warning('App: value {0:d} too large '.format(value) +
+                    _log.warning('value {0:d} too large '.format(value) +
                                  'for PV {0:s} of type enum'.format(reason))
                     return False
             elif isinstance(value, str):
