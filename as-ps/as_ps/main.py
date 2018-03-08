@@ -86,21 +86,10 @@ class App:
         propty = parts[-1]
         psname = ':'.join(parts[:2])
         ps = _pvs.ps_devices[psname]
-        ps.write(field=propty, value=value)
-        self._driver.setParam(reason, value)
-        self._driver.updatePVs()
-
-        # ps_propty = propty.replace('-', '_').lower()
-        # try:
-        #     if ps_propty in ('abort_cmd', 'reset_cmd'):
-        #         setattr(_pvs.ps_devices[psname],
-        #                 ps_propty.replace("_cmd", ""), value)
-        #         return
-        #     setattr(_pvs.ps_devices[psname], ps_propty, value)
-        #     self._driver.setParam(reason, value)
-        #     self._driver.updatePVs()
-        # except AttributeError:
-        #     print('attr error', ps_propty)
+        status = ps.write(field=propty, value=value)
+        if status is not None:
+            self._driver.setParam(reason, value)
+            self._driver.updatePVs()
 
         return True
 
