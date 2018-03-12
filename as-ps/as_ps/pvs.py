@@ -16,20 +16,20 @@ _COMMIT_HASH = _util.get_last_commit_hash()
 def get_ps_devices(bbblist, simulate=True):
     """Create/Return power supply objects."""
     global ps_devices
-    bbbs = list()
+    # bbbs = list()
     if ps_devices is None:
         ps_devices = {}
         # Create objects that'll handle the magnets
         # print('creating pv database...')
         for bbbname in bbblist:
             bbb = _BeagleBone(bbbname=bbbname, simulate=simulate)
-            bbbs.append(bbb)
+            # bbbs.append(bbb)
             for psname in bbb.psnames:
                 ps_devices[psname] = bbb[psname]
         # print('finished')
 
-    for bbb in bbbs:
-        bbb.scanning = True
+    # for bbb in bbbs:
+    #     bbb.scanning = True
 
     return ps_devices
 
