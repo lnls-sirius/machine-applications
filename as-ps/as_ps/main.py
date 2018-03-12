@@ -4,6 +4,9 @@ import as_ps.pvs as _pvs
 import time as _time
 import siriuspy as _siriuspy
 import numpy as _np
+from pcaspy import Alarm as _Alarm
+from pcaspy import Severity as _Severity
+from siriuspy.pwrsupply.model import PowerSupply as _PowerSupply
 
 
 # Coding guidelines:
@@ -42,6 +45,8 @@ class App:
         self._driver = driver
         for psname in _pvs.ps_devices:
             _pvs.ps_devices[psname].add_callback(self._mycallback)
+        # stores PS database
+        self._ps_db = _pvs.ps_devices[psname].get_database()
 
     @staticmethod
     def init_class(bbblist, simulate=True):
@@ -97,6 +102,13 @@ class App:
         """Mycallback method."""
         # print('{0:<15s}: '.format('ioc callback'), pvname, value)
         reason = pvname
+
+        # if ControllerIOC is disconnected to ControllerPS
+        if 'DISCONNECTED' in reason:
+            self._set_disconnected_pvs(reason)
+            self._driver.updatePVs()
+            return
+
         prev_value = self._driver.getParam(reason)
         if isinstance(value, _np.ndarray):
             if _np.any(value != prev_value):
@@ -106,3 +118,10 @@ class App:
             if value != prev_value:
                 self._driver.setParam(reason, value)
                 self._driver.updatePVs()
+
+    def _set_disconnected_pvs(self, reason):
+        for field in self._ps_db:
+            pvname = reason.replace(_PowerSupply._DISCONNECTED, field)
+            self.setParamStatus(pvname,
+                                _Alarm.TIMEOUT_ALARM,
+                                _Severity.Invalid_ALARM)
