@@ -107,7 +107,7 @@ class App:
 
         # if ControllerIOC is disconnected to ControllerPS
         if _PowerSupply.CONNECTED in reason:
-            self._set_disconnected_pvs(reason, value)
+            self._set_connected_pvs(reason, value)
             self._driver.updatePVs()
             return
 
@@ -121,8 +121,12 @@ class App:
                 self._driver.setParam(reason, value)
                 self._driver.updatePVs()
 
-    def _set_disconnected_pvs(self, reason, value):
-        # print(reason, value)
+    def _set_connected_pvs(self, reason, value):
+        psname = reason.replace(':'+_PowerSupply.CONNECTED,'')
+        if value is True:
+            print('{} connected.'.format(psname))
+        else:
+            print('{} disconnected.'.format(psname))
         if value is True:
             alarm = _Alarm.NO_ALARM
             severity = _Severity.NO_ALARM
@@ -131,5 +135,7 @@ class App:
             severity = _Severity.INVALID_ALARM
         for field in self._ps_db:
             pvname = reason.replace(_PowerSupply.CONNECTED, field)
-            print(pvname)
+            # print(pvname)
+            # value = self._driver.getParam(pvname)
+            # self._driver.setParam(pvname, value)
             self._driver.setParamStatus(pvname, alarm, severity)
