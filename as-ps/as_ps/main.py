@@ -43,10 +43,12 @@ class App:
                                          _pvs._PREFIX),
                                         App.pvs_database[_pvs._PREFIX])
         self._driver = driver
+        # stores PS database
+        psname = tuple(_pvs.ps_devices.keys())[0]
+        self._ps_db = _pvs.ps_devices[psname].get_database()
+        # add callbacks
         for psname in _pvs.ps_devices:
             _pvs.ps_devices[psname].add_callback(self._mycallback)
-        # stores PS database
-        self._ps_db = _pvs.ps_devices[psname].get_database()
 
     @staticmethod
     def init_class(bbblist, simulate=True):
@@ -129,4 +131,5 @@ class App:
             severity = _Severity.INVALID_ALARM
         for field in self._ps_db:
             pvname = reason.replace(_PowerSupply.CONNECTED, field)
+            print(pvname)
             self._driver.setParamStatus(pvname, alarm, severity)
