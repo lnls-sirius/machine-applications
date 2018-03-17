@@ -4,6 +4,9 @@ import as_ps.pvs as _pvs
 import time as _time
 import siriuspy as _siriuspy
 import numpy as _np
+from pcaspy import Alarm as _Alarm
+from pcaspy import Severity as _Severity
+from siriuspy.pwrsupply.model import PowerSupply as _PowerSupply
 
 
 # Coding guidelines:
@@ -40,6 +43,10 @@ class App:
                                          _pvs._PREFIX),
                                         App.pvs_database[_pvs._PREFIX])
         self._driver = driver
+        # stores PS database
+        psname = tuple(_pvs.ps_devices.keys())[0]
+        self._ps_db = _pvs.ps_devices[psname].get_database()
+        # add callbacks
         for psname in _pvs.ps_devices:
             _pvs.ps_devices[psname].add_callback(self._mycallback)
 
@@ -86,21 +93,10 @@ class App:
         propty = parts[-1]
         psname = ':'.join(parts[:2])
         ps = _pvs.ps_devices[psname]
-        ps.write(field=propty, value=value)
-        self._driver.setParam(reason, value)
-        self._driver.updatePVs()
-
-        # ps_propty = propty.replace('-', '_').lower()
-        # try:
-        #     if ps_propty in ('abort_cmd', 'reset_cmd'):
-        #         setattr(_pvs.ps_devices[psname],
-        #                 ps_propty.replace("_cmd", ""), value)
-        #         return
-        #     setattr(_pvs.ps_devices[psname], ps_propty, value)
-        #     self._driver.setParam(reason, value)
-        #     self._driver.updatePVs()
-        # except AttributeError:
-        #     print('attr error', ps_propty)
+        status = ps.write(field=propty, value=value)
+        if status is not None:
+            self._driver.setParam(reason, value)
+            self._driver.updatePVs()
 
         return True
 
@@ -108,6 +104,13 @@ class App:
         """Mycallback method."""
         # print('{0:<15s}: '.format('ioc callback'), pvname, value)
         reason = pvname
+
+        # if ControllerIOC is disconnected to ControllerPS
+        if _PowerSupply.CONNECTED in reason:
+            self._set_connected_pvs(reason, value)
+            self._driver.updatePVs()
+            return
+
         prev_value = self._driver.getParam(reason)
         if isinstance(value, _np.ndarray):
             if _np.any(value != prev_value):
@@ -117,3 +120,22 @@ class App:
             if value != prev_value:
                 self._driver.setParam(reason, value)
                 self._driver.updatePVs()
+
+    def _set_connected_pvs(self, reason, value):
+        psname = reason.replace(':'+_PowerSupply.CONNECTED,'')
+        if value is True:
+            print('{} connected.'.format(psname))
+        else:
+            print('{} disconnected.'.format(psname))
+        if value is True:
+            alarm = _Alarm.NO_ALARM
+            severity = _Severity.NO_ALARM
+        else:
+            alarm = _Alarm.TIMEOUT_ALARM
+            severity = _Severity.INVALID_ALARM
+        for field in self._ps_db:
+            pvname = reason.replace(_PowerSupply.CONNECTED, field)
+            # print(pvname)
+            # value = self._driver.getParam(pvname)
+            # self._driver.setParam(pvname, value)
+            self._driver.setParamStatus(pvname, alarm, severity)
