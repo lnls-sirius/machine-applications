@@ -82,19 +82,16 @@ class App:
     def process(self, interval):
         """Run continuously in the main thread."""
         t0 = _time.time()
-        # _log.debug('App: Executing check.')
         tf = _time.time()
         dt = (tf-t0)
-        if dt > 0.2:
-            _log.debug('App: check took {0:f}ms.'.format(dt*1000))
+        if dt > 2*interval:
+            _log.warning('App: check took {0:f}ms.'.format(dt*1000))
         dt = interval - dt
         if dt > 0:
             _time.sleep(dt)
 
     def write(self, reason, value):
         """Write PV in the model."""
-        _log.debug('Writing PV {0:s} with value {1:s}'
-                   .format(reason, str(value)))
         if not self._isValid(reason, value):
             return False
         fun_ = self._database[reason].get('fun_set_pv')
@@ -103,22 +100,19 @@ class App:
                          '{0:s} does not have a set function.'.format(reason))
             return False
         ret_val = fun_(value)
-        if ret_val:
-            _log.debug('Write complete.')
-        else:
+        if not ret_val:
             _log.warning('Unsuccessful write of PV {0:s}; value = {1:s}.'
                          .format(reason, str(value)))
         return ret_val
 
-    def _update_driver(self, pvname, value, **kwargs):
-        _log.debug('PV {0:s} updated in driver database with value {1:s}'
-                   .format(pvname, str(value)))
+    def _update_driver(self, pvname, value, alarm=None, severity=None):
         self.driver.setParam(pvname, value)
+        if alarm is not None and severity is not None:
+            self.driver.setParamStatus(pvname, alarm=alarm, severity=severity)
         self.driver.updatePVs()
 
     def _isValid(self, reason, value):
         if reason.endswith(('-Sts', '-RB', '-Mon')):
-            _log.debug('PV {0:s} is read only.'.format(reason))
             return False
         enums = (self._database[reason].get('enums') or
                  self._database[reason].get('Enums'))
