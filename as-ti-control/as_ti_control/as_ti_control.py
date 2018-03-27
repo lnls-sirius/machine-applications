@@ -68,11 +68,14 @@ class _Driver(_pcaspy.Driver):
         app_ret = self.app.write(reason, value)
         if app_ret:
             self.setParam(reason, value)
-        self.updatePVs()
+            self.updatePVs()
+            _log.info('{0:40s}: OK'.format(reason))
+        else:
+            _log.info('{0:40s}: not OK'.format(reason))
         return app_ret
 
 
-def run(events=True, clocks_evg=True, triggers='all', debug=False):
+def run(evg_params=True, triggers='all', debug=False):
     """Start the IOC."""
     trig_list = TRIG_LISTS.get(triggers, [])
 
@@ -90,12 +93,10 @@ def run(events=True, clocks_evg=True, triggers='all', debug=False):
 
     # Creates App object
     _log.info('Creating App.')
-    app = _main.App(events=events, clocks_evg=clocks_evg,
-                    triggers_list=trig_list)
+    app = _main.App(evg_params=evg_params, triggers_list=trig_list)
     _log.info('Generating database file.')
     fname = 'AS-TI-'
-    fname += 'EVENTS-' if events else ''
-    fname += 'CLOCKS-' if clocks_evg else ''
+    fname += 'EVG-PARAMS-' if evg_params else ''
     fname += triggers.upper() + '-' if triggers != 'none' else ''
     db = app.get_database()
     db.update({fname+'Version-Cte': {'type': 'string', 'value': __version__}})

@@ -25,13 +25,13 @@ class App:
         return db
 
     def __init__(self, driver=None, triggers_list=[],
-                 events=True, clocks_evg=True):
+                 evg_params=True):
         """Initialize the instance.
 
         driver : is the driver associated with this app;
         triggers_list: is the list of the high level triggers to be managed;
-        events : define if this app will manage events;
-        clocks_evg : define if this app will manage clocks and evg.
+        clocks_evg : define if this app will manage evg params such as clocks,
+                     events, etc.
         """
         _log.info('Starting App...')
         self.driver = driver
@@ -39,14 +39,13 @@ class App:
         self._clocks = dict()
         self._events = dict()
         self._triggers = dict()
-        if clocks_evg:
+        if evg_params:
             self._evg = HL_EVG(self._update_driver)
             _log.info('Creating High Level Interface for Clocks and EVG:')
             for cl_hl, cl_ll in Clocks.HL2LL_MAP.items():
                 clock = Clocks.HL_PREF + cl_hl
                 self._clocks[clock] = HL_Clock(clock, self._update_driver,
                                                cl_ll)
-        if events:
             _log.info('Creating High Level Interface for Events:')
             for ev_hl, ev_ll in Events.HL2LL_MAP.items():
                 event = Events.HL_PREF + ev_hl
@@ -66,18 +65,12 @@ class App:
         """Trigger connection to external PVs in other classes."""
         if self._evg is not None:
             self._evg.connect()
-        _log.info('Connecting to Low Level Interface for Clocks:')
         for key, val in self._clocks.items():
             val.connect()
-        _log.info('All Clocks connection opened.')
-        _log.info('Connecting to Low Level Interface for Events:')
         for key, val in self._events.items():
             val.connect()
-        _log.info('All Events connection opened.')
-        _log.info('Connecting to Low Level Triggers Controllers:')
         for key, val in self._triggers.items():
             val.connect()
-        _log.info('All Triggers connection opened.')
 
     def process(self, interval):
         """Run continuously in the main thread."""
@@ -96,19 +89,21 @@ class App:
             return False
         fun_ = self._database[reason].get('fun_set_pv')
         if fun_ is None:
-            _log.warning('Write unsuccessful. PV ' +
+            _log.warning('Not OK: PV ' +
                          '{0:s} does not have a set function.'.format(reason))
             return False
         ret_val = fun_(value)
         if not ret_val:
-            _log.warning('Unsuccessful write of PV {0:s}; value = {1:s}.'
+            _log.warning('Not OK: PV {0:s}; value = {1:s}.'
                          .format(reason, str(value)))
         return ret_val
 
     def _update_driver(self, pvname, value, alarm=None, severity=None):
         self.driver.setParam(pvname, value)
+        _log.info('{0:40s}: updated'.format(pvname))
         if alarm is not None and severity is not None:
             self.driver.setParamStatus(pvname, alarm=alarm, severity=severity)
+            _log.info('{0:40s}: alarm'.format(pvname))
         self.driver.updatePVs()
 
     def _isValid(self, reason, value):
