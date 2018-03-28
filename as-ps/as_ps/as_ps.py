@@ -36,13 +36,23 @@ def _stop_now(signum, frame):
 
 def get_controllers(bbblist, simulate=True):
     controllers = {}
+    serial_address = {'BO-03U:PS-CH': 5, 'BO-03U:PS-CV': 6}
     if not simulate:
         serial = PRU()
         for bbbname in bbblist:
             psnames = PSSearch.conv_bbbname_2_psnames(bbbname)
+            # Temp fix for test benches
             for i, psname in enumerate(psnames):
                 db = PSData(psname).propty_database
-                device = PowerSupply(serial, i + 1, db)
+
+                if bbbname in ('BO-01:CO-BBB-2', 'BO-01:CO-BBB-1'):
+                    if psname in ('BO-03U:PS-CH', 'BO-03U:PS-CV'):
+                        device = PowerSupply(serial, serial_address[psname], db)
+                    else:
+                        device = PowerSupplySim(db)
+                else:
+                    device = PowerSupply(serial, i + 1, db)
+
                 controllers[psname] = PSController(device)
     else:
         for bbbname in bbblist:
@@ -123,4 +133,4 @@ def run(bbblist, simulate=True):
 
 
 if __name__ == "__main__":
-    run(['BO-01:CO-BBB-2'])
+    run(['BO-01:CO-BBB-2'], simulate=False)
