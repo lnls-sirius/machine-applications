@@ -89,11 +89,18 @@ class App:
         return None
 
     def write(self, reason, value):
-        """Write value to device field."""
+        """Enqueue write request."""
         split = reason.split(':')
         device = ':'.join(split[:2])
         field = split[-1]
-        # TODO: Check errors
+        op = App.Operation(device, self._write,
+                           {'device': device, 'field': field, 'value': value})
+        self._op_deque.appendleft(op)
+        return
+
+    def _write(self, device, field, value):
+        """Write value to device field."""
+        reason = device + ':' + field
         try:
             self.devices[device].write(field, value)
         except _InvalidValue:
@@ -119,14 +126,14 @@ class App:
         if self._op_deque:
             op = self._op_deque.popleft()
             dev = op.device
-            if op.kwargs:
-                ret = op.function(op.kwargs)
-            else:
+            if op.kwargs:  # Write
+                ret = op.function(**op.kwargs)
+            else:  # Read
                 ret = op.function()
-            for field, value in ret.items():
-                reason = dev + ':' + field
-                self.driver.setParam(reason, value)
-            self.driver.updatePVs()
+                for field, value in ret.items():
+                    reason = dev + ':' + field
+                    self.driver.setParam(reason, value)
+                self.driver.updatePVs()
         _time.sleep(0.01)
 
     def enqueue_scan(self):
