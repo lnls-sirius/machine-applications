@@ -59,18 +59,6 @@ class App:
                                         ('',
                                          prefix),
                                         database[prefix])
-        # if not self._simulate:
-        #     self._serial = PRU()
-        #     # Temporary fix for test benches
-        #     if self.bbbname == 'BO-Glob:CO-BBB-T1':
-        #         addresses = (1, 2)
-        #     elif self.bbbname == 'BO-Glob:CO-BBB-T2':
-        #         addresses = (5, 6)
-        #     for i, address in enumerate(addresses):
-        #         self.devices[self._psnames[i]] = \
-        #             PowerSupply(self._serial, address)
-        # else:
-        #     raise NotImplementedError()
 
     @property
     def driver(self):
@@ -111,23 +99,6 @@ class App:
                 'W', reason, value))
             self.driver.setParamStatus(
                 reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
-        # try:
-        #     self.devices[device].write(field, value)
-        # except _InvalidValue:
-        #     print("[{:s}] - {:32s} = {} - INVALID VALUE".format(
-        #         'W', reason, value))
-        #     self.driver.setParamStatus(
-        #         reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
-        # except _SerialError:
-        #     print("[{:s}] - {:32s} = {} - SERIAL ERROR".format(
-        #         'W', reason, value))
-        #     self.driver.setParamStatus(
-        #         reason, _Alarm.TIMEOUT_ALARM, _Severity.TIMEOUT_ALARM)
-        # else:
-        #     print("[{:s}] - {:32s} = {}".format('W', reason, value))
-        #     self.driver.setParamStatus(
-        #         reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
-        #     self.driver.setParam(reason, value)
         self.driver.updatePVs()
         return
 
@@ -171,7 +142,7 @@ class App:
                 op = App.Operation(
                     psname, self.update_db, {'device_name': psname})
                 self._op_deque.append(op)
-            _time.sleep(0.25)
+            _time.sleep(1/len(self.devices))
 
 
 # class App:

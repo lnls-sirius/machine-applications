@@ -1,4 +1,4 @@
-"""PS Test IOC."""
+"""IOC for PS."""
 
 import sys as _sys
 import signal as _signal
@@ -10,7 +10,7 @@ import pcaspy.tools as _pcaspy_tools
 import siriuspy.util as _util
 # import as_ps.main as _main
 # import as_ps.pvs as _pvs
-from main import App
+from as_ps.main import App
 from siriuspy.envars import vaca_prefix as _VACA_PREFIX
 from siriuspy.search import PSSearch
 from siriuspy.pwrsupply.data import PSData
@@ -35,6 +35,7 @@ def _stop_now(signum, frame):
 
 
 def get_controllers(bbblist, simulate=True):
+    """Rerturn a controller for each device."""
     controllers = {}
     serial_address = {'BO-01U:PS-CH': 1, 'BO-01U:PS-CV': 2,
                       'BO-03U:PS-CH': 5, 'BO-03U:PS-CV': 6}
@@ -68,6 +69,7 @@ def get_controllers(bbblist, simulate=True):
 
 
 def get_database(controllers):
+    """Return the database."""
     db = {}
     for psname in controllers:
         dev_db = controllers[psname].device.database
@@ -95,17 +97,13 @@ class _PCASDriver(_pcaspy.Driver):
 
 def run(bbblist, simulate=True):
     """Main function."""
-    # define abort function
+    # Define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
-
+    # What if serial is no running?
     controllers = get_controllers(bbblist, simulate=simulate)
     database = get_database(controllers)
-
-    # define IOC and initializes it
-    # _main.App.init_class(bbblist, simulate=simulate)
-
-    # check if IOC is already running
+    # Check if IOC is already running
     pvname = \
         _PREFIX + list(controllers[list(controllers)[0]].device.database)[0]
     running = _util.check_pv_online(
@@ -113,24 +111,25 @@ def run(bbblist, simulate=True):
     if running:
         print('Another PS IOC is already running!')
         return
-
-    # create a new simple pcaspy server and driver to respond client's requests
+    # Create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
-    # for prefix, database in _main.App.get_pvs_database().items():
     server.createPV(_PREFIX, get_database(controllers)[_PREFIX])
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
+    # Create driver to handle requests
     pcas_driver = _PCASDriver(controllers, database)
+    # Create scan thread that'll enqueue read request to update DB
     scan_thread = _Thread(target=pcas_driver.app.enqueue_scan)
+    # Start threads and processing
     server_thread.start()
     scan_thread.start()
-    # main loop
     while not stop_event:
         pcas_driver.app.process(INTERVAL)
+    # Signal received, exit
     print('exiting...')
-    # sends stop signal to server thread
     server_thread.stop()
     pcas_driver.app.scan = False
+
     server_thread.join()
     scan_thread.join()
 
