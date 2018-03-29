@@ -101,23 +101,56 @@ class App:
     def _write(self, device, field, value):
         """Write value to device field."""
         reason = device + ':' + field
-        try:
-            self.devices[device].write(field, value)
-        except _InvalidValue:
-            print("[{:s}] - {:32s} = {} - INVALID VALUE".format(
-                'W', reason, value))
-            self.driver.setParamStatus(
-                reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
-        except _SerialError:
-            print("[{:s}] - {:32s} = {} - SERIAL ERROR".format(
-                'W', reason, value))
-            self.driver.setParamStatus(
-                reason, _Alarm.TIMEOUT_ALARM, _Severity.TIMEOUT_ALARM)
-        else:
-            print("[{:s}] - {:32s} = {}".format('W', reason, value))
+        if self.devices[device].write(field, value):
+            print("[{:2s}] - {:32s} = {}".format('W', reason, value))
             self.driver.setParamStatus(
                 reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
             self.driver.setParam(reason, value)
+        else:
+            print("[{:2s}] - {:32s} = {} - SERIAL ERROR".format(
+                'W', reason, value))
+            self.driver.setParamStatus(
+                reason, _Alarm.TIMEOUT_ALARM, _Severity.TIMEOUT_ALARM)
+        # try:
+        #     self.devices[device].write(field, value)
+        # except _InvalidValue:
+        #     print("[{:s}] - {:32s} = {} - INVALID VALUE".format(
+        #         'W', reason, value))
+        #     self.driver.setParamStatus(
+        #         reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+        # except _SerialError:
+        #     print("[{:s}] - {:32s} = {} - SERIAL ERROR".format(
+        #         'W', reason, value))
+        #     self.driver.setParamStatus(
+        #         reason, _Alarm.TIMEOUT_ALARM, _Severity.TIMEOUT_ALARM)
+        # else:
+        #     print("[{:s}] - {:32s} = {}".format('W', reason, value))
+        #     self.driver.setParamStatus(
+        #         reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+        #     self.driver.setParam(reason, value)
+        self.driver.updatePVs()
+        return
+
+    def update_db(self, device_name):
+        """Read variables and update DB."""
+        dev = self.devices[device_name]
+        vars = dev.read_all_variables()
+        conn = dev.connected
+        if not conn:
+            for field in dev.device.database:
+                reason = device_name + ':' + field
+                print("[{:2s}] - {:32s} - SERIAL ERROR".format(
+                    'RA', reason))
+                self.driver.setParamStatus(
+                    reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+        elif conn and vars is not None:
+            for field, value in vars.items():
+                reason = device_name + ':' + field
+                self.driver.setParam(reason, value)
+                self.driver.setParamStatus(
+                    reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+        else:
+            print("[RA] - Failed to read {} variables.".format(device_name))
         self.driver.updatePVs()
         return
 
@@ -125,24 +158,21 @@ class App:
         """Process method."""
         if self._op_deque:
             op = self._op_deque.popleft()
-            dev = op.device
-            if op.kwargs:  # Write
-                ret = op.function(**op.kwargs)
-            else:  # Read
-                ret = op.function()
-                for field, value in ret.items():
-                    reason = dev + ':' + field
-                    self.driver.setParam(reason, value)
-                self.driver.updatePVs()
+            if op.kwargs:
+                op.function(**op.kwargs)
+            else:
+                op.function()
         _time.sleep(0.01)
 
     def enqueue_scan(self):
         """Enqueue read methods run as a thread."""
         while self.scan:
             for psname, device in self.devices.items():
-                op = App.Operation(psname, device.read_all_variables, None)
+                op = App.Operation(
+                    psname, self.update_db, {'device_name': psname})
                 self._op_deque.append(op)
             _time.sleep(0.25)
+
 
 # class App:
 #     """App class."""
