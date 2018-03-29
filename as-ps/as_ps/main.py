@@ -110,7 +110,7 @@ class App:
             print("[{:2s}] - {:32s} = {} - SERIAL ERROR".format(
                 'W', reason, value))
             self.driver.setParamStatus(
-                reason, _Alarm.TIMEOUT_ALARM, _Severity.TIMEOUT_ALARM)
+                reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
         # try:
         #     self.devices[device].write(field, value)
         # except _InvalidValue:
