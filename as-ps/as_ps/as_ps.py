@@ -16,7 +16,7 @@ from siriuspy.search import PSSearch
 from siriuspy.pwrsupply.data import PSData
 from siriuspy.pwrsupply.pru import PRU
 from siriuspy.pwrsupply.model import PowerSupply, PowerSupplySim
-from siriuspy.pwrsupply.controller import PSController
+from siriuspy.pwrsupply.dispatcher import PSDispatcher
 
 INTERVAL = 0.1/10
 stop_event = False  # _multiprocessing.Event()
@@ -57,14 +57,14 @@ def get_controllers(bbblist, simulate=True):
                 else:
                     device = PowerSupply(serial, i + 1, db)
 
-                controllers[psname] = PSController(device)
+                controllers[psname] = PSDispatcher(device)
     else:
         for bbbname in bbblist:
             psnames = PSSearch.conv_bbbname_2_psnames(bbbname)
             for i, psname in enumerate(psnames):
                 db = PSData(psname).propty_database
                 device = PowerSupplySim(db)
-                controllers[psname] = PSController(device)
+                controllers[psname] = PSDispatcher(device)
     return controllers
 
 
@@ -119,7 +119,7 @@ def run(bbblist, simulate=True):
     # Create driver to handle requests
     pcas_driver = _PCASDriver(controllers, database)
     # Create scan thread that'll enqueue read request to update DB
-    scan_thread = _Thread(target=pcas_driver.app.enqueue_scan)
+    scan_thread = _Thread(target=pcas_driver.app.enqueue_scan, daemon=True)
     # Start threads and processing
     server_thread.start()
     scan_thread.start()
