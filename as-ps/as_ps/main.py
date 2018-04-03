@@ -10,8 +10,6 @@ from pcaspy import Severity as _Severity
 
 # import as_ps.pvs as _pvs
 import siriuspy as _siriuspy
-from siriuspy.bsmp import SerialError as _SerialError
-from siriuspy.pwrsupply.controller import InvalidValue as _InvalidValue
 import siriuspy.util as _util
 
 # Coding guidelines:
@@ -70,6 +68,16 @@ class App:
         """Devices."""
         return self._devices
 
+    def process(self, interval):
+        """Process method."""
+        if self._op_deque:
+            op = self._op_deque.popleft()
+            if op.kwargs:
+                op.function(**op.kwargs)
+            else:
+                op.function()
+        _time.sleep(0.01)
+
     def read(self, reason):
         """Read from database."""
         print("[{:s}] - {:32s} = {}".format(
@@ -125,16 +133,6 @@ class App:
         self.driver.updatePVs()
         return
 
-    def process(self, interval):
-        """Process method."""
-        if self._op_deque:
-            op = self._op_deque.popleft()
-            if op.kwargs:
-                op.function(**op.kwargs)
-            else:
-                op.function()
-        _time.sleep(0.01)
-
     def enqueue_scan(self):
         """Enqueue read methods run as a thread."""
         while self.scan:
@@ -143,120 +141,3 @@ class App:
                     psname, self.update_db, {'device_name': psname})
                 self._op_deque.append(op)
             _time.sleep(1/len(self.devices))
-
-
-# class App:
-#     """App class."""
-#
-#     ps_devices = None
-#     pvs_database = None
-#
-#     def __init__(self, driver):
-#         """Init."""
-#         _siriuspy.util.print_ioc_banner(
-#             ioc_name='BeagleBone',
-#             db=App.pvs_database[_pvs._PREFIX],
-#             description='BeagleBone Power Supply IOC',
-#             version=__version__,
-#             prefix=_pvs._PREFIX)
-#         _siriuspy.util.save_ioc_pv_list('as-ps',
-#                                         ('',
-#                                          _pvs._PREFIX),
-#                                         App.pvs_database[_pvs._PREFIX])
-#         self._driver = driver
-#         # stores PS database
-#         psname = tuple(_pvs.ps_devices.keys())[0]
-#         self._ps_db = _pvs.ps_devices[psname].get_database()
-#         # add callbacks
-#         for psname in _pvs.ps_devices:
-#             _pvs.ps_devices[psname].add_callback(self._mycallback)
-#
-#     @staticmethod
-#     def init_class(bbblist, simulate=True):
-#         """Init class."""
-#         App.ps_devices = _pvs.get_ps_devices(bbblist, simulate=simulate)
-#         App.pvs_database = _pvs.get_pvs_database(bbblist, simulate=simulate)
-#
-#     @staticmethod
-#     def get_pvs_database():
-#         """Get pvs database."""
-#         if App.pvs_database is None:
-#             App.pvs_database = _pvs.get_pvs_database()
-#         return App.pvs_database
-#
-#     @staticmethod
-#     def get_ps_devices():
-#         """Get ps devices."""
-#         if App.ps_devices is None:
-#             App.ps_devices = _pvs.get_ps_devices()
-#         return App.ps_devices
-#
-#     @property
-#     def driver(self):
-#         """Driver method."""
-#         return self._driver
-#
-#     def process(self, interval):
-#         """Process method."""
-#         _time.sleep(interval)
-#
-#     def read(self, reason):
-#         """Read pv method."""
-#         return None
-#
-#     def write(self, reason, value):
-#         """Write pv method."""
-#         if isinstance(value, (int, float)):
-#             print('write', reason, value)
-#         else:
-#             print('write', reason)
-#         parts = reason.split(':')
-#         propty = parts[-1]
-#         psname = ':'.join(parts[:2])
-#         ps = _pvs.ps_devices[psname]
-#         status = ps.write(field=propty, value=value)
-#         if status is not None:
-#             self._driver.setParam(reason, value)
-#             self._driver.updatePVs()
-#
-#         return True
-#
-#     def _mycallback(self, pvname, value, **kwargs):
-#         """Mycallback method."""
-#         # print('{0:<15s}: '.format('ioc callback'), pvname, value)
-#         reason = pvname
-#
-#         # if ControllerIOC is disconnected to ControllerPS
-#         if _PowerSupply.CONNECTED in reason:
-#             self._set_connected_pvs(reason, value)
-#             self._driver.updatePVs()
-#             return
-#
-#         prev_value = self._driver.getParam(reason)
-#         if isinstance(value, _np.ndarray):
-#             if _np.any(value != prev_value):
-#                 self._driver.setParam(reason, value)
-#                 self._driver.updatePVs()
-#         else:
-#             if value != prev_value:
-#                 self._driver.setParam(reason, value)
-#                 self._driver.updatePVs()
-#
-#     def _set_connected_pvs(self, reason, value):
-#         psname = reason.replace(':'+_PowerSupply.CONNECTED,'')
-#         if value is True:
-#             print('{} connected.'.format(psname))
-#         else:
-#             print('{} disconnected.'.format(psname))
-#         if value is True:
-#             alarm = _Alarm.NO_ALARM
-#             severity = _Severity.NO_ALARM
-#         else:
-#             alarm = _Alarm.TIMEOUT_ALARM
-#             severity = _Severity.INVALID_ALARM
-#         for field in self._ps_db:
-#             pvname = reason.replace(_PowerSupply.CONNECTED, field)
-#             # print(pvname)
-#             # value = self._driver.getParam(pvname)
-#             # self._driver.setParam(pvname, value)
-#             self._driver.setParamStatus(pvname, alarm, severity)
