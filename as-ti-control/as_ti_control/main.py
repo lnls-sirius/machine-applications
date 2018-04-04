@@ -2,8 +2,14 @@
 
 import time as _time
 import logging as _log
-from siriuspy.timesys.time_data import Events, Clocks, Triggers
-from as_ti_control.hl_classes import HL_Event, HL_Clock, HL_Trigger, HL_EVG
+from siriuspy.timesys.time_data import Events as _Events
+from siriuspy.timesys.time_data import Clocks as _Clocks
+from siriuspy.timesys.time_data import Triggers as _Triggers
+from as_ti_control.hl_classes import HL_Event as _HL_Event
+from as_ti_control.hl_classes import HL_Clock as _HL_Clock
+from as_ti_control.hl_classes import HL_Trigger as _HL_Trigger
+from as_ti_control.hl_classes import HL_EVG as _HL_EVG
+
 
 _TIMEOUT = 0.05
 
@@ -40,25 +46,25 @@ class App:
         self._events = dict()
         self._triggers = dict()
         if evg_params:
-            self._evg = HL_EVG(self._update_driver)
+            self._evg = _HL_EVG(self._update_driver)
             _log.info('Creating High Level Interface for Clocks and EVG:')
-            for cl_hl, cl_ll in Clocks.HL2LL_MAP.items():
-                clock = Clocks.HL_PREF + cl_hl
-                self._clocks[clock] = HL_Clock(clock, self._update_driver,
-                                               cl_ll)
+            for cl_hl, cl_ll in _Clocks.HL2LL_MAP.items():
+                clock = _Clocks.HL_PREF + cl_hl
+                self._clocks[clock] = _HL_Clock(clock, self._update_driver,
+                                                cl_ll)
             _log.info('Creating High Level Interface for Events:')
-            for ev_hl, ev_ll in Events.HL2LL_MAP.items():
-                event = Events.HL_PREF + ev_hl
-                self._events[event] = HL_Event(event, self._update_driver,
-                                               ev_ll)
+            for ev_hl, ev_ll in _Events.HL2LL_MAP.items():
+                event = _Events.HL_PREF + ev_hl
+                self._events[event] = _HL_Event(event, self._update_driver,
+                                                ev_ll)
         if triggers_list:
             _log.info('Creating High Level Triggers:')
-            all_triggers = Triggers().hl_triggers
+            all_triggers = _Triggers().hl_triggers
             for pref in triggers_list:
                 prop = all_triggers[pref]
-                self._triggers[pref] = HL_Trigger(pref,
-                                                  self._update_driver,
-                                                  **prop)
+                self._triggers[pref] = _HL_Trigger(pref,
+                                                   self._update_driver,
+                                                   **prop)
         self._database = self.get_database()
 
     def connect(self):

@@ -7,13 +7,13 @@ import pcaspy.tools as _pcaspy_tools
 from as_ti_control import main as _main
 from siriuspy.util import get_last_commit_hash as _get_version
 from siriuspy.envars import vaca_prefix as PREFIX
-from siriuspy.timesys.time_data import Triggers
+from siriuspy.timesys.time_data import Triggers as _Triggers
 
 __version__ = _get_version()
 INTERVAL = 0.1
 stop_event = False
 
-_hl_trig = Triggers().hl_triggers
+_hl_trig = _Triggers().hl_triggers
 TRIG_LISTS = {
     'si-dip-quads': ['SI-Glob:TI-Quads:', 'SI-Glob:TI-Dips:'],
     'si-sexts-skews': ['SI-Glob:TI-Sexts:', 'SI-Glob:TI-Skews:'],
