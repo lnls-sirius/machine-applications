@@ -4,7 +4,6 @@ import time as _time
 import logging as _log
 from siriuspy.timesys.time_data import Events as _Events
 from siriuspy.timesys.time_data import Clocks as _Clocks
-from siriuspy.timesys.time_data import Triggers as _Triggers
 from as_ti_control.hl_classes import HL_Event as _HL_Event
 from as_ti_control.hl_classes import HL_Clock as _HL_Clock
 from as_ti_control.hl_classes import HL_Trigger as _HL_Trigger
@@ -59,12 +58,8 @@ class App:
                                                 ev_ll)
         if triggers_list:
             _log.info('Creating High Level Triggers:')
-            all_triggers = _Triggers().hl_triggers
             for pref in triggers_list:
-                prop = all_triggers[pref]
-                self._triggers[pref] = _HL_Trigger(pref,
-                                                   self._update_driver,
-                                                   **prop)
+                self._triggers[pref] = _HL_Trigger(pref, self._update_driver)
         self._database = self.get_database()
 
     def connect(self):
