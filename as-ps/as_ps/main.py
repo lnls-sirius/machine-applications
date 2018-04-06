@@ -101,12 +101,12 @@ class App:
             print("[{:2s}] - {:32s} = {}".format('W', reason, value))
             self.driver.setParamStatus(
                 reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
-            self.driver.setParam(reason, value)
         else:
             print("[{:2s}] - {:32s} = {} - SERIAL ERROR".format(
                 'W', reason, value))
             self.driver.setParamStatus(
                 reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+        self.driver.setParam(reason, value)
         self.driver.updatePVs()
         return
 
