@@ -15,7 +15,8 @@ from siriuspy.envars import vaca_prefix as _VACA_PREFIX
 from siriuspy.search import PSSearch
 from siriuspy.pwrsupply.data import PSData
 from siriuspy.pwrsupply.pru import PRU
-from siriuspy.pwrsupply.model import PowerSupply, PowerSupplySim
+from siriuspy.pwrsupply.model import PowerSupply
+from siriuspy.pwrsupply.controller import FBPController, FBPControllerSim
 from siriuspy.pwrsupply.dispatcher import PSDispatcher
 
 INTERVAL = 0.1/10
@@ -37,34 +38,30 @@ def _stop_now(signum, frame):
 def get_controllers(bbblist, simulate=True):
     """Rerturn a controller for each device."""
     controllers = {}
-    serial_address = {'BO-01U:PS-CH': 1, 'BO-01U:PS-CV': 2,
-                      'BO-03U:PS-CH': 5, 'BO-03U:PS-CV': 6}
-    if not simulate:
-        serial = PRU()
-        for bbbname in bbblist:
-            psnames = PSSearch.conv_bbbname_2_psnames(bbbname)
-            # Temp fix for test benches
-            for i, psname in enumerate(psnames):
-                db = PSData(psname).propty_database
-
+    for bbbname in bbblist:
+        psnames = PSSearch.conv_bbbname_2_psnames(bbbname)
+        for i, psname in enumerate(psnames):
+            # Define device controller
+            if not simulate:
+                serial = PRU()
+                # Temp fix for test benches, TODO: remove
+                serial_address = {'BO-01U:PS-CH': 1, 'BO-01U:PS-CV': 2,
+                                  'BO-03U:PS-CH': 5, 'BO-03U:PS-CV': 6}
                 if bbbname in ('BO-01:CO-BBB-2', 'BO-01:CO-BBB-1'):
                     if psname in ('BO-01U:PS-CH', 'BO-01U:PS-CV',
                                   'BO-03U:PS-CH', 'BO-03U:PS-CV'):
-                        device = \
-                            PowerSupply(serial, serial_address[psname], db)
+                        controller = \
+                            FBPController(serial, serial_address[psname])
                     else:
-                        device = PowerSupplySim(db)
+                        controller = FBPControllerSim()
                 else:
-                    device = PowerSupply(serial, i + 1, db)
-
-                controllers[psname] = PSDispatcher(device)
-    else:
-        for bbbname in bbblist:
-            psnames = PSSearch.conv_bbbname_2_psnames(bbbname)
-            for i, psname in enumerate(psnames):
-                db = PSData(psname).propty_database
-                device = PowerSupplySim(db)
-                controllers[psname] = PSDispatcher(device)
+                    controller = FBPController(serial, i + 1)
+            else:  # Simulate
+                controller = FBPControllerSim()
+            # Create device and dispatcher
+            device = PowerSupply(controller)
+            db = PSData(psname).propty_database
+            controllers[psname] = PSDispatcher(device, database=db)
     return controllers
 
 
@@ -72,7 +69,7 @@ def get_database(controllers):
     """Return the database."""
     db = {}
     for psname in controllers:
-        dev_db = controllers[psname].device.database
+        dev_db = controllers[psname].database
         for field in dev_db:
             db[psname + ':' + field] = dev_db[field]
     return {_PREFIX: db}
@@ -105,7 +102,7 @@ def run(bbblist, simulate=True):
     database = get_database(controllers)
     # Check if IOC is already running
     pvname = \
-        _PREFIX + list(controllers[list(controllers)[0]].device.database)[0]
+        _PREFIX + list(controllers[list(controllers)[0]].database)[0]
     running = _util.check_pv_online(
         pvname=pvname, use_prefix=False, timeout=0.5)
     if running:
