@@ -2,8 +2,7 @@
 
 import time as _time
 import logging as _log
-from siriuspy.timesys.time_data import Events as _Events
-from siriuspy.timesys.time_data import Clocks as _Clocks
+from siriuspy.csdevice import timesys as _cstime
 from as_ti_control.hl_classes import HL_Event as _HL_Event
 from as_ti_control.hl_classes import HL_Clock as _HL_Clock
 from as_ti_control.hl_classes import HL_Trigger as _HL_Trigger
@@ -47,13 +46,13 @@ class App:
         if evg_params:
             self._evg = _HL_EVG(self._update_driver)
             _log.info('Creating High Level Interface for Clocks and EVG:')
-            for cl_hl, cl_ll in _Clocks.HL2LL_MAP.items():
-                clock = _Clocks.HL_PREF + cl_hl
+            for cl_hl, cl_ll in _cstime.clocks_hl2ll_map.items():
+                clock = _cstime.clocks_hl_pref + cl_hl
                 self._clocks[clock] = _HL_Clock(clock, self._update_driver,
                                                 cl_ll)
             _log.info('Creating High Level Interface for Events:')
-            for ev_hl, ev_ll in _Events.HL2LL_MAP.items():
-                event = _Events.HL_PREF + ev_hl
+            for ev_hl, ev_ll in _cstime.events_hl2ll_map.items():
+                event = _cstime.events_hl_pref + ev_hl
                 self._events[event] = _HL_Event(event, self._update_driver,
                                                 ev_ll)
         if triggers_list:
