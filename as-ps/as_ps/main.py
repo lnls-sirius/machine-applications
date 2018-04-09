@@ -116,7 +116,7 @@ class App:
         vars = dev.read_all_variables()
         conn = dev.connected
         if not conn:
-            for field in dev.device.database:
+            for field in dev.database:
                 reason = device_name + ':' + field
                 print("[{:2s}] - {:32s} - SERIAL ERROR".format(
                     'RA', reason))
@@ -140,4 +140,5 @@ class App:
                 op = App.Operation(
                     psname, self.update_db, {'device_name': psname})
                 self._op_deque.append(op)
-            _time.sleep(1/len(self.devices))
+            # _time.sleep(1/len(self.devices))
+            _time.sleep(0.1)

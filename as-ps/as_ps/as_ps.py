@@ -15,9 +15,8 @@ from siriuspy.envars import vaca_prefix as _VACA_PREFIX
 from siriuspy.search import PSSearch
 from siriuspy.pwrsupply.data import PSData
 from siriuspy.pwrsupply.pru import PRU
-from siriuspy.pwrsupply.model import PowerSupply
+from siriuspy.pwrsupply.model import FBPPowerSupply
 from siriuspy.pwrsupply.controller import FBPController, FBPControllerSim
-from siriuspy.pwrsupply.dispatcher import PSDispatcher
 
 INTERVAL = 0.1/10
 stop_event = False  # _multiprocessing.Event()
@@ -35,9 +34,9 @@ def _stop_now(signum, frame):
     stop_event = True
 
 
-def get_controllers(bbblist, simulate=True):
+def get_devices(bbblist, simulate=True):
     """Rerturn a controller for each device."""
-    controllers = {}
+    devices = {}
     for bbbname in bbblist:
         psnames = PSSearch.conv_bbbname_2_psnames(bbbname)
         for i, psname in enumerate(psnames):
@@ -59,10 +58,9 @@ def get_controllers(bbblist, simulate=True):
             else:  # Simulate
                 controller = FBPControllerSim()
             # Create device and dispatcher
-            device = PowerSupply(controller)
             db = PSData(psname).propty_database
-            controllers[psname] = PSDispatcher(device, database=db)
-    return controllers
+            devices[psname] = FBPPowerSupply(controller, database=db)
+    return devices
 
 
 def get_database(controllers):
@@ -77,9 +75,9 @@ def get_database(controllers):
 
 class _PCASDriver(_pcaspy.Driver):
 
-    def __init__(self, controllers, database):
+    def __init__(self, devices, database):
         super().__init__()
-        self.app = App(self, controllers, database, _PREFIX)
+        self.app = App(self, devices, database, _PREFIX)
 
     def read(self, reason):
         value = self.app.read(reason)
@@ -98,11 +96,11 @@ def run(bbblist, simulate=True):
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
     # What if serial is no running?
-    controllers = get_controllers(bbblist, simulate=simulate)
-    database = get_database(controllers)
+    devices = get_devices(bbblist, simulate=simulate)
+    database = get_database(devices)
     # Check if IOC is already running
     pvname = \
-        _PREFIX + list(controllers[list(controllers)[0]].database)[0]
+        _PREFIX + list(devices[list(devices)[0]].database)[0]
     running = _util.check_pv_online(
         pvname=pvname, use_prefix=False, timeout=0.5)
     if running:
@@ -110,11 +108,11 @@ def run(bbblist, simulate=True):
         return
     # Create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
-    server.createPV(_PREFIX, get_database(controllers)[_PREFIX])
+    server.createPV(_PREFIX, get_database(devices)[_PREFIX])
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
     # Create driver to handle requests
-    pcas_driver = _PCASDriver(controllers, database)
+    pcas_driver = _PCASDriver(devices, database)
     # Create scan thread that'll enqueue read request to update DB
     scan_thread = _Thread(target=pcas_driver.app.enqueue_scan, daemon=True)
     # Start threads and processing
