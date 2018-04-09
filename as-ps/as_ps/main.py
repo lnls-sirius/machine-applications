@@ -45,6 +45,10 @@ class App:
         self._driver = driver
         self._op_deque = _deque()
         self.scan = True
+        for dev_name, device in devices.items():
+            version = device.read('Version-Cte')
+            reason = dev_name + ':Version-Cte'
+            driver.setParam(reason, version)
         # Print info about the IOC
         _siriuspy.util.print_ioc_banner(
             ioc_name='BeagleBone',
@@ -113,7 +117,7 @@ class App:
     def update_db(self, device_name):
         """Read variables and update DB."""
         dev = self.devices[device_name]
-        vars = dev.read_all_variables()
+        vars = dev.read_group(3)
         conn = dev.connected
         if not conn:
             for field in dev.database:
