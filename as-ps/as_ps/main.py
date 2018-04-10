@@ -102,7 +102,10 @@ class App:
         """Write value to device field."""
         reason = device + ':' + field
         if self.devices[device].write(field, value):
-            print("[{:2s}] - {:32s} = {}".format('W', reason, value))
+            if isinstance(value, _np.ndarray):
+                print("[{:2s}] - {:32s}".format('W', reason))
+            else:
+                print("[{:2s}] - {:32s} = {}".format('W', reason, value))
             self.driver.setParamStatus(
                 reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
         else:
