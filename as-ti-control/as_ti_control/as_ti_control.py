@@ -2,18 +2,19 @@
 import sys as _sys
 import logging as _log
 import signal as _signal
+from threading import Event as _Event
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 from as_ti_control import main as _main
 from siriuspy.util import get_last_commit_hash as _get_version
 from siriuspy.envars import vaca_prefix as PREFIX
-from siriuspy.timesys.time_data import Triggers
+from siriuspy.search import HLTimeSearch as _HLTimeSearch
 
 __version__ = _get_version()
 INTERVAL = 0.1
-stop_event = False
+stop_event = _Event()
 
-_hl_trig = Triggers().hl_triggers
+_hl_trig = _HLTimeSearch.get_hl_triggers()
 TRIG_LISTS = {
     'si-dip-quads': ['SI-Glob:TI-Quads:', 'SI-Glob:TI-Dips:'],
     'si-sexts-skews': ['SI-Glob:TI-Sexts:', 'SI-Glob:TI-Skews:'],
@@ -47,7 +48,7 @@ TRIG_LISTS['none'] = []
 def _stop_now(signum, frame):
     _log.info('SIGINT received')
     global stop_event
-    stop_event = True
+    stop_event.set()
 
 
 def _print_pvs_in_file(db, fname):
@@ -68,11 +69,14 @@ class _Driver(_pcaspy.Driver):
         app_ret = self.app.write(reason, value)
         if app_ret:
             self.setParam(reason, value)
-        self.updatePVs()
+            self.updatePVs()
+            _log.info('{0:40s}: OK'.format(reason))
+        else:
+            _log.info('{0:40s}: not OK'.format(reason))
         return app_ret
 
 
-def run(events=True, clocks_evg=True, triggers='all', debug=False):
+def run(evg_params=True, triggers='all', force=False, wait=15, debug=False):
     """Start the IOC."""
     trig_list = TRIG_LISTS.get(triggers, [])
 
@@ -90,12 +94,10 @@ def run(events=True, clocks_evg=True, triggers='all', debug=False):
 
     # Creates App object
     _log.info('Creating App.')
-    app = _main.App(events=events, clocks_evg=clocks_evg,
-                    triggers_list=trig_list)
+    app = _main.App(evg_params=evg_params, trig_list=trig_list)
     _log.info('Generating database file.')
     fname = 'AS-TI-'
-    fname += 'EVENTS-' if events else ''
-    fname += 'CLOCKS-' if clocks_evg else ''
+    fname += 'EVG-PARAMS-' if evg_params else ''
     fname += triggers.upper() + '-' if triggers != 'none' else ''
     db = app.get_database()
     db.update({fname+'Version-Cte': {'type': 'string', 'value': __version__}})
@@ -109,18 +111,25 @@ def run(events=True, clocks_evg=True, triggers='all', debug=False):
     _log.info('Creating Driver.')
     pcas_driver = _Driver(app)
 
-    # Connects to low level PVs
-    _log.info('Openning connections with Low Level IOCs.')
-    app.connect()
-
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
     _log.info('Starting Server Thread.')
     server_thread.start()
 
+    # Connects to low level PVs
+    _log.info('Openning connections with Low Level IOCs.')
+    app.connect(get_ll_state=not force)
+
+    if not force:
+        tm = max(5, wait)
+        _log.info('Waiting ' + str(tm) + ' seconds to start forcing.')
+        stop_event.wait(tm)
+        _log.info('Start forcing now.')
+        if not stop_event.is_set():
+            app.start_forcing()
+
     # main loop
-    # while not stop_event.is_set():
-    while not stop_event:
+    while not stop_event.is_set():
         pcas_driver.app.process(INTERVAL)
 
     _log.info('Stoping Server Thread...')

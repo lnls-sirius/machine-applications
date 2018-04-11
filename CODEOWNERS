@@ -1,0 +1,43 @@
+# -------- LIST OF CONTRIBUTERS --------
+
+# @gu1lhermelp
+# @xresende
+# @anacso17
+# @fernandohds564
+# @liulin-lili
+
+# --- default owners of the repo
+* @gu1lhermelp @xresende @anacso17 @fernandohds564
+
+
+# -------- BASIC MODULES --------
+
+# --- pcaspy-template-generator
+/pcaspy-template-generator/ @xresende
+
+
+# -------- SUBPACKAGES --------
+
+# --- as-ap-currinfo
+/as-ap-currinfo/ @anacso17 @gu1lhermelp
+
+# --- as-ap-opmode
+/as-ap-opmode/ @xresende @gu1lhermelp
+
+# --- as-ap-opticscorr
+/as-ap-opticscorr/ @anacso17 @fernandohds564 @xresende
+
+# --- as-ap-posang
+/as-ap-posang/ @anacso17 @fernandohds564 @xresende
+
+# --- as-ma
+/as-ma/ @xresende @gu1lhermelp
+
+# --- as-ps
+/as-ps/ @xresende @gu1lhermelp
+
+# --- as-ti-control
+/as-ti-control/ @fernandohds564 @xresende
+
+# --- as-ap-sofb
+/as-ap-sofb/ @fernandohds564  @xresende @anacso1
