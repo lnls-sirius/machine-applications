@@ -61,16 +61,42 @@ class App:
                 self._triggers[pref] = _HL_Trigger(pref, self._update_driver)
         self._database = self.get_database()
 
-    def connect(self):
-        """Trigger connection to external PVs in other classes."""
+    def connect(self, get_ll_state=True):
+        """Trigger connection to external PVs in other classes.
+
+        get_ll_state: If False a default initial state will be forced
+            on LL IOCs. Else, it will be read from the LL PVs.
+        """
         if self._evg is not None:
-            self._evg.connect()
-        for key, val in self._clocks.items():
-            val.connect()
-        for key, val in self._events.items():
-            val.connect()
-        for key, val in self._triggers.items():
-            val.connect()
+            self._evg.connect(get_ll_state)
+        for val in self._clocks:
+            val.connect(get_ll_state)
+        for val in self._events:
+            val.connect(get_ll_state)
+        for val in self._triggers:
+            val.connect(get_ll_state)
+
+    def start_forcing(self):
+        """Start locking Low Level PVs."""
+        if self._evg is not None:
+            self._evg.start_forcing()
+        for val in self._clocks:
+            val.start_forcing()
+        for val in self._events:
+            val.start_forcing()
+        for val in self._triggers:
+            val.start_forcing()
+
+    def stop_forcing(self):
+        """Stop locking Low Level PVs."""
+        if self._evg is not None:
+            self._evg.stop_forcing()
+        for val in self._clocks:
+            val.stop_forcing()
+        for val in self._events:
+            val.stop_forcing()
+        for val in self._triggers:
+            val.stop_forcing()
 
     def process(self, interval):
         """Run continuously in the main thread."""
