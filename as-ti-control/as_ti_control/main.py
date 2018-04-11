@@ -3,10 +3,10 @@
 import time as _time
 import logging as _log
 from siriuspy.csdevice import timesys as _cstime
-from as_ti_control.hl_classes import HL_Event as _HL_Event
-from as_ti_control.hl_classes import HL_Clock as _HL_Clock
-from as_ti_control.hl_classes import HL_Trigger as _HL_Trigger
-from as_ti_control.hl_classes import HL_EVG as _HL_EVG
+from .hl_classes import HL_Event as _HL_Event
+from .hl_classes import HL_Clock as _HL_Clock
+from .hl_classes import HL_Trigger as _HL_Trigger
+from .hl_classes import HL_EVG as _HL_EVG
 
 
 _TIMEOUT = 0.05
@@ -20,57 +20,78 @@ class App:
         db = dict()
         if self._evg is not None:
             db.update(self._evg.get_database())
-        for cl in self._clocks.values():
+        for cl in self._clocks:
             db.update(cl.get_database())
-        for ev in self._events.values():
+        for ev in self._events:
             db.update(ev.get_database())
-        for trig in self._triggers.values():
+        for trig in self._triggers:
             db.update(trig.get_database())
         return db
 
-    def __init__(self, driver=None, triggers_list=[],
-                 evg_params=True):
+    def __init__(self, driver=None, trig_list=[], evg_params=True):
         """Initialize the instance.
 
         driver : is the driver associated with this app;
         triggers_list: is the list of the high level triggers to be managed;
-        clocks_evg : define if this app will manage evg params such as clocks,
+        evg_params: define if this app will manage evg params such as clocks,
                      events, etc.
         """
         _log.info('Starting App...')
         self.driver = driver
         self._evg = None
-        self._clocks = dict()
-        self._events = dict()
-        self._triggers = dict()
+        self._clocks = set()
+        self._events = set()
+        self._triggers = set()
         if evg_params:
             self._evg = _HL_EVG(self._update_driver)
             _log.info('Creating High Level Interface for Clocks and EVG:')
             for cl_hl, cl_ll in _cstime.clocks_hl2ll_map.items():
-                clock = _cstime.clocks_hl_pref + cl_hl
-                self._clocks[clock] = _HL_Clock(clock, self._update_driver,
-                                                cl_ll)
+                self._clocks.add(_HL_Clock(cl_hl, self._update_driver))
             _log.info('Creating High Level Interface for Events:')
             for ev_hl, ev_ll in _cstime.events_hl2ll_map.items():
-                event = _cstime.events_hl_pref + ev_hl
-                self._events[event] = _HL_Event(event, self._update_driver,
-                                                ev_ll)
-        if triggers_list:
+                self._events.add(_HL_Event(ev_hl, self._update_driver))
+        if trig_list:
             _log.info('Creating High Level Triggers:')
-            for pref in triggers_list:
-                self._triggers[pref] = _HL_Trigger(pref, self._update_driver)
+            for pref in trig_list:
+                self._triggers.add(_HL_Trigger(pref, self._update_driver))
         self._database = self.get_database()
 
-    def connect(self):
-        """Trigger connection to external PVs in other classes."""
+    def connect(self, get_ll_state=True):
+        """Trigger connection to external PVs in other classes.
+
+        get_ll_state: If False a default initial state will be forced
+            on LL IOCs. Else, it will be read from the LL PVs.
+        """
         if self._evg is not None:
-            self._evg.connect()
-        for key, val in self._clocks.items():
-            val.connect()
-        for key, val in self._events.items():
-            val.connect()
-        for key, val in self._triggers.items():
-            val.connect()
+            self._evg.connect(get_ll_state)
+        for val in self._clocks:
+            val.connect(get_ll_state)
+        for val in self._events:
+            val.connect(get_ll_state)
+        for val in self._triggers:
+            val.connect(get_ll_state)
+
+    def start_forcing(self):
+        """Start locking Low Level PVs."""
+        if self._evg is not None:
+            self._evg.start_forcing()
+        for val in self._clocks:
+            val.start_forcing()
+        for val in self._events:
+            val.start_forcing()
+        for val in self._triggers:
+            val.start_forcing()
+
+    def stop_forcing(self):
+        """Stop locking Low Level PVs."""
+        if self._evg is not None:
+            self._evg.stop_forcing()
+        for val in self._clocks:
+            val.stop_forcing()
+        for val in self._events:
+            val.stop_forcing()
+        for val in self._triggers:
+            val.stop_forcing()
 
     def process(self, interval):
         """Run continuously in the main thread."""
