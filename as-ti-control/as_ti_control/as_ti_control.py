@@ -76,7 +76,7 @@ class _Driver(_pcaspy.Driver):
         return app_ret
 
 
-def run(evg_params=True, triggers='all', debug=False):
+def run(evg_params=True, triggers='all', force=False, wait=15, debug=False):
     """Start the IOC."""
     trig_list = TRIG_LISTS.get(triggers, [])
 
@@ -94,7 +94,7 @@ def run(evg_params=True, triggers='all', debug=False):
 
     # Creates App object
     _log.info('Creating App.')
-    app = _main.App(evg_params=evg_params, triggers_list=trig_list)
+    app = _main.App(evg_params=evg_params, trig_list=trig_list)
     _log.info('Generating database file.')
     fname = 'AS-TI-'
     fname += 'EVG-PARAMS-' if evg_params else ''
@@ -111,14 +111,22 @@ def run(evg_params=True, triggers='all', debug=False):
     _log.info('Creating Driver.')
     pcas_driver = _Driver(app)
 
-    # Connects to low level PVs
-    _log.info('Openning connections with Low Level IOCs.')
-    app.connect()
-
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
     _log.info('Starting Server Thread.')
     server_thread.start()
+
+    # Connects to low level PVs
+    _log.info('Openning connections with Low Level IOCs.')
+    app.connect(get_ll_state=not force)
+
+    if not force:
+        tm = max(5, wait)
+        _log.info('Waiting ' + str(tm) + ' seconds to start forcing.')
+        stop_event.wait(tm)
+        _log.info('Start forcing now.')
+        if not stop_event.is_set():
+            app.start_forcing()
 
     # main loop
     while not stop_event.is_set():
