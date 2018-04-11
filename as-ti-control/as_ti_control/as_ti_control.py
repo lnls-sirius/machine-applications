@@ -2,6 +2,7 @@
 import sys as _sys
 import logging as _log
 import signal as _signal
+from threading import Event as _Event
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 from as_ti_control import main as _main
@@ -11,7 +12,7 @@ from siriuspy.search import HLTimeSearch as _HLTimeSearch
 
 __version__ = _get_version()
 INTERVAL = 0.1
-stop_event = False
+stop_event = _Event()
 
 _hl_trig = _HLTimeSearch.get_hl_triggers()
 TRIG_LISTS = {
@@ -47,7 +48,7 @@ TRIG_LISTS['none'] = []
 def _stop_now(signum, frame):
     _log.info('SIGINT received')
     global stop_event
-    stop_event = True
+    stop_event.set()
 
 
 def _print_pvs_in_file(db, fname):
@@ -120,8 +121,7 @@ def run(evg_params=True, triggers='all', debug=False):
     server_thread.start()
 
     # main loop
-    # while not stop_event.is_set():
-    while not stop_event:
+    while not stop_event.is_set():
         pcas_driver.app.process(INTERVAL)
 
     _log.info('Stoping Server Thread...')
