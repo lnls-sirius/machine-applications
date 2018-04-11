@@ -1,5 +1,6 @@
 """Define the low level classes which will connect to Timing Devices IOC."""
 
+from functools import partial as _partial
 import logging as _log
 import epics as _epics
 from siriuspy.thread import RepeaterThread as _Timer
@@ -9,23 +10,23 @@ from siriuspy.envars import vaca_prefix as LL_PREFIX
 from siriuspy.namesys import SiriusPVName as _PVName
 
 from siriuspy.csdevice import timesys as _cstime
-from siriuspy.timesys.time_data import Connections as _Connections
-from siriuspy.timesys.time_data import IOs as _IOs
-from siriuspy.timesys.time_data import RF_FREQUENCY as _RFFREQ
-from siriuspy.timesys.time_data import RF_DIVISION as _RFDIV
-from siriuspy.timesys.time_data import AC_FREQUENCY as _ACFREQ
-from siriuspy.timesys.time_data import FINE_DELAY as _FDEL
+from siriuspy.search import LLTimeSearch as _LLTimeSearch
+
+_RFFREQ = _cstime.Constants.RF_FREQUENCY
+_RFDIV = _cstime.Constants.RF_DIVISION
+_ACFREQ = _cstime.Constants.AC_FREQUENCY
+_FDEL = _cstime.Constants.FINE_DELAY
 
 INTERVAL = 0.1
 _DELAY_UNIT_CONV = 1e-6
-_Connections.add_bbb_info()
-_Connections.add_crates_info()
-EVG_NAME = _Connections.get_devices('EVG').pop()
-EVRs = _Connections.get_devices('EVR')
-EVEs = _Connections.get_devices('EVE')
-AFCs = _Connections.get_devices('AFC')
-FOUTs = _Connections.get_devices('FOUT')
-TWDS_EVG = _Connections.get_connections_twds_evg()
+_LLTimeSearch.add_bbb_info()
+_LLTimeSearch.add_crates_info()
+EVG_NAME = _LLTimeSearch.get_devices_by_type('EVG').pop()
+EVRs = _LLTimeSearch.get_devices_by_type('EVR')
+EVEs = _LLTimeSearch.get_devices_by_type('EVE')
+AFCs = _LLTimeSearch.get_devices_by_type('AFC')
+FOUTs = _LLTimeSearch.get_devices_by_type('FOUT')
+TWDS_EVG = _LLTimeSearch.get_connections_twds_evg()
 
 
 class _Base:
@@ -286,13 +287,13 @@ class LL_Clock(_Base):
     def _define_dict_for_write(self):
         return {
             'Freq': self._set_frequency,
-            'State': lambda x: self._set_simple('MuxEnbl', x),
+            'State': _partial(self._set_simple, 'MuxEnbl'),
             }
 
     def _define_dict_for_read(self):
         return {
             'MuxDiv': self._get_frequency,
-            'MuxEnbl': lambda x: self._get_simple('MuxEnbl', x, 'State'),
+            'MuxEnbl': _partial(self._get_simple, 'MuxEnbl', hl_prop='State'),
             }
 
     def _set_frequency(self, value):
@@ -325,17 +326,17 @@ class LL_Event(_Base):
     def _define_dict_for_write(self):
         return {
             'Delay': self._set_delay,
-            'Mode': lambda x: self._set_simple('Mode', x),
-            'DelayType': lambda x: self._set_simple('DelayType', x),
-            'ExtTrig': lambda x: self._set_simple('ExtTrig', x),
+            'Mode': _partial(self._set_simple, 'Mode'),
+            'DelayType': _partial(self._set_simple, 'DelayType'),
+            'ExtTrig': _partial(self._set_simple, 'ExtTrig'),
             }
 
     def _define_dict_for_read(self):
         return {
             'Delay': self._get_delay,
-            'Mode': lambda x: self._get_simple('Mode',  x),
-            'DelayType': lambda x: self._get_simple('DelayType', x),
-            'ExtTrig': lambda x: self._get_simple('ExtTrig', x),
+            'Mode': _partial(self._get_simple, 'Mode'),
+            'DelayType': _partial(self._get_simple, 'DelayType'),
+            'ExtTrig': _partial(self._get_simple, 'ExtTrig'),
             }
 
     def _set_delay(self, value):
@@ -355,7 +356,7 @@ class _EVROUT(_Base):
                  init_hl_state, source_enums):
         self._internal_trigger = self._define_num_int(conn_num)
         self.prefix = LL_PREFIX + _PVName(channel).device_name + ':'
-        chan_tree = _Connections.get_device_tree(channel)
+        chan_tree = _LLTimeSearch.get_device_tree(channel)
         fout_name = [chan.device_name for chan in chan_tree
                      if chan.device_name in FOUTs][0]
         self._fout_prefix = LL_PREFIX + fout_name + ':'
@@ -406,15 +407,15 @@ class _EVROUT(_Base):
 
     def _define_dict_for_write(self):
         map_ = {
-            'DevEnbl': lambda x: self._set_simple('DevEnbl', x),
-            'FOUTDevEnbl': lambda x: self._set_simple('FOUTDevEnbl', x),
-            'EVGDevEnbl': lambda x: self._set_simple('EVGDevEnbl', x),
-            'State': lambda x: self._set_simple('State', x),
+            'DevEnbl': _partial(self._set_simple, 'DevEnbl'),
+            'FOUTDevEnbl': _partial(self._set_simple, 'FOUTDevEnbl'),
+            'EVGDevEnbl': _partial(self._set_simple, 'EVGDevEnbl'),
+            'State': _partial(self._set_simple, 'State'),
             'Src': self._set_source,
             'Duration': self._set_duration,
-            'Polarity': lambda x: self._set_simple('Polarity', x),
+            'Polarity': _partial(self._set_simple, 'Polarity'),
             'Pulses': self._set_pulses,
-            'Intlk': lambda x: self._set_simple('Intlk', x),
+            'Intlk': _partial(self._set_simple, 'Intlk'),
             'Delay': self._set_delay,
             'DelayType': self._set_delay_type,
             }
@@ -422,24 +423,24 @@ class _EVROUT(_Base):
 
     def _define_dict_for_read(self):
         map_ = {
-            'State': lambda x: self._get_simple('State', x),
-            'Evt': lambda x: self._process_source('Evt', x),
-            'Width': lambda x: self._get_duration_pulses('Width', x),
-            'Polarity': lambda x: self._get_simple('Polarity', x),
-            'Pulses': lambda x: self._get_duration_pulses('Pulses', x),
-            'Delay': lambda x: self._get_delay('Delay', x),
-            'Intlk': lambda x: self._get_simple('Intlk', x),
-            'Src': lambda x: self._process_source('Src', x),
-            'SrcTrig': lambda x: self._process_source('SrcTrig', x),
-            'RFDelay': lambda x: self._get_delay('RFDelay', x),
-            'FineDelay': lambda x: self._get_delay('FineDelay', x),
-            'DevEnbl': lambda x: self._get_status('DevEnbl', x),
-            'Network': lambda x: self._get_status('Network', x),
-            'Link': lambda x: self._get_status('Link', x),
-            'Los': lambda x: self._get_status('Los', x),
-            'IntlkMon': lambda x: self._get_status('IntlkMon', x),
-            'FOUTDevEnbl': lambda x: self._get_status('FOUTDevEnbl', x),
-            'EVGDevEnbl': lambda x: self._get_status('EVGDevEnbl', x),
+            'State': _partial(self._get_simple, 'State'),
+            'Evt': _partial(self._process_source, 'Evt'),
+            'Width': _partial(self._get_duration_pulses, 'Width'),
+            'Polarity': _partial(self._get_simple, 'Polarity'),
+            'Pulses': _partial(self._get_duration_pulses, 'Pulses'),
+            'Delay': _partial(self._get_delay, 'Delay'),
+            'Intlk': _partial(self._get_simple, 'Intlk'),
+            'Src': _partial(self._process_source, 'Src'),
+            'SrcTrig': _partial(self._process_source, 'SrcTrig'),
+            'RFDelay': _partial(self._get_delay, 'RFDelay'),
+            'FineDelay': _partial(self._get_delay, 'FineDelay'),
+            'DevEnbl': _partial(self._get_status, 'DevEnbl'),
+            'Network': _partial(self._get_status, 'Network'),
+            'Link': _partial(self._get_status, 'Link'),
+            'Los': _partial(self._get_status, 'Los'),
+            'IntlkMon': _partial(self._get_status, 'IntlkMon'),
+            'FOUTDevEnbl': _partial(self._get_status, 'FOUTDevEnbl'),
+            'EVGDevEnbl': _partial(self._get_status, 'EVGDevEnbl'),
             }
         for prop in self._REMOVE_PROPS:
             map_.pop(prop)
@@ -553,7 +554,8 @@ class _EVROUT(_Base):
             self._my_state_sp['Src'] = _cstime.triggers_src_ll.index(pname)
         else:
             self._my_state_sp['Src'] = _cstime.triggers_src_ll.index('Trigger')
-            self._my_state_sp['Evt'] = int(_cstime.events_hl2ll_map[pname][-2:])
+            evt = int(_cstime.events_hl2ll_map[pname][-2:])
+            self._my_state_sp['Evt'] = evt
         if 'SrcTrig' in self._dict_convert_prop2pv.keys():
             self._my_state_sp['SrcTrig'] = self._internal_trigger
 
@@ -669,7 +671,7 @@ def get_ll_trigger_object(channel, callback, init_hl_state, source_enums):
         ('AFC', 'FMC'): _AFCFMC,
         }
     chan = _PVName(channel)
-    match = _IOs.LL_RGX.findall(chan.propty)
+    match = _LLTimeSearch.ll_rgx.findall(chan.propty)
     if match[0][0] == 'FMC':
         conn_ty = match[0][0]
         conn_num = int(match[0][1]-1) + 5*(int(match[1][1])-1)
