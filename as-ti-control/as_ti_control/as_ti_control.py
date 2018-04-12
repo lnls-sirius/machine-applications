@@ -92,6 +92,14 @@ def run(evg_params=True, triggers='all', force=False, wait=15, debug=False):
     # Creates App object
     app = _main.App(evg_params=evg_params, trig_list=trig_list)
     db = app.get_database()
+    db[ioc_name + ':Version-Cte'] = {'type': 'string', 'value': __version__}
+
+    # check if IOC is already running
+    running = _util.check_pv_online(
+        pvname=PREFIX + list(db.keys())[0], use_prefix=False, timeout=0.5)
+    if running:
+        _log.error('Another ' + ioc_name + ' is already running!')
+        return
     _log.info('Generating database file.')
     _util.save_ioc_pv_list(ioc_name.lower(), PREFIX, db)
     _log.info('File generated with {0:d} pvs.'.format(len(db)))
