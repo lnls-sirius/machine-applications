@@ -100,6 +100,10 @@ def run(evg_params=True, triggers='all', force=False, wait=15, debug=False):
     if running:
         _log.error('Another ' + ioc_name + ' is already running!')
         return
+
+    _util.print_ioc_banner(
+            ioc_name, db, 'High Level Timing IOC.', __version__, PREFIX)
+
     _log.info('Generating database file.')
     _util.save_ioc_pv_list(ioc_name.lower(), PREFIX, db)
     _log.info('File generated with {0:d} pvs.'.format(len(db)))
