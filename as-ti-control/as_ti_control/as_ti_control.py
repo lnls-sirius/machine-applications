@@ -122,6 +122,7 @@ def run(evg_params=True, triggers='all', force=False, wait=15, debug=False):
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
+    server_thread.daemon = True
     _log.info('Starting Server Thread.')
     server_thread.start()
 
