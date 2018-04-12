@@ -1,12 +1,14 @@
 """IOC Module."""
 import sys as _sys
+
+import os as _os
 import logging as _log
 import signal as _signal
 from threading import Event as _Event
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 from as_ti_control import main as _main
-from siriuspy.util import get_last_commit_hash as _get_version
+from siriuspy import util as _util
 from siriuspy.envars import vaca_prefix as PREFIX
 from siriuspy.search import HLTimeSearch as _HLTimeSearch
 
@@ -56,6 +58,10 @@ def _print_pvs_in_file(db, fname):
         for key in sorted(db.keys()):
             f.write(PREFIX+'{0:40s}\n'.format(key))
     _log.info(fname+' file generated with {0:d} pvs.'.format(len(db)))
+def _attribute_acces_security_group(db):
+    for k, v in db.items():
+        if k.endswith(('-RB', '-Sts', '-Cte', '-Mon')):
+            v.update({'asg': 'rbpv'})
 
 
 class _Driver(_pcaspy.Driver):
@@ -102,10 +108,13 @@ def run(evg_params=True, triggers='all', force=False, wait=15, debug=False):
     db = app.get_database()
     db.update({fname+'Version-Cte': {'type': 'string', 'value': __version__}})
     _print_pvs_in_file(db, fname=fname+'pvs.txt')
+    _attribute_acces_security_group(db)
 
     # create a new simple pcaspy server and driver to respond client's requests
     _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
+    path_ = _os.path.abspath(_os.path.dirname(__file__))
+    server.initAccessSecurityFile(path_ + '/access_rules.as')
     _log.info('Setting Server Database.')
     server.createPV(PREFIX, db)
     _log.info('Creating Driver.')
