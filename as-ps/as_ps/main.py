@@ -1,13 +1,16 @@
 """Main application."""
 
-import as_ps.pvs as _pvs
 import time as _time
-import siriuspy as _siriuspy
 import numpy as _np
+from collections import deque as _deque
+from collections import namedtuple as _namedtuple
+
 from pcaspy import Alarm as _Alarm
 from pcaspy import Severity as _Severity
-from siriuspy.pwrsupply.model import PowerSupply as _PowerSupply
 
+# import as_ps.pvs as _pvs
+import siriuspy as _siriuspy
+import siriuspy.util as _util
 
 # Coding guidelines:
 # =================
@@ -21,121 +24,143 @@ from siriuspy.pwrsupply.model import PowerSupply as _PowerSupply
 # 06 - be consistent in coding style (variable naming, spacings, prefixes,
 #      suffixes, etc)
 
-__version__ = _pvs._COMMIT_HASH
+__version__ = _util.get_last_commit_hash()
 
 
 class App:
-    """App class."""
+    """Responsible for updating the IOC database.
 
-    ps_devices = None
-    pvs_database = None
+    Update values and parameters such as alarms.
 
-    def __init__(self, driver):
-        """Init."""
+    Issues 2 threads:
+        - thread to queue all request to devices underneath it.
+        - thread to enqueue a read request for each device (10 Hz per dev)
+    """
+
+    Operation = _namedtuple('Operation', 'device, function, kwargs')
+
+    def __init__(self, driver, bbblist, database, prefix):
+        """Create Power Supply controllers."""
+        # self._devices = devices
+        self._bbblist = bbblist
+        self._driver = driver
+        self._op_deque = _deque()
+        self.scan = True
+        for psname, bbb in self.bbblist.items():
+            version = bbb[psname].read('Version-Cte')
+            reason = psname + ':Version-Cte'
+            driver.setParam(reason, version)
+        # Print info about the IOC
         _siriuspy.util.print_ioc_banner(
             ioc_name='BeagleBone',
-            db=App.pvs_database[_pvs._PREFIX],
+            # db=App.pvs_database[_pvs._PREFIX],
+            db=database[prefix],
             description='BeagleBone Power Supply IOC',
             version=__version__,
-            prefix=_pvs._PREFIX)
+            prefix=prefix)
         _siriuspy.util.save_ioc_pv_list('as-ps',
                                         ('',
-                                         _pvs._PREFIX),
-                                        App.pvs_database[_pvs._PREFIX])
-        self._driver = driver
-        # stores PS database
-        psname = tuple(_pvs.ps_devices.keys())[0]
-        self._ps_db = _pvs.ps_devices[psname].get_database()
-        # add callbacks
-        for psname in _pvs.ps_devices:
-            _pvs.ps_devices[psname].add_callback(self._mycallback)
-
-    @staticmethod
-    def init_class(bbblist, simulate=True):
-        """Init class."""
-        App.ps_devices = _pvs.get_ps_devices(bbblist, simulate=simulate)
-        App.pvs_database = _pvs.get_pvs_database(bbblist, simulate=simulate)
-
-    @staticmethod
-    def get_pvs_database():
-        """Get pvs database."""
-        if App.pvs_database is None:
-            App.pvs_database = _pvs.get_pvs_database()
-        return App.pvs_database
-
-    @staticmethod
-    def get_ps_devices():
-        """Get ps devices."""
-        if App.ps_devices is None:
-            App.ps_devices = _pvs.get_ps_devices()
-        return App.ps_devices
+                                         prefix),
+                                        database[prefix])
 
     @property
     def driver(self):
-        """Driver method."""
+        """Pcaspy driver."""
         return self._driver
+
+    @property
+    def bbblist(self):
+        """BBBs."""
+        return self._bbblist
 
     def process(self, interval):
         """Process method."""
-        _time.sleep(interval)
+        if self._op_deque:
+            op = self._op_deque.popleft()
+            if op.kwargs:
+                op.function(**op.kwargs)
+            else:
+                op.function()
+        _time.sleep(0.01)
 
     def read(self, reason):
-        """Read pv method."""
+        """Read from database."""
+        print("[{:s}] - {:32s} = {}".format(
+            'R', reason, self.driver.getParam(reason)))
         return None
 
     def write(self, reason, value):
-        """Write pv method."""
-        if isinstance(value, (int, float)):
-            print('write', reason, value)
+        """Enqueue write request."""
+        split = reason.split(':')
+        device = ':'.join(split[:2])
+        field = split[-1]
+        op = App.Operation(device, self._write,
+                           {'device': device, 'field': field, 'value': value})
+        self._op_deque.appendleft(op)
+        return
+
+    def _write(self, device, field, value):
+        """Write value to device field."""
+        bbb = self.bbblist[device]
+        reason = device + ':' + field
+        if bbb.set(device, field, value):
+            if isinstance(value, _np.ndarray):
+                print("[{:2s}] - {:32s}".format('W', reason))
+            else:
+                print("[{:2s}] - {:32s} = {}".format('W', reason, value))
+            self.driver.setParamStatus(
+                reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
         else:
-            print('write', reason)
-        parts = reason.split(':')
-        propty = parts[-1]
-        psname = ':'.join(parts[:2])
-        ps = _pvs.ps_devices[psname]
-        status = ps.write(field=propty, value=value)
-        if status is not None:
-            self._driver.setParam(reason, value)
-            self._driver.updatePVs()
+            print("[{:2s}] - {:32s} = {} - SERIAL ERROR".format(
+                'W', reason))
+            self.driver.setParamStatus(
+                reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+        self.driver.setParam(reason, value)
+        self.driver.updatePVs()
+        return
 
-        return True
+    def update_db(self, device_name):
+        """Read variables and update DB."""
+        bbb = self.bbblist[device_name]
+        dev = bbb[device_name]
 
-    def _mycallback(self, pvname, value, **kwargs):
-        """Mycallback method."""
-        # print('{0:<15s}: '.format('ioc callback'), pvname, value)
-        reason = pvname
+        # Get fields
+        fields = dict()
+        fields.update(dev.read_setpoints())
+        fields.update(dev.read_status())
+        for field, value in fields.items():
+            reason = device_name + ':' + field
+            self.driver.setParam(reason, value)
 
-        # if ControllerIOC is disconnected to ControllerPS
-        if _PowerSupply.CONNECTED in reason:
-            self._set_connected_pvs(reason, value)
-            self._driver.updatePVs()
-            return
-
-        prev_value = self._driver.getParam(reason)
-        if isinstance(value, _np.ndarray):
-            if _np.any(value != prev_value):
-                self._driver.setParam(reason, value)
-                self._driver.updatePVs()
+        # Read from serial
+        vars = dev.read_ps_variables()
+        conn = dev.connected
+        if not conn:
+            for field in dev.database:
+                reason = device_name + ':' + field
+                print("[{:2s}] - {:32s} - SERIAL ERROR".format(
+                    'RA', reason))
+                self.driver.setParamStatus(
+                    reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+        elif conn and vars is not None:
+            for field, value in vars.items():
+                reason = device_name + ':' + field
+                self.driver.setParam(reason, value)
+                self.driver.setParamStatus(
+                    reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
         else:
-            if value != prev_value:
-                self._driver.setParam(reason, value)
-                self._driver.updatePVs()
+            print("[RA] - Failed to read {} variables.".format(device_name))
 
-    def _set_connected_pvs(self, reason, value):
-        psname = reason.replace(':'+_PowerSupply.CONNECTED,'')
-        if value is True:
-            print('{} connected.'.format(psname))
-        else:
-            print('{} disconnected.'.format(psname))
-        if value is True:
-            alarm = _Alarm.NO_ALARM
-            severity = _Severity.NO_ALARM
-        else:
-            alarm = _Alarm.TIMEOUT_ALARM
-            severity = _Severity.INVALID_ALARM
-        for field in self._ps_db:
-            pvname = reason.replace(_PowerSupply.CONNECTED, field)
-            # print(pvname)
-            # value = self._driver.getParam(pvname)
-            # self._driver.setParam(pvname, value)
-            self._driver.setParamStatus(pvname, alarm, severity)
+        # Update PVs in DB
+        self.driver.updatePVs()
+        return
+
+    def enqueue_scan(self):
+        """Enqueue read methods run as a thread."""
+        while self.scan:
+            for psname in self.bbblist:
+                op = App.Operation(
+                    psname, self.update_db, {'device_name': psname})
+                self._op_deque.append(op)
+            # _time.sleep(1/len(self.devices))
+            _time.sleep(0.1)
