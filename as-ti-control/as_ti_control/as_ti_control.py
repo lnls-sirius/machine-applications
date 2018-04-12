@@ -1,5 +1,4 @@
 """IOC Module."""
-import sys as _sys
 
 import os as _os
 import logging as _log
@@ -12,7 +11,7 @@ from siriuspy import util as _util
 from siriuspy.envars import vaca_prefix as PREFIX
 from siriuspy.search import HLTimeSearch as _HLTimeSearch
 
-__version__ = _get_version()
+__version__ = _util.get_last_commit_hash()
 INTERVAL = 0.1
 stop_event = _Event()
 
@@ -53,11 +52,6 @@ def _stop_now(signum, frame):
     stop_event.set()
 
 
-def _print_pvs_in_file(db, fname):
-    with open('pvs/' + fname, 'w') as f:
-        for key in sorted(db.keys()):
-            f.write(PREFIX+'{0:40s}\n'.format(key))
-    _log.info(fname+' file generated with {0:d} pvs.'.format(len(db)))
 def _attribute_acces_security_group(db):
     for k, v in db.items():
         if k.endswith(('-RB', '-Sts', '-Cte', '-Mon')):
@@ -85,6 +79,9 @@ class _Driver(_pcaspy.Driver):
 def run(evg_params=True, triggers='all', force=False, wait=15, debug=False):
     """Start the IOC."""
     trig_list = TRIG_LISTS.get(triggers, [])
+    ioc_name = 'AS-TI'
+    ioc_name += '-EVG-PARAMS' if evg_params else ''
+    ioc_name += ('-' + triggers.upper()) if triggers != 'none' else ''
 
     level = _log.DEBUG if debug else _log.INFO
     fmt = ('%(levelname)7s | %(asctime)s | ' +
@@ -99,15 +96,12 @@ def run(evg_params=True, triggers='all', force=False, wait=15, debug=False):
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # Creates App object
-    _log.info('Creating App.')
     app = _main.App(evg_params=evg_params, trig_list=trig_list)
-    _log.info('Generating database file.')
-    fname = 'AS-TI-'
-    fname += 'EVG-PARAMS-' if evg_params else ''
-    fname += triggers.upper() + '-' if triggers != 'none' else ''
     db = app.get_database()
-    db.update({fname+'Version-Cte': {'type': 'string', 'value': __version__}})
-    _print_pvs_in_file(db, fname=fname+'pvs.txt')
+    _log.info('Generating database file.')
+    _util.save_ioc_pv_list(ioc_name.lower(), PREFIX, db)
+    _log.info('File generated with {0:d} pvs.'.format(len(db)))
+
     _attribute_acces_security_group(db)
 
     # create a new simple pcaspy server and driver to respond client's requests
