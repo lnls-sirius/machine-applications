@@ -83,13 +83,7 @@ def run(evg_params=True, triggers='all', force=False, wait=15, debug=False):
     ioc_name += '-EVG-PARAMS' if evg_params else ''
     ioc_name += ('-' + triggers.upper()) if triggers != 'none' else ''
 
-    level = _log.DEBUG if debug else _log.INFO
-    fmt = ('%(levelname)7s | %(asctime)s | ' +
-           '%(module)15s.%(funcName)20s[%(lineno)4d] ::: %(message)s')
-    _log.basicConfig(format=fmt, datefmt='%F %T', level=level,
-                     stream=_sys.stdout)
-    #  filename=LOG_FILENAME, filemode='w')
-    _log.info('Starting...')
+    _util.configure_log_file(filename=None, debug=debug)
 
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
