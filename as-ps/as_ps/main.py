@@ -85,8 +85,8 @@ class App:
 
     def read(self, reason):
         """Read from database."""
-        print("[{:s}] - {:32s} = {}".format(
-            'R', reason, self.driver.getParam(reason)))
+        print("[{:.2s}] - {:.32s} = {:.50s}".format(
+            'R ', reason, str(self.driver.getParam(reason))))
         return None
 
     def write(self, reason, value):
@@ -105,14 +105,15 @@ class App:
         reason = device + ':' + field
         if bbb.set(device, field, value):
             if isinstance(value, _np.ndarray):
-                print("[{:2s}] - {:32s}".format('W', reason))
+                print("[{:.2s}] - {:.32s}".format('W ', reason))
             else:
-                print("[{:2s}] - {:32s} = {}".format('W', reason, value))
+                print("[{:.2s}] - {:.32s} = {:50s}".format(
+                    'W ', reason, str(value)))
             self.driver.setParamStatus(
                 reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
         else:
-            print("[{:2s}] - {:32s} = {} - SERIAL ERROR".format(
-                'W', reason))
+            print("[{:.2s}] - {:.32s} = {:.50s} - SERIAL ERROR".format(
+                'W ', reason, str(value)))
             self.driver.setParamStatus(
                 reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
         self.driver.setParam(reason, value)
@@ -138,7 +139,7 @@ class App:
         if not conn:
             for field in dev.database:
                 reason = device_name + ':' + field
-                print("[{:2s}] - {:32s} - SERIAL ERROR".format(
+                print("[{:.2s}] - {:.32s} - SERIAL ERROR".format(
                     'RA', reason))
                 self.driver.setParamStatus(
                     reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
