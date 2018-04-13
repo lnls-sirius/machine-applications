@@ -52,10 +52,12 @@ def _stop_now(signum, frame):
     stop_event.set()
 
 
-def _attribute_acces_security_group(db):
+def _attribute_access_security_group(server, db):
     for k, v in db.items():
         if k.endswith(('-RB', '-Sts', '-Cte', '-Mon')):
             v.update({'asg': 'rbpv'})
+    path_ = _os.path.abspath(_os.path.dirname(__file__))
+    server.initAccessSecurityFile(path_ + '/access_rules.as')
 
 
 class _Driver(_pcaspy.Driver):
@@ -108,13 +110,10 @@ def run(evg_params=True, triggers='all', force=False, wait=15, debug=False):
     _util.save_ioc_pv_list(ioc_name.lower(), PREFIX, db)
     _log.info('File generated with {0:d} pvs.'.format(len(db)))
 
-    _attribute_acces_security_group(db)
-
     # create a new simple pcaspy server and driver to respond client's requests
     _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
-    path_ = _os.path.abspath(_os.path.dirname(__file__))
-    server.initAccessSecurityFile(path_ + '/access_rules.as')
+    _attribute_access_security_group(server, db)
     _log.info('Setting Server Database.')
     server.createPV(PREFIX, db)
     _log.info('Creating Driver.')

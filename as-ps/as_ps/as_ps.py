@@ -1,5 +1,6 @@
 """IOC for PS."""
 
+import os as _os
 import sys as _sys
 import signal as _signal
 from threading import Thread as _Thread
@@ -50,6 +51,14 @@ def get_database(controllers):
     return {_PREFIX: db}
 
 
+def _attribute_access_security_group(server, db):
+    for k, v in db.items():
+        if k.endswith(('-RB', '-Sts', '-Cte', '-Mon')):
+            v.update({'asg': 'rbpv'})
+    path_ = _os.path.abspath(_os.path.dirname(__file__))
+    server.initAccessSecurityFile(path_ + '/access_rules.as')
+
+
 class _PCASDriver(_pcaspy.Driver):
 
     def __init__(self, bbblist, database):
@@ -98,7 +107,9 @@ def run(bbblist, simulate=True):
 
     # Create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
-    server.createPV(_PREFIX, get_database(devices)[_PREFIX])
+    db = get_database(devices)[_PREFIX]
+    _attribute_access_security_group(server, db)
+    server.createPV(_PREFIX, db)
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
