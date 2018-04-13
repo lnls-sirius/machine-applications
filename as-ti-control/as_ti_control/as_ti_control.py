@@ -21,10 +21,10 @@ TRIG_LISTS = {
     'si-sexts-skews': ['SI-Glob:TI-Sexts:', 'SI-Glob:TI-Skews:'],
     'si-corrs': ['SI-Glob:TI-Corrs:'],
     'si-dig': [
-        'SI-01SA:TI-HTuneS:', 'SI-01SA:TI-InjK:',
+        'SI-01SA:TI-TuneShkrH:', 'SI-01SA:TI-InjK:',
         'SI-13C4:TI-DCCT:', 'SI-14C4:TI-DCCT:',
-        'SI-16C4:TI-GBPM:', 'SI-17C4:TI-VTuneP:',
-        'SI-17SA:TI-HTuneP:', 'SI-18C4:TI-VTuneS:',
+        'SI-16C4:TI-GBPM:', 'SI-17C4:TI-TunePkupV:',
+        'SI-17SA:TI-TunePkupH:', 'SI-18C4:TI-TuneShkrV:',
         'SI-19C4:TI-VPing:', 'SI-19SP:TI-GSL15:',
         'SI-20SB:TI-GSL07:', 'SI-01SA:TI-HPing:'],
     'li-all': [
