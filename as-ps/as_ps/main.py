@@ -185,7 +185,6 @@ class App:
     def enqueue_scan(self):
         """Enqueue read methods run as a thread."""
         while self.scan:
-            print('enqueuing')
             for bbb in self.bbblist:
                 op = App.Operation(self.scan_bbb, {'bbb': bbb})
                 self._op_deque.append(op)
