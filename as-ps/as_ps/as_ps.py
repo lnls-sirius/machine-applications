@@ -44,6 +44,8 @@ def run(bbblist, simulate=True):
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
+    _util.configure_log_file()
+
     # define IOC and initializes it
     _main.App.init_class(bbblist, simulate=simulate)
 
