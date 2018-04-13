@@ -168,7 +168,7 @@ class App:
 
     def _scan_pru(self, pru):
         # Scan PRU
-        if pru.sync_mode == pru._SYNC_ON:
+        if pru.sync_status == pru._SYNC_ON:
             self._scan_interval = 1
         else:
             self._scan_interval = 0.1
