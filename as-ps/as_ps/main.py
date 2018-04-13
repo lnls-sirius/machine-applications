@@ -37,19 +37,30 @@ class App:
         - thread to enqueue a read request for each device (10 Hz per dev)
     """
 
-    Operation = _namedtuple('Operation', 'device, function, kwargs')
+    Operation = _namedtuple('Operation', 'function, kwargs')
 
     def __init__(self, driver, bbblist, database, prefix):
         """Create Power Supply controllers."""
         # self._devices = devices
-        self._bbblist = bbblist
         self._driver = driver
+        # Mapping device to bbb
+        self._bbblist = bbblist
+        # Map psname to bbb
+        self._bbb_devices = dict()
+        for bbb in self.bbblist:
+            for psname in bbb.psnames:
+                self._bbb_devices[psname] = bbb
         self._op_deque = _deque()
+        self._scan_interval = 0.1
         self.scan = True
-        for psname, bbb in self.bbblist.items():
+
+        # Read Constants
+        for psname, bbb in self._bbb_devices.items():
             version = bbb[psname].read('Version-Cte')
             reason = psname + ':Version-Cte'
-            driver.setParam(reason, version)
+            self.driver.setParam(reason, version)
+        self.driver.updatePVs()
+
         # Print info about the IOC
         _siriuspy.util.print_ioc_banner(
             ioc_name='BeagleBone',
@@ -94,16 +105,17 @@ class App:
         split = reason.split(':')
         device = ':'.join(split[:2])
         field = split[-1]
-        op = App.Operation(device, self._write,
-                           {'device': device, 'field': field, 'value': value})
+        op = App.Operation(
+            self._write,
+            {'device_name': device, 'field': field, 'value': value})
         self._op_deque.appendleft(op)
         return
 
-    def _write(self, device, field, value):
+    def _write(self, device_name, field, value):
         """Write value to device field."""
-        bbb = self.bbblist[device]
-        reason = device + ':' + field
-        if bbb.set(device, field, value):
+        bbb = self._bbb_devices[device_name]
+        reason = device_name + ':' + field
+        if bbb.set(device_name, field, value):
             if isinstance(value, _np.ndarray):
                 print("[{:2s}] - {:32s}".format('W', reason))
             else:
@@ -119,48 +131,62 @@ class App:
         self.driver.updatePVs()
         return
 
-    def update_db(self, device_name):
-        """Read variables and update DB."""
-        bbb = self.bbblist[device_name]
-        dev = bbb[device_name]
+    def _set_fields(self, device_name, fields_dict):
+        """Update fields of db.
 
-        # Get fields
-        fields = dict()
-        fields.update(dev.read_setpoints())
-        fields.update(dev.read_status())
-        for field, value in fields.items():
+        `fields` is a dict with fields as key
+        """
+        for field, value in fields_dict.items():
             reason = device_name + ':' + field
             self.driver.setParam(reason, value)
+            self.driver.setParamStatus(
+                reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
 
-        # Read from serial
-        vars = dev.read_ps_variables()
-        conn = dev.connected
-        if not conn:
-            for field in dev.database:
-                reason = device_name + ':' + field
-                print("[{:2s}] - {:32s} - SERIAL ERROR".format(
-                    'RA', reason))
-                self.driver.setParamStatus(
-                    reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
-        elif conn and vars is not None:
-            for field, value in vars.items():
-                reason = device_name + ':' + field
-                self.driver.setParam(reason, value)
-                self.driver.setParamStatus(
-                    reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+    def _set_fields_invalid(self, device_name, fields_list):
+        """Set fields to invalid."""
+        for field in fields_list:
+            reason = device_name + ':' + field
+            self.driver.setParamStatus(
+                reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+
+    def _set_device_setpoints(self, device_name, device):
+        fields = dict()
+        fields.update(device.read_setpoints())
+        fields.update(device.read_status())
+        self._set_fields(device_name, fields)
+
+    def _set_device_variables(self, device_name, device):
+        variables = device.read_ps_variables()
+        if not device.connected:
+            self._set_fields_invalid(device_name, device.database.keys())
+        elif device.connected and variables is not None:
+            self._set_fields(device_name, variables)
         else:
-            print("[RA] - Failed to read {} variables.".format(device_name))
+            # Log
+            pass
 
-        # Update PVs in DB
+    def _scan_pru(self, pru):
+        # Scan PRU
+        if pru.sync_mode == pru._SYNC_ON:
+            self._scan_interval = 1
+        else:
+            self._scan_interval = 0.1
+
+    def scan_bbb(self, bbb):
+        """Scan devices and PRU."""
+        self._scan_pru(bbb.pru)
+        for psname, ps in bbb.power_supplies.items():
+            self._set_device_setpoints(psname, ps)
+            self._set_device_variables(psname, ps)
         self.driver.updatePVs()
         return
 
     def enqueue_scan(self):
         """Enqueue read methods run as a thread."""
         while self.scan:
-            for psname in self.bbblist:
-                op = App.Operation(
-                    psname, self.update_db, {'device_name': psname})
+            print('enqueuing')
+            for bbb in self.bbblist:
+                op = App.Operation(self.scan_bbb, {'bbb': bbb})
                 self._op_deque.append(op)
             # _time.sleep(1/len(self.devices))
-            _time.sleep(0.1)
+            _time.sleep(self._scan_interval)
