@@ -3,6 +3,7 @@
 import sys as _sys
 import signal as _signal
 from threading import Thread as _Thread
+import traceback as _traceback
 
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
@@ -21,6 +22,7 @@ from siriuspy.pwrsupply.beaglebone import BeagleBone as _BeagleBone
 
 INTERVAL = 0.1/10
 stop_event = False  # _multiprocessing.Event()
+pcas_driver = None
 
 _PREFIX = _VACA_PREFIX
 _COMMIT_HASH = _util.get_last_commit_hash()
@@ -33,6 +35,7 @@ def _stop_now(signum, frame):
     _sys.stdout.flush()
     _sys.stderr.flush()
     stop_event = True
+    pcas_driver.app.scan = False
 
 
 def get_devices(bbbs, simulate=True):
@@ -40,13 +43,13 @@ def get_devices(bbbs, simulate=True):
     pass
 
 
-def get_database(controllers):
+def get_database(device_list):
     """Return the database."""
     db = {}
-    for psname in controllers:
-        dev_db = controllers[psname].database
+    for device in device_list:
+        dev_db = device.database
         for field in dev_db:
-            db[psname + ':' + field] = dev_db[field]
+            db[device.name + ':' + field] = dev_db[field]
     return {_PREFIX: db}
 
 
@@ -69,25 +72,27 @@ class _PCASDriver(_pcaspy.Driver):
 
 def run(bbblist, simulate=True):
     """Main function."""
+    global pcas_driver
     # Define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # Create BBBs
-    bbbs = dict()
-    devices = dict()
+    bbbs = list()
+    devices = list()
     for bbbname in bbblist:
         bbb = _BeagleBone(bbbname, simulate)
+        bbbs.append(bbb)
         for psname in bbb.psnames:
-            devices[psname] = bbb[psname]
-            bbbs[psname] = bbb
+            devices.append(bbb[psname])
     # What if serial is not running?
     # devices = get_devices(bbbs, simulate=simulate)
     database = get_database(devices)
 
     # Check if IOC is already running
     pvname = \
-        _PREFIX + list(devices[list(devices)[0]].database)[0]
+        _PREFIX + devices[0].name + ':' + list(devices[0].database)[0]
+    print(pvname)
     running = _util.check_pv_online(
         pvname=pvname, use_prefix=False, timeout=0.5)
     if running:
@@ -111,7 +116,10 @@ def run(bbblist, simulate=True):
     server_thread.start()
     scan_thread.start()
     while not stop_event:
-        pcas_driver.app.process(INTERVAL)
+        try:
+            pcas_driver.app.process(INTERVAL)
+        except Exception as e:
+            _traceback.print_exc()
 
     # Signal received, exit
     print('exiting...')
