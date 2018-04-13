@@ -115,7 +115,7 @@ class App:
         """Write value to device field."""
         bbb = self._bbb_devices[device_name]
         reason = device_name + ':' + field
-        if bbb.set(device_name, field, value):
+        if bbb.write(device_name, field, value):
             if isinstance(value, _np.ndarray):
                 print("[{:.2s}] - {:.32s}".format('W ', reason))
             else:
