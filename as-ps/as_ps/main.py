@@ -87,12 +87,15 @@ class App:
     def process(self, interval):
         """Process method."""
         if self._op_deque:
+            # TODO: do something in IOC to indicate boundless growth of deque
+            # Maybe a new bit PV 'CommOverflow-Mon' or use one bit of the
+            # power supplies.
             op = self._op_deque.popleft()
             if op.kwargs:
                 op.function(**op.kwargs)
             else:
                 op.function()
-        _time.sleep(0.01)
+        _time.sleep(0.01)  # TODO: value seems arbitrary.
 
     def read(self, reason):
         """Read from database."""
@@ -169,13 +172,13 @@ class App:
     def _scan_pru(self, pru):
         # Scan PRU
         if pru.sync_status == pru._SYNC_ON:
-            self._scan_interval = 1
+            self._scan_interval = 1.0
         else:
             self._scan_interval = 0.1
 
     def scan_bbb(self, bbb):
         """Scan devices and PRU."""
-        self._scan_pru(bbb.pru)
+        self._scan_pru(bbb.controller.pru)
         for psname, ps in bbb.power_supplies.items():
             self._set_device_setpoints(psname, ps)
             self._set_device_variables(psname, ps)
