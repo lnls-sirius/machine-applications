@@ -12,19 +12,10 @@ from pcaspy import Severity as _Severity
 import siriuspy as _siriuspy
 import siriuspy.util as _util
 
-# Coding guidelines:
-# =================
-# 01 - pay special attention to code readability
-# 02 - simplify logic as much as possible
-# 03 - unroll expressions in order to simplify code
-# 04 - dont be afraid to generate seemingly repetitive flat code
-#      (they may be easier to read!)
-# 05 - 'copy and paste' is your friend and it allows you to code 'repeatitive'
-#      (but clearer) sections fast.
-# 06 - be consistent in coding style (variable naming, spacings, prefixes,
-#      suffixes, etc)
-
 __version__ = _util.get_last_commit_hash()
+
+FREQUENCY_SCAN = 10.0  # [Hz]
+FREQUENCY_RAMP = 2.0  # [Hz]
 
 
 class App:
@@ -37,42 +28,45 @@ class App:
         - thread to enqueue a read request for each device (10 Hz per dev)
     """
 
+    # Queue size over this value is interpreted as communication overflow
+    QUEUE_SIZE_OVERFLOW = 500
+
     Operation = _namedtuple('Operation', 'function, kwargs')
 
-    def __init__(self, driver, bbblist, database, prefix):
+    def __init__(self, driver, bbblist, dbset, prefix):
         """Create Power Supply controllers."""
-        # self._devices = devices
         self._driver = driver
+
         # Mapping device to bbb
         self._bbblist = bbblist
+
         # Map psname to bbb
         self._bbb_devices = dict()
         for bbb in self.bbblist:
             for psname in bbb.psnames:
                 self._bbb_devices[psname] = bbb
-        self._op_deque = _deque()
-        self._scan_interval = 0.1
+        self._op_deque = _deque()  # TODO: is dequeu thread-safe ?!
+        self._scan_interval = 1.0/FREQUENCY_SCAN
         self.scan = True
 
-        # Read Constants
-        for psname, bbb in self._bbb_devices.items():
-            version = bbb[psname].read('Version-Cte')
-            reason = psname + ':Version-Cte'
-            self.driver.setParam(reason, version)
-        self.driver.updatePVs()
+        # Read Constants once and for all
+        self._read_constants()
 
         # Print info about the IOC
         _siriuspy.util.print_ioc_banner(
             ioc_name='BeagleBone',
-            # db=App.pvs_database[_pvs._PREFIX],
-            db=database[prefix],
+            db=dbset[prefix],
             description='BeagleBone Power Supply IOC',
             version=__version__,
             prefix=prefix)
+
+        # Save file with PVs list
         _siriuspy.util.save_ioc_pv_list('as-ps',
                                         ('',
                                          prefix),
-                                        database[prefix])
+                                        dbset[prefix])
+
+    # --- public interface ---
 
     @property
     def driver(self):
@@ -81,41 +75,92 @@ class App:
 
     @property
     def bbblist(self):
-        """BBBs."""
+        """Return list of beaglebone objects."""
         return self._bbblist
 
     def process(self, interval):
-        """Process method."""
+        """Process all read and write requests in queue."""
         if self._op_deque:
-            # TODO: do something in IOC to indicate boundless growth of deque
-            # Maybe a new bit PV 'CommOverflow-Mon' or use one bit of the
-            # power supplies.
+            # TODO: do something in IOC to indicate
+            t = _time.time()
             op = self._op_deque.popleft()
             if op.kwargs:
                 op.function(**op.kwargs)
             else:
                 op.function()
-        _time.sleep(0.01)  # TODO: value seems arbitrary.
+            dt = _time.time() - t
+            print('operation processed in {} ms'.format(1000*dt))
+        else:
+            _time.sleep(1.0/FREQUENCY_SCAN/10.0)
 
     def read(self, reason):
         """Read from database."""
+        # TODO: use logging
         print("[{:.2s}] - {:.32s} = {:.50s}".format(
             'R ', reason, str(self.driver.getParam(reason))))
         return None
 
     def write(self, reason, value):
         """Enqueue write request."""
+        # TODO: can we parse reason with SiriusPVName?
         split = reason.split(':')
         device = ':'.join(split[:2])
         field = split[-1]
         op = App.Operation(
-            self._write,
+            self._write_to_device,
             {'device_name': device, 'field': field, 'value': value})
-        self._op_deque.appendleft(op)
+        # TODO: this seems wrong since process pops from left!!!
+        self.queue_appendleft(op)
         return
 
-    def _write(self, device_name, field, value):
+    def scan_bbb(self, bbb):
+        """Scan PRU and power supply devices."""
+        self._scan_pru(bbb.controller.pru)
+        for psname, ps in bbb.power_supplies.items():
+            self._set_device_setpoints(psname, ps)
+            self._set_device_variables(psname, ps)
+        self.driver.updatePVs()
+        return
+
+    def enqueue_scan(self):
+        """Enqueue read methods run as a thread."""
+        while self.scan:
+            t = _time.time()
+            for bbb in self.bbblist:
+                op = App.Operation(self.scan_bbb, {'bbb': bbb})
+                self.queue_append(op)
+            # wait until proper scan interval is reached
+            dt = _time.time() - t
+            _time.sleep(self._scan_interval - dt)
+
+    # --- private methods ---
+
+    def queue_append(self, op):
+        """Right-append operation to queue."""
+        if self._is_queue_ok():
+            self._op_deque.append(op)
+
+    def queue_appendleft(self, op):
+        """Left-append operation to queue."""
+        if self._is_queue_ok():
+            self._op_deque.appendleft(op)
+
+    def _is_queue_ok(self):
+        # TODO:  do something in IOC database to indicate boundless growth of
+        # deque. Maybe a new bit-PV 'CommOverflow-Mon' or use one bit of the
+        # power supplies interlock.
+        return len(self._op_deque) < App.QUEUE_SIZE_OVERFLOW
+
+    def _read_constants(self):
+        for psname, bbb in self._bbb_devices.items():
+            version = bbb[psname].read('Version-Cte')
+            reason = psname + ':Version-Cte'
+            self.driver.setParam(reason, version)
+        self.driver.updatePVs()
+
+    def _write_to_device(self, device_name, field, value):
         """Write value to device field."""
+        # TODO: use logging
         bbb = self._bbb_devices[device_name]
         reason = device_name + ':' + field
         if bbb.write(device_name, field, value):
@@ -172,24 +217,6 @@ class App:
     def _scan_pru(self, pru):
         # Scan PRU
         if pru.sync_status == pru._SYNC_ON:
-            self._scan_interval = 1.0
+            self._scan_interval = 1.0/FREQUENCY_RAMP  # Ramp interval
         else:
-            self._scan_interval = 0.1
-
-    def scan_bbb(self, bbb):
-        """Scan devices and PRU."""
-        self._scan_pru(bbb.controller.pru)
-        for psname, ps in bbb.power_supplies.items():
-            self._set_device_setpoints(psname, ps)
-            self._set_device_variables(psname, ps)
-        self.driver.updatePVs()
-        return
-
-    def enqueue_scan(self):
-        """Enqueue read methods run as a thread."""
-        while self.scan:
-            for bbb in self.bbblist:
-                op = App.Operation(self.scan_bbb, {'bbb': bbb})
-                self._op_deque.append(op)
-            # _time.sleep(1/len(self.devices))
-            _time.sleep(self._scan_interval)
+            self._scan_interval = 1.0/FREQUENCY_SCAN  # Scan interval
