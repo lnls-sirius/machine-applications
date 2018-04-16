@@ -210,7 +210,7 @@ class App:
 
     def _set_device_variables(self, device_name, device):
         variables = device.read_ps_variables()
-        if not device.connected:
+        if not device.connected or variables is None:
             self._set_fields_invalid(device_name, device.database.keys())
         elif device.connected and variables is not None:
             self._set_fields(device_name, variables)
