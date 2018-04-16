@@ -50,6 +50,7 @@ class App:
         self.scan = True
 
         # Read Constants once and for all
+        self._constants_update = False
         self._read_constants()
 
         # Print info about the IOC
@@ -80,8 +81,8 @@ class App:
 
     def process(self, interval):
         """Process all read and write requests in queue."""
+        self._read_constants()
         if self._op_deque:
-            # TODO: do something in IOC to indicate
             t = _time.time()
             op = self._op_deque.popleft()
             if op.kwargs:
@@ -152,11 +153,14 @@ class App:
         return len(self._op_deque) < App.QUEUE_SIZE_OVERFLOW
 
     def _read_constants(self):
+        if self._constants_update:
+            return
         for psname, bbb in self._bbb_devices.items():
             version = bbb[psname].read('Version-Cte')
             reason = psname + ':Version-Cte'
             self.driver.setParam(reason, version)
         self.driver.updatePVs()
+        self._constants_update = True
 
     def _write_to_device(self, device_name, field, value):
         """Write value to device field."""
