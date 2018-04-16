@@ -88,8 +88,7 @@ class App:
                 op.function(**op.kwargs)
             else:
                 op.function()
-            dt = _time.time() - t
-            print('operation processed in {} ms'.format(1000*dt))
+            App._print_scan(t, op)
         else:
             _time.sleep(1.0/FREQUENCY_SCAN/10.0)
 
@@ -149,6 +148,7 @@ class App:
         # TODO:  do something in IOC database to indicate boundless growth of
         # deque. Maybe a new bit-PV 'CommOverflow-Mon' or use one bit of the
         # power supplies interlock.
+        # print('queue len: {}'.format(len(self._op_deque)))
         return len(self._op_deque) < App.QUEUE_SIZE_OVERFLOW
 
     def _read_constants(self):
@@ -220,3 +220,13 @@ class App:
             self._scan_interval = 1.0/FREQUENCY_RAMP  # Ramp interval
         else:
             self._scan_interval = 1.0/FREQUENCY_SCAN  # Scan interval
+
+    @staticmethod
+    def _print_scan(t, op):
+        # TEMPORARY UTILITY
+        # return
+        dt = _time.time() - t
+        strop = str(op)
+        _, *strop = strop.split('.')
+        strop, *_ = strop[0].split(' ')
+        print('operation "{}" processed in {:.4f} ms'.format(strop, 1000*dt))
