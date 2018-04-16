@@ -1,16 +1,17 @@
 """IOC Module."""
-import sys as _sys
+
+import os as _os
 import logging as _log
 import signal as _signal
 from threading import Event as _Event
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 from as_ti_control import main as _main
-from siriuspy.util import get_last_commit_hash as _get_version
+from siriuspy import util as _util
 from siriuspy.envars import vaca_prefix as PREFIX
 from siriuspy.search import HLTimeSearch as _HLTimeSearch
 
-__version__ = _get_version()
+__version__ = _util.get_last_commit_hash()
 INTERVAL = 0.1
 stop_event = _Event()
 
@@ -20,12 +21,12 @@ TRIG_LISTS = {
     'si-sexts-skews': ['SI-Glob:TI-Sexts:', 'SI-Glob:TI-Skews:'],
     'si-corrs': ['SI-Glob:TI-Corrs:'],
     'si-dig': [
-        'SI-01SA:TI-TuneShkrH:', 'SI-01SA:TI-InjK:',
+        'SI-01SA:TI-TuneShkrH:', 'SI-01SA:TI-InjKckr:',
         'SI-13C4:TI-DCCT:', 'SI-14C4:TI-DCCT:',
         'SI-16C4:TI-GBPM:', 'SI-17C4:TI-TunePkupV:',
         'SI-17SA:TI-TunePkupH:', 'SI-18C4:TI-TuneShkrV:',
-        'SI-19C4:TI-VPing:', 'SI-19SP:TI-GSL15:',
-        'SI-20SB:TI-GSL07:', 'SI-01SA:TI-HPing:'],
+        'SI-19C4:TI-PingV:', 'SI-19SP:TI-GSL15:',
+        'SI-20SB:TI-GSL07:', 'SI-01SA:TI-PingH:'],
     'li-all': [
         'LI-01:TI-EGun:MultBun', 'LI-01:TI-EGun:SglBun',
         'LI-01:TI-ICT-1:', 'LI-01:TI-ICT-2:',
@@ -51,11 +52,12 @@ def _stop_now(signum, frame):
     stop_event.set()
 
 
-def _print_pvs_in_file(db, fname):
-    with open('pvs/' + fname, 'w') as f:
-        for key in sorted(db.keys()):
-            f.write(PREFIX+'{0:40s}\n'.format(key))
-    _log.info(fname+' file generated with {0:d} pvs.'.format(len(db)))
+def _attribute_access_security_group(server, db):
+    for k, v in db.items():
+        if k.endswith(('-RB', '-Sts', '-Cte', '-Mon')):
+            v.update({'asg': 'rbpv'})
+    path_ = _os.path.abspath(_os.path.dirname(__file__))
+    server.initAccessSecurityFile(path_ + '/access_rules.as')
 
 
 class _Driver(_pcaspy.Driver):
@@ -79,33 +81,39 @@ class _Driver(_pcaspy.Driver):
 def run(evg_params=True, triggers='all', force=False, wait=15, debug=False):
     """Start the IOC."""
     trig_list = TRIG_LISTS.get(triggers, [])
+    ioc_name = 'AS-TI'
+    ioc_name += '-EVG-PARAMS' if evg_params else ''
+    ioc_name += ('-' + triggers.upper()) if triggers != 'none' else ''
 
-    level = _log.DEBUG if debug else _log.INFO
-    fmt = ('%(levelname)7s | %(asctime)s | ' +
-           '%(module)15s.%(funcName)20s[%(lineno)4d] ::: %(message)s')
-    _log.basicConfig(format=fmt, datefmt='%F %T', level=level,
-                     stream=_sys.stdout)
-    #  filename=LOG_FILENAME, filemode='w')
-    _log.info('Starting...')
+    _util.configure_log_file(filename=None, debug=debug)
 
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # Creates App object
-    _log.info('Creating App.')
     app = _main.App(evg_params=evg_params, trig_list=trig_list)
-    _log.info('Generating database file.')
-    fname = 'AS-TI-'
-    fname += 'EVG-PARAMS-' if evg_params else ''
-    fname += triggers.upper() + '-' if triggers != 'none' else ''
     db = app.get_database()
-    db.update({fname+'Version-Cte': {'type': 'string', 'value': __version__}})
-    _print_pvs_in_file(db, fname=fname+'pvs.txt')
+    db[ioc_name + ':Version-Cte'] = {'type': 'string', 'value': __version__}
+
+    # check if IOC is already running
+    running = _util.check_pv_online(
+        pvname=PREFIX + list(db.keys())[0], use_prefix=False, timeout=0.5)
+    if running:
+        _log.error('Another ' + ioc_name + ' is already running!')
+        return
+
+    _util.print_ioc_banner(
+            ioc_name, db, 'High Level Timing IOC.', __version__, PREFIX)
+
+    _log.info('Generating database file.')
+    _util.save_ioc_pv_list(ioc_name.lower(), PREFIX, db)
+    _log.info('File generated with {0:d} pvs.'.format(len(db)))
 
     # create a new simple pcaspy server and driver to respond client's requests
     _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
+    _attribute_access_security_group(server, db)
     _log.info('Setting Server Database.')
     server.createPV(PREFIX, db)
     _log.info('Creating Driver.')
@@ -113,6 +121,7 @@ def run(evg_params=True, triggers='all', force=False, wait=15, debug=False):
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
+    server_thread.daemon = True
     _log.info('Starting Server Thread.')
     server_thread.start()
 

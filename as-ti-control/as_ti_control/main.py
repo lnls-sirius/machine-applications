@@ -36,7 +36,6 @@ class App:
         evg_params: define if this app will manage evg params such as clocks,
                      events, etc.
         """
-        _log.info('Starting App...')
         self.driver = driver
         self._evg = None
         self._clocks = set()
@@ -44,14 +43,11 @@ class App:
         self._triggers = set()
         if evg_params:
             self._evg = _HL_EVG(self._update_driver)
-            _log.info('Creating High Level Interface for Clocks and EVG:')
             for cl_hl, cl_ll in _cstime.clocks_hl2ll_map.items():
                 self._clocks.add(_HL_Clock(cl_hl, self._update_driver))
-            _log.info('Creating High Level Interface for Events:')
             for ev_hl, ev_ll in _cstime.events_hl2ll_map.items():
                 self._events.add(_HL_Event(ev_hl, self._update_driver))
         if trig_list:
-            _log.info('Creating High Level Triggers:')
             for pref in trig_list:
                 self._triggers.add(_HL_Trigger(pref, self._update_driver))
         self._database = self.get_database()
@@ -136,19 +132,12 @@ class App:
             self.driver.updatePVs()
 
     def _isValid(self, reason, value):
-        if reason.endswith(('-Sts', '-RB', '-Mon')):
-            return False
-        enums = (self._database[reason].get('enums') or
-                 self._database[reason].get('Enums'))
+        enums = self._database[reason].get('enums')
         if enums is not None:
             if isinstance(value, int):
                 len_ = len(enums)
                 if value >= len_:
                     _log.warning('value {0:d} too large '.format(value) +
                                  'for PV {0:s} of type enum'.format(reason))
-                    return False
-            elif isinstance(value, str):
-                if value not in enums:
-                    _log.warning('Value {0:s} not permited'.format(value))
                     return False
         return True

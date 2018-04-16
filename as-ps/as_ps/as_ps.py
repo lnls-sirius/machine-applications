@@ -1,5 +1,6 @@
 """IOC for PS."""
 
+import os as _os
 import sys as _sys
 import signal as _signal
 from threading import Thread as _Thread
@@ -46,6 +47,14 @@ def get_database_set(devlist):
     return {_PREFIX: db}
 
 
+def _attribute_access_security_group(server, db):
+    for k, v in db.items():
+        if k.endswith(('-RB', '-Sts', '-Cte', '-Mon')):
+            v.update({'asg': 'rbpv'})
+    path_ = _os.path.abspath(_os.path.dirname(__file__))
+    server.initAccessSecurityFile(path_ + '/access_rules.as')
+
+
 class _PCASDriver(_pcaspy.Driver):
 
     def __init__(self, bbblist, dbset):
@@ -85,6 +94,8 @@ def run(bbbnames, simulate=True):
     # Define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
+
+    _util.configure_log_file()
 
     # Create BBBs
     bbblist = list()
