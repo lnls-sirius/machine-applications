@@ -111,6 +111,7 @@ def run(bbbnames, simulate=True):
 
     # Check if IOC is already running
     if _is_running(dbset):
+        print('Another PS IOC is already running!')
         return
 
     # TODO: discuss with guilherme the need of all these threads
@@ -155,7 +156,6 @@ def _is_running(dbset):
     # print(pvname)
     running = _util.check_pv_online(
         pvname=pvname, use_prefix=False, timeout=0.5)
-    print('Another PS IOC is already running!')
     return running
 
 

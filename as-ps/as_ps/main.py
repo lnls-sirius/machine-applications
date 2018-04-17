@@ -171,7 +171,7 @@ class App:
             if isinstance(value, _np.ndarray):
                 print("[{:.2s}] - {:.32s}".format('W ', reason))
             else:
-                print("[{:.2s}] - {:.32s} = {:50s}".format(
+                print("[{:.2s}] - {:.32s} = {:.50s}".format(
                     'W ', reason, str(value)))
             self.driver.setParamStatus(
                 reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
