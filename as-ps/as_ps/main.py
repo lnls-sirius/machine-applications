@@ -99,20 +99,27 @@ class App:
             if self._op_thread is None or \
                not self._op_thread.is_alive():
                 # get operation
+                # _log.info('processing new operation')
                 op = self.queue_pop()
                 self._op_thread = _Thread(
                     target=self._exec_operation,
                     args=(op, ), daemon=True)
                 self._op_thread.start()
+            else:
+                # _log.info('thread already running')
+                pass
+        # _log.info('processed done.')
         _time.sleep(1.0/FREQUENCY_SCAN/10.0)  # sleep a little.
 
     def _exec_operation(self, op):
-        time_init = _time.time()
+        # time_init = _time.time()
+        # _log.info('begin op: {}, {}'.format(op.function, op.kwargs))
         if op.kwargs:
             op.function(**op.kwargs)
         else:
             op.function()
-        App._print_scan(time_init, op)
+        # _log.info('end op: {}, {}'.format(op.function, op.kwargs))
+        # App._print_scan(time_init, op)
 
     def read(self, reason):
         """Read from database."""
@@ -284,9 +291,9 @@ class App:
     def _print_scan(t, op):
         # TEMPORARY UTILITY
         return
-        dt = _time.time() - t
+        # dt = _time.time() - t
         strop = str(op)
         _, *strop = strop.split('.')
         strop, *_ = strop[0].split(' ')
-        _log.info(
-            'operation "{}" processed in {:.4f} ms'.format(strop, 1000*dt))
+        # _log.info(
+        #     'operation "{}" processed in {:.4f} ms'.format(strop, 1000*dt))

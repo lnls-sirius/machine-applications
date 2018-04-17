@@ -140,7 +140,7 @@ def run(bbbnames, simulate=True):
         try:
             pcas_driver.app.process(INTERVAL)
         except Exception as e:
-            _log.warning('exception while processing main loop')
+            _log.warning('[!!] - exception while processing main loop')
             _traceback.print_exc()
 
     # Signal received, exit
