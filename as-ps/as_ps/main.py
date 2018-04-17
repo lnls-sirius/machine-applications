@@ -2,8 +2,10 @@
 
 import time as _time
 import numpy as _np
+import logging as _log
 from collections import deque as _deque
 from collections import namedtuple as _namedtuple
+from threading import Thread as _Thread
 from threading import Lock as _Lock
 
 from pcaspy import Alarm as _Alarm
@@ -38,10 +40,24 @@ class App:
         """Create Power Supply controllers."""
         self._driver = driver
 
-        # Mapping device to bbb
+        # mapping device to bbb
         self._bbblist = bbblist
 
-        # Map psname to bbb
+        # print info about the IOC
+        _siriuspy.util.print_ioc_banner(
+            ioc_name='BeagleBone',
+            db=dbset[prefix],
+            description='BeagleBone Power Supply IOC',
+            version=__version__,
+            prefix=prefix)
+
+        # save file with PVs list
+        _siriuspy.util.save_ioc_pv_list('as-ps',
+                                        ('',
+                                         prefix),
+                                        dbset[prefix])
+
+        # map psname to bbb
         self._bbb_devices = dict()
         for bbb in self.bbblist:
             for psname in bbb.psnames:
@@ -57,23 +73,11 @@ class App:
         self._scan_interval = 1.0/FREQUENCY_SCAN
         self.scan = True
 
-        # Read Constants once and for all
+        # read Constants once and for all
         self._constants_update = False
-        # self._read_constants()
 
-        # Print info about the IOC
-        _siriuspy.util.print_ioc_banner(
-            ioc_name='BeagleBone',
-            db=dbset[prefix],
-            description='BeagleBone Power Supply IOC',
-            version=__version__,
-            prefix=prefix)
-
-        # Save file with PVs list
-        _siriuspy.util.save_ioc_pv_list('as-ps',
-                                        ('',
-                                         prefix),
-                                        dbset[prefix])
+        # symbol to threads that execute BSMP blocking operations
+        self._op_thread = None
 
     # --- public interface ---
 
@@ -89,28 +93,37 @@ class App:
 
     def process(self, interval):
         """Process all read and write requests in queue."""
-        time_init = _time.time()
-
-        # # give chance to init DBs of constant pvs, if not already done.
-        # self._read_constants()  # give chance to update
-
-        # n = self.queue_length()
-        # if n > 0:
-
-        op = self.queue_pop()
-        if op is not None:
-            if op.kwargs:
-                op.function(**op.kwargs)
+        n = self.queue_length()
+        if n > 0:
+            # check if instance of exec_operation
+            if self._op_thread is None or \
+               not self._op_thread.is_alive():
+                # get operation
+                # _log.info('processing new operation')
+                op = self.queue_pop()
+                self._op_thread = _Thread(
+                    target=self._exec_operation,
+                    args=(op, ), daemon=True)
+                self._op_thread.start()
             else:
-                op.function()
-            App._print_scan(time_init, op)
+                # _log.info('thread already running')
+                pass
+        # _log.info('processed done.')
+        _time.sleep(1.0/FREQUENCY_SCAN/10.0)  # sleep a little.
+
+    def _exec_operation(self, op):
+        # time_init = _time.time()
+        # _log.info('begin op: {}, {}'.format(op.function, op.kwargs))
+        if op.kwargs:
+            op.function(**op.kwargs)
         else:
-            _time.sleep(1.0/FREQUENCY_SCAN/10.0)  # sleep a little.
+            op.function()
+        # _log.info('end op: {}, {}'.format(op.function, op.kwargs))
+        # App._print_scan(time_init, op)
 
     def read(self, reason):
         """Read from database."""
-        # TODO: use logging
-        print("[{:.2s}] - {:.32s} = {:.50s}".format(
+        _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
             'R ', reason, str(self.driver.getParam(reason))))
         return None
 
@@ -120,15 +133,19 @@ class App:
         split = reason.split(':')
         device = ':'.join(split[:2])
         field = split[-1]
-        op = App.Operation(
-            self._write_to_device,
-            {'device_name': device, 'field': field, 'value': value})
-        self.queue_append(op)
+        if 'OpMode-Sel' in reason:
+            # TODO: workaround to be cleaned.
+            self._write_to_device(device_name=device, field=field, value=value)
+        else:
+            op = App.Operation(
+                self._write_to_device,
+                {'device_name': device, 'field': field, 'value': value})
+            self.queue_append(op)
         return
 
     def scan_bbb(self, bbb):
         """Scan PRU and power supply devices."""
-        self._scan_pru(bbb.controller.pru)
+        # self._scan_pru(bbb.controller.pru)
         for psname, ps in bbb.power_supplies.items():
             self._set_device_setpoints(psname, ps)
             self._set_device_variables(psname, ps)
@@ -139,14 +156,21 @@ class App:
         """Enqueue read methods run as a thread."""
         while self.scan:
             t = _time.time()
+
+            # scan PRU
+            for bbb in self.bbblist:
+                self._scan_pru(bbb.controller.pru)
+
             # enqueue read_constants, if necessary
             if not self._constants_update:
                 op = App.Operation(self._read_constants, {})
                 self.queue_append(op)
+
             # enqueue a scan for each bbb
             for bbb in self.bbblist:
                 op = App.Operation(self.scan_bbb, {'bbb': bbb})
                 self.queue_append(op)
+
             # wait until proper scan interval is reached
             dt = _time.time() - t
             _time.sleep(abs(self._scan_interval - dt))
@@ -207,15 +231,15 @@ class App:
         reason = device_name + ':' + field
         if bbb.write(device_name, field, value):
             if isinstance(value, _np.ndarray):
-                print("[{:.2s}] - {:.32s}".format('W ', reason))
+                _log.info("[{:.2s}] - {:.32s}".format('W ', reason))
             else:
-                print("[{:.2s}] - {:.32s} = {:.50s}".format(
+                _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
                     'W ', reason, str(value)))
             self.driver.setParamStatus(
                 reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
         else:
-            print("[{:.2s}] - {:.32s} = {:.50s} - SERIAL ERROR".format(
-                'W ', reason, str(value)))
+            _log.warning("[!!] - {:.32s} = {:.50s} - SERIAL ERROR".format(
+                reason, str(value)))
             self.driver.setParamStatus(
                 reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
         self.driver.setParam(reason, value)
@@ -267,8 +291,9 @@ class App:
     def _print_scan(t, op):
         # TEMPORARY UTILITY
         return
-        dt = _time.time() - t
+        # dt = _time.time() - t
         strop = str(op)
         _, *strop = strop.split('.')
         strop, *_ = strop[0].split(' ')
-        print('operation "{}" processed in {:.4f} ms'.format(strop, 1000*dt))
+        # _log.info(
+        #     'operation "{}" processed in {:.4f} ms'.format(strop, 1000*dt))
