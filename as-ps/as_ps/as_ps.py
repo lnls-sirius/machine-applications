@@ -129,11 +129,11 @@ def run(bbbnames, simulate=True):
     thread_server = _pcaspy_tools.ServerThread(server)
 
     # Create scan thread that'll enqueue read request to update DB
-    thread_scan = _Thread(target=pcas_driver.app.enqueue_scan, daemon=True)
+    # thread_scan = _Thread(target=pcas_driver.app.enqueue_scan, daemon=True)
 
     # Start threads and processing
     thread_server.start()
-    thread_scan.start()
+    # thread_scan.start()
 
     # Main loop - run app.proccess
     while not stop_event:
@@ -146,9 +146,9 @@ def run(bbbnames, simulate=True):
     # Signal received, exit
     print('exiting...')
     thread_server.stop()
-    pcas_driver.app.scan = False
+    # pcas_driver.app.scan = False
     thread_server.join()
-    thread_scan.join()
+    # thread_scan.join()
 
 
 def _is_running(dbset):

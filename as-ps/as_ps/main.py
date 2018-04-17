@@ -22,19 +22,7 @@ FREQUENCY_RAMP = 2.0  # [Hz]
 
 
 class App:
-    """Responsible for updating the IOC database.
-
-    Update values and parameters such as alarms.
-
-    Issues 2 threads:
-        - thread to queue all request to devices underneath it.
-        - thread to enqueue a read request for each device (10 Hz per dev)
-    """
-
-    # Queue size over this value is interpreted as communication overflow
-    QUEUE_SIZE_OVERFLOW = 500
-
-    Operation = _namedtuple('Operation', 'function, kwargs')
+    """Responsible for updating the IOC database."""
 
     def __init__(self, driver, bbblist, dbset, prefix):
         """Create Power Supply controllers."""
@@ -58,26 +46,13 @@ class App:
                                         dbset[prefix])
 
         # map psname to bbb
-        self._bbb_devices = dict()
+        self._psname_2_bbbdev = dict()
         for bbb in self.bbblist:
             for psname in bbb.psnames:
-                self._bbb_devices[psname] = bbb
-
-        # operation queue
-        self._op_deque = _deque()  # TODO: is dequeu thread-safe ?!
-        self._lock = _Lock()
-
-        # scan
-        # TODO: there should be one _scan_interval for each BBB !!!
-        # rethink IOC duties.
-        self._scan_interval = 1.0/FREQUENCY_SCAN
-        self.scan = True
+                self._psname_2_bbbdev[psname] = bbb
 
         # read Constants once and for all
-        self._constants_update = False
-
-        # symbol to threads that execute BSMP blocking operations
-        self._op_thread = None
+        # self._constants_update = False
 
     # --- public interface ---
 
@@ -92,34 +67,18 @@ class App:
         return self._bbblist
 
     def process(self, interval):
-        """Process all read and write requests in queue."""
-        n = self.queue_length()
-        if n > 0:
-            # check if instance of exec_operation
-            if self._op_thread is None or \
-               not self._op_thread.is_alive():
-                # get operation
-                # _log.info('processing new operation')
-                op = self.queue_pop()
-                self._op_thread = _Thread(
-                    target=self._exec_operation,
-                    args=(op, ), daemon=True)
-                self._op_thread.start()
-            else:
-                # _log.info('thread already running')
-                pass
-        # _log.info('processed done.')
+        """Process IOC updates."""
+        for bbb in self.bbblist:
+            bbbstate = bbb.read_state()
+            for reason, db in bbbstate.items():
+                value = db['value']
+                if value is not None:
+                    self.driver.setParam(reason, value)
+                else:
+                    # set alarm state
+                    pass
+        self.driver.updatePVs()
         _time.sleep(1.0/FREQUENCY_SCAN/10.0)  # sleep a little.
-
-    def _exec_operation(self, op):
-        # time_init = _time.time()
-        # _log.info('begin op: {}, {}'.format(op.function, op.kwargs))
-        if op.kwargs:
-            op.function(**op.kwargs)
-        else:
-            op.function()
-        # _log.info('end op: {}, {}'.format(op.function, op.kwargs))
-        # App._print_scan(time_init, op)
 
     def read(self, reason):
         """Read from database."""
@@ -133,103 +92,23 @@ class App:
         split = reason.split(':')
         device = ':'.join(split[:2])
         field = split[-1]
-        if 'OpMode-Sel' in reason:
-            # TODO: workaround to be cleaned.
-            self._write_to_device(device_name=device, field=field, value=value)
-        else:
-            op = App.Operation(
-                self._write_to_device,
-                {'device_name': device, 'field': field, 'value': value})
-            self.queue_append(op)
-        return
+        self._write_to_device(psname=device, field=field, value=value)
+        return None
 
-    def scan_bbb(self, bbb):
-        """Scan PRU and power supply devices."""
-        # self._scan_pru(bbb.controller.pru)
-        for psname, ps in bbb.power_supplies.items():
-            self._set_device_setpoints(psname, ps)
-            self._set_device_variables(psname, ps)
-        self.driver.updatePVs()
-        return
+    # def _read_constants(self):
+    #     for psname, bbb in self._psname_2_bbbdev.items():
+    #         version = bbb[psname].read('Version-Cte')
+    #         reason = psname + ':Version-Cte'
+    #         self.driver.setParam(reason, version)
+    #     self.driver.updatePVs()
+    #     self._constants_update = True
 
-    def enqueue_scan(self):
-        """Enqueue read methods run as a thread."""
-        while self.scan:
-            t = _time.time()
-
-            # scan PRU
-            for bbb in self.bbblist:
-                self._scan_pru(bbb.controller.pru)
-
-            # enqueue read_constants, if necessary
-            if not self._constants_update:
-                op = App.Operation(self._read_constants, {})
-                self.queue_append(op)
-
-            # enqueue a scan for each bbb
-            for bbb in self.bbblist:
-                op = App.Operation(self.scan_bbb, {'bbb': bbb})
-                self.queue_append(op)
-
-            # wait until proper scan interval is reached
-            dt = _time.time() - t
-            _time.sleep(abs(self._scan_interval - dt))
-
-    # --- private methods ---
-
-    def queue_pop(self):
-        """Queue pop operation."""
-        self._lock.acquire(blocking=True)
-        op = self._op_deque.popleft() if self._op_deque else None
-        self._lock.release()
-        return op
-
-    def queue_append(self, op):
-        """Right-append operation to queue."""
-        self._lock.acquire(blocking=True)
-        is_ok = len(self._op_deque) < App.QUEUE_SIZE_OVERFLOW
-        if is_ok:
-            self._op_deque.append(op)
-        self._lock.release()
-        # TODO:  do something in IOC database to indicate boundless growth of
-        # deque. Maybe a new bit-PV 'CommOverflow-Mon' or use one bit of the
-        # power supplies interlock.
-        # print('queue len: {}'.format(len(self._op_deque)))
-        pass
-
-    def queue_length(self):
-        """Return length of queue."""
-        self._lock.acquire(blocking=True)
-        n = len(self._op_deque)
-        self._lock.release()
-        return n
-
-    # def queue_appendleft(self, op):
-    #     """Left-append operation to queue."""
-    #     if self._is_queue_ok():
-    #         self._op_deque.appendleft(op)
-
-    # def _is_queue_ok(self):
-    #     # TODO:  do something in IOC database to indicate boundless growth of
-    #     # deque. Maybe a new bit-PV 'CommOverflow-Mon' or use one bit of the
-    #     # power supplies interlock.
-    #     # print('queue len: {}'.format(len(self._op_deque)))
-    #     return len(self._op_deque) < App.QUEUE_SIZE_OVERFLOW
-
-    def _read_constants(self):
-        for psname, bbb in self._bbb_devices.items():
-            version = bbb[psname].read('Version-Cte')
-            reason = psname + ':Version-Cte'
-            self.driver.setParam(reason, version)
-        self.driver.updatePVs()
-        self._constants_update = True
-
-    def _write_to_device(self, device_name, field, value):
+    def _write_to_device(self, psname, field, value):
         """Write value to device field."""
         # TODO: use logging
-        bbb = self._bbb_devices[device_name]
-        reason = device_name + ':' + field
-        if bbb.write(device_name, field, value):
+        bbb = self._psname_2_bbbdev[psname]
+        reason = psname + ':' + field
+        if bbb.write(psname, field, value):
             if isinstance(value, _np.ndarray):
                 _log.info("[{:.2s}] - {:.32s}".format('W ', reason))
             else:
@@ -245,47 +124,6 @@ class App:
         self.driver.setParam(reason, value)
         self.driver.updatePVs()
         return
-
-    def _set_fields(self, device_name, fields_dict):
-        """Update fields of db.
-
-        `fields` is a dict with fields as key
-        """
-        for field, value in fields_dict.items():
-            reason = device_name + ':' + field
-            self.driver.setParam(reason, value)
-            self.driver.setParamStatus(
-                reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
-
-    def _set_fields_invalid(self, device_name, fields_list):
-        """Set fields to invalid."""
-        for field in fields_list:
-            reason = device_name + ':' + field
-            self.driver.setParamStatus(
-                reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
-
-    def _set_device_setpoints(self, device_name, device):
-        fields = dict()
-        fields.update(device.read_setpoints())
-        fields.update(device.read_status())
-        self._set_fields(device_name, fields)
-
-    def _set_device_variables(self, device_name, device):
-        variables = device.read_ps_variables()
-        if not device.connected or variables is None:
-            self._set_fields_invalid(device_name, device.database.keys())
-        elif device.connected and variables is not None:
-            self._set_fields(device_name, variables)
-        else:
-            # Log
-            pass
-
-    def _scan_pru(self, pru):
-        # Scan PRU
-        if pru.sync_status == pru._SYNC_ON:
-            self._scan_interval = 1.0/FREQUENCY_RAMP  # Ramp interval
-        else:
-            self._scan_interval = 1.0/FREQUENCY_SCAN  # Scan interval
 
     @staticmethod
     def _print_scan(t, op):
