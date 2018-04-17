@@ -248,7 +248,7 @@ class App:
     @staticmethod
     def _print_scan(t, op):
         # TEMPORARY UTILITY
-        # return
+        return
         dt = _time.time() - t
         strop = str(op)
         _, *strop = strop.split('.')
