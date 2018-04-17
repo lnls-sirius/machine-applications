@@ -46,14 +46,20 @@ class App:
         for bbb in self.bbblist:
             for psname in bbb.psnames:
                 self._bbb_devices[psname] = bbb
+
+        # operation queue
         self._op_deque = _deque()  # TODO: is dequeu thread-safe ?!
         self._lock = _Lock()
+
+        # scan
+        # TODO: there should be one _scan_interval for each BBB !!!
+        # rethink IOC duties.
         self._scan_interval = 1.0/FREQUENCY_SCAN
         self.scan = True
 
         # Read Constants once and for all
         self._constants_update = False
-        self._read_constants()
+        # self._read_constants()
 
         # Print info about the IOC
         _siriuspy.util.print_ioc_banner(
@@ -85,10 +91,12 @@ class App:
         """Process all read and write requests in queue."""
         time_init = _time.time()
 
-        # give chance to init DBs of constant pvs, if not already done.
-        self._read_constants()  # give chance to update
+        # # give chance to init DBs of constant pvs, if not already done.
+        # self._read_constants()  # give chance to update
 
-        # process
+        # n = self.queue_length()
+        # if n > 0:
+
         op = self.queue_pop()
         if op is not None:
             if op.kwargs:
@@ -131,12 +139,17 @@ class App:
         """Enqueue read methods run as a thread."""
         while self.scan:
             t = _time.time()
+            # enqueue read_constants, if necessary
+            if not self._constants_update:
+                op = App.Operation(self._read_constants, {})
+                self.queue_append(op)
+            # enqueue a scan for each bbb
             for bbb in self.bbblist:
                 op = App.Operation(self.scan_bbb, {'bbb': bbb})
                 self.queue_append(op)
             # wait until proper scan interval is reached
             dt = _time.time() - t
-            _time.sleep(self._scan_interval - dt)
+            _time.sleep(abs(self._scan_interval - dt))
 
     # --- private methods ---
 
@@ -160,6 +173,13 @@ class App:
         # print('queue len: {}'.format(len(self._op_deque)))
         pass
 
+    def queue_length(self):
+        """Return length of queue."""
+        self._lock.acquire(blocking=True)
+        n = len(self._op_deque)
+        self._lock.release()
+        return n
+
     # def queue_appendleft(self, op):
     #     """Left-append operation to queue."""
     #     if self._is_queue_ok():
@@ -173,8 +193,6 @@ class App:
     #     return len(self._op_deque) < App.QUEUE_SIZE_OVERFLOW
 
     def _read_constants(self):
-        if self._constants_update:
-            return
         for psname, bbb in self._bbb_devices.items():
             version = bbb[psname].read('Version-Cte')
             reason = psname + ':Version-Cte'
