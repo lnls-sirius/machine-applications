@@ -43,7 +43,7 @@ def get_database_set(devlist):
     for device in devlist:
         dev_db = device.database
         for field in dev_db:
-            db[device.name + ':' + field] = dev_db[field]
+            db[device.psname + ':' + field] = dev_db[field]
     return {_PREFIX: db}
 
 

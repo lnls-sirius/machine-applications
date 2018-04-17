@@ -4,6 +4,7 @@ import time as _time
 import numpy as _np
 from collections import deque as _deque
 from collections import namedtuple as _namedtuple
+from threading import Lock as _Lock
 
 from pcaspy import Alarm as _Alarm
 from pcaspy import Severity as _Severity
@@ -46,6 +47,7 @@ class App:
             for psname in bbb.psnames:
                 self._bbb_devices[psname] = bbb
         self._op_deque = _deque()  # TODO: is dequeu thread-safe ?!
+        self._lock = _Lock()
         self._scan_interval = 1.0/FREQUENCY_SCAN
         self.scan = True
 
@@ -81,17 +83,21 @@ class App:
 
     def process(self, interval):
         """Process all read and write requests in queue."""
-        self._read_constants()
-        if self._op_deque:
-            t = _time.time()
-            op = self._op_deque.popleft()
+        time_init = _time.time()
+
+        # give chance to init DBs of constant pvs, if not already done.
+        self._read_constants()  # give chance to update
+
+        # process
+        op = self.queue_pop()
+        if op is not None:
             if op.kwargs:
                 op.function(**op.kwargs)
             else:
                 op.function()
-            App._print_scan(t, op)
+            App._print_scan(time_init, op)
         else:
-            _time.sleep(1.0/FREQUENCY_SCAN/10.0)
+            _time.sleep(1.0/FREQUENCY_SCAN/10.0)  # sleep a little.
 
     def read(self, reason):
         """Read from database."""
@@ -109,8 +115,7 @@ class App:
         op = App.Operation(
             self._write_to_device,
             {'device_name': device, 'field': field, 'value': value})
-        # TODO: this seems wrong since process pops from left!!!
-        self.queue_appendleft(op)
+        self.queue_append(op)
         return
 
     def scan_bbb(self, bbb):
@@ -135,22 +140,37 @@ class App:
 
     # --- private methods ---
 
+    def queue_pop(self):
+        """Queue pop operation."""
+        self._lock.acquire(blocking=True)
+        op = self._op_deque.popleft() if self._op_deque else None
+        self._lock.release()
+        return op
+
     def queue_append(self, op):
         """Right-append operation to queue."""
-        if self._is_queue_ok():
+        self._lock.acquire(blocking=True)
+        is_ok = len(self._op_deque) < App.QUEUE_SIZE_OVERFLOW
+        if is_ok:
             self._op_deque.append(op)
-
-    def queue_appendleft(self, op):
-        """Left-append operation to queue."""
-        if self._is_queue_ok():
-            self._op_deque.appendleft(op)
-
-    def _is_queue_ok(self):
+        self._lock.release()
         # TODO:  do something in IOC database to indicate boundless growth of
         # deque. Maybe a new bit-PV 'CommOverflow-Mon' or use one bit of the
         # power supplies interlock.
         # print('queue len: {}'.format(len(self._op_deque)))
-        return len(self._op_deque) < App.QUEUE_SIZE_OVERFLOW
+        pass
+
+    # def queue_appendleft(self, op):
+    #     """Left-append operation to queue."""
+    #     if self._is_queue_ok():
+    #         self._op_deque.appendleft(op)
+
+    # def _is_queue_ok(self):
+    #     # TODO:  do something in IOC database to indicate boundless growth of
+    #     # deque. Maybe a new bit-PV 'CommOverflow-Mon' or use one bit of the
+    #     # power supplies interlock.
+    #     # print('queue len: {}'.format(len(self._op_deque)))
+    #     return len(self._op_deque) < App.QUEUE_SIZE_OVERFLOW
 
     def _read_constants(self):
         if self._constants_update:
