@@ -4,24 +4,19 @@ import os as _os
 import sys as _sys
 import signal as _signal
 from threading import Thread as _Thread
-
+import traceback as _traceback
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 
-import siriuspy.util as _util
-# import as_ps.main as _main
-# import as_ps.pvs as _pvs
-from as_ps.main import App
+from siriuspy import util as _util
 from siriuspy.envars import vaca_prefix as _VACA_PREFIX
-# from siriuspy.search import PSSearch
-# from siriuspy.pwrsupply.data import PSData
-# from siriuspy.pwrsupply.pru import PRU
-# from siriuspy.pwrsupply.model import FBPPowerSupply
-# from siriuspy.pwrsupply.controller import FBPController, FBPControllerSim
 from siriuspy.pwrsupply.beaglebone import BeagleBone as _BeagleBone
+
+from as_ps.main import App
 
 INTERVAL = 0.1/10
 stop_event = False  # _multiprocessing.Event()
+pcas_driver = None
 
 _PREFIX = _VACA_PREFIX
 _COMMIT_HASH = _util.get_last_commit_hash()
@@ -34,6 +29,7 @@ def _stop_now(signum, frame):
     _sys.stdout.flush()
     _sys.stderr.flush()
     stop_event = True
+    pcas_driver.app.scan = False
 
 
 def get_devices(bbbs, simulate=True):
@@ -41,13 +37,13 @@ def get_devices(bbbs, simulate=True):
     pass
 
 
-def get_database(controllers):
-    """Return the database."""
+def get_database_set(devlist):
+    """Return the database set, one for each prefix."""
     db = {}
-    for psname in controllers:
-        dev_db = controllers[psname].database
+    for device in devlist:
+        dev_db = device.database
         for field in dev_db:
-            db[psname + ':' + field] = dev_db[field]
+            db[device.psname + ':' + field] = dev_db[field]
     return {_PREFIX: db}
 
 
@@ -61,9 +57,9 @@ def _attribute_access_security_group(server, db):
 
 class _PCASDriver(_pcaspy.Driver):
 
-    def __init__(self, bbblist, database):
+    def __init__(self, bbblist, dbset):
         super().__init__()
-        self.app = App(self, bbblist, database, _PREFIX)
+        self.app = App(self, bbblist, dbset, _PREFIX)
 
     def read(self, reason):
         value = self.app.read(reason)
@@ -76,8 +72,25 @@ class _PCASDriver(_pcaspy.Driver):
         return self.app.write(reason, value)
 
 
-def run(bbblist, simulate=True):
-    """Main function."""
+def run(bbbnames, simulate=True):
+    """Main function.
+
+    This is the main function of the IOC:
+    1. It first builds a list of all required beaglebone objets
+    2. It Builds a list of all power supply devices.
+    3. Checks if another instance of the IOC is already running
+    4. Initializes epics DB with the set of IOC databases
+    5. Creates a Driver to handle requests
+    6. Starts a thread (thread_server) that listens to client connections
+    6. Creates a thread (thread_scan) to enqueue read requests to update DB
+
+    Three methods in App are running within concurrent threads:
+        App.proccess: process all read and write requests in queue
+        App.enqueu_scan: enqueue read requests to update DB
+        App.write: enqueue write requests.
+    """
+    global pcas_driver
+
     # Define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
@@ -85,54 +98,65 @@ def run(bbblist, simulate=True):
     _util.configure_log_file()
 
     # Create BBBs
-    bbbs = dict()
-    devices = dict()
-    for bbbname in bbblist:
+    bbblist = list()
+    devlist = list()
+    for bbbname in bbbnames:
         bbb = _BeagleBone(bbbname, simulate)
+        bbblist.append(bbb)
         for psname in bbb.psnames:
-            devices[psname] = bbb[psname]
-            bbbs[psname] = bbb
+            devlist.append(bbb[psname])
     # What if serial is not running?
-    # devices = get_devices(bbbs, simulate=simulate)
-    database = get_database(devices)
+    # devlist = get_devices(bbblist, simulate=simulate)
+    dbset = get_database_set(devlist)
 
     # Check if IOC is already running
-    pvname = \
-        _PREFIX + list(devices[list(devices)[0]].database)[0]
-    running = _util.check_pv_online(
-        pvname=pvname, use_prefix=False, timeout=0.5)
-    if running:
+    if _is_running(dbset):
         print('Another PS IOC is already running!')
         return
 
+    # TODO: discuss with guilherme the need of all these threads
+
     # Create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
-    db = get_database(devices)[_PREFIX]
-    _attribute_access_security_group(server, db)
-    server.createPV(_PREFIX, db)
-
-    # initiate a new thread responsible for listening for client connections
-    server_thread = _pcaspy_tools.ServerThread(server)
+    for prefix, db in dbset.items():
+        server.createPV(prefix, db)
 
     # Create driver to handle requests
-    pcas_driver = _PCASDriver(bbbs, database)
+    pcas_driver = _PCASDriver(bbblist, dbset)
+
+    # Create a new thread responsible for listening for client connections
+    thread_server = _pcaspy_tools.ServerThread(server)
 
     # Create scan thread that'll enqueue read request to update DB
-    scan_thread = _Thread(target=pcas_driver.app.enqueue_scan, daemon=True)
+    thread_scan = _Thread(target=pcas_driver.app.enqueue_scan, daemon=True)
 
     # Start threads and processing
-    server_thread.start()
-    scan_thread.start()
+    thread_server.start()
+    thread_scan.start()
+
+    # Main loop - run app.proccess
     while not stop_event:
-        pcas_driver.app.process(INTERVAL)
+        try:
+            pcas_driver.app.process(INTERVAL)
+        except Exception as e:
+            _traceback.print_exc()
 
     # Signal received, exit
     print('exiting...')
-    server_thread.stop()
+    thread_server.stop()
     pcas_driver.app.scan = False
+    thread_server.join()
+    thread_scan.join()
 
-    server_thread.join()
-    scan_thread.join()
+
+def _is_running(dbset):
+    prefix = tuple(dbset.keys())[0]
+    propty = tuple(dbset[prefix].keys())[0]
+    pvname = prefix + propty
+    # print(pvname)
+    running = _util.check_pv_online(
+        pvname=pvname, use_prefix=False, timeout=0.5)
+    return running
 
 
 if __name__ == "__main__":
