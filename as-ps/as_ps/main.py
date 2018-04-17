@@ -2,6 +2,7 @@
 
 import time as _time
 import numpy as _np
+import logging as _log
 from collections import deque as _deque
 from collections import namedtuple as _namedtuple
 from threading import Thread as _Thread
@@ -115,8 +116,7 @@ class App:
 
     def read(self, reason):
         """Read from database."""
-        # TODO: use logging
-        print("[{:.2s}] - {:.32s} = {:.50s}".format(
+        _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
             'R ', reason, str(self.driver.getParam(reason))))
         return None
 
@@ -126,10 +126,14 @@ class App:
         split = reason.split(':')
         device = ':'.join(split[:2])
         field = split[-1]
-        op = App.Operation(
-            self._write_to_device,
-            {'device_name': device, 'field': field, 'value': value})
-        self.queue_append(op)
+        if 'OpMode-Sel' in reason:
+            # TODO: workaround to be cleaned.
+            self._write_to_device(device_name=device, field=field, value=value)
+        else:
+            op = App.Operation(
+                self._write_to_device,
+                {'device_name': device, 'field': field, 'value': value})
+            self.queue_append(op)
         return
 
     def scan_bbb(self, bbb):
@@ -220,15 +224,15 @@ class App:
         reason = device_name + ':' + field
         if bbb.write(device_name, field, value):
             if isinstance(value, _np.ndarray):
-                print("[{:.2s}] - {:.32s}".format('W ', reason))
+                _log.info("[{:.2s}] - {:.32s}".format('W ', reason))
             else:
-                print("[{:.2s}] - {:.32s} = {:.50s}".format(
+                _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
                     'W ', reason, str(value)))
             self.driver.setParamStatus(
                 reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
         else:
-            print("[{:.2s}] - {:.32s} = {:.50s} - SERIAL ERROR".format(
-                'W ', reason, str(value)))
+            _log.warning("[!!] - {:.32s} = {:.50s} - SERIAL ERROR".format(
+                reason, str(value)))
             self.driver.setParamStatus(
                 reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
         self.driver.setParam(reason, value)
@@ -284,4 +288,5 @@ class App:
         strop = str(op)
         _, *strop = strop.split('.')
         strop, *_ = strop[0].split(' ')
-        print('operation "{}" processed in {:.4f} ms'.format(strop, 1000*dt))
+        _log.info(
+            'operation "{}" processed in {:.4f} ms'.format(strop, 1000*dt))
