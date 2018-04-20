@@ -22,7 +22,10 @@ FREQUENCY_RAMP = 2.0  # [Hz]
 
 
 class App:
-    """Responsible for updating the IOC database."""
+    """Responsible for updating the IOC database.
+
+    Update values and parameters such as alarms.
+    """
 
     def __init__(self, driver, bbblist, dbset, prefix):
         """Create Power Supply controllers."""
@@ -46,16 +49,28 @@ class App:
                                         dbset[prefix])
 
         # map psname to bbb
-        self._psname_2_bbbdev = dict()
+        self._bbb_devices = dict()
         for bbb in self.bbblist:
             for psname in bbb.psnames:
-                self._psname_2_bbbdev[psname] = bbb
+                self._bbb_devices[psname] = bbb
+
+        # operation queue
+        self._op_deque = _deque()  # TODO: is dequeu thread-safe ?!
+        self._lock = _Lock()
+
+        # scan
+        # TODO: there should be one _scan_interval for each BBB !!!
+        # rethink IOC duties.
+        self._scan_interval = 1.0/FREQUENCY_SCAN
+        self.scan = True
 
         # read Constants once and for all
-        # self._constants_update = False
+        self._constants_update = False
 
-    # --- public interface ---
+        # symbol to threads that execute BSMP blocking operations
+        self._op_thread = None
 
+    # API
     @property
     def driver(self):
         """Pcaspy driver."""
@@ -67,18 +82,11 @@ class App:
         return self._bbblist
 
     def process(self, interval):
-        """Process IOC updates."""
+        """Process all read and write requests in queue."""
         for bbb in self.bbblist:
-            bbbstate = bbb.read_state()
-            for reason, db in bbbstate.items():
-                value = db['value']
-                if value is not None:
-                    self.driver.setParam(reason, value)
-                else:
-                    # set alarm state
-                    pass
+            self._scan_bbb(bbb)
         self.driver.updatePVs()
-        _time.sleep(1.0/FREQUENCY_SCAN/10.0)  # sleep a little.
+        _time.sleep(0.05)
 
     def read(self, reason):
         """Read from database."""
@@ -92,46 +100,41 @@ class App:
         split = reason.split(':')
         device = ':'.join(split[:2])
         field = split[-1]
-        self._write_to_device(psname=device, field=field, value=value)
-        return None
 
-    # def _read_constants(self):
-    #     for psname, bbb in self._psname_2_bbbdev.items():
-    #         version = bbb[psname].read('Version-Cte')
-    #         reason = psname + ':Version-Cte'
-    #         self.driver.setParam(reason, version)
-    #     self.driver.updatePVs()
-    #     self._constants_update = True
+        _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
+            'W ', reason, value))
 
-    def _write_to_device(self, psname, field, value):
-        """Write value to device field."""
-        # TODO: use logging
-        bbb = self._psname_2_bbbdev[psname]
-        reason = psname + ':' + field
-        if bbb.write(psname, field, value):
-            if isinstance(value, _np.ndarray):
-                _log.info("[{:.2s}] - {:.32s}".format('W ', reason))
-            else:
-                _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
-                    'W ', reason, str(value)))
-            self.driver.setParamStatus(
-                reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+        bbb = self._bbb_devices[device]
+        bbb.write(device, field, value)
+
+    # Private
+    def _check_value_changed(self, reason, new_value):
+        old_value = self.driver.getParam(reason)
+        if isinstance(new_value, _np.ndarray):
+            # TODO: check for ndarray
+            return True
         else:
-            _log.warning("[!!] - {:.32s} = {:.50s} - SERIAL ERROR".format(
-                reason, str(value)))
+            if new_value != old_value:
+                return True
+        return False
+
+    def _update_ioc_database(self, bbb, device_name):
+        # Return dict idexed with reason
+        for reason, new_value in bbb.read(device_name).items():
+            if self._check_value_changed(reason, new_value):
+                self.setParam(reason, new_value)
+                self.driver.setParamStatus(
+                    reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+
+    def _set_device_disconnected(self, bbb, device_name):
+        for field in bbb.devices_database:
+            reason = device_name + ':' + field
             self.driver.setParamStatus(
                 reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
-        self.driver.setParam(reason, value)
-        self.driver.updatePVs()
-        return
 
-    @staticmethod
-    def _print_scan(t, op):
-        # TEMPORARY UTILITY
-        return
-        # dt = _time.time() - t
-        strop = str(op)
-        _, *strop = strop.split('.')
-        strop, *_ = strop[0].split(' ')
-        # _log.info(
-        #     'operation "{}" processed in {:.4f} ms'.format(strop, 1000*dt))
+    def _scan_bbb(self, bbb):
+        for device_name, connection in bbb.connections.items():
+            if connection:
+                self._update_ioc_database(bbb, device_name)
+            else:
+                self._set_device_disconnected(bbb, device_name)
