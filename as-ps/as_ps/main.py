@@ -102,7 +102,7 @@ class App:
         field = split[-1]
 
         _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
-            'W ', reason, value))
+            'W ', reason, str(value)))
 
         bbb = self._bbb_devices[device]
         bbb.write(device, field, value)
@@ -122,7 +122,7 @@ class App:
         # Return dict idexed with reason
         for reason, new_value in bbb.read(device_name).items():
             if self._check_value_changed(reason, new_value):
-                self.setParam(reason, new_value)
+                self.driver.setParam(reason, new_value)
                 self.driver.setParamStatus(
                     reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
 
