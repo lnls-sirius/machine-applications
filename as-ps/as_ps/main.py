@@ -133,8 +133,8 @@ class App:
                 reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
 
     def _scan_bbb(self, bbb):
-        for device_name, connection in bbb.connections.items():
-            if connection:
+        for device_name, device in bbb.power_supplies.items():
+            if bbb.is_connected(device_name):
                 self._update_ioc_database(bbb, device_name)
             else:
                 self._set_device_disconnected(bbb, device_name)
