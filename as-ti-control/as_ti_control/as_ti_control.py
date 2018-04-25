@@ -27,14 +27,15 @@ TRIG_LISTS = {
         'SI-17SA:TI-TunePkupH:', 'SI-18C4:TI-TuneShkrV:',
         'SI-19C4:TI-PingV:', 'SI-19SP:TI-GSL15:',
         'SI-20SB:TI-GSL07:', 'SI-01SA:TI-PingH:'],
-    'li-all': [
-        'LI-01:TI-EGun:MultBun', 'LI-01:TI-EGun:SglBun',
-        'LI-01:TI-ICT-1:', 'LI-01:TI-ICT-2:',
+    'li-inj': [
+        'LI-01:TI-EGunAmpMB:', 'LI-01:TI-EGunAmpSB:',
         'LI-01:TI-Modltr-1:', 'LI-01:TI-Modltr-2:',
-        'LI-Fam:TI-BPM:', 'LI-Fam:TI-Scrn:',
         'LI-Glob:TI-LLRF-1:', 'LI-Glob:TI-LLRF-2:',
         'LI-Glob:TI-LLRF-3:', 'LI-Glob:TI-RFAmp-1:',
-        'LI-Glob:TI-RFAmp-2:', 'LI-Glob:TI-SHAmp:'],
+        'LI-Glob:TI-RFAmp-2:', 'LI-Glob:TI-SHBAmp:'],
+    'li-dig': [
+        'LI-01:TI-ICT-1:', 'LI-01:TI-ICT-2:',
+        'LI-Fam:TI-BPM:', 'LI-Fam:TI-Scrn:'],
     'bo-mags': ['BO-Glob:TI-Mags:'],
     'bo-si-bpms': ['BO-Fam:TI-BPM:', 'SI-Fam:TI-BPM:'],
     }
