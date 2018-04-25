@@ -109,6 +109,8 @@ class App:
 
     # Private
     def _check_value_changed(self, reason, new_value):
+        return True
+        # TODO: Is it necessary to check?
         old_value = self.driver.getParam(reason)
         if isinstance(new_value, _np.ndarray):
             # TODO: check for ndarray
@@ -133,8 +135,8 @@ class App:
                 reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
 
     def _scan_bbb(self, bbb):
-        for device_name, device in bbb.power_supplies.items():
-            if bbb.is_connected(device_name):
+        for device_name in bbb.psnames:
+            if bbb.get_connected(device_name):
                 self._update_ioc_database(bbb, device_name)
             else:
                 self._set_device_disconnected(bbb, device_name)

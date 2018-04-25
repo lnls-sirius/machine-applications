@@ -8,6 +8,7 @@ from threading import Thread as _Thread
 import traceback as _traceback
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
+from copy import deepcopy as _deepcopy
 
 from siriuspy import util as _util
 from siriuspy.envars import vaca_prefix as _VACA_PREFIX
@@ -38,13 +39,14 @@ def get_devices(bbbs, simulate=True):
     pass
 
 
-def get_database_set(devlist):
+def get_database_set(bbblist):
     """Return the database set, one for each prefix."""
     db = {}
-    for device in devlist:
-        dev_db = device.database
+    for bbb in bbblist:
+        dev_db = bbb._ioc_controller.database
         for field in dev_db:
-            db[device.psname + ':' + field] = dev_db[field]
+            for psname in bbb.psnames:
+                db[psname + ':' + field] = _deepcopy(dev_db[field])
     return {_PREFIX: db}
 
 
@@ -100,15 +102,14 @@ def run(bbbnames, simulate=True):
 
     # Create BBBs
     bbblist = list()
-    devlist = list()
     for bbbname in bbbnames:
         bbb = _BeagleBone(bbbname, simulate)
         bbblist.append(bbb)
-        for psname in bbb.psnames:
-            devlist.append(bbb[psname])
+        # for psname in bbb.psnames:
+        #     devlist.append(bbb[psname])
     # What if serial is not running?
     # devlist = get_devices(bbblist, simulate=simulate)
-    dbset = get_database_set(devlist)
+    dbset = get_database_set(bbblist)
 
     # Check if IOC is already running
     if _is_running(dbset):
