@@ -136,7 +136,7 @@ class App:
 
     def _scan_bbb(self, bbb):
         for device_name in bbb.psnames:
-            if bbb.get_connected(device_name):
+            if bbb.check_connected(device_name):
                 self._update_ioc_database(bbb, device_name)
             else:
                 self._set_device_disconnected(bbb, device_name)
