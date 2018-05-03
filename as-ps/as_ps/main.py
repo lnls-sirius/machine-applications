@@ -3,10 +3,10 @@
 import time as _time
 import numpy as _np
 import logging as _log
-from collections import deque as _deque
-from collections import namedtuple as _namedtuple
-from threading import Thread as _Thread
-from threading import Lock as _Lock
+# from collections import deque as _deque
+# from collections import namedtuple as _namedtuple
+# from threading import Thread as _Thread
+# from threading import Lock as _Lock
 
 from pcaspy import Alarm as _Alarm
 from pcaspy import Severity as _Severity
@@ -14,11 +14,12 @@ from pcaspy import Severity as _Severity
 # import as_ps.pvs as _pvs
 import siriuspy as _siriuspy
 import siriuspy.util as _util
+from siriuspy.pwrsupply.beaglebone import E2SController as _E2SController
 
 __version__ = _util.get_last_commit_hash()
 
-FREQUENCY_SCAN = 10.0  # [Hz]
-FREQUENCY_RAMP = 2.0  # [Hz]
+# FREQUENCY_SCAN = 10.0  # [Hz]
+# FREQUENCY_RAMP = 2.0  # [Hz]
 
 
 class App:
@@ -55,20 +56,20 @@ class App:
                 self._bbb_devices[psname] = bbb
 
         # operation queue
-        self._op_deque = _deque()  # TODO: is dequeu thread-safe ?!
-        self._lock = _Lock()
+        # self._op_deque = _deque()  # TODO: is dequeu thread-safe ?!
+        # self._lock = _Lock()
 
         # scan
         # TODO: there should be one _scan_interval for each BBB !!!
         # rethink IOC duties.
-        self._scan_interval = 1.0/FREQUENCY_SCAN
-        self.scan = True
+        # self._scan_interval = 1.0/FREQUENCY_SCAN
+        # self.scan = True
 
         # read Constants once and for all
-        self._constants_update = False
+        # self._constants_update = False
 
         # symbol to threads that execute BSMP blocking operations
-        self._op_thread = None
+        # self._op_thread = None
 
     # API
     @property
@@ -83,10 +84,16 @@ class App:
 
     def process(self, interval):
         """Process all read and write requests in queue."""
+        t0 = _time.time()
         for bbb in self.bbblist:
             self._scan_bbb(bbb)
         self.driver.updatePVs()
-        _time.sleep(0.05)
+        t1 = _time.time()
+        # TODO: this detailed time keeping was necessary in order to
+        # have an update refresh rate at 10 Hz. scan_bbb is taking around
+        # 40 ms to complete. We should start optimizing
+        # the IOC code. As it is it is taking up 80% of BBB1 cpu time.
+        _time.sleep(abs(_E2SController.INTERVAL_SCAN-(t1-t0)))
 
     def read(self, reason):
         """Read from database."""
