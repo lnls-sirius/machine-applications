@@ -131,6 +131,8 @@ class App:
         # Return dict idexed with reason
         for reason, new_value in bbb.read(device_name).items():
             if self._check_value_changed(reason, new_value):
+                if new_value is None:
+                    continue
                 self.driver.setParam(reason, new_value)
                 self.driver.setParamStatus(
                     reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
