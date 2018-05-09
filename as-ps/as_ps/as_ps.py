@@ -4,7 +4,6 @@ import os as _os
 import sys as _sys
 import signal as _signal
 import logging as _log
-# from threading import Thread as _Thread
 import traceback as _traceback
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools

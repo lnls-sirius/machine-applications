@@ -3,15 +3,10 @@
 import time as _time
 import numpy as _np
 import logging as _log
-# from collections import deque as _deque
-# from collections import namedtuple as _namedtuple
-# from threading import Thread as _Thread
-# from threading import Lock as _Lock
 
 from pcaspy import Alarm as _Alarm
 from pcaspy import Severity as _Severity
 
-# import as_ps.pvs as _pvs
 import siriuspy as _siriuspy
 import siriuspy.util as _util
 
@@ -40,10 +35,7 @@ class App:
             prefix=prefix)
 
         # save file with PVs list
-        _siriuspy.util.save_ioc_pv_list('as-ps',
-                                        ('',
-                                         prefix),
-                                        dbset[prefix])
+        _siriuspy.util.save_ioc_pv_list('as-ps', ('', prefix), dbset[prefix])
 
         # map psname to bbb
         self._bbb_devices = dict()
@@ -51,7 +43,8 @@ class App:
             for psname in bbb.psnames:
                 self._bbb_devices[psname] = bbb
 
-    # API
+    # --- public interface ---
+
     @property
     def driver(self):
         """Pcaspy driver."""
@@ -94,7 +87,8 @@ class App:
         bbb = self._bbb_devices[device]
         bbb.write(device, field, value)
 
-    # Private
+    # --- private methods ---
+
     def _check_value_changed(self, reason, new_value):
         return True
         # TODO: Is it necessary to check?
