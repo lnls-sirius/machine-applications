@@ -14,7 +14,7 @@ from pcaspy import Severity as _Severity
 # import as_ps.pvs as _pvs
 import siriuspy as _siriuspy
 import siriuspy.util as _util
-from siriuspy.pwrsupply.beaglebone import E2SController as _E2SController
+from siriuspy.pwrsupply.beaglebone import _E2SController
 
 __version__ = _util.get_last_commit_hash()
 

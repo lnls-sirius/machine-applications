@@ -43,7 +43,7 @@ def get_database_set(bbblist):
     """Return the database set, one for each prefix."""
     db = {}
     for bbb in bbblist:
-        dev_db = bbb._ioc_controller.database
+        dev_db = bbb._e2s_controller.database
         for field in dev_db:
             for psname in bbb.psnames:
                 db[psname + ':' + field] = _deepcopy(dev_db[field])
