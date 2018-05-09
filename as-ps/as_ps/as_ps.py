@@ -1,4 +1,4 @@
-"""IOC for PS."""
+"""IOC for power supplies."""
 
 import os as _os
 import sys as _sys
@@ -13,10 +13,9 @@ from copy import deepcopy as _deepcopy
 from siriuspy import util as _util
 from siriuspy.envars import vaca_prefix as _VACA_PREFIX
 from siriuspy.pwrsupply.beaglebone import BeagleBone as _BeagleBone
-
+from siriuspy.pwrsupply.beaglebone import _E2SController
 from as_ps.main import App
 
-INTERVAL = 0.1/10
 stop_event = False  # _multiprocessing.Event()
 pcas_driver = None
 
@@ -43,7 +42,7 @@ def get_database_set(bbblist):
     """Return the database set, one for each prefix."""
     db = {}
     for bbb in bbblist:
-        dev_db = bbb._ioc_controller.database
+        dev_db = bbb.e2s_controller.database
         for field in dev_db:
             for psname in bbb.psnames:
                 db[psname + ':' + field] = _deepcopy(dev_db[field])
@@ -56,6 +55,16 @@ def _attribute_access_security_group(server, db):
             v.update({'asg': 'rbpv'})
     path_ = _os.path.abspath(_os.path.dirname(__file__))
     server.initAccessSecurityFile(path_ + '/access_rules.as')
+
+
+def _is_running(dbset):
+    prefix = tuple(dbset.keys())[0]
+    propty = tuple(dbset[prefix].keys())[0]
+    pvname = prefix + propty
+    # print(pvname)
+    running = _util.check_pv_online(
+        pvname=pvname, use_prefix=False, timeout=0.5)
+    return running
 
 
 class _PCASDriver(_pcaspy.Driver):
@@ -139,7 +148,7 @@ def run(bbbnames, simulate=True):
     # Main loop - run app.proccess
     while not stop_event:
         try:
-            pcas_driver.app.process(INTERVAL)
+            pcas_driver.app.process(_E2SController.INTERVAL_SCAN)
         except Exception as e:
             _log.warning('[!!] - exception while processing main loop')
             _traceback.print_exc()
@@ -150,17 +159,3 @@ def run(bbbnames, simulate=True):
     # pcas_driver.app.scan = False
     thread_server.join()
     # thread_scan.join()
-
-
-def _is_running(dbset):
-    prefix = tuple(dbset.keys())[0]
-    propty = tuple(dbset[prefix].keys())[0]
-    pvname = prefix + propty
-    # print(pvname)
-    running = _util.check_pv_online(
-        pvname=pvname, use_prefix=False, timeout=0.5)
-    return running
-
-
-if __name__ == "__main__":
-    run(['BO-01:CO-BBB-2'], simulate=True)
