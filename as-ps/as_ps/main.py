@@ -90,11 +90,9 @@ class App:
     # --- private methods ---
 
     def _check_value_changed(self, reason, new_value):
-        return True
-        # TODO: Is it necessary to check?
+        # TODO: check how arrays are eing compared
         old_value = self.driver.getParam(reason)
         if isinstance(new_value, _np.ndarray):
-            # TODO: check for ndarray
             return True
         else:
             if new_value != old_value:
@@ -108,8 +106,8 @@ class App:
                 if new_value is None:
                     continue
                 self.driver.setParam(reason, new_value)
-                self.driver.setParamStatus(
-                    reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+            self.driver.setParamStatus(
+                reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
 
     def _set_device_disconnected(self, bbb, device_name):
         for field in bbb.devices_database:
