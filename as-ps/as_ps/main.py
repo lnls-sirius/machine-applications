@@ -13,6 +13,16 @@ import siriuspy.util as _util
 __version__ = _util.get_last_commit_hash()
 
 
+# NOTE on current behaviour of PS IOC:
+#
+# 01. While in RmpWfm, MigWfm or SlowRefSync, the PS_I_LOAD variable read from
+#     power supplies after setting the last curve point may not be the
+#     final value given by PS_REFERENCE. This is due to the fact that the
+#     power supply control loop takes some time to converge and the PRU may
+#     block serial comm. before it. This is evident in SlowRefSync mode, where
+#     reference values may change considerably between two setpoints.
+#     (see identical note in BeagleBone class)
+
 class App:
     """Responsible for updating the IOC database.
 
@@ -90,11 +100,9 @@ class App:
     # --- private methods ---
 
     def _check_value_changed(self, reason, new_value):
-        return True
-        # TODO: Is it necessary to check?
+        # TODO: check how arrays are eing compared
         old_value = self.driver.getParam(reason)
         if isinstance(new_value, _np.ndarray):
-            # TODO: check for ndarray
             return True
         else:
             if new_value != old_value:
@@ -108,8 +116,8 @@ class App:
                 if new_value is None:
                     continue
                 self.driver.setParam(reason, new_value)
-                self.driver.setParamStatus(
-                    reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+            self.driver.setParamStatus(
+                reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
 
     def _set_device_disconnected(self, bbb, device_name):
         for field in bbb.devices_database:
