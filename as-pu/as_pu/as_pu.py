@@ -1,4 +1,4 @@
-"""IOC for power supplies."""
+"""IOC for PS."""
 
 import os as _os
 import sys as _sys
@@ -7,14 +7,16 @@ import logging as _log
 import traceback as _traceback
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-from copy import deepcopy as _deepcopy
+# from copy import deepcopy as _deepcopy
 
 from siriuspy import util as _util
 from siriuspy.envars import vaca_prefix as _VACA_PREFIX
-from siriuspy.pwrsupply.beaglebone import BeagleBone as _BeagleBone
-from siriuspy.pwrsupply.beaglebone import _E2SController
-from as_ps.main import App
+from siriuspy.pwrsupply.data import PSData
+from siriuspy.pwrsupply.pulsed import PulsedPS
 
+from as_pu.main import App
+
+INTERVAL = 0.1/10
 stop_event = False  # _multiprocessing.Event()
 pcas_driver = None
 
@@ -32,19 +34,24 @@ def _stop_now(signum, frame):
     pcas_driver.app.scan = False
 
 
-def get_devices(bbbs, simulate=True):
+def get_devices(devices_names, simulate=True):
     """Rerturn a controller for each device."""
-    pass
+    devices = []
+    for device_name in devices_names:
+        print(device_name)
+        device_data = PSData(device_name)
+        devices.append(PulsedPS(device_data))
+    return devices
 
 
-def get_database_set(bbblist):
+def get_database_set(devices):
     """Return the database set, one for each prefix."""
     db = {}
-    for bbb in bbblist:
-        dev_db = bbb.e2s_controller.database
-        for field in dev_db:
-            for psname in bbb.psnames:
-                db[psname + ':' + field] = _deepcopy(dev_db[field])
+    for device in devices:
+        device_db = device.database
+        device_name = device.name
+        for field in device_db:
+            db[device_name + ':' + field] = device_db[field]
     return {_PREFIX: db}
 
 
@@ -56,21 +63,11 @@ def _attribute_access_security_group(server, db):
     server.initAccessSecurityFile(path_ + '/access_rules.as')
 
 
-def _is_running(dbset):
-    prefix = tuple(dbset.keys())[0]
-    propty = tuple(dbset[prefix].keys())[0]
-    pvname = prefix + propty
-    # print(pvname)
-    running = _util.check_pv_online(
-        pvname=pvname, use_prefix=False, timeout=0.5)
-    return running
-
-
 class _PCASDriver(_pcaspy.Driver):
 
-    def __init__(self, bbblist, dbset):
+    def __init__(self, devices, dbset):
         super().__init__()
-        self.app = App(self, bbblist, dbset, _PREFIX)
+        self.app = App(self, devices, dbset, _PREFIX)
 
     def read(self, reason):
         value = self.app.read(reason)
@@ -83,7 +80,7 @@ class _PCASDriver(_pcaspy.Driver):
         return self.app.write(reason, value)
 
 
-def run(bbbnames, simulate=True):
+def run(device_name, simulate=True):
     """Main function.
 
     This is the main function of the IOC:
@@ -109,22 +106,13 @@ def run(bbbnames, simulate=True):
     _util.configure_log_file()
 
     # Create BBBs
-    bbblist = list()
-    for bbbname in bbbnames:
-        bbb = _BeagleBone(bbbname, simulate)
-        bbblist.append(bbb)
-        # for psname in bbb.psnames:
-        #     devlist.append(bbb[psname])
-    # What if serial is not running?
-    # devlist = get_devices(bbblist, simulate=simulate)
-    dbset = get_database_set(bbblist)
+    devices = get_devices(device_name)
+    dbset = get_database_set(devices)
 
     # Check if IOC is already running
     if _is_running(dbset):
         print('Another PS IOC is already running!')
         return
-
-    # TODO: discuss with guilherme the need of all these threads
 
     # Create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
@@ -132,7 +120,7 @@ def run(bbbnames, simulate=True):
         server.createPV(prefix, db)
 
     # Create driver to handle requests
-    pcas_driver = _PCASDriver(bbblist, dbset)
+    pcas_driver = _PCASDriver(devices, dbset)
 
     # Create a new thread responsible for listening for client connections
     thread_server = _pcaspy_tools.ServerThread(server)
@@ -147,7 +135,7 @@ def run(bbbnames, simulate=True):
     # Main loop - run app.proccess
     while not stop_event:
         try:
-            pcas_driver.app.process(_E2SController.INTERVAL_SCAN)
+            pcas_driver.app.process(INTERVAL)
         except Exception as e:
             _log.warning('[!!] - exception while processing main loop')
             _traceback.print_exc()
@@ -158,3 +146,17 @@ def run(bbbnames, simulate=True):
     # pcas_driver.app.scan = False
     thread_server.join()
     # thread_scan.join()
+
+
+def _is_running(dbset):
+    prefix = tuple(dbset.keys())[0]
+    propty = tuple(dbset[prefix].keys())[0]
+    pvname = prefix + propty
+    # print(pvname)
+    running = _util.check_pv_online(
+        pvname=pvname, use_prefix=False, timeout=0.5)
+    return running
+
+
+if __name__ == "__main__":
+    run(['BO-01:CO-BBB-2'], simulate=True)
