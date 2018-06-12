@@ -41,7 +41,8 @@ def main():
         for i in range(len(bbbnames)):
             bbbname = bbbnames[i]
             print('{:<20s} '.format(bbbname), end='')
-            psnames = bbb_dict[bbbname]
+            bsmps = bbb_dict[bbbname]
+            psnames = [bsmp[0] for bsmp in bsmps]
             for psname in psnames:
                 print('{:<16s} '.format(psname), end='')
             print()
