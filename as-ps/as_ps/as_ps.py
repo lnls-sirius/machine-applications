@@ -32,7 +32,7 @@ def _stop_now(signum, frame):
     pcas_driver.app.scan = False
 
 
-def get_devices(bbbs, simulate=True):
+def get_devices(bbbs, simulate=False):
     """Rerturn a controller for each device."""
     pass
 
@@ -83,7 +83,7 @@ class _PCASDriver(_pcaspy.Driver):
         return self.app.write(reason, value)
 
 
-def run(bbbnames, simulate=True):
+def run(bbbnames, simulate=False):
     """Main function.
 
     This is the main function of the IOC:
