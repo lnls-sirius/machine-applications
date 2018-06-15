@@ -11,9 +11,11 @@ from copy import deepcopy as _deepcopy
 
 from siriuspy import util as _util
 from siriuspy.envars import vaca_prefix as _VACA_PREFIX
-from siriuspy.pwrsupply.beaglebone import BeagleBone as _BeagleBone
-from siriuspy.pwrsupply.beaglebone import _E2SController
 from as_ps.main import App
+from siriuspy.pwrsupply.beaglebone import BBBFactory
+from siriuspy.pwrsupply.e2scontroller import \
+    StandardPSController as _PSController
+
 
 stop_event = False  # _multiprocessing.Event()
 pcas_driver = None
@@ -110,15 +112,18 @@ def run(bbbnames, simulate=True):
 
     # Create BBBs
     bbblist = list()
+    dbset = dict()
     for bbbname in bbbnames:
-        bbb = _BeagleBone(bbbname, simulate)
+        bbb, db = BBBFactory.get(bbbname=bbbname, simulate=simulate)
+        # bbb = _BeagleBone(bbbname, simulate)
         bbblist.append(bbb)
+        dbset.update(db)
         # for psname in bbb.psnames:
         #     devlist.append(bbb[psname])
     # What if serial is not running?
     # devlist = get_devices(bbblist, simulate=simulate)
-    dbset = get_database_set(bbblist)
-
+    # dbset = get_database_set(bbblist)
+    dbset = {_PREFIX: dbset}
     # Check if IOC is already running
     if _is_running(dbset):
         print('Another PS IOC is already running!')
@@ -147,7 +152,7 @@ def run(bbbnames, simulate=True):
     # Main loop - run app.proccess
     while not stop_event:
         try:
-            pcas_driver.app.process(_E2SController.INTERVAL_SCAN)
+            pcas_driver.app.process(_PSController.INTERVAL_SCAN)
         except Exception as e:
             _log.warning('[!!] - exception while processing main loop')
             _traceback.print_exc()

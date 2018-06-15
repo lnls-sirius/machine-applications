@@ -112,10 +112,11 @@ class App:
                     reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
 
     def _set_device_disconnected(self, bbb, device_name):
-        for field in bbb.devices_database:
-            reason = device_name + ':' + field
-            self.driver.setParamStatus(
-                reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+        pass
+        # for field in bbb.devices_database:
+        #     reason = device_name + ':' + field
+        #     self.driver.setParamStatus(
+        #         reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
 
     def _scan_bbb(self, bbb):
         for device_name in bbb.psnames:
