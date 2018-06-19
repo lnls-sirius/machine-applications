@@ -13,7 +13,7 @@ from siriuspy import util as _util
 from siriuspy.envars import vaca_prefix as _VACA_PREFIX
 from as_ps.main import App
 from siriuspy.pwrsupply.beaglebone import BBBFactory
-from siriuspy.pwrsupply.e2scontroller import \
+from siriuspy.pwrsupply.controller import \
     StandardPSController as _PSController
 
 
