@@ -49,7 +49,11 @@ class App:
 
         # map psname to bbb
         self._bbb_devices = dict()
+        self._interval = None
         for bbb in self.bbblist:
+            bbb_interval = bbb.update_interval()
+            self._interval = min(bbb_interval, self._interval) if \
+                self._interval else bbb_interval
             for psname in bbb.psnames:
                 self._bbb_devices[psname] = bbb
 
@@ -65,7 +69,7 @@ class App:
         """Return list of beaglebone objects."""
         return self._bbblist
 
-    def process(self, interval):
+    def process(self):
         """Process all read and write requests in queue."""
         t0 = _time.time()
         for bbb in self.bbblist:
@@ -76,7 +80,7 @@ class App:
         # have an update refresh rate at 10 Hz. scan_bbb is taking around
         # 40 ms to complete. We should start optimizing
         # the IOC code. As it is it is taking up 80% of BBB1 cpu time.
-        _time.sleep(abs(interval-(t1-t0)))
+        _time.sleep(abs(self._interval-(t1-t0)))
 
     def read(self, reason):
         """Read from database."""
@@ -100,7 +104,7 @@ class App:
     # --- private methods ---
 
     def _check_value_changed(self, reason, new_value):
-        # TODO: check how arrays are eing compared
+        # TODO: check how arrays are being compared
         old_value = self.driver.getParam(reason)
         if isinstance(new_value, _np.ndarray):
             return True
@@ -110,6 +114,19 @@ class App:
         return False
 
     def _update_ioc_database(self, bbb, device_name):
+        # Return dict idexed with reason
+        data, updated = bbb.read(device_name)
+        if not updated:
+            return
+        for reason, new_value in data.items():
+            if self._check_value_changed(reason, new_value):
+                if new_value is None:
+                    continue
+                self.driver.setParam(reason, new_value)
+            self.driver.setParamStatus(
+                reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+
+    def _update_ioc_database_old(self, bbb, device_name):
         # Return dict idexed with reason
         for reason, new_value in bbb.read(device_name).items():
             if self._check_value_changed(reason, new_value):
