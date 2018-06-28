@@ -24,9 +24,9 @@ def print_help():
     print('       --help')
     print('               print this help.')
     print()
-    print('       --real')
-    print('               creates real PRU and SerialComm objects, not '
-          'simulated ones.')
+    print('       --simul')
+    print('               creates simulated PRU and SerialComm objects, not '
+          'real ones.')
     print()
 
 
@@ -41,21 +41,21 @@ def main():
         for i in range(len(bbbnames)):
             bbbname = bbbnames[i]
             print('{:<20s} '.format(bbbname), end='')
-            psnames = bbb_dict[bbbname]
+            bsmps = bbb_dict[bbbname]
+            psnames = [bsmp[0] for bsmp in bsmps]
             for psname in psnames:
                 print('{:<16s} '.format(psname), end='')
             print()
     else:
         args = [arg for arg in sys.argv[1:]]
-        if '--real' in args:
-            simulate = False
-            args.remove('--real')
+        if '--simul' in args:
+            simulate = True
+            args.remove('--simul')
         elif '--help' in args:
             args.remove('--help')
             print_help()
         else:
-            simulate = True
-
+            simulate = False
         if args:
             ioc_module.run(args, simulate=simulate)
 
