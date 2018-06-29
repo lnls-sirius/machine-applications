@@ -47,11 +47,12 @@ class App:
         # save file with PVs list
         _siriuspy.util.save_ioc_pv_list('as-ps', ('', prefix), dbset[prefix])
 
-        # map psname to bbb
+        # build _bbb_devices dict
         self._bbb_devices = dict()
         self._interval = None
         for bbb in self.bbblist:
             bbb_interval = bbb.update_interval()
+            # get minimum time interval for BBB
             self._interval = min(bbb_interval, self._interval) if \
                 self._interval else bbb_interval
             for psname in bbb.psnames:
@@ -144,6 +145,7 @@ class App:
                 reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
 
     def _scan_bbb(self, bbb):
+        #return
         for device_name in bbb.psnames:
             if bbb.check_connected(device_name):
                 self._update_ioc_database(bbb, device_name)
