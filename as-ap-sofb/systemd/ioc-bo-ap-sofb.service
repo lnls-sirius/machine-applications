@@ -1,14 +1,14 @@
 [Unit]
-Description=Soft IOC for Sirius Orbit acquisition.
+Description=Soft IOC for Booster SOFB.
 After=multi-user.target
 
 [Service]
 Group=fac
 User=fac
 Type=simple
-WorkingDirectory=/home/fac/sirius-iocs
+WorkingDirectory=/home/fac/sirius-iocs/bo-ap-sofb
 StandardOutput=syslog
 StandardError=syslog
 ExecStartPre=/bin/bash --login -c 'env > /tmp/.magic-environment-file'
 EnvironmentFile=-/tmp/.magic-environment-file
-ExecStart=/usr/local/bin/sirius-ioc-si-ap-orbit.py -n
+ExecStart=/usr/local/bin/sirius-ioc-bo-ap-sofb.py
