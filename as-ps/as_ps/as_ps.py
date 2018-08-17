@@ -13,9 +13,6 @@ from siriuspy import util as _util
 from siriuspy.envars import vaca_prefix as _VACA_PREFIX
 from as_ps.main import App
 from siriuspy.pwrsupply.beaglebone import BBBFactory
-from siriuspy.pwrsupply.controller import \
-    StandardPSController as _PSController
-
 
 stop_event = False  # _multiprocessing.Event()
 pcas_driver = None
@@ -86,7 +83,7 @@ class _PCASDriver(_pcaspy.Driver):
 
 
 def run(bbbnames, simulate=False):
-    """Main function.
+    """Run function.
 
     This is the main function of the IOC:
     1. It first builds a list of all required beaglebone objets
@@ -152,10 +149,11 @@ def run(bbbnames, simulate=False):
     # Main loop - run app.proccess
     while not stop_event:
         try:
-            pcas_driver.app.process(_PSController.INTERVAL_SCAN)
-        except Exception as e:
+            pcas_driver.app.process()
+        except Exception:
             _log.warning('[!!] - exception while processing main loop')
             _traceback.print_exc()
+            break
 
     # Signal received, exit
     print('exiting...')
