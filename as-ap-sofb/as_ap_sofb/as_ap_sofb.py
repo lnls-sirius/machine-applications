@@ -40,12 +40,7 @@ class _PCASDriver(_pcaspy.Driver):
         return super().read(reason)
 
     def write(self, reason, value):
-        app_ret = self.app.write(reason, value)
-        if app_ret:
-            self.setParam(reason, value)
-        else:
-            self.setParam(reason, self.getParam(reason))
-        self.updatePVs()
+        self.app.write(reason, value)
         return True
 
 
