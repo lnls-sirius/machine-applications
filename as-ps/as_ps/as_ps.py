@@ -153,6 +153,7 @@ def run(bbbnames, simulate=False):
         except Exception:
             _log.warning('[!!] - exception while processing main loop')
             _traceback.print_exc()
+            break
 
     # Signal received, exit
     print('exiting...')
