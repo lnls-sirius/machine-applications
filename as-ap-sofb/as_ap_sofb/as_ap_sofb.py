@@ -60,31 +60,30 @@ def run(acc='SI', debug=False):
     db = app.get_database()
     db.update({'Version-Cte': {'type': 'string', 'value': __version__}})
     PREFIX = acc.upper() + '-Glob:AP-SOFB:'
+    ioc_name = acc.lower() + '-ap-sofb'
     _util.save_ioc_pv_list(
-                        ioc_name=acc.lower() + '-ap-sofb',
+                        ioc_name=ioc_name,
                         prefix=(PREFIX, _vaca_prefix), db=db)
-
+    _util.print_ioc_banner(
+            ioc_name, db, 'SOFB for '+acc, '0.2', _vaca_prefix + PREFIX)
     # create a new simple pcaspy server and driver to respond client's requests
     _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
     _log.info('Setting Server Database.')
     _attribute_access_security_group(server, db)
-    server.createPV(PREFIX, db)
+    server.createPV(_vaca_prefix + PREFIX, db)
     _log.info('Creating Driver.')
-    pcas_driver = _PCASDriver(app)
-
-    # Connects to low level PVs
-    _log.info('Openning connections with Low Level IOCs.')
-    app.connect()
+    _PCASDriver(app)
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
     _log.info('Starting Server Thread.')
+    server_thread.setDaemon(True)
     server_thread.start()
 
     # main loop
     while not stop_event:
-        pcas_driver.app.update_status()
+        app.process()
 
     _log.info('Stoping Server Thread...')
     # sends stop signal to server thread
