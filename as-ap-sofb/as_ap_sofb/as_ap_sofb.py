@@ -2,16 +2,16 @@
 """IOC Module."""
 
 import os as _os
-import sys as _sys
 import logging as _log
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 import signal as _signal
-from si_ap_sofb import main as _main
-from si_ap_sofb.definitions import print_pvs_in_file
-from si_ap_sofb.definitions import __version__, PREFIX, INTERVAL
+import siriuspy.util as _util
+from siriuspy.envars import vaca_prefix as _vaca_prefix
+from .main import SOFB as _SOFB
 
 stop_event = False
+__version__ = _util.get_last_commit_hash()
 
 
 def _stop_now(signum, frame):
@@ -40,23 +40,13 @@ class _PCASDriver(_pcaspy.Driver):
         return super().read(reason)
 
     def write(self, reason, value):
-        app_ret = self.app.write(reason, value)
-        if app_ret:
-            self.setParam(reason, value)
-        else:
-            self.setParam(reason, self.getParam(reason))
-        self.updatePVs()
+        self.app.write(reason, value)
         return True
 
 
-def run(debug=False):
+def run(acc='SI', debug=False):
     """Start the IOC."""
-    level = _log.DEBUG if debug else _log.INFO
-    fmt = ('%(levelname)7s | %(asctime)s | ' +
-           '%(module)15s.%(funcName)20s[%(lineno)4d] ::: %(message)s')
-    _log.basicConfig(format=fmt, datefmt='%F %T', level=level,
-                     stream=_sys.stdout)
-    #  filename=LOG_FILENAME, filemode='w')
+    _util.configure_log_file(debug=debug)
     _log.info('Starting...')
 
     # define abort function
@@ -64,35 +54,36 @@ def run(debug=False):
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # Creates App object
-    _log.info('Creating App.')
-    app = _main.App()
+    _log.debug('Creating SOFB Object.')
+    app = _SOFB(acc=acc)
     _log.info('Generating database file.')
     db = app.get_database()
     db.update({'Version-Cte': {'type': 'string', 'value': __version__}})
-    print_pvs_in_file(db)
-
+    PREFIX = acc.upper() + '-Glob:AP-SOFB:'
+    ioc_name = acc.lower() + '-ap-sofb'
+    _util.save_ioc_pv_list(
+                        ioc_name=ioc_name,
+                        prefix=(PREFIX, _vaca_prefix), db=db)
+    _util.print_ioc_banner(
+            ioc_name, db, 'SOFB for '+acc, '0.2', _vaca_prefix + PREFIX)
     # create a new simple pcaspy server and driver to respond client's requests
     _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
     _log.info('Setting Server Database.')
     _attribute_access_security_group(server, db)
-    server.createPV(PREFIX, db)
+    server.createPV(_vaca_prefix + PREFIX, db)
     _log.info('Creating Driver.')
-    pcas_driver = _PCASDriver(app)
-
-    # Connects to low level PVs
-    _log.info('Openning connections with Low Level IOCs.')
-    app.connect()
+    _PCASDriver(app)
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
     _log.info('Starting Server Thread.')
+    server_thread.setDaemon(True)
     server_thread.start()
 
     # main loop
-    # while not stop_event.is_set():
     while not stop_event:
-        pcas_driver.app.process(INTERVAL)
+        app.process()
 
     _log.info('Stoping Server Thread...')
     # sends stop signal to server thread

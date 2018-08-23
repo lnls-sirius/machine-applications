@@ -19,9 +19,9 @@ setup(
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering'
     ],
-    packages=['si_ap_orbit', 'si_ap_sofb'],
-    package_data={'si_ap_orbit': [], 'si_ap_sofb': []},
-    scripts=['scripts/sirius-ioc-si-ap-orbit.py',
-             'scripts/sirius-ioc-si-ap-sofb.py'],
+    packages=['as_ap_sofb'],
+    package_data={'as_ap_sofb': []},
+    scripts=['scripts/sirius-ioc-si-ap-sofb.py',
+             'scripts/sirius-ioc-bo-ap-sofb.py'],
     zip_safe=False
 )
