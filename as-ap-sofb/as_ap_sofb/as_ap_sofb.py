@@ -40,8 +40,7 @@ class _PCASDriver(_pcaspy.Driver):
         return super().read(reason)
 
     def write(self, reason, value):
-        self.app.write(reason, value)
-        return True
+        return self.app.write(reason, value)
 
 
 def run(acc='SI', debug=False):
@@ -80,6 +79,7 @@ def run(acc='SI', debug=False):
     _log.info('Starting Server Thread.')
     server_thread.setDaemon(True)
     server_thread.start()
+    app.start()
 
     # main loop
     while not stop_event:
