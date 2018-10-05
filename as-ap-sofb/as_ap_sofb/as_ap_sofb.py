@@ -79,7 +79,6 @@ def run(acc='SI', debug=False):
     _log.info('Starting Server Thread.')
     server_thread.setDaemon(True)
     server_thread.start()
-    app.start()
 
     # main loop
     while not stop_event:
