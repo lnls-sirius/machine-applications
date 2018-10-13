@@ -22,6 +22,9 @@ setup(
     packages=['as_ap_sofb'],
     package_data={'as_ap_sofb': []},
     scripts=['scripts/sirius-ioc-si-ap-sofb.py',
-             'scripts/sirius-ioc-bo-ap-sofb.py'],
+             'scripts/sirius-ioc-bo-ap-sofb.py',
+             'scripts/sirius-ioc-tb-ap-orbit.py',
+             'scripts/sirius-ioc-ts-ap-orbit.py',
+             ],
     zip_safe=False
 )
