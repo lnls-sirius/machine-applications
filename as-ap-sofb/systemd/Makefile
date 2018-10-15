@@ -14,8 +14,8 @@ install-services:
 	systemctl daemon-reload
 	mkdir -p /home/fac/sirius-iocs/si-ap-sofb
 	mkdir -p /home/fac/sirius-iocs/bo-ap-sofb
-	mkdir -p /home/fac/sirius-iocs/ts-ap-orbit
-	mkdir -p /home/fac/sirius-iocs/tb-ap-orbit
+	mkdir -p /home/fac/sirius-iocs/ts-ap-sofb
+	mkdir -p /home/fac/sirius-iocs/tb-ap-sofb
 	mkdir -p /home/fac/sirius-iocs/pvs
 	chown -R fac.fac /home/fac/sirius-iocs
 
