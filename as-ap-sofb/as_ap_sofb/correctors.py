@@ -5,7 +5,6 @@ import math as _math
 import numpy as _np
 from epics import PV as _PV
 import siriuspy.util as _util
-import siriuspy.csdevice.orbitcorr as _csorb
 from siriuspy.thread import RepeaterThread as _Repeat
 from siriuspy.search.hl_time_search import HLTimeSearch as _HLTimeSearch
 from siriuspy.csdevice.pwrsupply import Const as _PwrSplyConst
@@ -74,7 +73,8 @@ class Corrector(_BaseTimingConfig):
 class RFCtrl(Corrector):
 
     def __init__(self):
-        super().__init__(_csorb.RF_GEN_NAME)
+        super().__init__('SI')
+        self._name = self._csorb.RF_GEN_NAME
         opt = {'connection_timeout': TIMEOUT}
         self._sp = _PV(LL_PREF+self._name+':Freq-SP', **opt)
         self._rb = _PV(LL_PREF+self._name+':Freq-RB', **opt)
@@ -155,7 +155,7 @@ class TimingConfig(_BaseTimingConfig):
         elif acc == 'BO':
             evt = 'OrbBO'
             trig = 'BO-Glob:TI-Corrs:'
-        pref_name = LL_PREF + _csorb.EVG_NAME + ':' + evt
+        pref_name = LL_PREF + self._csorb.EVG_NAME + ':' + evt
         opt = {'connection_timeout': TIMEOUT}
         self._evt_sender = _PV(pref_name + 'ExtTrig-Cmd', **opt)
         # self._evt_sender = _PV(
@@ -209,12 +209,13 @@ class EpicsCorrectors(BaseCorrectors):
 
     def get_database(self):
         """Get the database of the class."""
-        db = _csorb.get_corrs_database(self.acc)
+        db = self._csorb.get_corrs_database()
         prop = 'fun_set_pv'
-        db['SyncKicks-Sel'][prop] = self.set_chcvs_mode
         db['ConfigCorrs-Cmd'][prop] = self.configure_correctors
-        db['NominalFreqRF-SP'][prop] = self.set_nominal_rf_freq
         db['KickAcqRate-SP'][prop] = self.set_kick_acq_rate
+        if self.isring:
+            db['SyncKicks-Sel'][prop] = self.set_chcvs_mode
+            db['NominalFreqRF-SP'][prop] = self.set_nominal_rf_freq
         db = super().get_database(db)
         return db
 
@@ -223,11 +224,11 @@ class EpicsCorrectors(BaseCorrectors):
         super().__init__(acc, prefix=prefix, callback=callback)
         self._synced_kicks = True
         self._acq_rate = 10
-        self._names = self._const.CH_NAMES + self._const.CV_NAMES
+        self._names = self._csorb.CH_NAMES + self._csorb.CV_NAMES
         self._chcvs = {CHCV(dev) for dev in self._names}
-        self._rf_ctrl = RFCtrl()
-        self._rf_nom_freq = _csorb.RF_NOM_FREQ
-        self.timing = TimingConfig(acc)
+        self._rf_ctrl = RFCtrl() if self.isring else None
+        self._rf_nom_freq = self._csorb.RF_NOM_FREQ
+        self.timing = TimingConfig(acc) if self.isring else None
         self._corrs_thread = _Repeat(
                 1/self._acq_rate, self._update_corrs_strength, niter=0)
         self._corrs_thread.start()
@@ -237,8 +238,9 @@ class EpicsCorrectors(BaseCorrectors):
         strn = '{0:20s}: {1:7.3f}'
         # apply the RF kick
         t0 = _time.time()
-        self.put_value_in_corr(
-            self._rf_ctrl, values[-1] + self._rf_nom_freq, False)
+        if self.isring:
+            self.put_value_in_corr(
+                self._rf_ctrl, values[-1] + self._rf_nom_freq, False)
         t1 = _time.time()
         print(strn.format('    send rf:', 1000*(t1-t0)))
 
@@ -280,7 +282,7 @@ class EpicsCorrectors(BaseCorrectors):
             corr.value = value
 
     def send_evt(self):
-        if not self._synced_kicks:
+        if not self.isring and not self._synced_kicks:
             return
         if not self.timing.connected:
             self._update_log('ERR: timing disconnected.')
@@ -292,11 +294,11 @@ class EpicsCorrectors(BaseCorrectors):
 
     def get_strength(self):
         """Get the correctors strengths."""
-        corr_values = _np.zeros(self._const.NR_CORRS, dtype=float)
+        corr_values = _np.zeros(self._csorb.NR_CORRS, dtype=float)
         for i, corr in enumerate(self._chcvs):
             if corr.connected:
                 corr_values[i] = corr.value
-        if self._rf_ctrl.connected:
+        if self.isring and self._rf_ctrl.connected:
             corr_values[-1] = self._rf_ctrl.value - self._rf_nom_freq
         return corr_values
 
@@ -310,15 +312,17 @@ class EpicsCorrectors(BaseCorrectors):
 
     def _update_corrs_strength(self):
         corr_vals = self.get_strength()
-        self.run_callbacks('KicksCH-Mon', corr_vals[:self._const.NR_CH])
-        self.run_callbacks('KicksCV-Mon', corr_vals[self._const.NR_CH:-1])
-        self.run_callbacks('KicksRF-Mon', corr_vals[-1])
+        self.run_callbacks('KicksCH-Mon', corr_vals[:self._csorb.NR_CH])
+        self.run_callbacks(
+            'KicksCV-Mon', corr_vals[self._csorb.NR_CH:self._csorb.NR_CHCV])
+        if self.isring:
+            self.run_callbacks('KicksRF-Mon', corr_vals[-1])
 
     def set_chcvs_mode(self, value):
         self._synced_kicks = value
-        if self._synced_kicks == _csorb.SyncKicks.On:
+        if self._synced_kicks == self._csorb.SyncKicks.On:
             val = _PwrSplyConst.OpMode.SlowRefSync
-        elif self._synced_kicks == _csorb.SyncKicks.Off:
+        elif self._synced_kicks == self._csorb.SyncKicks.Off:
             val = _PwrSplyConst.OpMode.SlowRef
 
         for corr in self._chcvs:
@@ -334,21 +338,10 @@ class EpicsCorrectors(BaseCorrectors):
         return True
 
     def configure_correctors(self, _):
-        if not self.timing.configure():
-            self._update_log('ERR: Failed to configure timing')
-            return False
-
-        if self._synced_kicks == _csorb.SyncKicks.On:
+        if self.isring and self._synced_kicks == self._csorb.SyncKicks.On:
             val = _PwrSplyConst.OpMode.SlowRefSync
-        elif self._synced_kicks == _csorb.SyncKicks.Off:
-            val = _PwrSplyConst.OpMode.SlowRef
-
-        if self._rf_ctrl.connected:
-            self._rf_ctrl.state = True
         else:
-            self._update_log('ERR: Failed to configure correctors')
-            return False
-
+            val = _PwrSplyConst.OpMode.SlowRef
         for corr in self._chcvs:
             if corr.connected:
                 corr.state = True
@@ -356,27 +349,39 @@ class EpicsCorrectors(BaseCorrectors):
             else:
                 self._update_log('ERR: Failed to configure correctors')
                 return False
+        if not self.isring:
+            return True
+
+        if not self.timing.configure():
+            self._update_log('ERR: Failed to configure timing')
+            return False
+        if self._rf_ctrl.connected:
+            self._rf_ctrl.state = True
+        else:
+            self._update_log('ERR: Failed to configure correctors')
+            return False
         return True
 
     def _update_status(self):
         status = 0b1111111
         status = _util.update_bit(
-                    status, bit_pos=0, bit_val=not self.timing.connected)
+            status, bit_pos=0,
+            bit_val=not all(corr.connected for corr in self._chcvs))
         status = _util.update_bit(
-                    status, bit_pos=1, bit_val=not self.timing.is_ok)
+            status, bit_pos=1,
+            bit_val=not all(corr.opmode_ok for corr in self._chcvs))
         status = _util.update_bit(
-                    status, bit_pos=2, bit_val=not self._rf_ctrl.connected)
-        status = _util.update_bit(
-                    status, bit_pos=3, bit_val=not self._rf_ctrl.state)
-        status = _util.update_bit(
-                    status, bit_pos=4,
-                    bit_val=not all(corr.connected for corr in self._chcvs))
-        status = _util.update_bit(
-                    status, bit_pos=5,
-                    bit_val=not all(corr.opmode_ok for corr in self._chcvs))
-        status = _util.update_bit(
-                    status, bit_pos=6,
-                    bit_val=not all(corr.state for corr in self._chcvs))
+            status, bit_pos=2,
+            bit_val=not all(corr.state for corr in self._chcvs))
+        if self.isring:
+            status = _util.update_bit(
+                status, bit_pos=3, bit_val=not self.timing.connected)
+            status = _util.update_bit(
+                status, bit_pos=4, bit_val=not self.timing.is_ok)
+            status = _util.update_bit(
+                status, bit_pos=5, bit_val=not self._rf_ctrl.connected)
+            status = _util.update_bit(
+                status, bit_pos=6, bit_val=not self._rf_ctrl.state)
         self._status = status
         self.run_callbacks('CorrStatus-Mon', status)
 
@@ -384,7 +389,8 @@ class EpicsCorrectors(BaseCorrectors):
         """Timed out."""
         corrs = list()
         corrs.extend(self._chcvs)
-        corrs.append(self._rf_ctrl)
+        if self.isring:
+            corrs.append(self._rf_ctrl)
         for _ in range(self.NUM_TIMEOUT):
             okg = True
             for i, corr in enumerate(corrs):

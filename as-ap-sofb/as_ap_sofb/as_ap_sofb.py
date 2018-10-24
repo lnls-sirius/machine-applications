@@ -3,9 +3,9 @@
 
 import os as _os
 import logging as _log
+import signal as _signal
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-import signal as _signal
 import siriuspy.util as _util
 from siriuspy.envars import vaca_prefix as _vaca_prefix
 from .main import SOFB as _SOFB

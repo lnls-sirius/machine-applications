@@ -1,16 +1,16 @@
 """Definition module."""
 import math as _math
-import siriuspy.csdevice.orbitcorr as _csorb
+from siriuspy.csdevice.orbitcorr import OrbitCorrDev
 from siriuspy.callbacks import Callback as _Callback
 
 
 class BaseClass(_Callback):
     def __init__(self, acc, prefix='', callback=None):
         super().__init__(callback)
-        self._acc = acc
-        self._const = _csorb.get_consts(acc)
+        self._csorb = OrbitCorrDev(acc)
         self._prefix = prefix
         self._status = 0b0
+        self._isring = self._csorb.acc_idx in self._csorb.Rings
 
     @property
     def prefix(self):
@@ -18,7 +18,15 @@ class BaseClass(_Callback):
 
     @property
     def acc(self):
-        return self._acc
+        return self._csorb.acc
+
+    @property
+    def acc_idx(self):
+        return self._csorb.acc_idx
+
+    @property
+    def isring(self):
+        return self._isring
 
     @property
     def status(self):
@@ -41,7 +49,7 @@ class BaseClass(_Callback):
 class BaseTimingConfig:
 
     def __init__(self, acc):
-        self.acc = acc
+        self._csorb = OrbitCorrDev(acc)
         self._config_ok_vals = {}
         self._config_pvs_rb = {}
         self._config_pvs_sp = {}

@@ -12,7 +12,10 @@ install-services:
 	  cp -rf $$ser /etc/systemd/system/ ; \
 	done
 	systemctl daemon-reload
-	mkdir -p /home/fac/sirius-iocs/si-ap-sofb
+	mkdir -p /home/fac/sirius-iocs/si-ap-sofb/data
+	mkdir -p /home/fac/sirius-iocs/bo-ap-sofb/data
+	mkdir -p /home/fac/sirius-iocs/ts-ap-sofb/data
+	mkdir -p /home/fac/sirius-iocs/tb-ap-sofb/data
 	mkdir -p /home/fac/sirius-iocs/pvs
 	chown -R fac.fac /home/fac/sirius-iocs
 
