@@ -61,7 +61,7 @@ def main():
         if '--hostname' in args:
             hostname = socket.gethostname()
             bbbname = hostname.replace('--', ':')
-            args = [hostname, ]
+            args = [bbbname, ]
         if args:
             ioc_module.run(args, simulate=simulate)
 
