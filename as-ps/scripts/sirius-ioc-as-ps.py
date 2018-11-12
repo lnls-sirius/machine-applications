@@ -7,6 +7,14 @@ from as_ps import as_ps as ioc_module
 from siriuspy.search import PSSearch
 
 
+def check_root():
+    """Check root access permission."""
+    if os.geteuid() != 0:
+        exit("You need to have root privileges to run this script.")
+
+
+
+
 def print_help():
     """Print help."""
     name = os.path.basename(sys.argv[0])
@@ -50,6 +58,7 @@ def main():
                 print('{:<16s} '.format(psname), end='')
             print()
     else:
+        check_root()
         args = [arg for arg in sys.argv[1:]]
         simulate = False
         if '--simul' in args:
