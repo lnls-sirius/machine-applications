@@ -1,37 +1,21 @@
-# Destination directory
-SERVICES = $(shell ls *.service | grep -v Makefile)
 
-# test:
-# 	for ser in $(SERVICES) ; do \
-# 	echo $$ser ; \
-# 	done
-
-install-services:
-	@echo " --- install services ---"
-	for ser in $(SERVICES) ; do \
-	  cp -rf $$ser /etc/systemd/system/ ; \
-	done
+install:
+	@printf "Intalling sirius-bbb-ioc-ps service...\n"
+	cp -rf sirius-bbb-ioc-ps.service /etc/systemd/system/
+	mkdir -p /root/sirius-iocs/pvs
 	systemctl daemon-reload
-	mkdir -p /home/fac/sirius-iocs/pvs
-	chown -R fac.fac /home/fac/sirius-iocs
 
-stop-services:
-	@echo " --- stop services ---"
-	for ser in $(SERVICES) ; do \
-	  systemctl stop $$ser ; \
-	done
 
-start-services: install-services
-	@echo " --- start services ---"
-	for ser in $(SERVICES) ; do \
-	  #systemctl enable $$ser ; \
-	  systemctl start $$ser  ; \
-	done
+stop:
+	@printf "Stopping sirius-bbb-ioc-ps...\n"
+	systemctl stop sirius-bbb-ioc-ps
 
-uninstall-services: stop-services
-	@echo " --- uninstall services ---"
-	for ser in $(SERVICES) ; do \
-	  systemctl disable $$ser ; \
-		rm -rf /etc/systemd/system/$$ser ; \
-	done
+start: 
+	@printf "Starting sirius-bbb-ioc-ps---"
+	systemctl start sirius-bbb-ioc-ps
+
+uninstall: stop
+	@printf "Uninstalling sirius-bbb-ioc-ps---"
+	rm -rf /etc/systemd/system/sirius-bbb-ioc-ps.service
 	systemctl daemon-reload
+
