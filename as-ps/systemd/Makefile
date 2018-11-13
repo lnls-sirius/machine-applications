@@ -16,6 +16,8 @@ start:
 
 uninstall: stop
 	@printf "Uninstalling sirius-bbb-ioc-ps---"
+	systemctl disable sirius-bbb-ioc-ps
 	rm -rf /etc/systemd/system/sirius-bbb-ioc-ps.service
 	systemctl daemon-reload
+	systemctl reset-failed
 
