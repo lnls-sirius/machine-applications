@@ -111,7 +111,7 @@ def run(bbbnames, simulate=False):
     bbblist = list()
     dbset = dict()
     for bbbname in bbbnames:
-        bbb, db = BBBFactory.get(bbbname=bbbname, simulate=simulate)
+        bbb, db = BBBFactory.create(bbbname=bbbname, simulate=simulate)
         # bbb = _BeagleBone(bbbname, simulate)
         bbblist.append(bbb)
         dbset.update(db)
