@@ -16,7 +16,6 @@ develop-scripts:
 	cd as-ps; sudo ./setup.py develop
 	cd as-ti-control; sudo ./setup.py develop
 	cd as-ap-sofb; sudo ./setup.py develop
-	sudo systemctl daemon-reload
 
 develop-services:
 	cd as-ap-currinfo; cd systemd; sudo make install-services
@@ -46,7 +45,6 @@ install-scripts:
 	cd as-ap-opticscorr; sudo ./setup.py install
 	cd as-ap-posang; sudo ./setup.py install
 	cd as-ap-currinfo; sudo ./setup.py install
-	sudo systemctl daemon-reload
 
 install-services:
 	cd as-ap-currinfo; cd systemd; sudo make install-services
