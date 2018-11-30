@@ -91,7 +91,7 @@ class App:
 
     def write(self, reason, value):
         """Enqueue write request."""
-        # TODO: can we parse reason with SiriusPVName?
+        # TODO: use SiriusPVName !!!
         split = reason.split(':')
         device = ':'.join(split[:2])
         field = split[-1]
