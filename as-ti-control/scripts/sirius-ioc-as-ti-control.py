@@ -11,7 +11,7 @@ parser.add_argument(
 parser.add_argument(
     '-t', "--triggers", type=str, default='none',
     help="Which high level Triggers to manage",
-    choices=sorted(as_ti_control.TRIG_LISTS.keys())
+    choices=sorted(as_ti_control.TRIG_TYPES)
     )
 parser.add_argument(
     '-f', '--force', action='store_true', default=False,
