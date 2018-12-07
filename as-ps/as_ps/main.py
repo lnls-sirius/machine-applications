@@ -115,7 +115,7 @@ class App:
         return False
 
     def _update_ioc_database(self, bbb, device_name):
-        # Return dict idexed with reason
+        # Return dict indexed with reason
         data, updated = bbb.read(device_name)
         if not updated:
             return
@@ -127,27 +127,29 @@ class App:
             self.driver.setParamStatus(
                 reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
 
-    def _update_ioc_database_old(self, bbb, device_name):
-        # Return dict idexed with reason
-        for reason, new_value in bbb.read(device_name).items():
+    def _update_ioc_database_disconnected(self, bbb, device_name):
+        # Return dict indexed with reason
+        data, updated = bbb.read(device_name)
+        if not updated:
+            return
+        for reason, new_value in data.items():
             if self._check_value_changed(reason, new_value):
                 if new_value is None:
                     continue
                 self.driver.setParam(reason, new_value)
             self.driver.setParamStatus(
-                reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
-
-    def _set_device_disconnected(self, bbb, device_name):
-        # pass
-        for field in bbb.database(device_name):
-            reason = device_name + ':' + field
-            self.driver.setParamStatus(
                 reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
 
+    # def _set_device_disconnected(self, bbb, device_name):
+    #     for field in bbb.database(device_name):
+    #         reason = device_name + ':' + field
+    #         self.driver.setParamStatus(
+    #             reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+
     def _scan_bbb(self, bbb):
-        #return
         for device_name in bbb.psnames:
             if bbb.check_connected(device_name):
                 self._update_ioc_database(bbb, device_name)
             else:
-                self._set_device_disconnected(bbb, device_name)
+                # self._set_device_disconnected(bbb, device_name)
+                self._update_ioc_database_disconnected(bbb, device_name)
