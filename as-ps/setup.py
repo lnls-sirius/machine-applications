@@ -21,7 +21,6 @@ setup(
     ],
     packages=['as_ps'],
     package_data={'as_ps': ['VERSION']},
-    scripts=['scripts/sirius-ioc-as-ps.py',
-             'scripts/sirius-ioc-as-ps-all.py'],
+    scripts=['scripts/sirius-ioc-as-ps.py'],
     zip_safe=False
 )

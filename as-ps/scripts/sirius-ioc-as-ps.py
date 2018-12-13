@@ -2,6 +2,7 @@
 """BeagleBone Black IOCs Launcher."""
 import sys
 import os
+import socket
 from as_ps import as_ps as ioc_module
 from siriuspy.search import PSSearch
 
@@ -25,8 +26,10 @@ def print_help():
     print('               print this help.')
     print()
     print('       --simul')
-    print('               creates simulated PRU and SerialComm objects, not '
+    print('               create simulated PRU and SerialComm objects, not '
           'real ones.')
+    print('       --hostname')
+    print('               take beaglebone name from hostname')
     print()
 
 
@@ -48,14 +51,17 @@ def main():
             print()
     else:
         args = [arg for arg in sys.argv[1:]]
+        simulate = False
         if '--simul' in args:
             simulate = True
             args.remove('--simul')
-        elif '--help' in args:
+        if '--help' in args:
             args.remove('--help')
             print_help()
-        else:
-            simulate = False
+        if '--hostname' in args:
+            hostname = socket.gethostname()
+            bbbname = hostname.replace('--', ':')
+            args = [bbbname, ]
         if args:
             ioc_module.run(args, simulate=simulate)
 
