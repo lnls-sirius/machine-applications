@@ -33,18 +33,19 @@ def _attribute_access_security_group(server, db):
     server.initAccessSecurityFile(path_ + '/access_rules.as')
 
 
-def _get_ioc_name_and_triggers(evg_params, triggers):
+def _get_ioc_name_and_triggers(events, triggers):
     ioc_name = 'as-ti'
-    ioc_name += '-evg' if evg_params else ''
+    ioc_name += '-evts' if events else ''
     ioc_name += ('-trig-' + triggers.lower()) if triggers != 'none' else ''
 
     if triggers.lower() not in TRIG_TYPES:
         _log.error("wrong input value for parameter 'triggers'.")
         return
-    if triggers.lower().startswith('none'):
-        trig_list = []
-    elif not triggers.lower().startswith('all'):
+    trig_list = []
+    if not triggers.lower().startswith('all'):
         trig_list = _HLTimeSearch.get_hl_triggers({'sec': triggers.upper()})
+    elif not triggers.lower().startswith('none'):
+        trig_list = _HLTimeSearch.get_hl_triggers()
     return ioc_name, trig_list
 
 
@@ -62,18 +63,8 @@ class _Driver(_pcaspy.Driver):
     def write(self, reason, value):
         return self.app.write(reason, value)
 
-    # def write(self, reason, value):
-    #     app_ret = self.app.write(reason, value)
-    #     if app_ret:
-    #         self.setParam(reason, value)
-    #         self.updatePVs()
-    #         _log.info('{0:40s}: OK'.format(reason))
-    #     else:
-    #         _log.info('{0:40s}: not OK'.format(reason))
-    #     return app_ret
 
-
-def run(evg_params=True, triggers='all', force=False, wait=15, debug=False):
+def run(events=True, triggers='all', lock=False, wait=15, debug=False):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
@@ -83,10 +74,10 @@ def run(evg_params=True, triggers='all', force=False, wait=15, debug=False):
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # get IOC name and triggers list
-    ioc_name, trig_list = _get_ioc_name_and_triggers(evg_params, triggers)
+    ioc_name, trig_list = _get_ioc_name_and_triggers(events, triggers)
     # Creates App object
     _log.debug('Creating App Object.')
-    app = _main.App(evg_params=evg_params, trig_list=trig_list)
+    app = _main.App(events=events, trig_list=trig_list)
     db = app.get_database()
     db['AS-Glob:TI-HighLvl-' + triggers.upper() + ':Version-Cte'] = {
                         'type': 'string', 'value': __version__}
@@ -120,15 +111,14 @@ def run(evg_params=True, triggers='all', force=False, wait=15, debug=False):
 
     # Connects to low level PVs
     _log.info('Openning connections with Low Level IOCs.')
-    app.connect(respect_ll_state=not force)
 
-    if not force:
+    if not lock:
         tm = max(5, wait)
-        _log.info('Waiting ' + str(tm) + ' seconds to start forcing.')
+        _log.info('Waiting ' + str(tm) + ' seconds to start locking Low Level.')
         stop_event.wait(tm)
-        _log.info('Start forcing now.')
+        _log.info('Start locking now.')
         if not stop_event.is_set():
-            app.start_forcing()
+            app.locked = True
 
     # main loop
     while not stop_event.is_set():
