@@ -3,9 +3,7 @@
 import time as _time
 import logging as _log
 from siriuspy.csdevice import timesys as _cstime
-from .hl_classes import HLEvent as _HLEvent, HLClock as _HLClock, \
-    HLTrigger as _HLTrigger, HLEVG as _HLEVG
-
+from .hl_classes import HLEvent as _HLEvent, HLTrigger as _HLTrigger
 
 _TIMEOUT = 0.05
 
@@ -16,14 +14,8 @@ class App:
     def get_database(self):
         """Get the database."""
         db = dict()
-        if self._evg is not None:
-            db.update(self._evg.get_database())
-        for clk in self._clocks:
-            db.update(clk.get_database())
-        for evt in self._events:
-            db.update(evt.get_database())
-        for trig in self._triggers:
-            db.update(trig.get_database())
+        for obj in self._objects:
+            db.update(obj.get_database())
         return db
 
     def __init__(self, driver=None, trig_list=[], evg_params=True):
@@ -35,57 +27,33 @@ class App:
                      events, etc.
         """
         self.driver = driver
-        self._evg = None
-        self._clocks = set()
-        self._events = set()
-        self._triggers = set()
+        self._objects = list()
         if evg_params:
-            self._evg = _HLEVG(self._update_driver)
-            for cl_hl in _cstime.Const.ClkHL2LLMap:
-                self._clocks.add(_HLClock(cl_hl, self._update_driver))
             for ev_hl in _cstime.Const.EvtHL2LLMap:
-                self._events.add(_HLEvent(ev_hl, self._update_driver))
+                self._objects.append(_HLEvent(ev_hl, self._update_driver))
         if trig_list:
             for pref in trig_list:
-                self._triggers.add(_HLTrigger(pref, self._update_driver))
-        self._database = self.get_database()
+                self._objects.append(_HLTrigger(pref, self._update_driver))
+        self._map2write = self.get_map2write()
+        self._db = self.get_database()
 
-    def connect(self, respect_ll_state=True):
-        """Trigger connection to external PVs in other classes.
-
-        respect_ll_state: If False a default initial state will be forced
-            on LL IOCs. Else, it will be read from the LL PVs.
-        """
-        if self._evg is not None:
-            self._evg.connect(respect_ll_state)
-        for val in self._clocks:
-            val.connect(respect_ll_state)
-        for val in self._events:
-            val.connect(respect_ll_state)
-        for val in self._triggers:
-            val.connect(respect_ll_state)
-
-    def start_forcing(self):
+    @property
+    def locked(self):
         """Start locking Low Level PVs."""
-        if self._evg is not None:
-            self._evg.start_forcing()
-        for val in self._clocks:
-            val.start_forcing()
-        for val in self._events:
-            val.start_forcing()
-        for val in self._triggers:
-            val.start_forcing()
+        locked = True
+        for obj in self._objects:
+            locked &= obj.locked
+        return locked
 
-    def stop_forcing(self):
+    @locked.setter
+    def locked(self, lock):
         """Stop locking Low Level PVs."""
-        if self._evg is not None:
-            self._evg.stop_forcing()
-        for val in self._clocks:
-            val.stop_forcing()
-        for val in self._events:
-            val.stop_forcing()
-        for val in self._triggers:
-            val.stop_forcing()
+        for obj in self._objects:
+            if lock:
+                vals = obj.readall(is_sp=True)
+                for prop, val in vals.items():
+                    obj.write(prop, val['value'])
+            obj.locked = lock
 
     def process(self, interval):
         """Run continuously in the main thread."""
@@ -101,9 +69,9 @@ class App:
         """Write value in database."""
         if not self._isValid(reason, value):
             return False
-        fun_ = self._database[reason].get('fun_set_pv')
+        fun_ = self._map2write.get(reason)
         if fun_ is None:
-            _log.warning('Not OK: PV %s does not have a set function.', reason)
+            _log.warning('Not OK: PV %s is not settable.', reason)
             return False
         ret_val = fun_(value)
         if ret_val:
@@ -113,6 +81,13 @@ class App:
             _log.warning('NO write %s: %s', reason, str(value))
         self._update_driver(reason, value)
         return True
+
+    def get_map2write(self):
+        """Get the database."""
+        map2write = dict()
+        for obj in self._objects:
+            map2write.update(obj.get_map2write())
+        return map2write
 
     def _update_driver(self, pvname, value, alarm=None, severity=None):
         if self.driver is None:
@@ -135,7 +110,7 @@ class App:
         if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
             _log.debug('App: PV {0:s} is read only.'.format(reason))
             return False
-        enums = self._database[reason].get('enums')
+        enums = self._db[reason].get('enums')
         if enums is not None and isinstance(val, int) and val >= len(enums):
             _log.warning('value %d too large for enum type PV %s', val, reason)
             return False
