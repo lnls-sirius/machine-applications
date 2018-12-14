@@ -6,7 +6,7 @@ import signal as _signal
 from threading import Event as _Event
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-from as_ti_control import main as _main
+from as_ti_control import App
 from siriuspy import util as _util
 from siriuspy.envars import vaca_prefix as _vaca_prefix
 from siriuspy.search import HLTimeSearch as _HLTimeSearch
@@ -16,7 +16,9 @@ INTERVAL = 0.1
 stop_event = _Event()
 
 _hl_trig = _HLTimeSearch.get_hl_triggers()
-TRIG_TYPES = {'as', 'si', 'bo', 'tb', 'ts', 'li', 'all', 'none'}
+TRIG_TYPES = {
+    'trig-as', 'trig-si', 'trig-bo', 'trig-tb', 'trig-ts', 'trig-li',
+    'trig-all', 'evts'}
 
 
 def _stop_now(signum, frame):
@@ -33,20 +35,25 @@ def _attribute_access_security_group(server, db):
     server.initAccessSecurityFile(path_ + '/access_rules.as')
 
 
-def _get_ioc_name_and_triggers(events, triggers):
-    ioc_name = 'as-ti'
-    ioc_name += '-evts' if events else ''
-    ioc_name += ('-trig-' + triggers.lower()) if triggers != 'none' else ''
-
-    if triggers.lower() not in TRIG_TYPES:
+def _get_ioc_name_and_triggers(timing):
+    if timing.lower() not in TRIG_TYPES:
         _log.error("wrong input value for parameter 'triggers'.")
-        return
-    trig_list = []
-    if not triggers.lower().startswith('all'):
-        trig_list = _HLTimeSearch.get_hl_triggers({'sec': triggers.upper()})
-    elif not triggers.lower().startswith('none'):
-        trig_list = _HLTimeSearch.get_hl_triggers()
-    return ioc_name, trig_list
+        raise Exception("wrong input value for parameter 'triggers'.")
+
+    trig_list = _HLTimeSearch.get_hl_triggers()
+    events = False
+    sec = 'as'
+    suf = 'trig'
+    if timing.endswith(('as', 'li', 'tb', 'bo', 'ts', 'si')):
+        trig_list = _HLTimeSearch.get_hl_triggers({'sec': timing[-2:].upper()})
+        sec = timing[-2:]
+    elif timing.endswith('evts'):
+        trig_list = []
+        events = True
+        suf = 'evts'
+    ioc_name = sec + '-ti-' + suf
+    ioc_prefix = sec.upper() + '-Glob:TI-HighLvl' + suf.title()
+    return ioc_name, ioc_prefix, events, trig_list
 
 
 class _Driver(_pcaspy.Driver):
@@ -64,7 +71,7 @@ class _Driver(_pcaspy.Driver):
         return self.app.write(reason, value)
 
 
-def run(events=True, triggers='all', lock=False, wait=15, debug=False):
+def run(timing='evts', lock=False, wait=10, debug=False):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
@@ -74,13 +81,12 @@ def run(events=True, triggers='all', lock=False, wait=15, debug=False):
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # get IOC name and triggers list
-    ioc_name, trig_list = _get_ioc_name_and_triggers(events, triggers)
+    ioc_name, ioc_prefix, evts, trig_list = _get_ioc_name_and_triggers(timing)
     # Creates App object
     _log.debug('Creating App Object.')
-    app = _main.App(events=events, trig_list=trig_list)
+    app = App(events=evts, trig_list=trig_list)
     db = app.get_database()
-    db['AS-Glob:TI-HighLvl-' + triggers.upper() + ':Version-Cte'] = {
-                        'type': 'string', 'value': __version__}
+    db[ioc_prefix + ':Version-Cte'] = {'type': 'string', 'value': __version__}
     # check if IOC is already running
     running = _util.check_pv_online(
         pvname=_vaca_prefix + sorted(db.keys())[0],
@@ -114,18 +120,36 @@ def run(events=True, triggers='all', lock=False, wait=15, debug=False):
 
     if not lock:
         tm = max(5, wait)
-        _log.info('Waiting ' + str(tm) + ' seconds to start locking Low Level.')
+        _log.info(
+            'Waiting ' + str(tm) + ' seconds to start locking Low Level.')
         stop_event.wait(tm)
         _log.info('Start locking now.')
-        if not stop_event.is_set():
-            app.locked = True
+
+    if not stop_event.is_set():
+        app.locked = True
+
+    # set state
+    if lock:
+        db = app.get_database()
+        for pv, fun in app.get_map2writepvs().items():
+            if pv.endswith('-Cmd'):
+                continue
+            val = db[pv]['value']
+            fun(val)
+    else:  # or update driver state
+        for pvname, fun in app.get_map2readpvs().items():
+            val = fun()
+            value = val.pop('value')
+            app.driver.setParam(pvname, value)
+            app.driver.setParamStatus(pvname, **val)
+            app.driver.updatePV(pvname)
 
     # main loop
     while not stop_event.is_set():
         app.process(INTERVAL)
 
     _log.info('Stoping Server Thread...')
-    # sends stop signal to server thread
+    # send stop signal to server thread
     server_thread.stop()
     server_thread.join()
     _log.info('Server Thread stopped.')

@@ -1,26 +1,22 @@
 #!/usr/local/bin/python-sirius -u
 
 import argparse as _argparse
-from as_ti_control import as_ti_control
+from as_ti_control import run, TRIG_TYPES
 
 parser = _argparse.ArgumentParser(description="Run Timing IOC.")
 parser.add_argument(
-    '-e', '--evg', action='store_true', default=False,
-    help="Manage high level interface for EVG Params: Clocks, Events, etc."
+    '-t', "--timing", type=str, default='evts',
+    help="Which high level Timing properties to manage",
+    choices=sorted(TRIG_TYPES)
     )
 parser.add_argument(
-    '-t', "--triggers", type=str, default='none',
-    help="Which high level Triggers to manage",
-    choices=sorted(as_ti_control.TRIG_TYPES)
-    )
-parser.add_argument(
-    '-f', '--force', action='store_true', default=False,
+    '-l', '--lock', action='store_true', default=False,
     help="Force default initial HL state on LL IOCs.",
     )
 parser.add_argument(
     '-w', '--wait', type=float, default=15,
-    help='In case -f is not given, this is the time to wait in [s]' +
-         'before start forcing.'
+    help='In case -l is not given, this is the time to wait in [s]' +
+         'before start locking.'
     )
 parser.add_argument(
     '-d', '--debug', action='store_true', default=False,
@@ -28,7 +24,4 @@ parser.add_argument(
     )
 
 args = parser.parse_args()
-as_ti_control.run(
-    evg_params=args.evg, triggers=args.triggers,
-    force=args.force, wait=args.wait, debug=args.debug,
-    )
+run(timing=args.timing, lock=args.lock, wait=args.wait, debug=args.debug)

@@ -1,6 +1,8 @@
 """Module with main IOC Class."""
 
 import time as _time
+from functools import reduce as _reduce
+from operator import and_ as _and_
 import logging as _log
 from siriuspy.csdevice import timesys as _cstime
 from siriuspy.timesys import HLEvent as _HLEvent, HLTrigger as _HLTrigger
@@ -33,25 +35,19 @@ class App:
         if trig_list:
             for pref in trig_list:
                 self._objects.append(_HLTrigger(pref, self._update_driver))
-        self._map2write = self.get_map2write()
+        self._map2writepvs = self.get_map2writepvs()
+        self._map2readpvs = self.get_map2readpvs()
         self._db = self.get_database()
 
     @property
     def locked(self):
         """Start locking Low Level PVs."""
-        locked = True
-        for obj in self._objects:
-            locked &= obj.locked
-        return locked
+        return _reduce(_and_, map(lambda x: x.locked, self._objects))
 
     @locked.setter
     def locked(self, lock):
         """Stop locking Low Level PVs."""
         for obj in self._objects:
-            if lock:
-                vals = obj.readall(is_sp=True)
-                for prop, val in vals.items():
-                    obj.write(prop, val['value'])
             obj.locked = lock
 
     def process(self, interval):
@@ -65,30 +61,50 @@ class App:
             _log.debug('process took {0:f}ms.'.format((tf-t0)*1000))
 
     def write(self, reason, value):
-        """Write value in database."""
+        """Write value in objects and database."""
         if not self._isValid(reason, value):
             return False
-        fun_ = self._map2write.get(reason)
+        fun_ = self._map2writepvs.get(reason)
         if fun_ is None:
             _log.warning('Not OK: PV %s is not settable.', reason)
             return False
         ret_val = fun_(value)
         if ret_val:
             _log.info('YES Write %s: %s', reason, str(value))
-        else:
+        elif self.driver is not None:
             value = self.driver.getParam(reason)
             _log.warning('NO write %s: %s', reason, str(value))
         self._update_driver(reason, value)
         return True
 
-    def get_map2write(self):
-        """Get the database."""
-        map2write = dict()
-        for obj in self._objects:
-            map2write.update(obj.get_map2write())
-        return map2write
+    def read(self, reason, from_db=False):
+        """Read PV value from objects or database."""
+        if from_db and self.driver is not None:
+            value = self.driver.getParam(reason)
+        else:
+            fun_ = self._map2readpvs.get(reason)
+            if fun_ is None:
+                _log.warning('Not OK: PV %s is not settable.', reason)
+                return False
+            value = fun_()['value']
+        return value
 
-    def _update_driver(self, pvname, value, alarm=None, severity=None):
+    def get_map2writepvs(self):
+        """Get dictionary to write pvs to objects."""
+        map2writepvs = dict()
+        for obj in self._objects:
+            map2writepvs.update(obj.get_map2writepvs())
+        return map2writepvs
+
+    def get_map2readpvs(self):
+        """Get dictionary to read pvs from objects."""
+        map2readpvs = dict()
+        for obj in self._objects:
+            map2readpvs.update(obj.get_map2readpvs())
+        return map2readpvs
+
+    def _update_driver(
+            self, pvname, value, alarm=None, severity=None, **kwargs):
         if self.driver is None:
             return
         val = self.driver.getParam(pvname)
