@@ -82,6 +82,9 @@ def run(timing='evts', lock=False, wait=10, debug=False):
 
     # get IOC name and triggers list
     ioc_name, ioc_prefix, evts, trig_list = _get_ioc_name_and_triggers(timing)
+    if not evts and not trig_list:
+        _log.fatal('Must select evts or some triggers to run IOC.')
+        return
     # Creates App object
     _log.debug('Creating App Object.')
     app = App(events=evts, trig_list=trig_list)
