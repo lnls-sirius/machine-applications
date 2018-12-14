@@ -3,7 +3,7 @@
 import time as _time
 import logging as _log
 from siriuspy.csdevice import timesys as _cstime
-from .hl_classes import HLEvent as _HLEvent, HLTrigger as _HLTrigger
+from siriuspy.timesys import HLEvent as _HLEvent, HLTrigger as _HLTrigger
 
 _TIMEOUT = 0.05
 
