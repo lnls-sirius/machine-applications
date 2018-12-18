@@ -98,8 +98,6 @@ def run(timing='evts', lock=False, wait=10, debug=False):
         _log.error('Another ' + ioc_name + ' is already running!')
         return
     _log.info('Generating database file.')
-    _util.save_ioc_pv_list(
-        ioc_name=ioc_name.lower(), prefix=('', _vaca_prefix), db=db)
     _log.info('File generated with {0:d} pvs.'.format(len(db)))
     _util.print_ioc_banner(
             ioc_name, db, 'High Level Timing IOC.', __version__, _vaca_prefix)
