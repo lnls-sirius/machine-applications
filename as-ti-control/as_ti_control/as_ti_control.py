@@ -8,6 +8,7 @@ import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 from as_ti_control import App
 from siriuspy import util as _util
+from siriuspy.csdevice import util as _cutil
 from siriuspy.envars import vaca_prefix as _vaca_prefix
 from siriuspy.search import HLTimeSearch as _HLTimeSearch
 
@@ -90,6 +91,8 @@ def run(timing='evts', lock=False, wait=10, debug=False):
     app = App(events=evts, trig_list=trig_list)
     db = app.get_database()
     db[ioc_prefix + ':Version-Cte'] = {'type': 'string', 'value': __version__}
+    # add PV Properties-Cte with list of all IOC PVs:
+    db = _cutil.add_pvslist_cte(db, prefix=ioc_prefix)
     # check if IOC is already running
     running = _util.check_pv_online(
         pvname=_vaca_prefix + sorted(db.keys())[0],
@@ -97,8 +100,6 @@ def run(timing='evts', lock=False, wait=10, debug=False):
     if running:
         _log.error('Another ' + ioc_name + ' is already running!')
         return
-    _log.info('Generating database file.')
-    _log.info('File generated with {0:d} pvs.'.format(len(db)))
     _util.print_ioc_banner(
             ioc_name, db, 'High Level Timing IOC.', __version__, _vaca_prefix)
     # create a new simple pcaspy server and driver to respond client's requests
