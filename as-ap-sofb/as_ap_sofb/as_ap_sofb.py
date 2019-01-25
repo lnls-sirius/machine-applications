@@ -7,6 +7,7 @@ import signal as _signal
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 import siriuspy.util as _util
+from siriuspy.csdevice import util as _cutil
 from siriuspy.envars import vaca_prefix as _vaca_prefix
 from .main import SOFB as _SOFB
 
@@ -55,29 +56,35 @@ def run(acc='SI', debug=False):
     # Creates App object
     _log.debug('Creating SOFB Object.')
     app = _SOFB(acc=acc)
-    _log.info('Generating database file.')
     db = app.get_database()
     db.update({'Version-Cte': {'type': 'string', 'value': __version__}})
-    PREFIX = acc.upper() + '-Glob:AP-SOFB:'
+    ioc_prefix = acc.upper() + '-Glob:AP-SOFB:'
     ioc_name = acc.lower() + '-ap-sofb'
-    _util.save_ioc_pv_list(
-                        ioc_name=ioc_name,
-                        prefix=(PREFIX, _vaca_prefix), db=db)
+    # check if IOC is already running
+    running = _util.check_pv_online(
+        pvname=_vaca_prefix + ioc_prefix + sorted(db.keys())[0],
+        use_prefix=False, timeout=0.5)
+    # add PV Properties-Cte with list of all IOC PVs:
+    db = _cutil.add_pvslist_cte(db, prefix=ioc_prefix)
+    if running:
+        _log.error('Another ' + ioc_name + ' is already running!')
+        return
     _util.print_ioc_banner(
-            ioc_name, db, 'SOFB for '+acc, '0.2', _vaca_prefix + PREFIX)
+            ioc_name, db, 'SOFB for '+acc, __version__,
+            _vaca_prefix + ioc_prefix)
     # create a new simple pcaspy server and driver to respond client's requests
     _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
-    _log.info('Setting Server Database.')
     _attribute_access_security_group(server, db)
-    server.createPV(_vaca_prefix + PREFIX, db)
+    _log.info('Setting Server Database.')
+    server.createPV(_vaca_prefix + ioc_prefix, db)
     _log.info('Creating Driver.')
     _PCASDriver(app)
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
-    _log.info('Starting Server Thread.')
     server_thread.setDaemon(True)
+    _log.info('Starting Server Thread.')
     server_thread.start()
 
     # main loop

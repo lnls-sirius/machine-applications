@@ -1,13 +1,11 @@
 """Module with main IOC Class."""
 
 import time as _time
+from functools import reduce as _reduce
+from operator import and_ as _and_
 import logging as _log
 from siriuspy.csdevice import timesys as _cstime
-from .hl_classes import HL_Event as _HL_Event
-from .hl_classes import HL_Clock as _HL_Clock
-from .hl_classes import HL_Trigger as _HL_Trigger
-from .hl_classes import HL_EVG as _HL_EVG
-
+from siriuspy.timesys import HLEvent as _HLEvent, HLTrigger as _HLTrigger
 
 _TIMEOUT = 0.05
 
@@ -18,110 +16,102 @@ class App:
     def get_database(self):
         """Get the database."""
         db = dict()
-        if self._evg is not None:
-            db.update(self._evg.get_database())
-        for cl in self._clocks:
-            db.update(cl.get_database())
-        for ev in self._events:
-            db.update(ev.get_database())
-        for trig in self._triggers:
-            db.update(trig.get_database())
+        for obj in self._objects:
+            db.update(obj.get_database())
         return db
 
-    def __init__(self, driver=None, trig_list=[], evg_params=True):
+    def __init__(self, driver=None, trig_list=[], events=True):
         """Initialize the instance.
 
         driver : is the driver associated with this app;
         triggers_list: is the list of the high level triggers to be managed;
-        evg_params: define if this app will manage evg params such as clocks,
-                     events, etc.
+        events: define if this app will manage evg events.
         """
         self.driver = driver
-        self._evg = None
-        self._clocks = set()
-        self._events = set()
-        self._triggers = set()
-        if evg_params:
-            self._evg = _HL_EVG(self._update_driver)
-            for cl_hl, cl_ll in _cstime.clocks_hl2ll_map.items():
-                self._clocks.add(_HL_Clock(cl_hl, self._update_driver))
-            for ev_hl, ev_ll in _cstime.events_hl2ll_map.items():
-                self._events.add(_HL_Event(ev_hl, self._update_driver))
+        self._objects = list()
+        if events:
+            for ev_hl in _cstime.Const.EvtHL2LLMap:
+                self._objects.append(_HLEvent(ev_hl, self._update_driver))
         if trig_list:
             for pref in trig_list:
-                self._triggers.add(_HL_Trigger(pref, self._update_driver))
-        self._database = self.get_database()
+                self._objects.append(_HLTrigger(pref, self._update_driver))
+        self._map2writepvs = self.get_map2writepvs()
+        self._map2readpvs = self.get_map2readpvs()
+        self._db = self.get_database()
 
-    def connect(self, get_ll_state=True):
-        """Trigger connection to external PVs in other classes.
-
-        get_ll_state: If False a default initial state will be forced
-            on LL IOCs. Else, it will be read from the LL PVs.
-        """
-        if self._evg is not None:
-            self._evg.connect(get_ll_state)
-        for val in self._clocks:
-            val.connect(get_ll_state)
-        for val in self._events:
-            val.connect(get_ll_state)
-        for val in self._triggers:
-            val.connect(get_ll_state)
-
-    def start_forcing(self):
+    @property
+    def locked(self):
         """Start locking Low Level PVs."""
-        if self._evg is not None:
-            self._evg.start_forcing()
-        for val in self._clocks:
-            val.start_forcing()
-        for val in self._events:
-            val.start_forcing()
-        for val in self._triggers:
-            val.start_forcing()
+        return _reduce(_and_, map(lambda x: x.locked, self._objects))
 
-    def stop_forcing(self):
+    @locked.setter
+    def locked(self, lock):
         """Stop locking Low Level PVs."""
-        if self._evg is not None:
-            self._evg.stop_forcing()
-        for val in self._clocks:
-            val.stop_forcing()
-        for val in self._events:
-            val.stop_forcing()
-        for val in self._triggers:
-            val.stop_forcing()
+        for obj in self._objects:
+            obj.locked = lock
 
     def process(self, interval):
         """Run continuously in the main thread."""
         t0 = _time.time()
         tf = _time.time()
-        dt = (tf-t0)
-        if dt > 2*interval:
-            _log.warning('App: check took {0:f}ms.'.format(dt*1000))
-        dt = interval - dt
+        dt = interval - (tf-t0)
         if dt > 0:
             _time.sleep(dt)
+        else:
+            _log.debug('process took {0:f}ms.'.format((tf-t0)*1000))
 
     def write(self, reason, value):
-        """Write PV in the model."""
+        """Write value in objects and database."""
         if not self._isValid(reason, value):
             return False
-        fun_ = self._database[reason].get('fun_set_pv')
+        fun_ = self._map2writepvs.get(reason)
         if fun_ is None:
-            _log.warning('Not OK: PV ' +
-                         '{0:s} does not have a set function.'.format(reason))
+            _log.warning('Not OK: PV %s is not settable.', reason)
             return False
         ret_val = fun_(value)
-        if not ret_val:
-            _log.warning('Not OK: PV {0:s}; value = {1:s}.'
-                         .format(reason, str(value)))
-        return ret_val
+        if ret_val:
+            _log.info('YES Write %s: %s', reason, str(value))
+        elif self.driver is not None:
+            value = self.driver.getParam(reason)
+            _log.warning('NO write %s: %s', reason, str(value))
+        self._update_driver(reason, value)
+        return True
 
-    def _update_driver(self, pvname, value, alarm=None, severity=None):
+    def read(self, reason, from_db=False):
+        """Read PV value from objects or database."""
+        if from_db and self.driver is not None:
+            value = self.driver.getParam(reason)
+        else:
+            fun_ = self._map2readpvs.get(reason)
+            if fun_ is None:
+                _log.warning('Not OK: PV %s is not settable.', reason)
+                return False
+            value = fun_()['value']
+        return value
+
+    def get_map2writepvs(self):
+        """Get dictionary to write pvs to objects."""
+        map2writepvs = dict()
+        for obj in self._objects:
+            map2writepvs.update(obj.get_map2writepvs())
+        return map2writepvs
+
+    def get_map2readpvs(self):
+        """Get dictionary to read pvs from objects."""
+        map2readpvs = dict()
+        for obj in self._objects:
+            map2readpvs.update(obj.get_map2readpvs())
+        return map2readpvs
+
+    def _update_driver(
+            self, pvname, value, alarm=None, severity=None, **kwargs):
+        if self.driver is None:
+            return
         val = self.driver.getParam(pvname)
         update = False
         if value is not None and val != value:
             self.driver.setParam(pvname, value)
             _log.info('{0:40s}: updated'.format(pvname))
-            self.driver.updatePVs()
             update = True
         if alarm is not None and severity is not None:
             self.driver.setParamStatus(pvname, alarm=alarm, severity=severity)
@@ -129,15 +119,14 @@ class App:
                 _log.info('{0:40s}: alarm'.format(pvname))
             update = True
         if update:
-            self.driver.updatePVs()
+            self.driver.updatePV(pvname)
 
-    def _isValid(self, reason, value):
-        enums = self._database[reason].get('enums')
-        if enums is not None:
-            if isinstance(value, int):
-                len_ = len(enums)
-                if value >= len_:
-                    _log.warning('value {0:d} too large '.format(value) +
-                                 'for PV {0:s} of type enum'.format(reason))
-                    return False
+    def _isValid(self, reason, val):
+        if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
+            _log.debug('App: PV {0:s} is read only.'.format(reason))
+            return False
+        enums = self._db[reason].get('enums')
+        if enums is not None and isinstance(val, int) and val >= len(enums):
+            _log.warning('value %d too large for enum type PV %s', val, reason)
+            return False
         return True
