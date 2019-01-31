@@ -41,19 +41,21 @@ def _get_ioc_name_and_triggers(timing):
         _log.error("wrong input value for parameter 'triggers'.")
         raise Exception("wrong input value for parameter 'triggers'.")
 
-    trig_list = _HLTimeSearch.get_hl_triggers()
+    trig_list = []
     events = False
     sec = 'as'
-    suf = 'trig'
-    if timing.endswith(('as', 'li', 'tb', 'bo', 'ts', 'si')):
+    if timing.endswith('all'):
+        trig_list = _HLTimeSearch.get_hl_triggers()
+        suf = 'AllTrigs'
+    if timing.endswith(('-as', '-li', '-tb', '-bo', '-ts', '-si')):
         trig_list = _HLTimeSearch.get_hl_triggers({'sec': timing[-2:].upper()})
         sec = timing[-2:]
+        suf = sec.upper() + 'Trigs'
     elif timing.endswith('evts'):
-        trig_list = []
         events = True
-        suf = 'evts'
-    ioc_name = sec + '-ti-' + suf
-    ioc_prefix = sec.upper() + '-Glob:TI-HighLvl' + suf.title()
+        suf = 'Evts'
+    ioc_name = sec + '-ti-' + suf.lower()
+    ioc_prefix = sec.upper() + '-Glob:TI-HighLvl-' + suf
     return ioc_name, ioc_prefix, events, trig_list
 
 
