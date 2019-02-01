@@ -16,7 +16,6 @@ install-services:
 	mkdir -p /home/fac/sirius-iocs/bo-ap-sofb/data
 	mkdir -p /home/fac/sirius-iocs/ts-ap-sofb/data
 	mkdir -p /home/fac/sirius-iocs/tb-ap-sofb/data
-	mkdir -p /home/fac/sirius-iocs/pvs
 	chown -R fac.fac /home/fac/sirius-iocs
 
 stop-services:
