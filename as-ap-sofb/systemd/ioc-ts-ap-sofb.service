@@ -3,10 +3,10 @@ Description=Soft IOC for TS Orbit Correction.
 After=multi-user.target
 
 [Service]
-Group=fac
-User=fac
+Group=sirius
+User=sirius
 Type=simple
-WorkingDirectory=/home/fac/sirius-iocs/ts-ap-sofb
+WorkingDirectory=/home/sirius/iocs/ts-ap-sofb
 StandardOutput=syslog
 StandardError=syslog
 ExecStartPre=/bin/bash --login -c 'env > /tmp/.magic-environment-file'
