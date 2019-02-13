@@ -1,6 +1,7 @@
 """Module to deal with orbit acquisition."""
 import os as _os
 import time as _time
+import logging as _log
 from functools import partial as _part
 from threading import Lock
 import numpy as _np
@@ -8,6 +9,7 @@ from epics import PV as _PV
 import siriuspy.util as _util
 import siriuspy.csdevice.bpms as _csbpm
 import siriuspy.csdevice.timesys as _cstime
+from siriuspy.search import HLTimeSearch as _HLTimesearch
 from siriuspy.thread import RepeaterThread as _Repeat
 from siriuspy.envars import vaca_prefix as LL_PREF
 from .base_class import (
@@ -28,10 +30,10 @@ class BPM(_BaseTimingConfig):
         self._posy = _PV(LL_PREF + self._name + ':PosY-Mon', **opt)
         self._spposx = _PV(LL_PREF + self._name + ':SPPosX-Mon', **opt)
         self._spposy = _PV(LL_PREF + self._name + ':SPPosY-Mon', **opt)
-        self._spsum = _PV(LL_PREF + self._name + ':SPPosSum-Mon', **opt)
+        self._spsum = _PV(LL_PREF + self._name + ':SPSum-Mon', **opt)
         self._arrayx = _PV(LL_PREF + self._name + ':GEN_XArrayData', **opt)
         self._arrayy = _PV(LL_PREF + self._name + ':GEN_YArrayData', **opt)
-        self._arrays = _PV(LL_PREF + self._name + ':GEN_SumArrayData', **opt)
+        self._arrays = _PV(LL_PREF + self._name + ':GEN_SUMArrayData', **opt)
         self._offsetx = _PV(LL_PREF + self._name + ':PosXOffset-RB', **opt)
         self._offsety = _PV(LL_PREF + self._name + ':PosYOffset-RB', **opt)
         self._config_ok_vals = {
@@ -59,7 +61,6 @@ class BPM(_BaseTimingConfig):
             'ACQTriggerDataHyst': 2}
         pvs = {
             'asyn.ENBL': 'asyn.ENBL',
-            'asyn.CNCT': 'asyn.CNCT',
             'ACQBPMMode': 'ACQBPMMode-Sel',
             'ACQChannel': 'ACQChannel-Sel',
             # 'ACQNrShots': 'ACQNrShots-SP',
@@ -99,7 +100,8 @@ class BPM(_BaseTimingConfig):
             'ACQSamplesPost': 'ACQSamplesPost-RB',
             # 'ACQCtrl': 'ACQCtrl-Sts',
             'ACQTriggerEvent': 'ACQTriggerEvent-Sts',
-            'ACQStatus': 'ACQStatus-Mon',
+            # 'ACQStatus': 'ACQStatus-Mon',
+            'ACQStatus': 'ACQStatus-Sts',
             # 'ACQTriggerType': 'ACQTriggerType-Sts',
             'ACQTrigger': 'ACQTrigger-Sts',
             'ACQTriggerRep': 'ACQTriggerRep-Sts',
@@ -120,16 +122,15 @@ class BPM(_BaseTimingConfig):
     @property
     def connected(self):
         conn = super().connected
-        conn &= self._posx.connected
-        conn &= self._posy.connected
-        conn &= self._spposx.connected
-        conn &= self._spposy.connected
-        conn &= self._spsum.connected
-        conn &= self._arrayx.connected
-        conn &= self._arrayy.connected
-        conn &= self._arrays.connected
-        conn &= self._offsetx.connected
-        conn &= self._offsety.connected
+        pvs = (
+            self._posx, self._posy,
+            self._spposx, self._spposy, self._spsum,
+            self._arrayx, self._arrayy, self._arrays,
+            self._offsetx, self._offsety)
+        for pv in pvs:
+            if not pv.connected:
+                _log.debug('NOT CONN: ' + pv.pvname)
+            conn &= pv.connected
         return conn
 
     @property
@@ -359,22 +360,25 @@ class TimingConfig(_BaseTimingConfig):
 
     def __init__(self, acc):
         super().__init__(acc)
-        trig = self._csorb.TRIGGER_NAME
+        trig = self._csorb.TRIGGER_ACQ_NAME
         opt = {'connection_timeout': TIMEOUT}
-        evt = 'Dig' + acc
+        evt = self._csorb.EVT_ACQ_NAME
+        src_val = self._csorb.OrbitAcqExtEvtSrc._fields.index(evt)
+        src_val = self._csorb.OrbitAcqExtEvtSrc[src_val]
         self._config_ok_vals = {
-            'Src': self._csorb.OrbitAcqExtEvtSrc._fields.index(evt),
+            'Src': src_val,
             'Delay': 0.0,
-            'DelayType': _cstime.Const.TrigDlyTyp.Fixed,
             'NrPulses': 1,
             'Duration': 0.001,
             'State': _cstime.Const.TrigStates.Enbl,
             'Polarity': _cstime.Const.TrigPol.Normal}
-        pref_name = LL_PREF + trig
+        if _HLTimesearch.has_delay_type(trig):
+            self._config_ok_vals['RFDelayType'] = \
+                                    _cstime.Const.TrigDlyTyp.Manual
+        pref_name = LL_PREF + trig + ':'
         self._config_pvs_rb = {
             'Src': _PV(pref_name + 'Src-Sts', **opt),
             'Delay': _PV(pref_name + 'Delay-RB', **opt),
-            'DelayType': _PV(pref_name + 'DelayType-Sts', **opt),
             'NrPulses': _PV(pref_name + 'NrPulses-RB', **opt),
             'Duration': _PV(pref_name + 'Duration-RB', **opt),
             'State': _PV(pref_name + 'State-Sts', **opt),
@@ -382,11 +386,15 @@ class TimingConfig(_BaseTimingConfig):
         self._config_pvs_sp = {
             'Src': _PV(pref_name + 'Src-Sel', **opt),
             'Delay': _PV(pref_name + 'Delay-SP', **opt),
-            'DelayType': _PV(pref_name + 'DelayType-Sel', **opt),
             'NrPulses': _PV(pref_name + 'NrPulses-SP', **opt),
             'Duration': _PV(pref_name + 'Duration-SP', **opt),
             'State': _PV(pref_name + 'State-Sel', **opt),
             'Polarity': _PV(pref_name + 'Polarity-Sel', **opt)}
+        if _HLTimesearch.has_delay_type(trig):
+            self._config_pvs_rb['RFDelayType'] = _PV(
+                            pref_name + 'RFDelayType-Sts', **opt)
+            self._config_pvs_sp['RFDelayType'] = _PV(
+                            pref_name + 'RFDelayType-Sel', **opt)
 
     @property
     def nrpulses(self):
@@ -554,7 +562,9 @@ class EpicsOrbit(BaseOrbit):
             orbx, orby = getorb(orbs)
             break
         else:
-            self._update_log('ERR: get orbit function timeout.')
+            msg = 'ERR: get orbit function timeout.'
+            self._update_log(msg)
+            _log.error(msg[5:])
             orbx = self.ref_orbs['X']
             orby = self.ref_orbs['Y']
 
@@ -573,9 +583,13 @@ class EpicsOrbit(BaseOrbit):
         return orbs['X'][idx, :], orbs['Y'][idx, :]
 
     def set_offline_orbit(self, plane, orb):
-        self._update_log('Setting New Offline Orbit.')
+        msg = 'Setting New Offline Orbit.'
+        self._update_log(msg)
+        _log.info(msg)
         if len(orb) != self._csorb.NR_BPMS:
-            self._update_log('ERR: Wrong Size.')
+            msg = 'ERR: Wrong Size.'
+            self._update_log(msg)
+            _log.error(msg[5:])
             return False
         self.offline_orbit[plane] = _np.array(orb)
         self.run_callbacks('OrbitOffline'+plane+'-RB', orb)
@@ -591,9 +605,13 @@ class EpicsOrbit(BaseOrbit):
             self._reset_orbs()
 
     def set_ref_orbit(self, plane, orb):
-        self._update_log('Setting New Reference Orbit.')
+        msg = 'Setting New Reference Orbit.'
+        self._update_log(msg)
+        _log.info(msg)
         if len(orb) != self._csorb.NR_BPMS:
-            self._update_log('ERR: Wrong Size.')
+            msg = 'ERR: Wrong Size.'
+            self._update_log(msg)
+            _log.error(msg[5:])
             return False
         self.ref_orbs[plane] = _np.array(orb, dtype=float)
         self._save_ref_orbits()
@@ -607,7 +625,9 @@ class EpicsOrbit(BaseOrbit):
         if self.isring:
             trigmds.append(self._csorb.OrbitMode.MultiTurn)
         if self._mode in trigmds and value > 2:
-            self._update_log('ERR: In triggered mode cannot set rate > 2.')
+            msg = 'ERR: In triggered mode cannot set rate > 2.'
+            self._update_log(msg)
+            _log.error(msg[5:])
             return False
         self._acqrate = value
         self._orbit_thread.interval = 1/value
@@ -638,8 +658,9 @@ class EpicsOrbit(BaseOrbit):
         maxidx *= self._acqtrignrshots
         if value >= maxidx:
             value = maxidx-1
-            self._update_log(
-                'WARN: MultiTurnIdx is too large. Redefining...')
+            msg = 'WARN: MultiTurnIdx is too large. Redefining...'
+            self._update_log(msg)
+            _log.warning(msg[6:])
         with self._lock_raw_orbs:
             self._multiturnidx = int(value)
         self.run_callbacks('OrbitMultiTurnIdx-RB', self._multiturnidx)
@@ -652,7 +673,9 @@ class EpicsOrbit(BaseOrbit):
         if self.isring:
             trigmds.append(self._csorb.OrbitMode.MultiTurn)
         if self._mode not in trigmds:
-            self._update_log('ERR: Change to a Triggered mode first.')
+            msg = 'ERR: Change to a Triggered mode first.'
+            self._update_log(msg)
+            _log.error(msg[5:])
             return False
         for bpm in self.bpms:
             bpm.configure()
@@ -703,7 +726,7 @@ class EpicsOrbit(BaseOrbit):
     def set_trig_acq_datathres(self, value):
         for bpm in self.bpms:
             bpm.acq_trig_datathres = value
-        self.run_callbacks('OrbitTrigDataSel-SP', value)
+        self.run_callbacks('OrbitTrigDataThres-RB', value)
         return True
 
     def set_trig_acq_datahyst(self, value):
@@ -731,7 +754,7 @@ class EpicsOrbit(BaseOrbit):
         return True
 
     def set_trig_acq_extsource(self, value):
-        self.timing.evtsrc = value
+        self.timing.evtsrc = self._csorb.OrbitAcqExtEvtSrc[value]
         self.run_callbacks('OrbitTrigExtEvtSrc-Sts', value)
         return True
 
@@ -746,8 +769,9 @@ class EpicsOrbit(BaseOrbit):
         nval = self._find_new_nrsamples(nval, self._acqtrigdownsample)
         if nval != value:
             value = nval
-            self._update_log(
-                'WARN: Not possible to set NrSamples. Redefining..')
+            msg = 'WARN: Not possible to set NrSamples. Redefining..'
+            self._update_log(msg)
+            _log.warning(msg[6:])
 
         value -= getattr(self, '_acqtrignrsamples'+osuf)
         with self._lock_raw_orbs:
@@ -764,8 +788,9 @@ class EpicsOrbit(BaseOrbit):
         nrpoints = pntspshot * value
         if nrpoints > self._csorb.MAX_MT_ORBS:
             value = self._csorb.MAX_MT_ORBS // pntspshot
-            self._update_log(
-                'WARN: Not possible to set NrShots. Redefining...')
+            msg = 'WARN: Not possible to set NrShots. Redefining...'
+            self._update_log(msg)
+            _log.warning(msg[6:])
         with self._lock_raw_orbs:
             for bpm in self.bpms:
                 bpm.nrshots = value
@@ -784,8 +809,9 @@ class EpicsOrbit(BaseOrbit):
                 self.acqtrignrsamples, value, onlyup=True)
         if down != value:
             value = down
-            self._update_log(
-                'WARN: DwnSpl Must divide NRSamples. Redefining...')
+            msg = 'WARN: DwnSpl Must divide NRSamples. Redefining...'
+            self._update_log(msg)
+            _log.warning(msg[6:])
         self._acqtrigdownsample = value
         self.run_callbacks('OrbitTrigDownSample-RB', value)
         self._update_time_vector()
@@ -825,7 +851,9 @@ class EpicsOrbit(BaseOrbit):
         try:
             _np.savetxt(self._csorb.REFORBFNAME, orbs)
         except FileNotFoundError:
-            self._update_log('WARN: Could not save reference orbit in file.')
+            msg = 'WARN: Could not save reference orbit in file.'
+            self._update_log(msg)
+            _log.warning(msg[6:])
 
     def _reset_orbs(self):
         self.raw_orbs = {'X': [], 'Y': []}

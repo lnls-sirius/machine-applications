@@ -1,5 +1,6 @@
 """Definition module."""
 import math as _math
+import logging as _log
 from siriuspy.csdevice.orbitcorr import OrbitCorrDevFactory as \
     _OrbitCorrDevFactory
 from siriuspy.callbacks import Callback as _Callback
@@ -14,7 +15,6 @@ class BaseClass(_Callback):
         self._csorb = _OrbitCorrDevFactory.create(acc)
         self._prefix = prefix
         self._status = 0b0
-        self._isring = self._csorb.acc_idx in self._csorb.Rings
 
     @property
     def prefix(self):
@@ -34,7 +34,7 @@ class BaseClass(_Callback):
     @property
     def isring(self):
         """Ring accelerator status."""
-        return self._isring
+        return self._csorb.isring()
 
     @property
     def status(self):
@@ -72,8 +72,12 @@ class BaseTimingConfig:
         """Status connected."""
         conn = True
         for k, pv in self._config_pvs_rb.items():
+            if not pv.connected:
+                _log.debug('NOT CONN: ' + pv.pvname)
             conn &= pv.connected
         for k, pv in self._config_pvs_sp.items():
+            if not pv.connected:
+                _log.debug('NOT CONN: ' + pv.pvname)
             conn &= pv.connected
         return conn
 
@@ -85,9 +89,12 @@ class BaseTimingConfig:
             pv = self._config_pvs_rb[k]
             pvval = pv.value
             if isinstance(val, float):
-                ok &= _math.isclose(val, pvval, rel_tol=1e-2)
+                okay = _math.isclose(val, pvval, rel_tol=1e-2)
             else:
-                ok &= val == pvval
+                okay = val == pvval
+            if not okay:
+                _log.debug('NOT CONF: ' + pv.pvname)
+            ok &= okay
             if not ok:
                 break
         return ok

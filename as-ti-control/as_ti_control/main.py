@@ -31,7 +31,8 @@ class App:
         self._objects = list()
         if events:
             for ev_hl in _cstime.Const.EvtHL2LLMap:
-                self._objects.append(_HLEvent(ev_hl, self._update_driver))
+                if not ev_hl.startswith(('Dsbl', 'PsMtn')):
+                    self._objects.append(_HLEvent(ev_hl, self._update_driver))
         if trig_list:
             for pref in trig_list:
                 self._objects.append(_HLTrigger(pref, self._update_driver))

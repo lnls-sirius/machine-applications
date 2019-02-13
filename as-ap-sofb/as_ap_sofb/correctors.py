@@ -2,13 +2,14 @@
 
 import time as _time
 import math as _math
+import logging as _log
 import numpy as _np
 from epics import PV as _PV
 import siriuspy.util as _util
 from siriuspy.thread import RepeaterThread as _Repeat
-from siriuspy.search.hl_time_search import HLTimeSearch as _HLTimeSearch
 from siriuspy.csdevice.pwrsupply import Const as _PSConst
-from siriuspy.csdevice.timesys import events_modes as _EVT_MODES
+from siriuspy.csdevice.timesys import Const as _TIConst
+from siriuspy.search import HLTimeSearch as _HLTimesearch
 from siriuspy.envars import vaca_prefix as LL_PREF
 from .base_class import (
     BaseClass as _BaseClass,
@@ -38,19 +39,22 @@ class Corrector(_BaseTimingConfig):
     def connected(self):
         """Status connected."""
         conn = super().connected
-        conn &= self._sp.connected
-        conn &= self._rb.connected
+        pvs = (self._sp, self._rb)
+        for pv in pvs:
+            if not pv.connected:
+                _log.debug('NOT CONN: ' + pv.pvname)
+            conn &= pv.connected
         return conn
 
     @property
     def state(self):
         """State."""
         pv = self._config_pvs_rb['PwrState']
-        return pv.value == _PSConst.PwrState.On if pv.connected else False
+        return pv.value == _PSConst.PwrStateSel.On if pv.connected else False
 
     @state.setter
     def state(self, boo):
-        val = _PSConst.PwrState.On if boo else _PSConst.PwrState.Off
+        val = _PSConst.PwrStateSel.On if boo else _PSConst.PwrStateSel.Off
         pv = self._config_pvs_sp['PwrState']
         if pv.connected:
             self._config_ok_vals['PwrState'] = val
@@ -83,9 +87,9 @@ class Corrector(_BaseTimingConfig):
 class RFCtrl(Corrector):
     """RF control class."""
 
-    def __init__(self):
+    def __init__(self, acc):
         """Init method."""
-        super().__init__('SI')
+        super().__init__(acc)
         self._name = self._csorb.RF_GEN_NAME
         opt = {'connection_timeout': TIMEOUT}
         self._sp = _PV(LL_PREF+self._name+':Freq-SP', **opt)
@@ -125,7 +129,7 @@ class CHCV(Corrector):
         self._ref = _PV(LL_PREF + self._name + ':CurrentRef-Mon', **opt)
         self._config_ok_vals = {
             'OpMode': _PSConst.OpMode.SlowRefSync,
-            'PwrState': _PSConst.PwrState.On}
+            'PwrState': _PSConst.PwrStateSel.On}
         self._config_pvs_sp = {
             'OpMode': _PV(LL_PREF+self._name+':OpMode-Sel', **opt),
             'PwrState': _PV(LL_PREF+self._name+':PwrState-Sel', **opt)}
@@ -156,6 +160,8 @@ class CHCV(Corrector):
         """Status connected."""
         conn = super().connected
         conn &= self._ref.connected
+        if not self._ref.connected:
+            _log.debug('NOT CONN: ' + self._ref.pvname)
         return conn
 
     @property
@@ -170,29 +176,26 @@ class TimingConfig(_BaseTimingConfig):
     def __init__(self, acc):
         """Init method."""
         super().__init__(acc)
-        if acc == 'SI':
-            evt = 'OrbSI'
-            trig = 'SI-Glob:TI-Corrs:'
-        elif acc == 'BO':
-            evt = 'OrbBO'
-            trig = 'BO-Glob:TI-Corrs:'
+        evt = self._csorb.EVT_COR_NAME
         pref_name = LL_PREF + self._csorb.EVG_NAME + ':' + evt
+        trig = self._csorb.TRIGGER_COR_NAME
         opt = {'connection_timeout': TIMEOUT}
         self._evt_sender = _PV(pref_name + 'ExtTrig-Cmd', **opt)
-        # self._evt_sender = _PV(
-        #     'guilherme-AS-Glob:PS-Timing:Trigger-Cmd', **opt)
+        src_val = self._csorb.OrbitCorExtEvtSrc._fields.index(evt)
+        src_val = self._csorb.OrbitCorExtEvtSrc[src_val]
         self._config_ok_vals = {
-            'Mode': _EVT_MODES.External,
-            'Src': _HLTimeSearch.get_hl_trigger_sources(trig).index(evt),
-            'Delay': 0.0, 'DelayType': 0, 'NrPulses': 1,
-            'Duration': 0.1, 'State': 1, 'Polarity': 1,
+            'Mode': _TIConst.EvtModes.External,
+            'Src': src_val,
+            'Delay': 0.0,
+            'NrPulses': 1, 'Duration': 0.1, 'State': 1, 'Polarity': 1,
             }
-        pref_trig = LL_PREF + trig
+        if _HLTimesearch.has_delay_type(trig):
+            self._config_ok_vals['RFDelayType'] = _TIConst.TrigDlyTyp.Manual
+        pref_trig = LL_PREF + trig + ':'
         self._config_pvs_rb = {
             'Mode': _PV(pref_name + 'Mode-Sts', **opt),
             'Src': _PV(pref_trig + 'Src-Sts', **opt),
             'Delay': _PV(pref_trig + 'Delay-RB', **opt),
-            'DelayType': _PV(pref_trig + 'DelayType-Sts', **opt),
             'NrPulses': _PV(pref_trig + 'NrPulses-RB', **opt),
             'Duration': _PV(pref_trig + 'Duration-RB', **opt),
             'State': _PV(pref_trig + 'State-Sts', **opt),
@@ -202,12 +205,16 @@ class TimingConfig(_BaseTimingConfig):
             'Mode': _PV(pref_name + 'Mode-Sel', **opt),
             'Src': _PV(pref_trig + 'Src-Sel', **opt),
             'Delay': _PV(pref_trig + 'Delay-SP', **opt),
-            'DelayType': _PV(pref_trig + 'DelayType-Sel', **opt),
             'NrPulses': _PV(pref_trig + 'NrPulses-SP', **opt),
             'Duration': _PV(pref_trig + 'Duration-SP', **opt),
             'State': _PV(pref_trig + 'State-Sel', **opt),
             'Polarity': _PV(pref_trig + 'Polarity-Sel', **opt),
             }
+        if _HLTimesearch.has_delay_type(trig):
+            self._config_pvs_rb['RFDelayType'] = _PV(
+                            pref_trig + 'RFDelayType-Sts', **opt)
+            self._config_pvs_sp['RFDelayType'] = _PV(
+                            pref_trig + 'RFDelayType-Sel', **opt)
 
     def send_evt(self):
         """Send event method."""
@@ -218,6 +225,8 @@ class TimingConfig(_BaseTimingConfig):
         """Status connected."""
         conn = super().connected
         conn &= self._evt_sender.connected
+        if not self._evt_sender.connected:
+            _log.debug('NOT CONN: ' + self._evt_sender.pvname)
         return conn
 
 
@@ -252,60 +261,71 @@ class EpicsCorrectors(BaseCorrectors):
         self._acq_rate = 10
         self._names = self._csorb.CH_NAMES + self._csorb.CV_NAMES
         self._chcvs = {CHCV(dev) for dev in self._names}
-        self._rf_ctrl = RFCtrl() if self.isring else None
-        self._rf_nom_freq = self._csorb.RF_NOM_FREQ
-        self.timing = TimingConfig(acc) if self.isring else None
+        if self.isring:
+            self._rf_ctrl = RFCtrl(self.acc)
+            self._rf_nom_freq = self._csorb.RF_NOM_FREQ
+            self.timing = TimingConfig(acc)
         self._corrs_thread = _Repeat(
                 1/self._acq_rate, self._update_corrs_strength, niter=0)
         self._corrs_thread.start()
 
     def apply_kicks(self, values):
         """Apply kicks."""
-        strn = '{0:20s}: {1:7.3f}'
+        strn = '    TIMEIT: {0:20s} - {1:7.3f}'
         # apply the RF kick
+        _log.debug('    TIMEIT: BEGIN')
         t0 = _time.time()
         if self.isring:
             self.put_value_in_corr(
                 self._rf_ctrl, values[-1] + self._rf_nom_freq, False)
         t1 = _time.time()
-        print(strn.format('    send rf:', 1000*(t1-t0)))
+        _log.debug(strn.format('send rf:', 1000*(t1-t0)))
 
         # Send correctors setpoint
         for i, corr in enumerate(self._chcvs):
             self.put_value_in_corr(corr, values[i])
         t2 = _time.time()
-        print(strn.format('    send sp:', 1000*(t2-t1)))
+        _log.debug(strn.format('send sp:', 1000*(t2-t1)))
 
         # Wait for readbacks to be updated
         if self._timed_out(mode='ready'):
-            self._update_log('ERR: timeout waiting correctors RB')
+            msg = 'ERR: timeout waiting correctors RB'
+            self._update_log(msg)
+            _log.error(msg[5:])
             return
         t3 = _time.time()
-        print(strn.format('    check ready:', 1000*(t3-t2)))
+        _log.debug(strn.format('check ready:', 1000*(t3-t2)))
 
         # Send trigger signal for implementation
         # _time.sleep(0.450)
         self.send_evt()
         t4 = _time.time()
-        print(strn.format('    send evt:', 1000*(t4-t3)))
+        _log.debug(strn.format('send evt:', 1000*(t4-t3)))
 
         # Wait for references to be updated
         if self._timed_out(mode='applied'):
-            self._update_log('ERR: timeout waiting correctors Ref')
+            msg = 'ERR: timeout waiting correctors Ref'
+            self._update_log(msg)
+            _log.error(msg[5:])
         t5 = _time.time()
-        print(strn.format('    check applied:', 1000*(t5-t4)))
+        _log.debug(strn.format('check applied:', 1000*(t5-t4)))
+        _log.debug('    TIMEIT: END')
 
     def put_value_in_corr(self, corr, value, flag=True):
         """Put value in corrector method."""
-        if corr.equalKick(value):
-            return
         if not corr.connected:
-            self._update_log('ERR: ' + corr.name + ' not connected.')
+            msg = 'ERR: ' + corr.name + ' not connected.'
+            self._update_log(msg)
+            _log.error(msg[5:])
         elif not corr.state:
-            self._update_log('ERR: ' + corr.name + ' is off.')
+            msg = 'ERR: ' + corr.name + ' is off.'
+            self._update_log(msg)
+            _log.error(msg[5:])
         elif flag and not corr.opmode_ok:
-            self._update_log('ERR: ' + corr.name + ' mode not configured.')
-        else:
+            msg = 'ERR: ' + corr.name + ' mode not configured.'
+            self._update_log(msg)
+            _log.error(msg[5:])
+        elif not corr.equalKick(value):
             corr.value = value
 
     def send_evt(self):
@@ -313,10 +333,14 @@ class EpicsCorrectors(BaseCorrectors):
         if not self.isring and not self._synced_kicks:
             return
         if not self.timing.connected:
-            self._update_log('ERR: timing disconnected.')
+            msg = 'ERR: timing disconnected.'
+            self._update_log(msg)
+            _log.error(msg[5:])
             return
         elif not self.timing.is_ok:
-            self._update_log('ERR: timing not configured.')
+            msg = 'ERR: timing not configured.'
+            self._update_log(msg)
+            _log.error(msg[5:])
             return
         self.timing.send_evt()
 
@@ -334,6 +358,7 @@ class EpicsCorrectors(BaseCorrectors):
         """Set kick caq rate method."""
         self._acq_rate = value
         self._corrs_thread.interval = 1/value
+        self.run_callbacks('KickAcqRate-RB', value)
         return True
 
     def set_nominal_rf_freq(self, value):
@@ -360,11 +385,14 @@ class EpicsCorrectors(BaseCorrectors):
             if corr.connected:
                 corr.opmode = val
             else:
-                self._update_log('ERR: Failed to configure correctors')
+                msg = 'ERR: Failed to configure correctors'
+                self._update_log(msg)
+                _log.error(msg[5:])
                 return False
-        self._update_log(
-            'Correctors set to {0:s} Mode'.format('Sync' if value else 'Async')
-            )
+        msg = 'Correctors set to {0:s} Mode'.format(
+                                    'Sync' if value else 'Async')
+        self._update_log(msg)
+        _log.info(msg)
         self.run_callbacks('SyncKicks-Sts', value)
         return True
 
@@ -379,18 +407,24 @@ class EpicsCorrectors(BaseCorrectors):
                 corr.state = True
                 corr.opmode = val
             else:
-                self._update_log('ERR: Failed to configure correctors')
+                msg = 'ERR: Failed to configure correctors'
+                self._update_log(msg)
+                _log.error(msg[5:])
                 return False
         if not self.isring:
             return True
 
         if not self.timing.configure():
-            self._update_log('ERR: Failed to configure timing')
+            msg = 'ERR: Failed to configure timing'
+            self._update_log(msg)
+            _log.error(msg[5:])
             return False
         if self._rf_ctrl.connected:
             self._rf_ctrl.state = True
         else:
-            self._update_log('ERR: Failed to configure correctors')
+            msg = 'ERR: Failed to configure correctors'
+            self._update_log(msg)
+            _log.error(msg[5:])
             return False
         return True
 

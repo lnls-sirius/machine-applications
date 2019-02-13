@@ -65,7 +65,7 @@ def run(acc='SI', debug=False):
         pvname=_vaca_prefix + ioc_prefix + sorted(db.keys())[0],
         use_prefix=False, timeout=0.5)
     # add PV Properties-Cte with list of all IOC PVs:
-    db = _cutil.add_pvslist_cte(db, prefix=ioc_prefix)
+    db = _cutil.add_pvslist_cte(db)
     if running:
         _log.error('Another ' + ioc_name + ' is already running!')
         return
