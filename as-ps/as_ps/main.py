@@ -91,16 +91,13 @@ class App:
 
     def write(self, reason, value):
         """Enqueue write request."""
-        # TODO: can we parse reason with SiriusPVName?
-        split = reason.split(':')
-        device = ':'.join(split[:2])
-        field = split[-1]
+        pvname = _siriuspy.namesys.SiriusPVName(reason)
 
         _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
             'W ', reason, str(value)))
 
-        bbb = self._bbb_devices[device]
-        bbb.write(device, field, value)
+        bbb = self._bbb_devices[pvname.device_name]
+        bbb.write(pvname.device_name, pvname.propty, value)
 
     # --- private methods ---
 

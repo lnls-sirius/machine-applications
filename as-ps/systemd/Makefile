@@ -2,7 +2,7 @@
 install-services:
 	@printf "Installing sirius-bbb-ioc-ps service...\n"
 	cp -rf sirius-bbb-ioc-ps.service /etc/systemd/system/
-	mkdir -p /root/sirius-iocs/pvs
+	mkdir -p /root/sirius-iocs
 	systemctl daemon-reload
 
 
