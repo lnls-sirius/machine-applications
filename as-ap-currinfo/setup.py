@@ -21,6 +21,7 @@ setup(
     ],
     packages=['as_ap_currinfo'],
     package_data={'as_ap_currinfo': ['VERSION']},
+    include_package_data=True,
     scripts=['scripts/sirius-ioc-bo-ap-currinfo-current.py',
              'scripts/sirius-ioc-bo-ap-currinfo-lifetime.py',
              'scripts/sirius-ioc-si-ap-currinfo-charge.py',

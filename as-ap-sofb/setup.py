@@ -21,6 +21,7 @@ setup(
     ],
     packages=['as_ap_sofb'],
     package_data={'as_ap_sofb': []},
+    include_package_data=True,
     scripts=['scripts/sirius-ioc-si-ap-sofb.py',
              'scripts/sirius-ioc-bo-ap-sofb.py',
              'scripts/sirius-ioc-tb-ap-sofb.py',

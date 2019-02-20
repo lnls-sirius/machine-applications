@@ -1,0 +1,2 @@
+include as_ap_opticscorr/tune/access_rules.as
+include as_ap_opticscorr/chrom/access_rules.as
