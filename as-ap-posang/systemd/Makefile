@@ -12,7 +12,8 @@ install-services:
 	  cp -rf $$ser /etc/systemd/system/ ; \
 	done
 	systemctl daemon-reload
-	mkdir -p /home/sirius/iocs
+	mkdir -p /home/sirius/iocs/tb-ap-posang
+	mkdir -p /home/sirius/iocs/ts-ap-posang
 	chown -R sirius.sirius /home/sirius/iocs
 
 stop-services:
