@@ -12,7 +12,10 @@ install-services:
 	  cp -rf $$ser /etc/systemd/system/ ; \
 	done
 	systemctl daemon-reload
-	mkdir -p /home/sirius/iocs
+	mkdir -p /home/sirius/iocs/bo-ap-chromcorr
+	mkdir -p /home/sirius/iocs/bo-ap-tunecorr
+	mkdir -p /home/sirius/iocs/si-ap-chromcorr
+	mkdir -p /home/sirius/iocs/si-ap-tunecorr
 	chown -R sirius.sirius /home/sirius/iocs
 
 stop-services:
