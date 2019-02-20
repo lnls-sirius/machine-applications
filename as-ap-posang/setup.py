@@ -21,6 +21,7 @@ setup(
     ],
     packages=['as_ap_posang'],
     package_data={'as_ap_posang': ['VERSION']},
+    include_package_data=True,
     scripts=['scripts/sirius-ioc-tb-ap-posang.py',
              'scripts/sirius-ioc-ts-ap-posang.py',
              ],

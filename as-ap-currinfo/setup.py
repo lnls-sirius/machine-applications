@@ -1,7 +1,7 @@
 #!/usr/bin/env python-sirius
 """Package installer."""
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open('VERSION', 'r') as _f:
     __version__ = _f.read().strip()
@@ -19,8 +19,9 @@ setup(
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering'
     ],
-    packages=['as_ap_currinfo'],
+    packages=find_packages(),
     package_data={'as_ap_currinfo': ['VERSION']},
+    include_package_data=True,
     scripts=['scripts/sirius-ioc-bo-ap-currinfo-current.py',
              'scripts/sirius-ioc-bo-ap-currinfo-lifetime.py',
              'scripts/sirius-ioc-si-ap-currinfo-charge.py',
