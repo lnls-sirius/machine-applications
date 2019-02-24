@@ -1,0 +1,14 @@
+[Unit]
+Description=Power Supply Epics IOC
+After=multi-user.target
+
+[Service]
+Group=root
+User=root
+Type=simple
+WorkingDirectory=/root/sirius-iocs
+StandardOutput=syslog
+StandardError=syslog
+ExecStartPre=/bin/bash --login -c 'env > /tmp/bashrc-sirius-ioc-ps'
+EnvironmentFile=-/tmp/bashrc-sirius-ioc-ps
+ExecStart=/usr/local/bin/sirius-ioc-as-ps.py --simul PA-RaPSE05:CO-PSCtrl-BO
