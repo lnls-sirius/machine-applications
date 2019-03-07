@@ -43,11 +43,11 @@ class BPM(_BaseTimingConfig):
             # 'ACQNrShots': 1,
             'ACQShots': 1,
             'ACQTriggerHwDly': 0.0,
-            'ACQUpdateTime': 0,
+            'ACQUpdateTime': 0.001,
             # 'ACQNrSamplesPre': 0,
-            'ACQSamplesPre': 0,
+            'ACQSamplesPre': 50,
             # 'ACQNrSamplesPost': 200,
-            'ACQSamplesPost': 200,
+            'ACQSamplesPost': 50,
             # 'ACQCtrl': _csbpm.AcqEvents.Stop,
             'ACQTriggerEvent': _csbpm.AcqEvents.Stop,
             # 'ACQTriggerType': _csbpm.AcqTrigTyp.External,
@@ -56,9 +56,9 @@ class BPM(_BaseTimingConfig):
             # 'ACQTriggerDataChan': _csbpm.AcqChan.Monit1,
             'ACQDataTrigChan': _csbpm.AcqChan.Monit1,
             'ACQTriggerDataSel': _csbpm.AcqDataTyp.A,
-            'ACQTriggerDataThres': 10,
+            'ACQTriggerDataThres': 1,
             'ACQTriggerDataPol': _csbpm.Polarity.Positive,
-            'ACQTriggerDataHyst': 2}
+            'ACQTriggerDataHyst': 0}
         pvs = {
             'asyn.ENBL': 'asyn.ENBL',
             'ACQBPMMode': 'ACQBPMMode-Sel',
@@ -151,29 +151,49 @@ class BPM(_BaseTimingConfig):
     def state(self, boo):
         val = _csbpm.EnblTyp.Enable if boo else _csbpm.EnblTyp.Disable
         pv = self._config_pvs_sp['asyn.ENBL']
+        self._config_ok_vals['asyn.ENBL'] = val
         if pv.connected:
-            self._config_ok_vals['asyn.ENBL'] = val
             pv.put(val, wait=False)
+
+    @property
+    def mode(self):
+        pv = self._config_pvs_rb['ACQBPMMode']
+        return pv.value if pv.connected else _csbpm.OpModes.MultiBunch
+
+    @mode.setter
+    def mode(self, mo):
+        pv = self._config_pvs_sp['ACQBPMMode']
+        self._config_ok_vals['ACQBPMMode'] = mo
+        if pv.connected:
+            pv.value = mo
 
     @property
     def posx(self):
         pv = self._posx
-        return self.ORB_CONV*pv.value if pv.connected else None
+        val = pv.value if pv.connected else None
+        if val is not None:
+            return self.ORB_CONV*val
 
     @property
     def posy(self):
         pv = self._posy
-        return self.ORB_CONV*pv.value if pv.connected else None
+        val = pv.value if pv.connected else None
+        if val is not None:
+            return self.ORB_CONV*val
 
     @property
     def spposx(self):
         pv = self._spposx
-        return self.ORB_CONV*pv.value if pv.connected else None
+        val = pv.value if pv.connected else None
+        if val is not None:
+            return self.ORB_CONV*val
 
     @property
     def spposy(self):
         pv = self._spposy
-        return self.ORB_CONV*pv.value if pv.connected else None
+        val = pv.value if pv.connected else None
+        if val is not None:
+            return self.ORB_CONV*val
 
     @property
     def spsum(self):
@@ -183,12 +203,16 @@ class BPM(_BaseTimingConfig):
     @property
     def mtposx(self):
         pv = self._arrayx
-        return self.ORB_CONV*pv.value if pv.connected else None
+        val = pv.value if pv.connected else None
+        if val is not None:
+            return self.ORB_CONV*val
 
     @property
     def mtposy(self):
         pv = self._arrayy
-        return self.ORB_CONV*pv.value if pv.connected else None
+        val = pv.value if pv.connected else None
+        if val is not None:
+            return self.ORB_CONV*val
 
     @property
     def mtsum(self):
@@ -198,12 +222,16 @@ class BPM(_BaseTimingConfig):
     @property
     def offsetx(self):
         pv = self._offsetx
-        return self.ORB_CONV*pv.value if pv.connected else None
+        val = pv.value if pv.connected else None
+        if val is not None:
+            return self.ORB_CONV*val
 
     @property
     def offsety(self):
         pv = self._offsety
-        return self.ORB_CONV*pv.value if pv.connected else None
+        val = pv.value if pv.connected else None
+        if val is not None:
+            return self.ORB_CONV*val
 
     @property
     def ctrl(self):
@@ -369,7 +397,7 @@ class TimingConfig(_BaseTimingConfig):
             'Src': src_val,
             'Delay': 0.0,
             'NrPulses': 1,
-            'Duration': 0.001,
+            'Duration': 100.0,
             'State': _cstime.Const.TrigStates.Enbl,
             'Polarity': _cstime.Const.TrigPol.Normal}
         if _HLTimesearch.has_delay_type(trig):
@@ -440,8 +468,8 @@ class TimingConfig(_BaseTimingConfig):
     @evtsrc.setter
     def evtsrc(self, val):
         pv = self._config_pvs_sp['Src']
+        self._config_ok_vals['Src'] = val
         if pv.connected:
-            self._config_ok_vals['Src'] = val
             pv.put(val, wait=False)
 
 
@@ -649,8 +677,8 @@ class EpicsOrbit(BaseOrbit):
         self.run_callbacks('OrbitMode-Sts', value)
         with self._lock_raw_orbs:
             self._reset_orbs()
-            if self._mode in trigmds:
-                self.trig_acq_config_bpms()
+            # if self._mode in trigmds:
+            #     self.trig_acq_config_bpms()
         return True
 
     def set_orbit_multiturn_idx(self, value):
@@ -678,6 +706,10 @@ class EpicsOrbit(BaseOrbit):
             _log.error(msg[5:])
             return False
         for bpm in self.bpms:
+            if self.isring and self._mode == self._csorb.OrbitMode.MultiTurn:
+                bpm.mode = _csbpm.OpModes.MultiBunch
+            else:
+                bpm.mode = _csbpm.OpModes.SinglePass
             bpm.configure()
         self.timing.configure()
         return True
@@ -849,6 +881,9 @@ class EpicsOrbit(BaseOrbit):
     def _save_ref_orbits(self):
         orbs = _np.array([self.ref_orbs['X'], self.ref_orbs['Y']]).T
         try:
+            path = _os.path.split(self._csorb.REFORBFNAME)[0]
+            if not _os.path.isdir(path):
+                _os.mkdir(path)
             _np.savetxt(self._csorb.REFORBFNAME, orbs)
         except FileNotFoundError:
             msg = 'WARN: Could not save reference orbit in file.'

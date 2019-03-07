@@ -63,17 +63,20 @@ class Corrector(_BaseTimingConfig):
     @property
     def ready(self):
         """Ready status."""
-        return self.equalKick(self._rb.value)
+        if self._rb.connected and self._rb.value is not None:
+            return self.equalKick(self._rb.value)
+        return False
 
     @property
     def applied(self):
         """Status applied."""
-        return self.equalKick(self._rb.value)
+        return self.ready
 
     @property
     def value(self):
         """Value."""
-        return self._rb.value
+        if self._rb.connected:
+            return self._rb.value
 
     @value.setter
     def value(self, val):
@@ -81,7 +84,9 @@ class Corrector(_BaseTimingConfig):
 
     def equalKick(self, value):
         """Equal kick."""
-        return _math.isclose(self._sp.value, value, abs_tol=self.TINY_KICK)
+        if self._sp.connected and self._sp.value is not None:
+            return _math.isclose(self._sp.value, value, abs_tol=self.TINY_KICK)
+        return False
 
 
 class RFCtrl(Corrector):
@@ -124,11 +129,11 @@ class CHCV(Corrector):
         """Init method."""
         super().__init__(corr_name)
         opt = {'connection_timeout': TIMEOUT}
-        self._sp = _PV(LL_PREF + self._name + ':Current-SP', **opt)
-        self._rb = _PV(LL_PREF + self._name + ':Current-RB', **opt)
-        self._ref = _PV(LL_PREF + self._name + ':CurrentRef-Mon', **opt)
+        self._sp = _PV(LL_PREF + self._name + ':Kick-SP', **opt)
+        self._rb = _PV(LL_PREF + self._name + ':Kick-RB', **opt)
+        self._ref = _PV(LL_PREF + self._name + ':KickRef-Mon', **opt)
         self._config_ok_vals = {
-            'OpMode': _PSConst.OpMode.SlowRefSync,
+            'OpMode': _PSConst.OpMode.SlowRef,
             'PwrState': _PSConst.PwrStateSel.On}
         self._config_pvs_sp = {
             'OpMode': _PV(LL_PREF+self._name+':OpMode-Sel', **opt),
@@ -146,13 +151,19 @@ class CHCV(Corrector):
     def opmode(self):
         """Opmode."""
         pv = self._config_pvs_rb['OpMode']
-        return pv.value if pv.connected else None
+        if not pv.connected:
+            return None
+        elif pv.value == _PSConst.States.SlowRefSync:
+            return _PSConst.OpMode.SlowRefSync
+        elif pv.value == _PSConst.States.SlowRef:
+            return _PSConst.OpMode.SlowRef
+        return pv.value
 
     @opmode.setter
     def opmode(self, val):
         pv = self._config_pvs_sp['OpMode']
-        if pv.connected:
-            self._config_ok_vals['OpMode'] = val
+        self._config_ok_vals['OpMode'] = val
+        if pv.connected and pv.value != val:
             pv.put(val, wait=False)
 
     @property
@@ -167,7 +178,9 @@ class CHCV(Corrector):
     @property
     def applied(self):
         """Status applied."""
-        return self.equalKick(self._ref.value)
+        if self._ref.connected and self._ref.value is not None:
+            return self.equalKick(self._ref.value)
+        return False
 
 
 class TimingConfig(_BaseTimingConfig):
@@ -257,10 +270,10 @@ class EpicsCorrectors(BaseCorrectors):
     def __init__(self, acc, prefix='', callback=None):
         """Initialize the instance."""
         super().__init__(acc, prefix=prefix, callback=callback)
-        self._synced_kicks = True
+        self._synced_kicks = False
         self._acq_rate = 10
         self._names = self._csorb.CH_NAMES + self._csorb.CV_NAMES
-        self._chcvs = {CHCV(dev) for dev in self._names}
+        self._chcvs = [CHCV(dev) for dev in self._names]
         if self.isring:
             self._rf_ctrl = RFCtrl(self.acc)
             self._rf_nom_freq = self._csorb.RF_NOM_FREQ
@@ -422,7 +435,7 @@ class EpicsCorrectors(BaseCorrectors):
         if self._rf_ctrl.connected:
             self._rf_ctrl.state = True
         else:
-            msg = 'ERR: Failed to configure correctors'
+            msg = 'ERR: Failed to configure RF'
             self._update_log(msg)
             _log.error(msg[5:])
             return False
