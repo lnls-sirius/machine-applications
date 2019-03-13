@@ -9,6 +9,7 @@ with open('VERSION', 'r') as _f:
 with open('requirements.txt', 'r') as _f:
     _requirements = _f.read().strip().split('\n')
 
+
 setup(
     name='as-ps',
     version=__version__,
