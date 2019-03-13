@@ -39,10 +39,10 @@ class BPM(_BaseTimingConfig):
         self._config_ok_vals = {
             'asyn.ENBL': _csbpm.EnblTyp.Enable,
             'ACQBPMMode': _csbpm.OpModes.MultiBunch,
-            'ACQChannel': _csbpm.AcqChan.Monit1,
+            'ACQChannel': _csbpm.AcqChan.ADC,
             # 'ACQNrShots': 1,
             'ACQShots': 1,
-            'ACQTriggerHwDly': 0.0,
+            # 'ACQTriggerHwDly': 0.0,  # NOTE: leave this property commented
             'ACQUpdateTime': 0.001,
             # 'ACQNrSamplesPre': 0,
             'ACQSamplesPre': 50,
@@ -52,9 +52,9 @@ class BPM(_BaseTimingConfig):
             'ACQTriggerEvent': _csbpm.AcqEvents.Stop,
             # 'ACQTriggerType': _csbpm.AcqTrigTyp.External,
             'ACQTrigger': _csbpm.AcqTrigTyp.External,
-            'ACQTriggerRep': _csbpm.AcqRepeat.Repetitive,
+            'ACQTriggerRep': _csbpm.AcqRepeat.Normal,
             # 'ACQTriggerDataChan': _csbpm.AcqChan.Monit1,
-            'ACQDataTrigChan': _csbpm.AcqChan.Monit1,
+            'ACQDataTrigChan': _csbpm.AcqChan.ADC,
             'ACQTriggerDataSel': _csbpm.AcqDataTyp.A,
             'ACQTriggerDataThres': 1,
             'ACQTriggerDataPol': _csbpm.Polarity.Positive,
@@ -65,7 +65,7 @@ class BPM(_BaseTimingConfig):
             'ACQChannel': 'ACQChannel-Sel',
             # 'ACQNrShots': 'ACQNrShots-SP',
             'ACQShots': 'ACQShots-SP',
-            'ACQTriggerHwDly': 'ACQTriggerHwDly-SP',
+            # 'ACQTriggerHwDly': 'ACQTriggerHwDly-SP',
             'ACQUpdateTime': 'ACQUpdateTime-SP',
             # 'ACQNrSamplesPre': 'ACQNrSamplesPre-SP',
             'ACQSamplesPre': 'ACQSamplesPre-SP',
@@ -92,7 +92,7 @@ class BPM(_BaseTimingConfig):
             'ACQChannel': 'ACQChannel-Sts',
             # 'ACQNrShots': 'ACQNrShots-RB',
             'ACQShots': 'ACQShots-RB',
-            'ACQTriggerHwDly': 'ACQTriggerHwDly-RB',
+            # 'ACQTriggerHwDly': 'ACQTriggerHwDly-RB',
             'ACQUpdateTime': 'ACQUpdateTime-RB',
             # 'ACQNrSamplesPre': 'ACQNrSamplesPre-RB',
             'ACQSamplesPre': 'ACQSamplesPre-RB',
@@ -203,21 +203,21 @@ class BPM(_BaseTimingConfig):
     @property
     def mtposx(self):
         pv = self._arrayx
-        val = pv.value if pv.connected else None
+        val = pv.get() if pv.connected else None
         if val is not None:
             return self.ORB_CONV*val
 
     @property
     def mtposy(self):
         pv = self._arrayy
-        val = pv.value if pv.connected else None
+        val = pv.get() if pv.connected else None
         if val is not None:
             return self.ORB_CONV*val
 
     @property
     def mtsum(self):
         pv = self._arrays
-        return pv.value if pv.connected else None
+        return pv.get() if pv.connected else None
 
     @property
     def offsetx(self):
@@ -243,9 +243,9 @@ class BPM(_BaseTimingConfig):
     def ctrl(self, val):
         # pv = self._config_pvs_sp['ACQCtrl']
         pv = self._config_pvs_sp['ACQTriggerEvent']
+        # self._config_ok_vals['ACQCtrl'] = val
+        self._config_ok_vals['ACQTriggerEvent'] = val
         if pv.connected:
-            # self._config_ok_vals['ACQCtrl'] = val
-            self._config_ok_vals['ACQTriggerEvent'] = val
             pv.put(val, wait=False)
 
     @property
@@ -256,8 +256,8 @@ class BPM(_BaseTimingConfig):
     @acq_type.setter
     def acq_type(self, val):
         pv = self._config_pvs_sp['ACQChannel']
+        self._config_ok_vals['ACQChannel'] = val
         if pv.connected:
-            self._config_ok_vals['ACQChannel'] = val
             pv.put(val, wait=False)
 
     @property
@@ -270,9 +270,21 @@ class BPM(_BaseTimingConfig):
     def acq_trigger(self, val):
         # pv = self._config_pvs_sp['ACQTriggerType']
         pv = self._config_pvs_sp['ACQTrigger']
+        # self._config_ok_vals['ACQTriggerType'] = val
+        self._config_ok_vals['ACQTrigger'] = val
         if pv.connected:
-            # self._config_ok_vals['ACQTriggerType'] = val
-            self._config_ok_vals['ACQTrigger'] = val
+            pv.put(val, wait=False)
+
+    @property
+    def acq_repeat(self):
+        pv = self._config_pvs_rb['ACQTriggerRep']
+        return pv.value if pv.connected else None
+
+    @acq_repeat.setter
+    def acq_repeat(self, val):
+        pv = self._config_pvs_sp['ACQTriggerRep']
+        self._config_ok_vals['ACQTriggerRep'] = val
+        if pv.connected:
             pv.put(val, wait=False)
 
     @property
@@ -285,9 +297,9 @@ class BPM(_BaseTimingConfig):
     def acq_trig_datatype(self, val):
         # pv = self._config_pvs_sp['ACQTriggerDataChan']
         pv = self._config_pvs_sp['ACQDataTrigChan']
+        # self._config_ok_vals['ACQTriggerDataChan'] = val
+        self._config_ok_vals['ACQDataTrigChan'] = val
         if pv.connected:
-            # self._config_ok_vals['ACQTriggerDataChan'] = val
-            self._config_ok_vals['ACQDataTrigChan'] = val
             pv.put(val, wait=False)
 
     @property
@@ -298,8 +310,8 @@ class BPM(_BaseTimingConfig):
     @acq_trig_datasel.setter
     def acq_trig_datasel(self, val):
         pv = self._config_pvs_sp['ACQTriggerDataSel']
+        self._config_ok_vals['ACQTriggerDataSel'] = val
         if pv.connected:
-            self._config_ok_vals['ACQTriggerDataSel'] = val
             pv.put(val, wait=False)
 
     @property
@@ -310,8 +322,8 @@ class BPM(_BaseTimingConfig):
     @acq_trig_datathres.setter
     def acq_trig_datathres(self, val):
         pv = self._config_pvs_sp['ACQTriggerDataThres']
+        self._config_ok_vals['ACQTriggerDataThres'] = val
         if pv.connected:
-            self._config_ok_vals['ACQTriggerDataThres'] = val
             pv.put(val, wait=False)
 
     @property
@@ -322,8 +334,8 @@ class BPM(_BaseTimingConfig):
     @acq_trig_datahyst.setter
     def acq_trig_datahyst(self, val):
         pv = self._config_pvs_sp['ACQTriggerDataHyst']
+        self._config_ok_vals['ACQTriggerDataHyst'] = val
         if pv.connected:
-            self._config_ok_vals['ACQTriggerDataHyst'] = val
             pv.put(val, wait=False)
 
     @property
@@ -334,8 +346,8 @@ class BPM(_BaseTimingConfig):
     @acq_trig_datapol.setter
     def acq_trig_datapol(self, val):
         pv = self._config_pvs_sp['ACQTriggerDataPol']
+        self._config_ok_vals['ACQTriggerDataPol'] = val
         if pv.connected:
-            self._config_ok_vals['ACQTriggerDataPol'] = val
             pv.put(val, wait=False)
 
     @property
@@ -348,9 +360,9 @@ class BPM(_BaseTimingConfig):
     def nrsamplespost(self, val):
         # pv = self._config_pvs_sp['ACQNrSamplesPost']
         pv = self._config_pvs_sp['ACQSamplesPost']
+        # self._config_ok_vals['ACQNrSamplesPost'] = val
+        self._config_ok_vals['ACQSamplesPost'] = val
         if pv.connected:
-            # self._config_ok_vals['ACQNrSamplesPost'] = val
-            self._config_ok_vals['ACQSamplesPost'] = val
             pv.put(val, wait=False)
 
     @property
@@ -363,9 +375,9 @@ class BPM(_BaseTimingConfig):
     def nrsamplespre(self, val):
         # pv = self._config_pvs_sp['ACQNrSamplesPre']
         pv = self._config_pvs_sp['ACQSamplesPre']
+        # self._config_ok_vals['ACQNrSamplesPre'] = val
+        self._config_ok_vals['ACQSamplesPre'] = val
         if pv.connected:
-            # self._config_ok_vals['ACQNrSamplesPre'] = val
-            self._config_ok_vals['ACQSamplesPre'] = val
             pv.put(val, wait=False)
 
     @property
@@ -378,9 +390,9 @@ class BPM(_BaseTimingConfig):
     def nrshots(self, val):
         # pv = self._config_pvs_sp['ACQNrShots']
         pv = self._config_pvs_sp['ACQShots']
+        # self._config_ok_vals['ACQNrShots'] = val
+        self._config_ok_vals['ACQShots'] = val
         if pv.connected:
-            # self._config_ok_vals['ACQNrShots'] = val
-            self._config_ok_vals['ACQShots'] = val
             pv.put(val, wait=False)
 
 
@@ -487,7 +499,10 @@ class EpicsOrbit(BaseOrbit):
         db['OrbitMode-Sel'][prop] = self.set_orbit_mode
         db['OrbitTrigAcqConfig-Cmd'][prop] = self.trig_acq_config_bpms
         db['OrbitTrigAcqCtrl-Sel'][prop] = self.set_trig_acq_control
+        db['OrbitTrigAcqChan-Sel'][prop] = self.set_trig_acq_channel
+        db['OrbitTrigDataChan-Sel'][prop] = self.set_trig_acq_datachan
         db['OrbitTrigAcqTrigger-Sel'][prop] = self.set_trig_acq_trigger
+        db['OrbitTrigAcqRepeat-Sel'][prop] = self.set_trig_acq_repeat
         db['OrbitTrigDataSel-Sel'][prop] = self.set_trig_acq_datasel
         db['OrbitTrigDataThres-SP'][prop] = self.set_trig_acq_datathres
         db['OrbitTrigDataHyst-SP'][prop] = self.set_trig_acq_datahyst
@@ -504,13 +519,12 @@ class EpicsOrbit(BaseOrbit):
         db['OrbitOfflineX-SP'][prop] = _part(self.set_offline_orbit, 'X')
         db['OrbitOfflineY-SP'][prop] = _part(self.set_offline_orbit, 'Y')
         db['OrbitSmoothNPnts-SP'][prop] = self.set_smooth_npts
+        db['OrbitSmoothMethod-Sel'][prop] = self.set_smooth_method
         db['OrbitSmoothReset-Cmd'][prop] = self.set_smooth_reset
         db['OrbitAcqRate-SP'][prop] = self.set_orbit_acq_rate
+        db['OrbitTrigNrShots-SP'][prop] = self.set_trig_acq_nrshots
         if self.isring:
             db['OrbitMultiTurnIdx-SP'][prop] = self.set_orbit_multiturn_idx
-            db['OrbitTrigAcqChan-Sel'][prop] = self.set_trig_acq_channel
-            db['OrbitTrigDataChan-Sel'][prop] = self.set_trig_acq_datachan
-            db['OrbitTrigNrShots-SP'][prop] = self.set_trig_acq_nrshots
             db['OrbitTrigDownSample-SP'][prop] = self.set_trig_acq_downsample
 
         db = super().get_database(db)
@@ -536,10 +550,11 @@ class EpicsOrbit(BaseOrbit):
                 'X': _np.zeros(self._csorb.NR_BPMS),
                 'Y': _np.zeros(self._csorb.NR_BPMS)}
         self._smooth_npts = 1
+        self._smooth_meth = self._csorb.OrbitSmoothMeth.Average
         self._acqrate = 10
         self._oldacqrate = self._acqrate
-        self._acqtrignrsamplespre = 0
-        self._acqtrignrsamplespost = 200
+        self._acqtrignrsamplespre = 50
+        self._acqtrignrsamplespost = 50
         self._acqtrignrshots = 1
         self._multiturnidx = 0
         self._acqtrigdownsample = 1
@@ -628,9 +643,15 @@ class EpicsOrbit(BaseOrbit):
         self.run_callbacks('OrbitSmoothNPnts-RB', num)
         return True
 
+    def set_smooth_method(self, meth):
+        self._smooth_meth = meth
+        self.run_callbacks('OrbitSmoothMethod-Sts', meth)
+        return True
+
     def set_smooth_reset(self, _):
         with self._lock_raw_orbs:
             self._reset_orbs()
+        return True
 
     def set_ref_orbit(self, plane, orb):
         msg = 'Setting New Reference Orbit.'
@@ -677,8 +698,8 @@ class EpicsOrbit(BaseOrbit):
         self.run_callbacks('OrbitMode-Sts', value)
         with self._lock_raw_orbs:
             self._reset_orbs()
-            # if self._mode in trigmds:
-            #     self.trig_acq_config_bpms()
+            if self._mode in trigmds:
+                self.trig_acq_config_bpms()
         return True
 
     def set_orbit_multiturn_idx(self, value):
@@ -733,9 +754,18 @@ class EpicsOrbit(BaseOrbit):
         return True
 
     def set_trig_acq_trigger(self, value):
+        val = _csbpm.AcqTrigTyp.Data
+        if value == self._csorb.OrbitAcqTrig.External:
+            val = _csbpm.AcqTrigTyp.External
         for bpm in self.bpms:
-            bpm.acq_trigger = value + 1  # See PVs Database definition
+            bpm.acq_trigger = val
         self.run_callbacks('OrbitTrigAcqTrigger-Sts', value)
+        return True
+
+    def set_trig_acq_repeat(self, value):
+        for bpm in self.bpms:
+            bpm.acq_repeat = value
+        self.run_callbacks('OrbitTrigAcqRepeat-Sts', value)
         return True
 
     def set_trig_acq_datachan(self, value):
@@ -931,7 +961,10 @@ class EpicsOrbit(BaseOrbit):
                 raws = self.raw_sporbs if sp else self.raw_orbs
                 raws[plane].append(orbs[plane])
                 raws[plane] = raws[plane][-self._smooth_npts:]
-                orb = _np.mean(raws[plane], axis=0)
+                if self._smooth_meth == self._csorb.OrbitSmoothMeth.Average:
+                    orb = _np.mean(raws[plane], axis=0)
+                else:
+                    orb = _np.median(raws[plane], axis=0)
             if sp:
                 self.smooth_sporb[plane] = orb
             else:
@@ -964,7 +997,10 @@ class EpicsOrbit(BaseOrbit):
                 norb = _np.array(orbs[pln], dtype=float)
                 raw.append(norb)
                 del raw[:-nr_pts]
-                orb = _np.mean(raw, axis=0)
+                if self._smooth_meth == self._csorb.OrbitSmoothMeth.Average:
+                    orb = _np.mean(raw, axis=0)
+                else:
+                    orb = _np.median(raw, axis=0)
                 if down > 1:
                     orb = _np.mean(orb.reshape(nr_bpms, -1, down), axis=2)
                 orb = orb.transpose()
