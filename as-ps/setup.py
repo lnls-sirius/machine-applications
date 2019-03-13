@@ -6,6 +6,9 @@ from setuptools import setup
 with open('VERSION', 'r') as _f:
     __version__ = _f.read().strip()
 
+with open('requirements.txt', 'r') as _f:
+    _requirements = _f.read().strip().split('\n')
+
 setup(
     name='as-ps',
     version=__version__,
@@ -21,6 +24,7 @@ setup(
     ],
     packages=['as_ps'],
     package_data={'as_ps': ['VERSION']},
+    install_requires=_requirements,
     include_package_data=True,
     scripts=['scripts/sirius-ioc-as-ps.py'],
     zip_safe=False
