@@ -109,18 +109,15 @@ class App:
         if self.driver is None:
             return
         val = self.driver.getParam(pvname)
-        update = False
-        if value is not None and val != value:
-            self.driver.setParam(pvname, value)
-            _log.debug('{0:40s}: updated'.format(pvname))
-            update = True
         if alarm is not None and severity is not None:
             self.driver.setParamStatus(pvname, alarm=alarm, severity=severity)
             if alarm:
                 _log.debug('{0:40s}: alarm'.format(pvname))
-            update = True
-        if update:
-            self.driver.updatePV(pvname)
+        if value is not None and val != value:
+            self.driver.setParam(pvname, value)
+            _log.debug('{0:40s}: updated'.format(pvname))
+
+        self.driver.updatePV(pvname)
 
     def _isValid(self, reason, val):
         if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
