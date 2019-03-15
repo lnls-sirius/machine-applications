@@ -84,9 +84,6 @@ class App:
             value = self.driver.getParam(reason)
         else:
             fun_ = self._map2readpvs.get(reason)
-            if fun_ is None:
-                _log.warning('Not OK: PV %s is not settable.', reason)
-                return False
             value = fun_()['value']
         return value
 
