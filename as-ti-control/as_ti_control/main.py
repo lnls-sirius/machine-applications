@@ -59,7 +59,7 @@ class App:
         if dt > 0:
             _time.sleep(dt)
         else:
-            _log.debug('process took {0:f}ms.'.format((tf-t0)*1000))
+            _log.warning('process took {0:f}ms.'.format((tf-t0)*1000))
 
     def write(self, reason, value):
         """Write value in objects and database."""
