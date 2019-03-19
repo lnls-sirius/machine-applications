@@ -144,6 +144,8 @@ def run(timing='evts', lock=False, wait=10, debug=False):
         for pvname, fun in app.get_map2readpvs().items():
             val = fun()
             value = val.pop('value')
+            if value is None:
+                continue
             app.driver.setParam(pvname, value)
             app.driver.setParamStatus(pvname, **val)
             app.driver.updatePV(pvname)
