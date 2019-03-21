@@ -1,0 +1,14 @@
+[Unit]
+Description=Soft IOC for TS Orbit Correction.
+After=multi-user.target
+
+[Service]
+Group=sirius
+User=sirius
+Type=simple
+WorkingDirectory=/home/sirius/iocs/ts-ap-sofb
+StandardOutput=syslog
+StandardError=syslog
+ExecStartPre=/bin/bash --login -c 'env > /tmp/.magic-environment-file'
+EnvironmentFile=-/tmp/.magic-environment-file
+ExecStart=/usr/local/bin/sirius-ioc-ts-ap-sofb.py

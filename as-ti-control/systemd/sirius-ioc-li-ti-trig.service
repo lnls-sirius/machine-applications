@@ -1,0 +1,14 @@
+[Unit]
+Description=Soft IOC for Timing Linac Triggers
+After=multi-user.target
+
+[Service]
+Group=sirius
+User=sirius
+Type=simple
+WorkingDirectory=/home/sirius/iocs
+StandardOutput=syslog
+StandardError=syslog
+ExecStartPre=/bin/bash --login -c 'env > /tmp/sirius-ioc-li-ti-trig'
+EnvironmentFile=-/tmp/sirius-ioc-li-ti-trig
+ExecStart=/usr/local/bin/sirius-ioc-as-ti-control.py -t trig-li
