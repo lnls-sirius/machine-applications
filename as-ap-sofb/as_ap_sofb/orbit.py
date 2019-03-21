@@ -88,6 +88,11 @@ class BPM(_BaseTimingConfig):
         pvs = {
             'asyn.ENBL': 'asyn.ENBL',
             'asyn.CNCT': 'asyn.CNCT',
+            'INFOClkFreq': 'INFOClkFreq-RB',
+            'INFOHarmonicNumber': 'INFOHarmonicNumber-RB',
+            'INFOTBTRate': 'INFOTBTRate-RB',
+            'INFOFOFBRate': 'INFOFOFBRate-RB',
+            'INFOMONITRate': 'INFOMONITRate-RB',
             'ACQBPMMode': 'ACQBPMMode-Sts',
             'ACQChannel': 'ACQChannel-Sts',
             # 'ACQNrShots': 'ACQNrShots-RB',
@@ -154,6 +159,51 @@ class BPM(_BaseTimingConfig):
         self._config_ok_vals['asyn.ENBL'] = val
         if pv.connected:
             pv.put(val, wait=False)
+
+    @property
+    def tbtperiod(self):
+        pv = self._config_pvs_rb['INFOTBTRate']
+        pvfreq = self._config_pvs_rb['INFOClkFreq']
+        if pv.connected and pvfreq.connected:
+            val1 = pv.value
+            val2 = pvfreq.value
+            if val1 is not None and val2 is not None:
+                return val1/val2
+        return self._csorb.T0
+
+    @property
+    def fofbperiod(self):
+        pv = self._config_pvs_rb['INFOFOFBRate']
+        pvfreq = self._config_pvs_rb['INFOClkFreq']
+        if pv.connected and pvfreq.connected:
+            val1 = pv.value
+            val2 = pvfreq.value
+            if val1 is not None and val2 is not None:
+                return val1/val2
+        return self._csorb.T0 * 24
+
+    @property
+    def monitperiod(self):
+        pv = self._config_pvs_rb['INFOMONITRate']
+        pvfreq = self._config_pvs_rb['INFOClkFreq']
+        if pv.connected and pvfreq.connected:
+            val1 = pv.value
+            val2 = pvfreq.value
+            if val1 is not None and val2 is not None:
+                return val1/val2
+        return self._csorb.T0 * 59904
+
+    @property
+    def monit1period(self):
+        # Not implemented in BPMs IOCs yet.
+        # pv = self._config_pvs_rb['INFOMONITRate']
+        # pvfreq = self._config_pvs_rb['INFOClkFreq']
+        # if pv.connected and pvfreq.connected:
+        #     val1 = pv.value
+        #     val2 = pvfreq.value
+        #     if val1 is not None and val2 is not None:
+        #         return val1/val2
+        return self._csorb.T0 * 603
 
     @property
     def mode(self):
@@ -629,12 +679,13 @@ class EpicsOrbit(BaseOrbit):
         msg = 'Setting New Offline Orbit.'
         self._update_log(msg)
         _log.info(msg)
-        if len(orb) != self._csorb.NR_BPMS:
+        orb = _np.array(orb, dtype=float)
+        if orb.size != self._csorb.NR_BPMS:
             msg = 'ERR: Wrong Size.'
             self._update_log(msg)
             _log.error(msg[5:])
             return False
-        self.offline_orbit[plane] = _np.array(orb)
+        self.offline_orbit[plane] = orb
         self.run_callbacks('OrbitOffline'+plane+'-RB', orb)
         return True
 
@@ -657,12 +708,13 @@ class EpicsOrbit(BaseOrbit):
         msg = 'Setting New Reference Orbit.'
         self._update_log(msg)
         _log.info(msg)
-        if len(orb) != self._csorb.NR_BPMS:
+        orb = _np.array(orb, dtype=float)
+        if orb.size != self._csorb.NR_BPMS:
             msg = 'ERR: Wrong Size.'
             self._update_log(msg)
             _log.error(msg[5:])
             return False
-        self.ref_orbs[plane] = _np.array(orb, dtype=float)
+        self.ref_orbs[plane] = orb
         self._save_ref_orbits()
         with self._lock_raw_orbs:
             self._reset_orbs()
@@ -882,17 +934,17 @@ class EpicsOrbit(BaseOrbit):
     def _update_time_vector(self, delay=None, duration=None, channel=None):
         if not self.isring:
             return
-        dl = (delay or self.timing.delay or 0.0) / 1000
-        dur = duration or self.timing.duration or 0.0
+        dl = (delay or self.timing.delay or 0.0) * 1e-6  # from us to s
+        dur = (duration or self.timing.duration or 0.0) * 1e-6  # from us to s
         channel = channel or self.bpms[0].acq_type or 0
-        # revolution period in ms
+        # revolution period in s
         if channel == self._csorb.OrbitAcqChan.Monit1:
-            dt = 578
+            dt = self.bpms[0].monit1period
         elif channel == self._csorb.OrbitAcqChan.FOFB:
-            dt = 5
+            dt = self.bpms[0].fofbperiod
         else:
-            dt = 1
-        dt *= self._csorb.T0 * self._acqtrigdownsample
+            dt = self.bpms[0].tbtperiod
+        dt *= self._acqtrigdownsample
         nrptpst = self.acqtrignrsamples // self._acqtrigdownsample
         offset = self._acqtrignrsamplespre / self._acqtrigdownsample
         nrst = self._acqtrignrshots

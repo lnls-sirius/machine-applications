@@ -59,7 +59,7 @@ class App:
         if dt > 0:
             _time.sleep(dt)
         else:
-            _log.debug('process took {0:f}ms.'.format((tf-t0)*1000))
+            _log.warning('process took {0:f}ms.'.format((tf-t0)*1000))
 
     def write(self, reason, value):
         """Write value in objects and database."""
@@ -84,9 +84,6 @@ class App:
             value = self.driver.getParam(reason)
         else:
             fun_ = self._map2readpvs.get(reason)
-            if fun_ is None:
-                _log.warning('Not OK: PV %s is not settable.', reason)
-                return False
             value = fun_()['value']
         return value
 
@@ -109,18 +106,15 @@ class App:
         if self.driver is None:
             return
         val = self.driver.getParam(pvname)
-        update = False
-        if value is not None and val != value:
-            self.driver.setParam(pvname, value)
-            _log.info('{0:40s}: updated'.format(pvname))
-            update = True
         if alarm is not None and severity is not None:
             self.driver.setParamStatus(pvname, alarm=alarm, severity=severity)
             if alarm:
-                _log.info('{0:40s}: alarm'.format(pvname))
-            update = True
-        if update:
-            self.driver.updatePV(pvname)
+                _log.debug('{0:40s}: alarm'.format(pvname))
+        if value is not None and val != value:
+            self.driver.setParam(pvname, value)
+            _log.debug('{0:40s}: updated'.format(pvname))
+
+        self.driver.updatePV(pvname)
 
     def _isValid(self, reason, val):
         if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
