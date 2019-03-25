@@ -2,7 +2,7 @@
 """Script fpr the AS PS Diagnostics IOC."""
 
 import argparse
-from as_ps_diagnostic import as_ps_diagnostic
+from as_ps_diag import as_ps_diag
 
 
 parser = argparse.ArgumentParser()
@@ -19,4 +19,4 @@ parser.add_argument(
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    as_ps_diagnostic.run(args.section, args.sub_section, args.device, False)
+    as_ps_diag.run(args.section, args.sub_section, args.device, False)
