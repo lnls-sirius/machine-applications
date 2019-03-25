@@ -9,7 +9,7 @@ This IOC checks Current SP/Mon difference.
 dev-packages (DiffPV)
 
 ## Running
-`sirius-ioc-as-ps-diagnostic.py section sub_section device`
+`sirius-ioc-as-ps-diag.py section sub_section device`
 `section`, `sub_section` and `device` are regular expressions.
 ### Examples
-`sirius-ioc-as-ps-diagnostic.py 'TB' '' ''` The IOC will using all power supply of TB section
+`sirius-ioc-as-ps-diag.py TB ".*" ".*"` The IOC will use all power supply of TB section
