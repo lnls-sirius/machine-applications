@@ -82,7 +82,9 @@ def run(section='', sub_section='', device='', debug=False):
         for key, value in db.items():
             if key == 'DiagVersion-Cte':
                 value['value'] = _COMMIT_HASH
-            pvdb[psname + ':' + key] = value
+            pvname = psname + ':' + key
+            print(pvname)
+            pvdb[pvname] = value
     _log.info("Creating server with %d devices and '%s' prefix",
               len(psnames), prefix)
     _attribute_access_security_group(server, pvdb)
@@ -91,7 +93,7 @@ def run(section='', sub_section='', device='', debug=False):
     # create driver
     _log.info('Creating driver')
     try:
-        driver = _PSDiagDriver(psnames)
+        driver = _PSDiagDriver(prefix, psnames)
     except Exception:
         _log.error('Failed to create driver. Aborting', exc_info=True)
         _sys.exit(1)
