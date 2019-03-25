@@ -11,6 +11,7 @@ import pcaspy.tools as _pcaspy_tools
 
 from .driver import PSDiagDriver as _PSDiagDriver
 
+from siriuspy import util as _util
 from siriuspy.envars import vaca_prefix as _vaca_prefix
 from siriuspy.util import get_timestamp as _get_timestamp
 from siriuspy.util import configure_log_file as _config_log_file
@@ -20,17 +21,19 @@ from siriuspy.csdevice.psdiag import get_ps_diag_propty_database as \
 from siriuspy.search import PSSearch as _PSSearch
 
 
+_COMMIT_HASH = _util.get_last_commit_hash()
+
 INTERVAL = 0.1
-stop_event = False
+_stop_event = False
 
 
 def _stop_now(signum, frame):
-    global stop_event
+    global _stop_event
     _log.warning(_signal.Signals(signum).name +
                  ' received at ' + _get_timestamp())
     _sys.stdout.flush()
     _sys.stderr.flush()
-    stop_event = True
+    _stop_event = True
 
 
 def _attribute_access_security_group(server, db):
@@ -77,8 +80,9 @@ def run(section='', sub_section='', device='', debug=False):
         _log.debug('{:32s}'.format(psname))
         db = _get_database(psname)
         for key, value in db.items():
+            if key == 'DiagVersion-Cte':
+                value['value'] = _COMMIT_HASH
             pvdb[psname + ':' + key] = value
-        pvdb
     _log.info("Creating server with %d devices and '%s' prefix",
               len(psnames), prefix)
     _attribute_access_security_group(server, pvdb)
@@ -102,7 +106,7 @@ def run(section='', sub_section='', device='', debug=False):
     server_thread.start()
 
     driver.scanning = True
-    while not stop_event:
+    while not _stop_event:
         server.process(INTERVAL)
 
     driver.scanning = False
