@@ -1,5 +1,5 @@
 #!/usr/local/bin/python-sirius -u
-"""Script fpr the AS PS Diagnostics IOC."""
+"""Script for the AS PS Diagnostics IOC."""
 
 import argparse
 from as_ps_diag import as_ps_diag
