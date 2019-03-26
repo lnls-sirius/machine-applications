@@ -26,6 +26,8 @@ _COMMIT_HASH = _util.get_last_commit_hash()
 INTERVAL = 0.1
 _stop_event = False
 
+SCAN_FREQUENCY = 2  # [Hz]
+
 
 def _stop_now(signum, frame):
     global _stop_event
@@ -82,8 +84,8 @@ def run(section='', sub_section='', device='', debug=False):
         for key, value in db.items():
             if key == 'DiagVersion-Cte':
                 value['value'] = _COMMIT_HASH
+                value['scan'] = 1/SCAN_FREQUENCY
             pvname = psname + ':' + key
-            print(pvname)
             pvdb[pvname] = value
     _log.info("Creating server with %d devices and '%s' prefix",
               len(psnames), prefix)
@@ -107,7 +109,6 @@ def run(section='', sub_section='', device='', debug=False):
     server_thread = _pcaspy_tools.ServerThread(server)
     server_thread.start()
 
-    driver.scanning = True
     while not _stop_event:
         server.process(INTERVAL)
 
