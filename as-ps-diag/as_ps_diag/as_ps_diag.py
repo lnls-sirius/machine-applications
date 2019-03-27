@@ -26,8 +26,6 @@ _COMMIT_HASH = _util.get_last_commit_hash()
 INTERVAL = 0.1
 _stop_event = False
 
-SCAN_FREQUENCY = 2  # [Hz]
-
 
 def _stop_now(signum, frame):
     global _stop_event
@@ -84,7 +82,6 @@ def run(section='', sub_section='', device='', debug=False):
         for key, value in db.items():
             if key == 'DiagVersion-Cte':
                 value['value'] = _COMMIT_HASH
-                value['scan'] = 1/SCAN_FREQUENCY
             pvname = psname + ':' + key
             pvdb[pvname] = value
     _log.info("Creating server with %d devices and '%s' prefix",
@@ -118,4 +115,3 @@ def run(section='', sub_section='', device='', debug=False):
     # sends stop signal to server thread
     server_thread.stop()
     server_thread.join()
-    # _sys.exit(0)
