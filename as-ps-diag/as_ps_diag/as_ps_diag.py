@@ -8,8 +8,9 @@ import logging as _log
 
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
+from pcaspy import Driver as _Driver
 
-from .driver import PSDiagDriver as _PSDiagDriver
+from .driver import App as _App
 
 from siriuspy import util as _util
 from siriuspy.envars import vaca_prefix as _vaca_prefix
@@ -44,6 +45,26 @@ def _attribute_access_security_group(server, db):
     server.initAccessSecurityFile(path_ + '/access_rules.as')
 
 
+class _PSDiagDriver(_Driver):
+
+    def __init__(self, prefix, psnames):
+        super().__init__()
+        self.app = _App(self, prefix, psnames)
+
+    def read(self, reason):
+        value = self.app.read(reason)
+        if value is None:
+            return super().read(reason)
+        else:
+            return value
+
+    def write(self, reason, value):
+        if self.app.write(reason, value):
+            super().write(reason, value)
+        else:
+            return False
+
+
 def run(section='', sub_section='', device='', debug=False):
     """Run IOC."""
     # define abort function
@@ -58,6 +79,7 @@ def run(section='', sub_section='', device='', debug=False):
     _log.info("{:12s}: {}".format('\tSub Section', sub_section or 'None'))
     _log.info("{:12s}: {}".format('\tDevice', device or 'None'))
 
+    # create a new simple pcaspy server
     server = _pcaspy.SimpleServer()
     device_filter = dict()
     if section:
@@ -106,11 +128,13 @@ def run(section='', sub_section='', device='', debug=False):
     server_thread = _pcaspy_tools.ServerThread(server)
     server_thread.start()
 
+    # main loop
+    driver.app.scanning = True
     while not _stop_event:
-        server.process(INTERVAL)
+        driver.app.process(INTERVAL)
 
-    driver.scanning = False
-    driver.quit = True
+    driver.app.scanning = False
+    driver.app.quit = True
 
     # sends stop signal to server thread
     server_thread.stop()
