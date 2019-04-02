@@ -10,7 +10,7 @@ import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 from pcaspy import Driver as _Driver
 
-from .driver import App as _App
+from .main import App as _App
 
 from siriuspy import util as _util
 from siriuspy.envars import vaca_prefix as _vaca_prefix
