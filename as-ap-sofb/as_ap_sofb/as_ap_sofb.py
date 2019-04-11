@@ -10,6 +10,9 @@ import siriuspy.util as _util
 from siriuspy.csdevice import util as _cutil
 from siriuspy.envars import vaca_prefix as _vaca_prefix
 from .main import SOFB as _SOFB
+from .matrix import EpicsMatrix as _EpicsMatrix
+from .orbit import EpicsOrbit as _EpicsOrbit
+from .correctors import EpicsCorrectors as _EpicsCorrectors
 
 stop_event = False
 __version__ = _util.get_last_commit_hash()
@@ -41,7 +44,31 @@ class _PCASDriver(_pcaspy.Driver):
         return super().read(reason)
 
     def write(self, reason, value):
-        return self.app.write(reason, value)
+        if not self._isValid(reason, value):
+            return False
+        ret_val = self.app.write(reason, value)
+        if ret_val:
+            _log.info('YES Write %s: %s', reason, str(value))
+        else:
+            value = self.getParam(reason)
+            _log.warning('NO write %s: %s', reason, str(value))
+        self.setParam(reason, value)
+        self.updatePV(reason)
+        return True
+
+    def _isValid(self, reason, val):
+        if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
+            _log.debug('PV {0:s} is read only.'.format(reason))
+            return False
+        if val is None:
+            msg = 'client tried to set None value. refusing...'
+            _log.error(msg)
+            return False
+        enums = self.getParamInfo(reason, info_keys=('enums', ))['enums']
+        if enums and isinstance(val, int) and val >= len(enums):
+            _log.warning('value %d too large for enum type PV %s', val, reason)
+            return False
+        return True
 
 
 def run(acc='SI', debug=False):
@@ -56,7 +83,7 @@ def run(acc='SI', debug=False):
     # Creates App object
     _log.debug('Creating SOFB Object.')
     app = _SOFB(acc=acc)
-    db = app.get_database()
+    db = app.csorb.get_ioc_database()
     db.update({'Version-Cte': {'type': 'string', 'value': __version__}})
     ioc_prefix = acc.upper() + '-Glob:AP-SOFB:'
     ioc_name = acc.lower() + '-ap-sofb'
@@ -86,6 +113,13 @@ def run(acc='SI', debug=False):
     server_thread.setDaemon(True)
     _log.info('Starting Server Thread.')
     server_thread.start()
+
+    app.orbit = _EpicsOrbit(
+        acc=app.acc, prefix=app.prefix, callback=app.update_driver)
+    app.correctors = _EpicsCorrectors(
+        acc=app.acc, prefix=app.prefix, callback=app.update_driver)
+    app.matrix = _EpicsMatrix(
+        acc=app.acc, prefix=app.prefix, callback=app.update_driver)
 
     # main loop
     while not stop_event:
