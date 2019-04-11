@@ -4,7 +4,8 @@ import time as _time
 from math import ceil as _ceil
 import logging as _log
 from functools import partial as _part
-from threading import Lock
+from threading import Lock, Thread
+from copy import deepcopy as _dcopy
 import numpy as _np
 import siriuspy.util as _util
 import siriuspy.csdevice.bpms as _csbpm
@@ -19,48 +20,6 @@ class BaseOrbit(_BaseClass):
 
 class EpicsOrbit(BaseOrbit):
     """Class to deal with orbit acquisition."""
-
-    def get_database(self):
-        """Get the database of the class."""
-        db = self._csorb.get_orbit_database()
-        prop = 'fun_set_pv'
-        db['SOFBMode-Sel'][prop] = self.set_orbit_mode
-        db['TrigAcqConfig-Cmd'][prop] = self.trig_acq_config_bpms
-        db['TrigAcqCtrl-Sel'][prop] = self.set_trig_acq_control
-        db['TrigAcqChan-Sel'][prop] = self.set_trig_acq_channel
-        db['TrigDataChan-Sel'][prop] = self.set_trig_acq_datachan
-        db['TrigAcqTrigger-Sel'][prop] = self.set_trig_acq_trigger
-        db['TrigAcqRepeat-Sel'][prop] = self.set_trig_acq_repeat
-        db['TrigDataSel-Sel'][prop] = self.set_trig_acq_datasel
-        db['TrigDataThres-SP'][prop] = self.set_trig_acq_datathres
-        db['TrigDataHyst-SP'][prop] = self.set_trig_acq_datahyst
-        db['TrigDataPol-Sel'][prop] = self.set_trig_acq_datapol
-        db['TrigExtDuration-SP'][prop] = self.set_trig_acq_extduration
-        db['TrigExtDelay-SP'][prop] = self.set_trig_acq_extdelay
-        db['TrigExtEvtSrc-Sel'][prop] = self.set_trig_acq_extsource
-        db['TrigNrSamplesPre-SP'][prop] = _part(
-            self.set_trig_acq_nrsamples, ispost=False)
-        db['TrigNrSamplesPost-SP'][prop] = _part(
-            self.set_trig_acq_nrsamples, ispost=True)
-        db['RefOrbX-SP'][prop] = _part(self.set_ref_orbit, 'X')
-        db['RefOrbY-SP'][prop] = _part(self.set_ref_orbit, 'Y')
-        db['OfflineOrbX-SP'][prop] = _part(self.set_offline_orbit, 'X')
-        db['OfflineOrbY-SP'][prop] = _part(self.set_offline_orbit, 'Y')
-        db['SmoothNrPts-SP'][prop] = self.set_smooth_npts
-        db['SmoothMethod-Sel'][prop] = self.set_smooth_method
-        db['SmoothReset-Cmd'][prop] = self.set_smooth_reset
-        db['SPassMethod-Sel'][prop] = self.set_spass_method
-        db['SPassMaskSplBeg-SP'][prop] = _part(self.set_spass_mask, beg=True)
-        db['SPassMaskSplEnd-SP'][prop] = _part(self.set_spass_mask, beg=False)
-        db['SPassAvgNrTurns-SP'][prop] = self.set_spass_average
-        db['OrbAcqRate-SP'][prop] = self.set_orbit_acq_rate
-        db['TrigNrShots-SP'][prop] = self.set_trig_acq_nrshots
-        if self.isring:
-            db['MTurnIdx-SP'][prop] = self.set_orbit_multiturn_idx
-            db['MTurnDownSample-SP'][prop] = self.set_mturndownsample
-
-        db = super().get_database(db)
-        return db
 
     def __init__(self, acc, prefix='', callback=None):
         """Initialize the instance."""
@@ -86,6 +45,9 @@ class EpicsOrbit(BaseOrbit):
         self._spass_method = self._csorb.SPassMethod.FromBPMs
         self._spass_mask = [0, 0]
         self._spass_average = 1
+        self._spass_th_acqbg = None
+        self._spass_bgs = [dict() for _ in range(self._csorb.NR_BPMS)]
+        self._spass_usebg = self._csorb.SPassUseBg.NotUsing
         self._acqrate = 10
         self._oldacqrate = self._acqrate
         self._acqtrignrsamplespre = 50
@@ -101,6 +63,53 @@ class EpicsOrbit(BaseOrbit):
                         1/self._acqrate, self._update_orbits, niter=0)
         self._orbit_thread.start()
         self._update_time_vector()
+
+    def get_map2write(self):
+        """Get the write methods of the class."""
+        db = {
+            'SOFBMode-Sel': self.set_orbit_mode,
+            'TrigAcqConfig-Cmd': self.trig_acq_config_bpms,
+            'TrigAcqCtrl-Sel': self.set_trig_acq_control,
+            'TrigAcqChan-Sel': self.set_trig_acq_channel,
+            'TrigDataChan-Sel': self.set_trig_acq_datachan,
+            'TrigAcqTrigger-Sel': self.set_trig_acq_trigger,
+            'TrigAcqRepeat-Sel': self.set_trig_acq_repeat,
+            'TrigDataSel-Sel': self.set_trig_acq_datasel,
+            'TrigDataThres-SP': self.set_trig_acq_datathres,
+            'TrigDataHyst-SP': self.set_trig_acq_datahyst,
+            'TrigDataPol-Sel': self.set_trig_acq_datapol,
+            'TrigExtDuration-SP': self.set_trig_acq_extduration,
+            'TrigExtDelay-SP': self.set_trig_acq_extdelay,
+            'TrigExtEvtSrc-Sel': self.set_trig_acq_extsource,
+            'TrigNrSamplesPre-SP': _part(self.set_acq_nrsamples, ispost=False),
+            'TrigNrSamplesPost-SP': _part(self.set_acq_nrsamples, ispost=True),
+            'RefOrbX-SP': _part(self.set_reforb, 'X'),
+            'RefOrbY-SP': _part(self.set_reforb, 'Y'),
+            'OfflineOrbX-SP': _part(self.set_offlineorb, 'X'),
+            'OfflineOrbY-SP': _part(self.set_offlineorb, 'Y'),
+            'SmoothNrPts-SP': self.set_smooth_npts,
+            'SmoothMethod-Sel': self.set_smooth_method,
+            'SmoothReset-Cmd': self.set_smooth_reset,
+            'SPassMethod-Sel': self.set_spass_method,
+            'SPassMaskSplBeg-SP': _part(self.set_spass_mask, beg=True),
+            'SPassMaskSplEnd-SP': _part(self.set_spass_mask, beg=False),
+            'SPassBgCtrl-Cmd': self.set_spass_bg,
+            'SPassUseBg-Sel': self.set_spass_usebg,
+            'SPassAvgNrTurns-SP': self.set_spass_average,
+            'OrbAcqRate-SP': self.set_orbit_acq_rate,
+            'TrigNrShots-SP': self.set_trig_acq_nrshots,
+            }
+        if not self.isring:
+            return db
+        db.update({
+            'MTurnIdx-SP': self.set_orbit_multiturn_idx,
+            'MTurnDownSample-SP': self.set_mturndownsample,
+            'MTurnSyncTim-Sel': self.set_mturn_sync,
+            'MTurnUseMask-Sel': self.set_mturn_usemask,
+            'MTurnMaskSplBeg-SP': _part(self.set_mturnmask, beg=True),
+            'MTurnMaskSplEnd-SP': _part(self.set_mturnmask, beg=False),
+            })
+        return db
 
     @property
     def mode(self):
@@ -195,7 +204,7 @@ class EpicsOrbit(BaseOrbit):
         idx = self._multiturnidx
         return orbs['X'][idx, :], orbs['Y'][idx, :]
 
-    def set_offline_orbit(self, plane, orb):
+    def set_offlineorb(self, plane, orb):
         msg = 'Setting New Offline Orbit.'
         self._update_log(msg)
         _log.info(msg)
@@ -240,6 +249,103 @@ class EpicsOrbit(BaseOrbit):
         self._spass_mask[beg] = val
         name = 'Beg' if beg else 'End'
         self.run_callbacks('SPassMaskSpl' + name + '-RB', val)
+        return True
+
+    def set_spass_bg(self, val):
+        if val == self._csorb.SPassBgCtrl.Acquire:
+            trh = self._spass_th_acqbg
+            if trh is None or not trh.is_alive():
+                self._spass_th_acqbg = Thread(
+                    target=self._do_acquire_spass_bg, daemon=True)
+                self._spass_th_acqbg.start()
+            else:
+                msg = 'WARN: SPassBg is already being acquired.'
+                self._update_log(msg)
+                _log.warning(msg[6:])
+        elif val == self._csorb.SPassBgCtrl.Reset:
+            self.run_callbacks(
+                'SPassUseBg-Sts', self._csorb.SPassUseBg.NotUsing)
+            self._spass_bgs = [dict() for _ in range(len(self.bpms))]
+            self.run_callbacks('SPassBgSts-Mon', self._csorb.SPassBgSts.Empty)
+        else:
+            msg = 'ERR: SPassBg Control not recognized.'
+            self._update_log(msg)
+            _log.warning(msg[5:])
+            return False
+        return True
+
+    def set_mturn_sync(self, val):
+        val = \
+            _csbpm.EnbldDsbld.disabled \
+            if val == self._csorb.EnbldDsbld.Dsbld else \
+            _csbpm.EnbldDsbld.enabled
+        for bpm in self.bpms:
+            bpm.tbt_sync_enbl = val
+        self.run_callbacks('MTurnSyncTim-Sts', val)
+        return True
+
+    def set_mturn_usemask(self, val):
+        val = \
+            _csbpm.EnbldDsbld.disabled \
+            if val == self._csorb.EnbldDsbld.Dsbld else \
+            _csbpm.EnbldDsbld.enabled
+        for bpm in self.bpms:
+            bpm.tbt_mask_enbl = val
+        self.run_callbacks('MTurnUseMask-Sts', val)
+        return True
+
+    def set_mturnmask(self, val, beg=True):
+        val = int(val) if val > 0 else 0
+        omsk = \
+            self.bpms[0].tbt_mask_begin if not beg else \
+            self.bpms[0].tbt_mask_end
+        omsk = omsk or 0
+        maxsz = self.bpms[0].tbtrate - omsk - 2
+        val = val if val < maxsz else maxsz
+        for bpm in self.bpms:
+            if beg:
+                bpm.tbt_mask_begin = val
+            else:
+                bpm.tbt_mask_end = val
+        name = 'Beg' if beg else 'End'
+        self.run_callbacks('MTurnMaskSpl' + name + '-RB', val)
+        return True
+
+    def _do_acquire_spass_bg(self):
+        self.run_callbacks('SPassBgSts-Mon', self._csorb.SPassBgSts.Acquiring)
+        self._spass_bgs = [dict() for _ in range(len(self.bpms))]
+        ants = {'A': [], 'B': [], 'C': [], 'D': []}
+        bgs = [_dcopy(ants) for _ in range(len(self.bpms))]
+        # Acquire the samples
+        for _ in range(self._smooth_npts):
+            for i, bpm in enumerate(self.bpms):
+                bgs[i]['A'].append(bpm.spanta)
+                bgs[i]['B'].append(bpm.spantb)
+                bgs[i]['C'].append(bpm.spantc)
+                bgs[i]['D'].append(bpm.spantd)
+            _time.sleep(1/self._acqrate)
+        # Make the smoothing
+        try:
+            for i, bpm in enumerate(self.bpms):
+                for k, v in bgs[i].items():
+                    if self._smooth_meth == self._csorb.SmoothMeth.Average:
+                        bgs[i][k] = _np.mean(v, axis=0)
+                    else:
+                        bgs[i][k] = _np.median(v, axis=0)
+                    if not _np.all(_np.isfinite(bgs[i][k])):
+                        raise ValueError('there was some nans or infs.')
+            self._spass_bgs = bgs
+            self.run_callbacks(
+                'SPassBgSts-Mon', self._csorb.SPassBgSts.Acquired)
+        except (ValueError, TypeError) as err:
+            msg = 'ERR: SPassBg Acq ' + str(err)
+            self._update_log(msg)
+            _log.error(msg[5:])
+            self.run_callbacks('SPassBgSts-Mon', self._csorb.SPassBgSts.Empty)
+
+    def set_spass_usebg(self, val):
+        self._spass_usebg = int(val)
+        return True
 
     def set_spass_average(self, val):
         if self._ring_extension != 1 and val != 1:
@@ -250,13 +356,14 @@ class EpicsOrbit(BaseOrbit):
         val = int(val) if val > 1 else 1
         self._spass_average = val
         self.run_callbacks('SPassAvgNrTurns-RB', val)
+        return True
 
     def set_smooth_reset(self, _):
         with self._lock_raw_orbs:
             self._reset_orbs()
         return True
 
-    def set_ref_orbit(self, plane, orb):
+    def set_reforb(self, plane, orb):
         msg = 'Setting New Reference Orbit.'
         self._update_log(msg)
         _log.info(msg)
@@ -432,7 +539,7 @@ class EpicsOrbit(BaseOrbit):
         self.run_callbacks('TrigExtEvtSrc-Sts', value)
         return True
 
-    def set_trig_acq_nrsamples(self, val, ispost=True):
+    def set_acq_nrsamples(self, val, ispost=True):
         val = int(val) if val > 4 else 4
         val = val if val < 20000 else 20000
         suf = 'post' if ispost else 'pre'
@@ -651,7 +758,11 @@ class EpicsOrbit(BaseOrbit):
         orbs = {'X': [], 'Y': [], 'Sum': []}
         ringsz = self._ring_extension
         down = self._spass_average
-        nr_turns = ringsz * down
+        use_bg = self._spass_usebg == self._csorb.SPassUseBg.Using
+        use_bg &= bool(self._spass_bgs[-1])  # check if there is a BG saved
+        pvv = self._csorb.SPassUseBg
+        self.run_callbacks(
+            'SPassUseBg-Sts', pvv.Using if use_bg else pvv.NotUsing)
         with self._lock_raw_orbs:  # I need the lock here to assure consistency
             dic = {
                 'maskbeg': self._spass_mask[0],
@@ -661,7 +772,8 @@ class EpicsOrbit(BaseOrbit):
             for i, bpm in enumerate(self.bpms):
                 dic.update({
                     'refx': self.ref_orbs['X'][i],
-                    'refy': self.ref_orbs['Y'][i]})
+                    'refy': self.ref_orbs['Y'][i],
+                    'bg': self._spass_bgs[i] if use_bg else dict()})
                 orbx, orby, Sum = bpm.calc_sp_multiturn_pos(**dic)
                 orbs['X'].append(orbx)
                 orbs['Y'].append(orby)
