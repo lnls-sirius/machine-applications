@@ -13,7 +13,7 @@ from siriuspy.envars import vaca_prefix as _vaca_prefix
 from siriuspy.search import HLTimeSearch as _HLTimeSearch
 
 __version__ = _util.get_last_commit_hash()
-INTERVAL = 0.1
+INTERVAL = 0.5
 stop_event = _Event()
 
 _hl_trig = _HLTimeSearch.get_hl_triggers()
@@ -97,7 +97,8 @@ class _Driver(_pcaspy.Driver):
             return False
         return True
 
-def run(timing='evts', lock=False, wait=10, debug=False):
+
+def run(timing='evts', lock=False, wait=5, debug=False):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
@@ -137,7 +138,7 @@ def run(timing='evts', lock=False, wait=10, debug=False):
     _Driver(app)
 
     if not lock:
-        tm = max(5, wait)
+        tm = max(2, wait)
         _log.info(
             'Waiting ' + str(tm) + ' seconds to start locking Low Level.')
         stop_event.wait(tm)

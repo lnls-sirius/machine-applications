@@ -14,7 +14,7 @@ parser.add_argument(
     help="Force default initial HL state on LL IOCs.",
     )
 parser.add_argument(
-    '-w', '--wait', type=float, default=15,
+    '-w', '--wait', type=float, default=5,
     help='In case -l is not given, this is the time to wait in [s]' +
          'before start locking.'
     )
