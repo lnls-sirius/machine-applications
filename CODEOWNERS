@@ -1,13 +1,13 @@
 # -------- LIST OF CONTRIBUTERS --------
 
-# @gu1lhermelp
+# @murilobalves
 # @xresende
 # @anacso17
 # @fernandohds564
 # @liulin-lili
 
 # --- default owners of the repo
-* @gu1lhermelp @xresende @anacso17 @fernandohds564
+* @xresende @anacso17 @fernandohds564 @murilobalves
 
 
 # -------- BASIC MODULES --------
@@ -19,25 +19,25 @@
 # -------- SUBPACKAGES --------
 
 # --- as-ap-currinfo
-/as-ap-currinfo/ @anacso17 @gu1lhermelp
+/as-ap-currinfo/ @anacso17 @murilobalves
 
 # --- as-ap-opmode
-/as-ap-opmode/ @xresende @gu1lhermelp
+/as-ap-opmode/ @xresende @anacso17
 
 # --- as-ap-opticscorr
-/as-ap-opticscorr/ @anacso17 @fernandohds564 @xresende
+/as-ap-opticscorr/ @anacso17 @fernandohds564 @xresende @murilobalves
 
 # --- as-ap-posang
-/as-ap-posang/ @anacso17 @fernandohds564 @xresende
+/as-ap-posang/ @anacso17 @fernandohds564 @xresende @murilobalves
 
 # --- as-ma
-/as-ma/ @xresende @gu1lhermelp
+/as-ma/ @xresende @anacso17 @murilobalves
 
 # --- as-ps
-/as-ps/ @xresende @gu1lhermelp
+/as-ps/ @xresende @anacso17 @murilobalves
 
 # --- as-ti-control
-/as-ti-control/ @fernandohds564 @xresende
+/as-ti-control/ @fernandohds564 @xresende @anacso17
 
 # --- as-ap-sofb
-/as-ap-sofb/ @fernandohds564  @xresende @anacso1
+/as-ap-sofb/ @fernandohds564  @xresende @anacso17 @murilobalves
