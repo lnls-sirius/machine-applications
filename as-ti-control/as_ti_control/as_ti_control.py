@@ -71,8 +71,31 @@ class _Driver(_pcaspy.Driver):
         return super().read(reason)
 
     def write(self, reason, value):
-        return self.app.write(reason, value)
+        if not self._isValid(reason, value):
+            return False
+        ret_val = self.app.write(reason, value)
+        if ret_val:
+            _log.info('YES Write %s: %s', reason, str(value))
+        else:
+            value = self.getParam(reason)
+            _log.warning('NO Write %s: %s', reason, str(value))
+        self.setParam(reason, value)
+        self.updatePV(reason)
+        return True
 
+    def _isValid(self, reason, val):
+        if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
+            _log.debug('PV {0:s} is read only.'.format(reason))
+            return False
+        if val is None:
+            msg = 'client tried to set None value. refusing...'
+            _log.error(msg)
+            return False
+        enums = self.getParamInfo(reason, info_keys=('enums', ))['enums']
+        if enums and isinstance(val, int) and val >= len(enums):
+            _log.warning('value %d too large for enum type PV %s', val, reason)
+            return False
+        return True
 
 def run(timing='evts', lock=False, wait=10, debug=False):
     """Start the IOC."""
