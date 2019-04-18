@@ -38,7 +38,6 @@ class App:
                 self._objects.append(_HLTrigger(pref, self._update_driver))
         self._map2writepvs = self.get_map2writepvs()
         self._map2readpvs = self.get_map2readpvs()
-        self._db = self.get_database()
 
     @property
     def locked(self):
@@ -63,20 +62,11 @@ class App:
 
     def write(self, reason, value):
         """Write value in objects and database."""
-        if not self._isValid(reason, value):
-            return False
         fun_ = self._map2writepvs.get(reason)
         if fun_ is None:
             _log.warning('Not OK: PV %s is not settable.', reason)
             return False
-        ret_val = fun_(value)
-        if ret_val:
-            _log.info('YES Write %s: %s', reason, str(value))
-        elif self.driver is not None:
-            value = self.driver.getParam(reason)
-            _log.warning('NO write %s: %s', reason, str(value))
-        self._update_driver(reason, value)
-        return True
+        return fun_(value)
 
     def read(self, reason, from_db=False):
         """Read PV value from objects or database."""
@@ -115,13 +105,3 @@ class App:
             _log.debug('{0:40s}: updated'.format(pvname))
 
         self.driver.updatePV(pvname)
-
-    def _isValid(self, reason, val):
-        if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
-            _log.debug('App: PV {0:s} is read only.'.format(reason))
-            return False
-        enums = self._db[reason].get('enums')
-        if enums is not None and isinstance(val, int) and val >= len(enums):
-            _log.warning('value %d too large for enum type PV %s', val, reason)
-            return False
-        return True

@@ -13,7 +13,7 @@ from siriuspy.envars import vaca_prefix as _vaca_prefix
 from siriuspy.search import HLTimeSearch as _HLTimeSearch
 
 __version__ = _util.get_last_commit_hash()
-INTERVAL = 0.1
+INTERVAL = 0.5
 stop_event = _Event()
 
 _hl_trig = _HLTimeSearch.get_hl_triggers()
@@ -71,10 +71,34 @@ class _Driver(_pcaspy.Driver):
         return super().read(reason)
 
     def write(self, reason, value):
-        return self.app.write(reason, value)
+        if not self._isValid(reason, value):
+            return False
+        ret_val = self.app.write(reason, value)
+        if ret_val:
+            _log.info('YES Write %s: %s', reason, str(value))
+        else:
+            value = self.getParam(reason)
+            _log.warning('NO Write %s: %s', reason, str(value))
+        self.setParam(reason, value)
+        self.updatePV(reason)
+        return True
+
+    def _isValid(self, reason, val):
+        if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
+            _log.debug('PV {0:s} is read only.'.format(reason))
+            return False
+        if val is None:
+            msg = 'client tried to set None value. refusing...'
+            _log.error(msg)
+            return False
+        enums = self.getParamInfo(reason, info_keys=('enums', ))['enums']
+        if enums and isinstance(val, int) and val >= len(enums):
+            _log.warning('value %d too large for enum type PV %s', val, reason)
+            return False
+        return True
 
 
-def run(timing='evts', lock=False, wait=10, debug=False):
+def run(timing='evts', lock=False, wait=5, debug=False):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
@@ -113,17 +137,8 @@ def run(timing='evts', lock=False, wait=10, debug=False):
     _log.info('Creating Driver.')
     _Driver(app)
 
-    # initiate a new thread responsible for listening for client connections
-    server_thread = _pcaspy_tools.ServerThread(server)
-    server_thread.daemon = True
-    _log.info('Starting Server Thread.')
-    server_thread.start()
-
-    # Connects to low level PVs
-    _log.info('Openning connections with Low Level IOCs.')
-
     if not lock:
-        tm = max(5, wait)
+        tm = max(2, wait)
         _log.info(
             'Waiting ' + str(tm) + ' seconds to start locking Low Level.')
         stop_event.wait(tm)
@@ -132,10 +147,17 @@ def run(timing='evts', lock=False, wait=10, debug=False):
     if not stop_event.is_set():
         app.locked = True
 
+    # initiate a new thread responsible for listening for client connections
+    server_thread = _pcaspy_tools.ServerThread(server)
+    server_thread.daemon = True
+    _log.info('Starting Server Thread.')
+    server_thread.start()
+
     # set state
+    db = app.get_database()
+    m2w = app.get_map2writepvs()
     if lock:
-        db = app.get_database()
-        for pv, fun in app.get_map2writepvs().items():
+        for pv, fun in m2w.items():
             if pv.endswith('-Cmd'):
                 continue
             val = db[pv]['value']
@@ -145,7 +167,9 @@ def run(timing='evts', lock=False, wait=10, debug=False):
             val = fun()
             value = val.pop('value')
             if value is None:
-                continue
+                value = db[pvname]['value']
+            if pvname.endswith(('-SP', '-Sel')):
+                m2w[pvname](value)
             app.driver.setParam(pvname, value)
             app.driver.setParamStatus(pvname, **val)
             app.driver.updatePV(pvname)
