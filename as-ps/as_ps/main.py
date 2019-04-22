@@ -44,9 +44,6 @@ class App:
             version=__version__,
             prefix=prefix)
 
-        # save file with PVs list
-        _siriuspy.util.save_ioc_pv_list('as-ps', ('', prefix), dbset[prefix])
-
         # build _bbb_devices dict
         self._bbb_devices = dict()
         self._interval = None
