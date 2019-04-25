@@ -11,4 +11,4 @@ StandardOutput=syslog
 StandardError=syslog
 ExecStartPre=/bin/bash --login -c 'env > /tmp/sirius-ioc-bo-ti-trig'
 EnvironmentFile=-/tmp/sirius-ioc-bo-ti-trig
-ExecStart=/usr/local/bin/sirius-ioc-as-ti-control.py -t trig-bo
+ExecStart=/usr/local/bin/sirius-ioc-as-ti-control.py -t trig-bo -i 0.05
