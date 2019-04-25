@@ -1,6 +1,7 @@
 """IOC Module."""
 
 import os as _os
+import time as _time
 import logging as _log
 import signal as _signal
 from threading import Event as _Event
@@ -98,7 +99,25 @@ class _Driver(_pcaspy.Driver):
         return True
 
 
-def run(timing='evts', lock=False, wait=5, debug=False):
+class _ServerThread(_pcaspy_tools.ServerThread):
+
+    def __init__(self, server, interval=0.1):
+        super().__init__(server)
+        self.interval = interval
+
+    def run(self):
+        """
+        Start the server processing
+        """
+        while self.running:
+            t0 = _time.time()
+            self.server.process(self.interval)
+            dt = _time.time() - t0
+            if dt > self.interval*1.1:
+                _log.info('Process took: {0:.4f} s'.format(dt))
+
+
+def run(timing='evts', lock=False, wait=5, debug=False, interval=0.1):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
@@ -148,7 +167,7 @@ def run(timing='evts', lock=False, wait=5, debug=False):
         app.locked = True
 
     # initiate a new thread responsible for listening for client connections
-    server_thread = _pcaspy_tools.ServerThread(server)
+    server_thread = _ServerThread(server, interval)
     server_thread.daemon = True
     _log.info('Starting Server Thread.')
     server_thread.start()
