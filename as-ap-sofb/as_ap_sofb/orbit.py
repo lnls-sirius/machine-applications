@@ -68,7 +68,7 @@ class EpicsOrbit(BaseOrbit):
         """Get the write methods of the class."""
         db = {
             'SOFBMode-Sel': self.set_orbit_mode,
-            'TrigAcqConfig-Cmd': self.trig_acq_config_bpms,
+            'TrigAcqConfig-Cmd': self.acq_config_bpms,
             'TrigAcqCtrl-Sel': self.set_trig_acq_control,
             'TrigAcqChan-Sel': self.set_trig_acq_channel,
             'TrigDataChan-Sel': self.set_trig_acq_datachan,
@@ -78,9 +78,6 @@ class EpicsOrbit(BaseOrbit):
             'TrigDataThres-SP': self.set_trig_acq_datathres,
             'TrigDataHyst-SP': self.set_trig_acq_datahyst,
             'TrigDataPol-Sel': self.set_trig_acq_datapol,
-            'TrigExtDuration-SP': self.set_trig_acq_extduration,
-            'TrigExtDelay-SP': self.set_trig_acq_extdelay,
-            'TrigExtEvtSrc-Sel': self.set_trig_acq_extsource,
             'TrigNrSamplesPre-SP': _part(self.set_acq_nrsamples, ispost=False),
             'TrigNrSamplesPost-SP': _part(self.set_acq_nrsamples, ispost=True),
             'RefOrbX-SP': _part(self.set_reforb, 'X'),
@@ -354,7 +351,9 @@ class EpicsOrbit(BaseOrbit):
             _log.warning(msg[5:])
             return False
         val = int(val) if val > 1 else 1
-        self._spass_average = val
+        with self._lock_raw_orbs:
+            self._spass_average = val
+            self._reset_orbs()
         self.run_callbacks('SPassAvgNrTurns-RB', val)
         return True
 
@@ -416,8 +415,7 @@ class EpicsOrbit(BaseOrbit):
                 self.run_callbacks('OrbAcqRate-SP', acqrate)
                 self.set_orbit_acq_rate(acqrate)
             self._reset_orbs()
-        if self._mode in trigmds:
-            self.trig_acq_config_bpms()
+        self.acq_config_bpms()
         self.run_callbacks('SOFBMode-Sts', value)
         return True
 
@@ -431,27 +429,29 @@ class EpicsOrbit(BaseOrbit):
             _log.warning(msg[6:])
         with self._lock_raw_orbs:
             self._multiturnidx = int(value)
+            self._reset_orbs()
         self.run_callbacks('MTurnIdx-RB', self._multiturnidx)
         self.run_callbacks(
             'MTurnIdxTime-Mon', self._timevector[self._multiturnidx])
         return True
 
-    def trig_acq_config_bpms(self, *args):
-        trigmds = [self._csorb.SOFBMode.SinglePass, ]
+    def acq_config_bpms(self, *args):
+        trigmds = {self._csorb.SOFBMode.SinglePass, }
         if self.isring:
-            trigmds.append(self._csorb.SOFBMode.MultiTurn)
-        if self._mode not in trigmds:
-            msg = 'ERR: Change to a Triggered mode first.'
-            self._update_log(msg)
-            _log.error(msg[5:])
-            return False
+            trigmds.add(self._csorb.SOFBMode.MultiTurn)
         for bpm in self.bpms:
-            if self.isring and self._mode == self._csorb.SOFBMode.MultiTurn:
+            if self.isring and self._mode == self._csorb.SOFBMode.SlowOrb:
+                bpm.set_auto_monitor(True)
+                continue
+            elif self.isring and self._mode == self._csorb.SOFBMode.MultiTurn:
                 bpm.mode = _csbpm.OpModes.MultiBunch
-            else:
+                bpm.configure()
+            elif self._mode == self._csorb.SOFBMode.SinglePass:
                 bpm.mode = _csbpm.OpModes.SinglePass
-            bpm.configure()
-        self.timing.configure()
+                bpm.configure()
+            bpm.set_auto_monitor(False)
+        if self._mode in trigmds:
+            self.timing.configure()
         return True
 
     def set_trig_acq_control(self, value):
@@ -520,23 +520,6 @@ class EpicsOrbit(BaseOrbit):
         for bpm in self.bpms:
             bpm.acq_trig_datapol = value
         self.run_callbacks('TrigDataPol-Sts', value)
-        return True
-
-    def set_trig_acq_extduration(self, value):
-        self.timing.duration = value
-        self._update_time_vector(duration=value)
-        self.run_callbacks('TrigExtDuration-RB', value)
-        return True
-
-    def set_trig_acq_extdelay(self, value):
-        self.timing.delay = value
-        self._update_time_vector(delay=value)
-        self.run_callbacks('TrigExtDelay-RB', value)
-        return True
-
-    def set_trig_acq_extsource(self, value):
-        self.timing.evtsrc = self._csorb.AcqExtEvtSrc[value]
-        self.run_callbacks('TrigExtEvtSrc-Sts', value)
         return True
 
     def set_acq_nrsamples(self, val, ispost=True):
@@ -641,20 +624,24 @@ class EpicsOrbit(BaseOrbit):
         self.smooth_mtorb = {'X': None, 'Y': None, 'Sum': None}
 
     def _update_orbits(self):
-        count = 0
-        if self.isring and self._mode == self._csorb.SOFBMode.MultiTurn:
-            self._update_multiturn_orbits()
-            count = len(self.raw_mtorbs['X'])
-        elif self._mode == self._csorb.SOFBMode.SinglePass:
-            if self._spass_method == self._csorb.SPassMethod.FromBPMs:
-                self._update_online_orbits(sp=True)
-            else:
-                self._update_singlepass_orbits()
-            count = len(self.raw_sporbs['X'])
-        elif self.isring:
-            self._update_online_orbits(sp=False)
-            count = len(self.raw_orbs['X'])
-        self.run_callbacks('BufferCount-Mon', count)
+        try:
+            count = 0
+            if self.isring and self._mode == self._csorb.SOFBMode.MultiTurn:
+                self._update_multiturn_orbits()
+                count = len(self.raw_mtorbs['X'])
+            elif self._mode == self._csorb.SOFBMode.SinglePass:
+                if self._spass_method == self._csorb.SPassMethod.FromBPMs:
+                    self._update_online_orbits(sp=True)
+                else:
+                    self._update_singlepass_orbits()
+                count = len(self.raw_sporbs['X'])
+            elif self.isring and self._mode == self._csorb.SOFBMode.SlowOrb:
+                self._update_online_orbits(sp=False)
+                count = len(self.raw_orbs['X'])
+            self.run_callbacks('BufferCount-Mon', count)
+        except Exception as err:
+            self._update_log('ERR: ' + str(err))
+            _log.error(str(err))
 
     def _update_online_orbits(self, sp=False):
         nrb = self._csorb.NR_BPMS
@@ -702,7 +689,6 @@ class EpicsOrbit(BaseOrbit):
                 return
             samp *= self._acqtrignrshots
             orbsz = self._csorb.NR_BPMS * ringsz
-            idx = self._multiturnidx
             nr_pts = self._smooth_npts
             for i, bpm in enumerate(self.bpms):
                 pos = bpm.mtposx
@@ -746,6 +732,7 @@ class EpicsOrbit(BaseOrbit):
                     orb = _np.mean(orb.reshape(-1, down, orbsz), axis=1)
                 self.smooth_mtorb[pln] = orb
                 orbs[pln] = orb
+        idx = min(self._multiturnidx, orb.shape[0])
         for pln, orb in orbs.items():
             name = ('Orb' if pln != 'Sum' else '') + pln
             self.run_callbacks('MTurn' + name + '-Mon', orb.flatten())

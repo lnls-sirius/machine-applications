@@ -4,7 +4,7 @@ import time as _time
 import math as _math
 import logging as _log
 import numpy as _np
-from epics import PV as _PV
+from siriuspy.epics import PV as _PV
 import siriuspy.util as _util
 from siriuspy.thread import RepeaterThread as _Repeat
 from siriuspy.csdevice.pwrsupply import Const as _PSConst
@@ -395,12 +395,16 @@ class EpicsCorrectors(BaseCorrectors):
         return True
 
     def _update_corrs_strength(self):
-        corr_vals = self.get_strength()
-        self.run_callbacks('KickCH-Mon', corr_vals[:self._csorb.NR_CH])
-        self.run_callbacks(
-            'KickCV-Mon', corr_vals[self._csorb.NR_CH:self._csorb.NR_CHCV])
-        if self.isring:
-            self.run_callbacks('KickRF-Mon', corr_vals[-1])
+        try:
+            corr_vals = self.get_strength()
+            self.run_callbacks('KickCH-Mon', corr_vals[:self._csorb.NR_CH])
+            self.run_callbacks(
+                'KickCV-Mon', corr_vals[self._csorb.NR_CH:self._csorb.NR_CHCV])
+            if self.isring:
+                self.run_callbacks('KickRF-Mon', corr_vals[-1])
+        except Exception as err:
+            self._update_log('ERR: ' + str(err))
+            _log.error(str(err))
 
     def set_corrs_mode(self, value):
         """Set mode of CHs and CVs method."""
