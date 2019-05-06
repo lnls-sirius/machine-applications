@@ -89,12 +89,18 @@ class App:
     def write(self, reason, value):
         """Enqueue write request."""
         pvname = _siriuspy.namesys.SiriusPVName(reason)
-
         _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
             'W ', reason, str(value)))
-
+        if pvname.sec == 'TB':
+            # NOTE: This modified behaviour is to allow loading global_config
+            # to complete without artificial warning messages or unnecessary
+            # delays. Whether we should extend it to all power supplies remains
+            # to be checked.
+            self.driver.setParam(reason, value)
+            self.driver.updatePV(reason)
         bbb = self._bbb_devices[pvname.device_name]
         bbb.write(pvname.device_name, pvname.propty, value)
+        # return True
 
     # --- private methods ---
 
@@ -134,16 +140,9 @@ class App:
             self.driver.setParamStatus(
                 reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
 
-    # def _set_device_disconnected(self, bbb, device_name):
-    #     for field in bbb.database(device_name):
-    #         reason = device_name + ':' + field
-    #         self.driver.setParamStatus(
-    #             reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
-
     def _scan_bbb(self, bbb):
         for device_name in bbb.psnames:
             if bbb.check_connected(device_name):
                 self._update_ioc_database(bbb, device_name)
             else:
-                # self._set_device_disconnected(bbb, device_name)
                 self._update_ioc_database_disconnected(bbb, device_name)
