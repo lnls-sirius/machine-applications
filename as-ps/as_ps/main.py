@@ -58,7 +58,7 @@ class App:
             for psname in bbb.psnames:
                 if 'TB' in psname:
                     if self._prucqueue is None:
-                        print('!!!!', psname)
+                        # print('!!!!', psname)
                         self._prucqueue = _PRUCQueue()
                 self._bbb_devices[psname] = bbb
 
