@@ -9,6 +9,7 @@ from pcaspy import Severity as _Severity
 
 import siriuspy as _siriuspy
 import siriuspy.util as _util
+from siriuspy.pwrsupply.prucontroller import PRUCQueue as _PRUCQueue
 
 __version__ = _util.get_last_commit_hash()
 
@@ -33,6 +34,8 @@ class App:
         """Create Power Supply controllers."""
         self._driver = driver
 
+        self._prucqueue = None
+
         # mapping device to bbb
         self._bbblist = bbblist
 
@@ -53,6 +56,10 @@ class App:
             self._interval = min(bbb_interval, self._interval) if \
                 self._interval else bbb_interval
             for psname in bbb.psnames:
+                if 'TB' in psname:
+                    if self._prucqueue is None:
+                        print('!!!!', psname)
+                        self._prucqueue = _PRUCQueue()
                 self._bbb_devices[psname] = bbb
 
     # --- public interface ---
@@ -70,6 +77,8 @@ class App:
     def process(self):
         """Process all read and write requests in queue."""
         t0 = _time.time()
+        if self._prucqueue:
+            self._prucqueue.process()
         for bbb in self.bbblist:
             self._scan_bbb(bbb)
         self.driver.updatePVs()
@@ -98,8 +107,14 @@ class App:
             # to be checked.
             self.driver.setParam(reason, value)
             self.driver.updatePV(reason)
-        bbb = self._bbb_devices[pvname.device_name]
-        bbb.write(pvname.device_name, pvname.propty, value)
+            bbb = self._bbb_devices[pvname.device_name]
+            op = (bbb.write, (pvname.device_name, pvname.propty, value))
+            self._prucqueue.append(op)
+            self._prucqueue.process()
+            # bbb.write(pvname.device_name, pvname.propty, value)
+        else:
+            bbb = self._bbb_devices[pvname.device_name]
+            bbb.write(pvname.device_name, pvname.propty, value)
         # return True
 
     # --- private methods ---
