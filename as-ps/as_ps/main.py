@@ -14,6 +14,10 @@ from siriuspy.pwrsupply.prucontroller import PRUCQueue as _PRUCQueue
 __version__ = _util.get_last_commit_hash()
 
 
+# TODO: feature in test phase
+_use_write_queue = False
+
+
 # NOTE on current behaviour of PS IOC:
 #
 # 01. While in RmpWfm, MigWfm or SlowRefSync, the PS_I_LOAD variable read from
@@ -53,12 +57,14 @@ class App:
         for bbb in self.bbblist:
             bbb_interval = bbb.update_interval()
             # get minimum time interval for BBB
-            self._interval = min(bbb_interval, self._interval) if \
-                self._interval else bbb_interval
+
+            # self._interval = min(bbb_interval, self._interval) if \
+            #     self._interval else bbb_interval
+            # TODO: check CPU usage in BBBs
+            self._interval = 0.1
             for psname in bbb.psnames:
-                if '_TB_' in psname:
+                if _use_write_queue and 'TB' in psname:
                     if self._prucqueue is None:
-                        # print('!!!!', psname)
                         self._prucqueue = _PRUCQueue()
                 self._bbb_devices[psname] = bbb
 
@@ -76,7 +82,6 @@ class App:
 
     def process(self):
         """Process all read and write requests in queue."""
-        self._interval = 0.1
         t0 = _time.time()
         if self._prucqueue:
             self._prucqueue.process()
@@ -106,7 +111,7 @@ class App:
         pvname = _siriuspy.namesys.SiriusPVName(reason)
         _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
             'W ', reason, str(value)))
-        if pvname.sec == '_TB_':
+        if _use_write_queue and pvname.sec == 'TB':
             # NOTE: This modified behaviour is to allow loading global_config
             # to complete without artificial warning messages or unnecessary
             # delays. Whether we should extend it to all power supplies remains
@@ -138,9 +143,6 @@ class App:
             return True
         else:
             if new_value != old_value:
-                # if 'Current-SP' in reason:
-                #     print(reason)
-                #     print(old_value, ' -> ', new_value)
                 return True
         return False
 
