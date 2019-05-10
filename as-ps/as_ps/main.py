@@ -76,6 +76,7 @@ class App:
 
     def process(self):
         """Process all read and write requests in queue."""
+        self._interval = 0.1
         t0 = _time.time()
         if self._prucqueue:
             self._prucqueue.process()
@@ -137,6 +138,9 @@ class App:
             return True
         else:
             if new_value != old_value:
+                # if 'Current-SP' in reason:
+                #     print(reason)
+                #     print(old_value, ' -> ', new_value)
                 return True
         return False
 
