@@ -56,7 +56,7 @@ class App:
             self._interval = min(bbb_interval, self._interval) if \
                 self._interval else bbb_interval
             for psname in bbb.psnames:
-                if 'TB' in psname:
+                if '_TB_' in psname:
                     if self._prucqueue is None:
                         # print('!!!!', psname)
                         self._prucqueue = _PRUCQueue()
@@ -79,6 +79,8 @@ class App:
         t0 = _time.time()
         if self._prucqueue:
             self._prucqueue.process()
+            if len(self._prucqueu) == 0:
+                _log.info("[{:.2s}] - write queue emptied".format('Q '))
         for bbb in self.bbblist:
             self._scan_bbb(bbb)
         self.driver.updatePVs()
@@ -87,7 +89,10 @@ class App:
         # have an update refresh rate at 10 Hz. scan_bbb is taking around
         # 40 ms to complete. We should start optimizing
         # the IOC code. As it is it is taking up 80% of BBB1 cpu time.
-        _time.sleep(abs(self._interval-(t1-t0)))
+        if self._prucqueue:
+            _time.sleep(0.050)
+        else:
+            _time.sleep(abs(self._interval-(t1-t0)))
 
     def read(self, reason):
         """Read from database."""
@@ -100,7 +105,7 @@ class App:
         pvname = _siriuspy.namesys.SiriusPVName(reason)
         _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
             'W ', reason, str(value)))
-        if pvname.sec == 'TB':
+        if pvname.sec == '_TB_':
             # NOTE: This modified behaviour is to allow loading global_config
             # to complete without artificial warning messages or unnecessary
             # delays. Whether we should extend it to all power supplies remains
@@ -110,11 +115,17 @@ class App:
             bbb = self._bbb_devices[pvname.device_name]
             op = (bbb.write, (pvname.device_name, pvname.propty, value))
             self._prucqueue.append(op)
+            _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
+                'Q ', reason,
+                'write queue size: {}'.format(len(self._prucqueue))))
             self._prucqueue.process()
-            # bbb.write(pvname.device_name, pvname.propty, value)
         else:
             bbb = self._bbb_devices[pvname.device_name]
+            t0 = _time.time()
             bbb.write(pvname.device_name, pvname.propty, value)
+            t1 = _time.time()
+            _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
+                'T ', reason, '{:.3f} ms'.format((t1-t0)*1000)))
         # return True
 
     # --- private methods ---
