@@ -79,7 +79,7 @@ class App:
         t0 = _time.time()
         if self._prucqueue:
             self._prucqueue.process()
-            if len(self._prucqueu) == 0:
+            if len(self._prucqueue) == 0:
                 _log.info("[{:.2s}] - write queue emptied".format('Q '))
         for bbb in self.bbblist:
             self._scan_bbb(bbb)
