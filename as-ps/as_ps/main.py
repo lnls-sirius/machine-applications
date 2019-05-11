@@ -15,8 +15,8 @@ from siriuspy.pwrsupply.prucontroller import PRUCQueue as _PRUCQueue
 __version__ = _util.get_last_commit_hash()
 
 
-# TODO: feature in test phase
-_use_write_queue = False
+# Select whether to queue write requests or process them right away.
+_use_write_queue = True
 
 
 # NOTE on current behaviour of PS IOC:
@@ -114,8 +114,10 @@ class App:
             # global_config to complete without artificial warning
             # messages or unnecessary delays. Whether we should extend
             # it to all power supplies remains to be checked.
-            self.driver.setParam(reason, value)
-            self.driver.updatePV(reason)
+            if App._setpoint_regexp.match(reason):
+                # Accept *-SP and *-Sel right away (not *-Cmd !)
+                self.driver.setParam(reason, value)
+                self.driver.updatePV(reason)
             bbb = self._bbb_devices[pvname.device_name]
             op = (self._write_operation, (bbb, pvname, value))
             self._prucqueue.append(op)
@@ -130,7 +132,6 @@ class App:
             self._scan_device(bbb, pvname.device_name, force_update=True)
             _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
                 'T ', reason, '{:.3f} ms'.format((t1-t0)*1000)))
-        # return True
 
     # --- private methods ---
 
@@ -151,6 +152,7 @@ class App:
     def _write_operation(self, bbb, pvname, value):
         t0 = _time.time()
         bbb.write(pvname.device_name, pvname.propty, value)
+        # NOTE: This scan_device might be redundent
         self._scan_device(bbb, pvname.device_name, force_update=True)
         t1 = _time.time()
         _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
