@@ -94,7 +94,8 @@ class App:
                 self._scan_bbb(bbb)
             self.driver.updatePVs()
             t1 = _time.time()
-            _log.info("process.... {:.3f} ms".format(1000*(t1-t0)))
+            # TODO: measure this intervall for various BBBs...
+            # _log.info("process.... {:.3f} ms".format(1000*(t1-t0)))
             _time.sleep(abs(self._interval-(t1-t0)))
 
     def read(self, reason):
