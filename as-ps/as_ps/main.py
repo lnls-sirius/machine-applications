@@ -10,7 +10,8 @@ from pcaspy import Severity as _Severity
 
 import siriuspy as _siriuspy
 import siriuspy.util as _util
-from siriuspy.pwrsupply.prucontroller import PRUCQueue as _PRUCQueue
+
+from siriuspy.thread import DequeThread as _DequeThread
 
 __version__ = _util.get_last_commit_hash()
 
@@ -146,7 +147,7 @@ class App:
             for psname in bbb.psnames:
                 if _use_write_queue and psname.startswith('TB-'):
                     if self._prucqueue is None:
-                        self._prucqueue = _PRUCQueue()
+                        self._prucqueue = _DequeThread()
                 self._bbb_devices[psname] = bbb
 
     def _write_operation(self, bbb, pvname, value):
