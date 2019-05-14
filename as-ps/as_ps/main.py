@@ -132,7 +132,7 @@ class App:
                 'T ', reason, '{:.3f} ms'.format((time1-time0)*1000)))
 
     def scan_bbb(self, bbb):
-        """Scan BBB devices and updates ioc DB."""
+        """Scan BBB devices and update ioc DB."""
         for device_name in bbb.psnames:
             self._scan_device(bbb, device_name)
         self.driver.updatePVs()
@@ -206,6 +206,7 @@ class App:
                 # a standard intel CPU takes:
                 # 1) np.all(a == b) -> ~4 us
                 # 2) np.allclose(a, b) -> 30 us
+                # 3) np.array_equal(a, b) -> ~4 us
                 # NOTE: it is not clear if numpy comparisons to avoid updating
                 # this PV do improve performance. how long does it take for
                 # pcaspy to update the PV?
