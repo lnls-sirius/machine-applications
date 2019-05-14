@@ -136,13 +136,15 @@ class App:
     def _create_bbb_dev_dict(self):
         # build _bbb_devices dict
         self._bbb_devices = dict()
+        self._dev_connected = dict()
         self._interval = float('Inf')
         for bbb in self.bbblist:
             # get minimum time interval for BBB
             self._interval = min(self._interval, bbb.update_interval())
             # create bbb_device dict
-            for psname in bbb.psnames:
-                self._bbb_devices[psname] = bbb
+            for dev_name in bbb.psnames:
+                self._dev_connected[dev_name] = None
+                self._bbb_devices[dev_name] = bbb
 
     def _write_operation(self, bbb, pvname, value):
         time0 = _time.time()
@@ -160,18 +162,20 @@ class App:
         self.driver.updatePVs()
 
     def _scan_device(self, bbb, device_name, force_update=False):
-        bbb_connected = bbb.check_connected(device_name)
-        self._update_ioc_database(bbb, device_name, bbb_connected,
+        dev_connected = bbb.check_connected(device_name)
+        self._update_ioc_database(bbb, device_name, dev_connected,
                                   force_update)
 
     def _update_ioc_database(self, bbb, device_name,
-                             bbb_connected=True,
+                             dev_connected=True,
                              force_update=False):
         # Return dict indexed with reason
         data, updated = bbb.read(device_name, force_update=force_update)
 
-        if not updated:
+        if not updated and self._dev_connected[device_name] is not None:
             return
+
+        self._dev_connected[device_name] = dev_connected
 
         for reason, new_value in data.items():
             if self._prucqueue and App._setpoint_regexp.match(reason):
@@ -183,7 +187,7 @@ class App:
                 if new_value is None:
                     continue
                 self.driver.setParam(reason, new_value)
-            if bbb_connected:
+            if dev_connected:
                 self.driver.setParamStatus(
                     reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
             else:
