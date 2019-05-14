@@ -86,11 +86,11 @@ class App:
             # variables will not be updated in the scan, in order not to spoil
             # the received write value.
             for bbb in self.bbblist:
-                self._scan_bbb(bbb)
+                self.scan_bbb(bbb)
             _time.sleep(0.050)
         else:
             for bbb in self.bbblist:
-                self._scan_bbb(bbb)
+                self.scan_bbb(bbb)
             time1 = _time.time()
             # TODO: measure this interval for various BBBs...
             # _log.info("process.... {:.3f} ms".format(1000*(time1-time0)))
@@ -131,6 +131,12 @@ class App:
             _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
                 'T ', reason, '{:.3f} ms'.format((time1-time0)*1000)))
 
+    def scan_bbb(self, bbb):
+        """Scan BBB devices and updates ioc DB."""
+        for device_name in bbb.psnames:
+            self._scan_device(bbb, device_name)
+        self.driver.updatePVs()
+
     # --- private methods ---
 
     def _create_bbb_dev_dict(self):
@@ -155,11 +161,6 @@ class App:
         _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
             'T ', pvname,
             'write operation took {:.3f} ms'.format((time1-time0)*1000)))
-
-    def _scan_bbb(self, bbb):
-        for device_name in bbb.psnames:
-            self._scan_device(bbb, device_name)
-        self.driver.updatePVs()
 
     def _scan_device(self, bbb, device_name, force_update=False):
         dev_connected = bbb.check_connected(device_name)
