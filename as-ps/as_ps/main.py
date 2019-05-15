@@ -72,7 +72,7 @@ class App:
         return self._bbblist
 
     def process(self):
-        """Process all read and write requests in queue."""
+        """Process all write requests in queue and does a BBB scan."""
         time0 = _time.time()
         if self._prucqueue:  # Not None and not empty
             status = self._prucqueue.process()
@@ -127,15 +127,20 @@ class App:
             time0 = _time.time()
             bbb.write(pvname.device_name, pvname.propty, value)
             time1 = _time.time()
-            # self._scan_device(bbb, pvname.device_name, force_update=True)
+            # self.scan_device(bbb, pvname.device_name, force_update=True)
             _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
                 'T ', reason, '{:.3f} ms'.format((time1-time0)*1000)))
 
     def scan_bbb(self, bbb):
         """Scan BBB devices and update ioc DB."""
         for device_name in bbb.psnames:
-            self._scan_device(bbb, device_name)
-        self.driver.updatePVs()
+            self.scan_device(bbb, device_name)
+
+    def scan_device(self, bbb, device_name, force_update=False):
+        """Scan BBB device and update ioc DB."""
+        dev_connected = bbb.check_connected(device_name)
+        self._update_ioc_database(bbb, device_name, dev_connected,
+                                  force_update)
 
     # --- private methods ---
 
@@ -156,47 +161,63 @@ class App:
         time0 = _time.time()
         bbb.write(pvname.device_name, pvname.propty, value)
         # NOTE: This scan_device might be redundent
-        # self._scan_device(bbb, pvname.device_name, force_update=True)
+        # self.scan_device(bbb, pvname.device_name, force_update=True)
         time1 = _time.time()
         _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
             'T ', pvname,
             'write operation took {:.3f} ms'.format((time1-time0)*1000)))
 
-    def _scan_device(self, bbb, device_name, force_update=False):
-        dev_connected = bbb.check_connected(device_name)
-        self._update_ioc_database(bbb, device_name, dev_connected,
-                                  force_update)
-
     def _update_ioc_database(self, bbb, device_name,
                              dev_connected=True,
                              force_update=False):
+
+        # connection state changed?
+        if dev_connected == self._dev_connected[device_name]:
+            conn_changed = False
+        else:
+            conn_changed = True
+
         # Return dict indexed with reason
         data, updated = bbb.read(device_name, force_update=force_update)
 
-        if not updated and self._dev_connected[device_name] is not None:
+        # return if nothing changed at all
+        if not updated and not conn_changed:
             return
 
-        self._dev_connected[device_name] = dev_connected
-
         for reason, new_value in data.items():
+
             if self._prucqueue and App._setpoint_regexp.match(reason):
                 # While there are pending write operations in the queue we
                 # cannot update setpoint variables or we will spoil the
                 # accepted value in the write method.
                 continue
-            if self._check_value_changed(reason, new_value):
-                if new_value is None:
-                    continue
-                self.driver.setParam(reason, new_value)
-            if dev_connected:
-                self.driver.setParamStatus(
-                    reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+
+            # check if specific reason value did change
+            if updated:
+                value_changed = self._check_value_changed(reason, new_value)
             else:
-                self.driver.setParamStatus(
-                    reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+                value_changed = False
+
+            # if it changed and is not None, update its PV database entry
+            if value_changed and new_value is not None:
+                self.driver.setParam(reason, new_value)
+                self.driver.updatePV(reason)
+
+            # update alarm state
+            if conn_changed:
+                if dev_connected:
+                    self.driver.setParamStatus(
+                        reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+                else:
+                    self.driver.setParamStatus(
+                        reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+
+        # update device connection state
+        self._dev_connected[device_name] = dev_connected
 
     def _check_value_changed(self, reason, new_value):
         old_value = self.driver.getParam(reason)
+        # NOTE: convert all WfmData to numpy from bottom up to here!
         if isinstance(new_value, _np.ndarray):
             if not isinstance(old_value, _np.ndarray):
                 # NOTE: this might be necessary only in the initialization.
@@ -209,12 +230,11 @@ class App:
                 # 3) np.array_equal(a, b) -> ~4 us
                 # NOTE: it is not clear if numpy comparisons to avoid updating
                 # this PV do improve performance. how long does it take for
-                # pcaspy to update the PV?
+                # pcaspy to update the numpy PV?
                 return True
             else:
                 return False
         else:
-            # NOTE: convert all WfmData to numpy from bottom up to here!
             if new_value != old_value:
                 return True
         return False
