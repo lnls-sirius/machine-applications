@@ -132,12 +132,12 @@ class App:
                 'T ', reason, '{:.3f} ms'.format((time1-time0)*1000)))
 
     def scan_bbb(self, bbb):
-        """Scan BBB devices and update ioc DB."""
+        """Scan BBB devices and update ioc epics DB."""
         for device_name in bbb.psnames:
             self.scan_device(bbb, device_name)
 
     def scan_device(self, bbb, device_name, force_update=False):
-        """Scan BBB device and update ioc DB."""
+        """Scan BBB device and update ioc epics DB."""
         dev_connected = bbb.check_connected(device_name)
         self._update_ioc_database(bbb, device_name, dev_connected,
                                   force_update)
@@ -198,10 +198,9 @@ class App:
             else:
                 value_changed = False
 
-            # if it changed and is not None, update its PV database entry
+            # if it changed and is not None, set new value in PV database entry
             if value_changed and new_value is not None:
                 self.driver.setParam(reason, new_value)
-                self.driver.updatePV(reason)
 
             # update alarm state
             if conn_changed:
@@ -211,6 +210,10 @@ class App:
                 else:
                     self.driver.setParamStatus(
                         reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+
+            # if reason state was set, update its PV db entry
+            if value_changed or conn_changed:
+                self.driver.updatePV(reason)
 
         # update device connection state
         self._dev_connected[device_name] = dev_connected
