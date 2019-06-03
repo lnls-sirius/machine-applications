@@ -20,19 +20,14 @@ class App:
             db.update(obj.get_database())
         return db
 
-    def __init__(self, driver=None, trig_list=[], events=True):
+    def __init__(self, driver=None, trig_list=[]):
         """Initialize the instance.
 
         driver : is the driver associated with this app;
         triggers_list: is the list of the high level triggers to be managed;
-        events: define if this app will manage evg events.
         """
         self.driver = driver
         self._objects = list()
-        if events:
-            for ev_hl in _cstime.Const.EvtHL2LLMap:
-                if not ev_hl.startswith(('Dsbl', 'PsMtn')):
-                    self._objects.append(_HLEvent(ev_hl, self._update_driver))
         if trig_list:
             for pref in trig_list:
                 self._objects.append(_HLTrigger(pref, self._update_driver))

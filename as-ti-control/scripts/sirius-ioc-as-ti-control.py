@@ -5,8 +5,8 @@ from as_ti_control import run, TRIG_TYPES
 
 parser = _argparse.ArgumentParser(description="Run Timing IOC.")
 parser.add_argument(
-    '-t', "--timing", type=str, default='evts',
-    help="Which high level Timing properties to manage (evts)",
+    '-t', "--timing", type=str, default='trig-all',
+    help="Which high level Timing properties to manage (trig-all)",
     choices=sorted(TRIG_TYPES)
     )
 parser.add_argument(
