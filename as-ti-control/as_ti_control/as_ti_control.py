@@ -20,7 +20,7 @@ stop_event = _Event()
 _hl_trig = _HLTimeSearch.get_hl_triggers()
 TRIG_TYPES = {
     'trig-as', 'trig-si', 'trig-bo', 'trig-tb', 'trig-ts', 'trig-li',
-    'trig-all', 'evts'}
+    'trig-all'}
 
 
 def _stop_now(signum, frame):
@@ -43,7 +43,6 @@ def _get_ioc_name_and_triggers(timing):
         raise Exception("wrong input value for parameter 'triggers'.")
 
     trig_list = []
-    events = False
     sec = 'as'
     if timing.endswith('all'):
         trig_list = _HLTimeSearch.get_hl_triggers()
@@ -52,12 +51,9 @@ def _get_ioc_name_and_triggers(timing):
         trig_list = _HLTimeSearch.get_hl_triggers({'sec': timing[-2:].upper()})
         sec = timing[-2:]
         suf = sec.upper() + 'Trigs'
-    elif timing.endswith('evts'):
-        events = True
-        suf = 'Evts'
     ioc_name = sec + '-ti-' + suf.lower()
     ioc_prefix = sec.upper() + '-Glob:TI-HighLvl-' + suf
-    return ioc_name, ioc_prefix, events, trig_list
+    return ioc_name, ioc_prefix, trig_list
 
 
 class _Driver(_pcaspy.Driver):
@@ -117,7 +113,7 @@ class _ServerThread(_pcaspy_tools.ServerThread):
                 _log.info('Process took: {0:.4f} s'.format(dt))
 
 
-def run(timing='evts', lock=False, wait=5, debug=False, interval=0.1):
+def run(timing='trig-all', lock=False, wait=5, debug=False, interval=0.1):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
@@ -127,13 +123,13 @@ def run(timing='evts', lock=False, wait=5, debug=False, interval=0.1):
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # get IOC name and triggers list
-    ioc_name, ioc_prefix, evts, trig_list = _get_ioc_name_and_triggers(timing)
-    if not evts and not trig_list:
-        _log.fatal('Must select evts or some triggers to run IOC.')
+    ioc_name, ioc_prefix, trig_list = _get_ioc_name_and_triggers(timing)
+    if not trig_list:
+        _log.fatal('Must select some triggers to run IOC.')
         return
     # Creates App object
     _log.debug('Creating App Object.')
-    app = App(events=evts, trig_list=trig_list)
+    app = App(trig_list=trig_list)
     db = app.get_database()
     db[ioc_prefix + ':Version-Cte'] = {'type': 'string', 'value': __version__}
     # add PV Properties-Cte with list of all IOC PVs:
