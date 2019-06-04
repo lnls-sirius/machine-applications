@@ -5,7 +5,7 @@ from functools import reduce as _reduce
 from operator import and_ as _and_
 import logging as _log
 from siriuspy.csdevice import timesys as _cstime
-from siriuspy.timesys import HLEvent as _HLEvent, HLTrigger as _HLTrigger
+from siriuspy.timesys import HLTrigger as _HLTrigger
 
 _TIMEOUT = 0.05
 
