@@ -43,7 +43,7 @@ class App:
         self._driver = driver
 
         # write operation queue
-        self._prucqueue = _DequeThread() if _USE_WRITE_QUEUE else None
+        self._dequethread = _DequeThread() if _USE_WRITE_QUEUE else None
 
         # mapping device to bbb
         self._bbblist = bbblist
@@ -56,7 +56,7 @@ class App:
             version=__version__,
             prefix=prefix)
 
-        # build bbb_devices dict (and set _prucqueue)
+        # build bbb_devices dict (and set _dequethread)
         self._create_bbb_dev_dict()
 
     # --- public interface ---
@@ -74,12 +74,12 @@ class App:
     def process(self):
         """Process all write requests in queue and does a BBB scan."""
         time0 = _time.time()
-        if self._prucqueue:  # Not None and not empty
-            status = self._prucqueue.process()
+        if self._dequethread:  # Not None and not empty
+            status = self._dequethread.process()
             if status:
                 txt = ("[{:.2s}] - new thread started for write queue item. "
                        "items left: {}")
-                logmsg = txt.format('Q ', len(self._prucqueue))
+                logmsg = txt.format('Q ', len(self._dequethread))
                 _log.info(logmsg)
             # scanning bbb allows for read-only variables to be updated while
             # there are pending write operations in the queue, since setpoint
@@ -118,8 +118,8 @@ class App:
                 self.driver.updatePV(reason)
             bbb = self._bbb_devices[pvname.device_name]
             operation = (self._write_operation, (bbb, pvname, value))
-            self._prucqueue.append(operation)
-            self._prucqueue.process()
+            self._dequethread.append(operation)
+            self._dequethread.process()
         else:
             self.driver.setParam(reason, value)
             self.driver.updatePV(reason)
@@ -186,7 +186,7 @@ class App:
 
         for reason, new_value in data.items():
 
-            if self._prucqueue and App._setpoint_regexp.match(reason):
+            if self._dequethread and App._setpoint_regexp.match(reason):
                 # While there are pending write operations in the queue we
                 # cannot update setpoint variables or we will spoil the
                 # accepted value in the write method.
