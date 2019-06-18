@@ -90,12 +90,11 @@ class App:
             self, pvname, value, alarm=None, severity=None, **kwargs):
         if self.driver is None:
             return
-        val = self.driver.getParam(pvname)
         if alarm is not None and severity is not None:
             self.driver.setParamStatus(pvname, alarm=alarm, severity=severity)
             if alarm:
                 _log.debug('{0:40s}: alarm'.format(pvname))
-        if value is not None and val != value:
+        if value is not None:
             self.driver.setParam(pvname, value)
             _log.debug('{0:40s}: updated'.format(pvname))
 
