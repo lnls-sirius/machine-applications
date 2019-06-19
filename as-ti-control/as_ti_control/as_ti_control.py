@@ -173,21 +173,25 @@ def run(timing='trig-all', lock=False, wait=5, debug=False, interval=0.1):
     m2w = app.get_map2writepvs()
     if lock:
         for pv, fun in m2w.items():
-            if pv.endswith('-Cmd'):
+            if pv.endswith('-Cmd') or pv.endswith('LowLvlLock-Sel'):
                 continue
             val = db[pv]['value']
             fun(val)
     else:  # or update driver state
-        for pvname, fun in app.get_map2readpvs().items():
+        for pv, fun in app.get_map2readpvs().items():
             val = fun()
             value = val.pop('value')
             if value is None:
-                value = db[pvname]['value']
-            if pvname.endswith(('-SP', '-Sel')):
-                m2w[pvname](value)
-            app.driver.setParam(pvname, value)
-            app.driver.setParamStatus(pvname, **val)
-            app.driver.updatePV(pvname)
+                value = db[pv]['value']
+            if pv.endswith(('-SP', '-Sel')) and not pv.endswith('LvlLock-Sel'):
+                m2w[pv](value)
+            try:
+                app.driver.setParam(pv, value)
+            except TypeError as err:
+                print(pv, value)
+                raise err
+            app.driver.setParamStatus(pv, **val)
+            app.driver.updatePV(pv)
 
     # main loop
     while not stop_event.is_set():
