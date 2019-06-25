@@ -68,11 +68,13 @@ class _Driver(Driver):
         dtim = _time.time() - tini
         if dtim <= interval:
             _time.sleep(interval - dtim)
+        else:
+            _log.warning('IOC took {0:.3f} ms in update loop.'.format(
+                dtim*1000))
 
     def _update(self):
         meas = self.osc_socket.query(":MEASure:RESults?")
         meas = meas.split(',')
-        # print('\n'.join(meas))
         idxict1 = [i for i, val in enumerate(meas) if 'ICT1' in val].pop()
         chg1 = float(meas[idxict1 + self.CURR]) * 1e9
         ave1 = float(meas[idxict1 + self.AVG]) * 1e9
