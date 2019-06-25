@@ -35,11 +35,11 @@ def _attribute_access_security_group(server, db):
 class _Driver(Driver):
     NAME = 0
     CURR = 1
-    AVG = 2
-    MIN = 3
-    MAX = 4
-    STD = 6
-    COUNT = 7
+    AVG = 4
+    MIN = 2
+    MAX = 3
+    STD = 5
+    COUNT = 6
 
     def __init__(self, ip):
         super().__init__()
@@ -62,8 +62,8 @@ class _Driver(Driver):
         tini = _time.time()
         try:
             self._update()
-        except:
-            _log.error('Problem reading data!!')
+        except Exception as err:
+            _log.error('Problem reading data: ' + str(err))
             pass
         dtim = _time.time() - tini
         if dtim <= interval:
@@ -72,20 +72,21 @@ class _Driver(Driver):
     def _update(self):
         meas = self.osc_socket.query(":MEASure:RESults?")
         meas = meas.split(',')
+        # print('\n'.join(meas))
         idxict1 = [i for i, val in enumerate(meas) if 'ICT1' in val].pop()
-        chg1 = float(meas[idxict1 + self.CURR])
-        ave1 = float(meas[idxict1 + self.AVG])
-        min1 = float(meas[idxict1 + self.MIN])
-        max1 = float(meas[idxict1 + self.MAX])
-        std1 = float(meas[idxict1 + self.STD])
-        cnt1 = float(meas[idxict1 + self.COUNT])
+        chg1 = float(meas[idxict1 + self.CURR]) * 1e9
+        ave1 = float(meas[idxict1 + self.AVG]) * 1e9
+        min1 = float(meas[idxict1 + self.MIN]) * 1e9
+        max1 = float(meas[idxict1 + self.MAX]) * 1e9
+        std1 = float(meas[idxict1 + self.STD]) * 1e9
+        cnt1 = int(float(meas[idxict1 + self.COUNT]))
         idxict2 = [i for i, val in enumerate(meas) if 'ICT2' in val].pop()
-        chg2 = float(meas[idxict2 + self.CURR])
-        ave2 = float(meas[idxict2 + self.AVG])
-        min2 = float(meas[idxict2 + self.MIN])
-        max2 = float(meas[idxict2 + self.MAX])
-        std2 = float(meas[idxict2 + self.STD])
-        cnt2 = float(meas[idxict2 + self.COUNT])
+        chg2 = float(meas[idxict2 + self.CURR]) * 1e9
+        ave2 = float(meas[idxict2 + self.AVG]) * 1e9
+        min2 = float(meas[idxict2 + self.MIN]) * 1e9
+        max2 = float(meas[idxict2 + self.MAX]) * 1e9
+        std2 = float(meas[idxict2 + self.STD]) * 1e9
+        cnt2 = int(float(meas[idxict2 + self.COUNT]))
 
         eff = 100 * chg2/chg1
         effave = 100 * ave2/ave1
