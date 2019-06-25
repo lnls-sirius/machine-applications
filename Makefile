@@ -62,6 +62,5 @@ install-services:
 	cd as-ma; cd systemd; sudo make install-services
 	cd as-ti-control; cd systemd; sudo make install-services
 	cd as-ap-sofb; cd systemd; sudo make install-services
-	sudo systemctl daemon-reload
 	cd li-di-charge; cd systemd; sudo make install-services
 	sudo systemctl daemon-reload
