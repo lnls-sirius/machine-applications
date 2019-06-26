@@ -105,8 +105,9 @@ class _Driver(Driver):
         self.setParam('LI-01:DI-ICT-2:ChargeMax-Mon', max2)
         self.setParam('LI-01:DI-ICT-2:ChargeStd-Mon', std2)
         self.setParam('LI-01:DI-ICT-2:PulseCount-Mon', cnt2)
-        self.setParam('LI-Glob:AP-TranspEff:Eff-Mon', eff)
-        self.setParam('LI-Glob:AP-TranspEff:EffAvg-Mon', effave)
+        if chg1 > 0.05:
+            self.setParam('LI-Glob:AP-TranspEff:Eff-Mon', eff)
+            self.setParam('LI-Glob:AP-TranspEff:EffAvg-Mon', effave)
         self.updatePVs()
 
     @staticmethod
