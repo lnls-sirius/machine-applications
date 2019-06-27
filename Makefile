@@ -39,6 +39,7 @@ install:
 	cd as-ma; sudo ./setup.py install; cd systemd; sudo make install-services
 	cd as-ti-control; sudo ./setup.py install; cd systemd; sudo make install-services
 	cd as-ap-sofb; sudo ./setup.py install; cd systemd; sudo make install-services
+	cd li-di-charge; sudo ./setup.py install; cd systemd; sudo make install-services
 	sudo systemctl daemon-reload
 
 install-scripts:
@@ -50,6 +51,7 @@ install-scripts:
 	cd as-ap-opticscorr; sudo ./setup.py install
 	cd as-ap-posang; sudo ./setup.py install
 	cd as-ap-currinfo; sudo ./setup.py install
+	cd li-di-charge; sudo ./setup.py install
 
 install-services:
 	cd as-ap-currinfo; cd systemd; sudo make install-services
@@ -60,4 +62,5 @@ install-services:
 	cd as-ma; cd systemd; sudo make install-services
 	cd as-ti-control; cd systemd; sudo make install-services
 	cd as-ap-sofb; cd systemd; sudo make install-services
+	cd li-di-charge; cd systemd; sudo make install-services
 	sudo systemctl daemon-reload
