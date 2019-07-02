@@ -196,6 +196,7 @@ def run(debug=False):
     while not stop_event.is_set():
         driver.process(INTERVAL)
 
+    driver.osc_socket.close()
     _log.info('Stoping Server Thread...')
     # send stop signal to server thread
     server_thread.stop()
