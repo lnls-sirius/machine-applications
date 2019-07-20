@@ -82,7 +82,7 @@ class _PCASDriver(_pcaspy.Driver):
         return self.app.write(reason, value)
 
 
-def run(bbbnames, simulate=False):
+def run(bbbnames, simulate=False, eth=False):
     """Run function.
 
     This is the main function of the IOC:
@@ -111,12 +111,9 @@ def run(bbbnames, simulate=False):
     bbblist = list()
     dbset = dict()
     for bbbname in bbbnames:
-        bbb, db = BBBFactory.create(bbbname=bbbname, simulate=simulate)
-        # bbb = _BeagleBone(bbbname, simulate)
+        bbb, db = BBBFactory.create(bbbname=bbbname, simulate=simulate, eth=eth)
         bbblist.append(bbb)
         dbset.update(db)
-        # for psname in bbb.psnames:
-        #     devlist.append(bbb[psname])
     # What if serial is not running?
     # devlist = get_devices(bbblist, simulate=simulate)
     # dbset = get_database_set(bbblist)
@@ -125,8 +122,6 @@ def run(bbbnames, simulate=False):
     if _is_running(dbset):
         print('Another PS IOC is already running!')
         return
-
-    # TODO: discuss with guilherme the need of all these threads
 
     # Create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
