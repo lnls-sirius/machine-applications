@@ -82,7 +82,7 @@ class _PCASDriver(_pcaspy.Driver):
         return self.app.write(reason, value)
 
 
-def run(bbbnames, simulate=False):
+def run(bbbnames, simulate=False, eth=False):
     """Run function.
 
     This is the main function of the IOC:
@@ -104,7 +104,7 @@ def run(bbbnames, simulate=False):
     bbblist = list()
     dbset = dict()
     for bbbname in bbbnames:
-        bbb, db = BBBFactory.create(bbbname=bbbname, simulate=simulate)
+        bbb, db = BBBFactory.create(bbbname=bbbname, simulate=simulate, eth=eth)
         bbblist.append(bbb)
         dbset.update(db)
 
