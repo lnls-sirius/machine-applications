@@ -1,0 +1,14 @@
+[Unit]
+Description=Power Supply IOC - BO Correctors 04
+After=multi-user.target
+
+[Service]
+Group=sirius
+User=sirius
+Type=simple
+WorkingDirectory=/home/sirius/iocs
+StandardOutput=syslog
+StandardError=syslog
+ExecStartPre=/bin/bash --login -c 'env > /tmp/bashrc-sirius-ioc-bo-ps-correctors-04'
+EnvironmentFile=-/tmp/bashrc-sirius-ioc-bo-ps-correctors-04
+ExecStart=/usr/local/bin/sirius-ioc-as-ps.py --eth IA-05RaCtrl:CO-PSCtrl-BO
