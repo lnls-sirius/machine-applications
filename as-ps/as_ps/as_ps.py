@@ -87,17 +87,10 @@ def run(bbbnames, simulate=False, eth=False):
 
     This is the main function of the IOC:
     1. It first builds a list of all required beaglebone objets
-    2. It Builds a list of all power supply devices.
-    3. Checks if another instance of the IOC is already running
-    4. Initializes epics DB with the set of IOC databases
-    5. Creates a Driver to handle requests
-    6. Starts a thread (thread_server) that listens to client connections
-    6. Creates a thread (thread_scan) to enqueue read requests to update DB
-
-    Three methods in App are running within concurrent threads:
-        App.proccess: process all read and write requests in queue
-        App.enqueu_scan: enqueue read requests to update DB
-        App.write: enqueue write requests.
+    2. Checks if another instance of the IOC is already running
+    3. Initializes epics DB with the set of IOC databases
+    4. Creates a Driver to handle requests
+    5. Starts a thread (thread_server) that listens to client connections
     """
     global pcas_driver
 
@@ -114,10 +107,9 @@ def run(bbbnames, simulate=False, eth=False):
         bbb, db = BBBFactory.create(bbbname=bbbname, simulate=simulate, eth=eth)
         bbblist.append(bbb)
         dbset.update(db)
-    # What if serial is not running?
-    # devlist = get_devices(bbblist, simulate=simulate)
-    # dbset = get_database_set(bbblist)
+
     dbset = {_PREFIX: dbset}
+
     # Check if IOC is already running
     if _is_running(dbset):
         print('Another PS IOC is already running!')
@@ -134,12 +126,8 @@ def run(bbbnames, simulate=False, eth=False):
     # Create a new thread responsible for listening for client connections
     thread_server = _pcaspy_tools.ServerThread(server)
 
-    # Create scan thread that'll enqueue read request to update DB
-    # thread_scan = _Thread(target=pcas_driver.app.enqueue_scan, daemon=True)
-
     # Start threads and processing
     thread_server.start()
-    # thread_scan.start()
 
     # Main loop - run app.proccess
     while not stop_event:
@@ -153,6 +141,4 @@ def run(bbbnames, simulate=False, eth=False):
     # Signal received, exit
     print('exiting...')
     thread_server.stop()
-    # pcas_driver.app.scan = False
     thread_server.join()
-    # thread_scan.join()
