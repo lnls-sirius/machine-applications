@@ -1,5 +1,5 @@
 [Unit]
-Description=Power Supply IOC - BO Correctors 02
+Description=Power Supply IOC - BO Correctors - IA02
 After=multi-user.target
 
 [Service]

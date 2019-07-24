@@ -1,5 +1,5 @@
 [Unit]
-Description=Power Supply IOC - BO Correctors 11
+Description=Power Supply IOC - BO Correctors - IA11
 After=multi-user.target
 
 [Service]
@@ -11,4 +11,4 @@ StandardOutput=syslog
 StandardError=syslog
 ExecStartPre=/bin/bash --login -c 'env > /tmp/bashrc-sirius-ioc-bo-ps-correctors-11'
 EnvironmentFile=-/tmp/bashrc-sirius-ioc-bo-ps-correctors-11
-ExecStart=/usr/local/bin/sirius-ioc-as-ps.py --eth IA-16RaCtrl:CO-PSCtrl-BO
+ExecStart=/usr/local/bin/sirius-ioc-as-ps.py --eth IA-11RaCtrl:CO-PSCtrl-BO
