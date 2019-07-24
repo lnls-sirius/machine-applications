@@ -24,6 +24,20 @@ install-services:
 	cp -rf sirius-ioc-bo-ps-correctors-11.service /etc/systemd/system/
 	cp -rf sirius-ioc-bo-ps-correctors-12.service /etc/systemd/system/
 	cp -rf sirius-ioc-bo-ps-correctors-13.service /etc/systemd/system/
+	cp -rf sirius-ioc-as-ps-dclink-tbts.service /etc/systemd/system/
+	cp -rf sirius-ioc-as-ps-dclink-ia01.service /etc/systemd/system/
+	cp -rf sirius-ioc-as-ps-dclink-ia02.service /etc/systemd/system/
+	cp -rf sirius-ioc-as-ps-dclink-ia03.service /etc/systemd/system/
+	cp -rf sirius-ioc-as-ps-dclink-ia04.service /etc/systemd/system/
+	cp -rf sirius-ioc-as-ps-dclink-ia05.service /etc/systemd/system/
+	cp -rf sirius-ioc-as-ps-dclink-ia06.service /etc/systemd/system/
+	cp -rf sirius-ioc-as-ps-dclink-ia07.service /etc/systemd/system/
+	cp -rf sirius-ioc-as-ps-dclink-ia08.service /etc/systemd/system/
+	cp -rf sirius-ioc-as-ps-dclink-ia09.service /etc/systemd/system/
+	cp -rf sirius-ioc-as-ps-dclink-ia10.service /etc/systemd/system/
+	cp -rf sirius-ioc-as-ps-dclink-ia11.service /etc/systemd/system/
+	cp -rf sirius-ioc-as-ps-dclink-ia12.service /etc/systemd/system/
+	cp -rf sirius-ioc-as-ps-dclink-ia13.service /etc/systemd/system/
 	systemctl daemon-reload
 
 stop:
@@ -51,6 +65,20 @@ stop:
 	systemctl stop sirius-ioc-bo-ps-correctors-11.service
 	systemctl stop sirius-ioc-bo-ps-correctors-12.service
 	systemctl stop sirius-ioc-bo-ps-correctors-13.service
+	systemctl stop sirius-ioc-as-ps-dclink-tbts.service
+	systemctl stop sirius-ioc-as-ps-dclink-ia01.service
+	systemctl stop sirius-ioc-as-ps-dclink-ia02.service
+	systemctl stop sirius-ioc-as-ps-dclink-ia03.service
+	systemctl stop sirius-ioc-as-ps-dclink-ia04.service
+	systemctl stop sirius-ioc-as-ps-dclink-ia05.service
+	systemctl stop sirius-ioc-as-ps-dclink-ia06.service
+	systemctl stop sirius-ioc-as-ps-dclink-ia07.service
+	systemctl stop sirius-ioc-as-ps-dclink-ia08.service
+	systemctl stop sirius-ioc-as-ps-dclink-ia09.service
+	systemctl stop sirius-ioc-as-ps-dclink-ia10.service
+	systemctl stop sirius-ioc-as-ps-dclink-ia11.service
+	systemctl stop sirius-ioc-as-ps-dclink-ia12.service
+	systemctl stop sirius-ioc-as-ps-dclink-ia13.service
 
 start:
 	@printf "Starting sirius-bbb-ioc-ps...\n"
@@ -77,20 +105,34 @@ start:
 	systemctl start sirius-ioc-bo-ps-correctors-11.service
 	systemctl start sirius-ioc-bo-ps-correctors-12.service
 	systemctl start sirius-ioc-bo-ps-correctors-13.service
+	systemctl start sirius-ioc-as-ps-dclink-tbts.service
+	systemctl start sirius-ioc-as-ps-dclink-ia01.service
+	systemctl start sirius-ioc-as-ps-dclink-ia02.service
+	systemctl start sirius-ioc-as-ps-dclink-ia03.service
+	systemctl start sirius-ioc-as-ps-dclink-ia04.service
+	systemctl start sirius-ioc-as-ps-dclink-ia05.service
+	systemctl start sirius-ioc-as-ps-dclink-ia06.service
+	systemctl start sirius-ioc-as-ps-dclink-ia07.service
+	systemctl start sirius-ioc-as-ps-dclink-ia08.service
+	systemctl start sirius-ioc-as-ps-dclink-ia09.service
+	systemctl start sirius-ioc-as-ps-dclink-ia10.service
+	systemctl start sirius-ioc-as-ps-dclink-ia11.service
+	systemctl start sirius-ioc-as-ps-dclink-ia12.service
+	systemctl start sirius-ioc-as-ps-dclink-ia13.service
 
 uninstall: stop
 	@printf "Uninstalling sirius-bbb-ioc-ps...\n"
 	systemctl disable sirius-bbb-ioc-ps.service
 	rm -rf /etc/systemd/system/sirius-bbb-ioc-ps.service
-	rm -rf /etc/system/system/sirius-ioc-tb-ps-dipoles.service
-	rm -rf /etc/system/system/sirius-ioc-tb-ps-quadrupoles.service
-	rm -rf /etc/system/system/sirius-ioc-tb-ps-correctors.service
-	rm -rf /etc/system/system/sirius-ioc-bo-ps-dipole-1.service
-	rm -rf /etc/system/system/sirius-ioc-bo-ps-dipole-2.service
-	rm -rf /etc/system/system/sirius-ioc-bo-ps-quadrupole-qf.service
-	rm -rf /etc/system/system/sirius-ioc-bo-ps-quadrupole-qd.service
-	rm -rf /etc/system/system/sirius-ioc-bo-ps-sextupole-sf.service
-	rm -rf /etc/system/system/sirius-ioc-bo-ps-sextupole-sd.service
+	rm -rf /etc/systemd/system/sirius-ioc-tb-ps-dipoles.service
+	rm -rf /etc/systemd/system/sirius-ioc-tb-ps-quadrupoles.service
+	rm -rf /etc/systemd/system/sirius-ioc-tb-ps-correctors.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-dipole-1.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-dipole-2.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-quadrupole-qf.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-quadrupole-qd.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-sextupole-sf.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-sextupole-sd.service
 	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-01.service
 	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-02.service
 	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-03.service
@@ -104,5 +146,19 @@ uninstall: stop
 	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-11.service
 	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-12.service
 	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-13.service
+	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-tbts.service
+	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia01.service
+	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia02.service
+	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia03.service
+	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia04.service
+	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia05.service
+	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia06.service
+	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia07.service
+	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia08.service
+	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia09.service
+	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia10.service
+	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia11.service
+	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia12.service
+	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia13.service
 	systemctl daemon-reload
 	systemctl reset-failed
