@@ -11,19 +11,19 @@ install-services:
 	cp -rf sirius-ioc-bo-ps-quadrupole-qd.service /etc/systemd/system/
 	cp -rf sirius-ioc-bo-ps-sextupole-sf.service /etc/systemd/system/
 	cp -rf sirius-ioc-bo-ps-sextupole-sd.service /etc/systemd/system/
-	cp -rf sirius-ioc-bo-ps-correctors-01.service /etc/systemd/system/
-	cp -rf sirius-ioc-bo-ps-correctors-02.service /etc/systemd/system/
-	cp -rf sirius-ioc-bo-ps-correctors-04.service /etc/systemd/system/
-	cp -rf sirius-ioc-bo-ps-correctors-05.service /etc/systemd/system/
-	cp -rf sirius-ioc-bo-ps-correctors-07.service /etc/systemd/system/
-	cp -rf sirius-ioc-bo-ps-correctors-08.service /etc/systemd/system/
-	cp -rf sirius-ioc-bo-ps-correctors-10.service /etc/systemd/system/
-	cp -rf sirius-ioc-bo-ps-correctors-11.service /etc/systemd/system/
-	cp -rf sirius-ioc-bo-ps-correctors-13.service /etc/systemd/system/
-	cp -rf sirius-ioc-bo-ps-correctors-14.service /etc/systemd/system/
-	cp -rf sirius-ioc-bo-ps-correctors-16.service /etc/systemd/system/
-	cp -rf sirius-ioc-bo-ps-correctors-17.service /etc/systemd/system/
-	cp -rf sirius-ioc-bo-ps-correctors-20.service /etc/systemd/system/
+	cp -rf sirius-ioc-bo-ps-correctors-ia01.service /etc/systemd/system/
+	cp -rf sirius-ioc-bo-ps-correctors-ia02.service /etc/systemd/system/
+	cp -rf sirius-ioc-bo-ps-correctors-ia04.service /etc/systemd/system/
+	cp -rf sirius-ioc-bo-ps-correctors-ia05.service /etc/systemd/system/
+	cp -rf sirius-ioc-bo-ps-correctors-ia07.service /etc/systemd/system/
+	cp -rf sirius-ioc-bo-ps-correctors-ia08.service /etc/systemd/system/
+	cp -rf sirius-ioc-bo-ps-correctors-ia10.service /etc/systemd/system/
+	cp -rf sirius-ioc-bo-ps-correctors-ia11.service /etc/systemd/system/
+	cp -rf sirius-ioc-bo-ps-correctors-ia13.service /etc/systemd/system/
+	cp -rf sirius-ioc-bo-ps-correctors-ia14.service /etc/systemd/system/
+	cp -rf sirius-ioc-bo-ps-correctors-ia16.service /etc/systemd/system/
+	cp -rf sirius-ioc-bo-ps-correctors-ia17.service /etc/systemd/system/
+	cp -rf sirius-ioc-bo-ps-correctors-ia20.service /etc/systemd/system/
 	cp -rf sirius-ioc-as-ps-dclink-tbts.service /etc/systemd/system/
 	cp -rf sirius-ioc-as-ps-dclink-ia01.service /etc/systemd/system/
 	cp -rf sirius-ioc-as-ps-dclink-ia02.service /etc/systemd/system/
@@ -52,19 +52,19 @@ stop:
 	systemctl stop sirius-ioc-bo-ps-quadrupole-qd.service
 	systemctl stop sirius-ioc-bo-ps-sextupole-sf.service
 	systemctl stop sirius-ioc-bo-ps-sextupole-sd.service
-	systemctl stop sirius-ioc-bo-ps-correctors-01.service
-	systemctl stop sirius-ioc-bo-ps-correctors-02.service
-	systemctl stop sirius-ioc-bo-ps-correctors-04.service
-	systemctl stop sirius-ioc-bo-ps-correctors-05.service
-	systemctl stop sirius-ioc-bo-ps-correctors-07.service
-	systemctl stop sirius-ioc-bo-ps-correctors-08.service
-	systemctl stop sirius-ioc-bo-ps-correctors-10.service
-	systemctl stop sirius-ioc-bo-ps-correctors-11.service
-	systemctl stop sirius-ioc-bo-ps-correctors-13.service
-	systemctl stop sirius-ioc-bo-ps-correctors-14.service
-	systemctl stop sirius-ioc-bo-ps-correctors-16.service
-	systemctl stop sirius-ioc-bo-ps-correctors-17.service
-	systemctl stop sirius-ioc-bo-ps-correctors-20.service
+	systemctl stop sirius-ioc-bo-ps-correctors-ia01.service
+	systemctl stop sirius-ioc-bo-ps-correctors-ia02.service
+	systemctl stop sirius-ioc-bo-ps-correctors-ia04.service
+	systemctl stop sirius-ioc-bo-ps-correctors-ia05.service
+	systemctl stop sirius-ioc-bo-ps-correctors-ia07.service
+	systemctl stop sirius-ioc-bo-ps-correctors-ia08.service
+	systemctl stop sirius-ioc-bo-ps-correctors-ia10.service
+	systemctl stop sirius-ioc-bo-ps-correctors-ia11.service
+	systemctl stop sirius-ioc-bo-ps-correctors-ia13.service
+	systemctl stop sirius-ioc-bo-ps-correctors-ia14.service
+	systemctl stop sirius-ioc-bo-ps-correctors-ia16.service
+	systemctl stop sirius-ioc-bo-ps-correctors-ia17.service
+	systemctl stop sirius-ioc-bo-ps-correctors-ia20.service
 	systemctl stop sirius-ioc-as-ps-dclink-tbts.service
 	systemctl stop sirius-ioc-as-ps-dclink-ia01.service
 	systemctl stop sirius-ioc-as-ps-dclink-ia02.service
@@ -92,19 +92,19 @@ start:
 	systemctl start sirius-ioc-bo-ps-quadrupole-qd.service
 	systemctl start sirius-ioc-bo-ps-sextupole-sf.service
 	systemctl start sirius-ioc-bo-ps-sextupole-sd.service
-	systemctl start sirius-ioc-bo-ps-correctors-01.service
-	systemctl start sirius-ioc-bo-ps-correctors-02.service
-	systemctl start sirius-ioc-bo-ps-correctors-04.service
-	systemctl start sirius-ioc-bo-ps-correctors-05.service
-	systemctl start sirius-ioc-bo-ps-correctors-07.service
-	systemctl start sirius-ioc-bo-ps-correctors-08.service
-	systemctl start sirius-ioc-bo-ps-correctors-10.service
-	systemctl start sirius-ioc-bo-ps-correctors-11.service
-	systemctl start sirius-ioc-bo-ps-correctors-13.service
-	systemctl start sirius-ioc-bo-ps-correctors-14.service
-	systemctl start sirius-ioc-bo-ps-correctors-16.service
-	systemctl start sirius-ioc-bo-ps-correctors-17.service
-	systemctl start sirius-ioc-bo-ps-correctors-20.service
+	systemctl start sirius-ioc-bo-ps-correctors-ia01.service
+	systemctl start sirius-ioc-bo-ps-correctors-ia02.service
+	systemctl start sirius-ioc-bo-ps-correctors-ia04.service
+	systemctl start sirius-ioc-bo-ps-correctors-ia05.service
+	systemctl start sirius-ioc-bo-ps-correctors-ia07.service
+	systemctl start sirius-ioc-bo-ps-correctors-ia08.service
+	systemctl start sirius-ioc-bo-ps-correctors-ia10.service
+	systemctl start sirius-ioc-bo-ps-correctors-ia11.service
+	systemctl start sirius-ioc-bo-ps-correctors-ia13.service
+	systemctl start sirius-ioc-bo-ps-correctors-ia14.service
+	systemctl start sirius-ioc-bo-ps-correctors-ia16.service
+	systemctl start sirius-ioc-bo-ps-correctors-ia17.service
+	systemctl start sirius-ioc-bo-ps-correctors-ia20.service
 	systemctl start sirius-ioc-as-ps-dclink-tbts.service
 	systemctl start sirius-ioc-as-ps-dclink-ia01.service
 	systemctl start sirius-ioc-as-ps-dclink-ia02.service
@@ -133,19 +133,19 @@ uninstall: stop
 	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-quadrupole-qd.service
 	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-sextupole-sf.service
 	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-sextupole-sd.service
-	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-01.service
-	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-02.service
-	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-04.service
-	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-05.service
-	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-07.service
-	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-08.service
-	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-10.service
-	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-11.service
-	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-13.service
-	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-14.service
-	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-16.service
-	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-17.service
-	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-20.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia01.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia02.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia04.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia05.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia07.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia08.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia10.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia11.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia13.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia14.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia16.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia17.service
+	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia20.service
 	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-tbts.service
 	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia01.service
 	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia02.service
