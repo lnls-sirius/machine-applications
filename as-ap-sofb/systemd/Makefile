@@ -12,11 +12,11 @@ install-services:
 	  cp -rf $$ser /etc/systemd/system/ ; \
 	done
 	systemctl daemon-reload
-	mkdir -p /home/sirius/iocs/si-ap-sofb/data
-	mkdir -p /home/sirius/iocs/bo-ap-sofb/data
-	mkdir -p /home/sirius/iocs/ts-ap-sofb/data
-	mkdir -p /home/sirius/iocs/tb-ap-sofb/data
-	chown -R sirius.sirius /home/sirius/iocs
+	mkdir -p /home/sirius/iocs-log/si-ap-sofb/data
+	mkdir -p /home/sirius/iocs-log/bo-ap-sofb/data
+	mkdir -p /home/sirius/iocs-log/ts-ap-sofb/data
+	mkdir -p /home/sirius/iocs-log/tb-ap-sofb/data
+	chown -R sirius.sirius /home/sirius/iocs-log
 
 stop-services:
 	@echo " --- stoping services ---"

@@ -2,7 +2,7 @@
 install-tb:
 	@printf "Installing sirius-ioc-tb-ps-diag service...\n"
 	cp -rf sirius-ioc-tb-ps-diag.service /etc/systemd/system/
-	mkdir -p /home/sirius/iocs
+	mkdir -p /home/sirius/iocs-log
 	systemctl daemon-reload
 
 stop-tb:
@@ -24,7 +24,7 @@ uninstall-tb: stop-tb
 install-bo:
 	@printf "Installing sirius-ioc-bo-ps-diag service...\n"
 	cp -rf sirius-ioc-bo-ps-diag.service /etc/systemd/system/
-	mkdir -p /home/sirius/iocs
+	mkdir -p /home/sirius/iocs-log
 	systemctl daemon-reload
 
 stop-bo:
@@ -46,7 +46,7 @@ uninstall-bo: stop-bo
 install-ts:
 	@printf "Installing sirius-ioc-ts-ps-diag service...\n"
 	cp -rf sirius-ioc-ts-ps-diag.service /etc/systemd/system/
-	mkdir -p /home/sirius/iocs
+	mkdir -p /home/sirius/iocs-log
 	systemctl daemon-reload
 
 stop-ts:
@@ -68,7 +68,7 @@ uninstall-ts: stop-ts
 install-si-fam:
 	@printf "Installing sirius-ioc-si-ps-diag-fam service...\n"
 	cp -rf sirius-ioc-si-ps-diag-fam.service /etc/systemd/system/
-	mkdir -p /home/sirius/iocs
+	mkdir -p /home/sirius/iocs-log
 	systemctl daemon-reload
 
 stop-si-fam:
@@ -90,7 +90,7 @@ uninstall-si-fam: stop-si-fam
 install-si-ch:
 	@printf "Installing sirius-ioc-si-ps-diag-ch service...\n"
 	cp -rf sirius-ioc-si-ps-diag-ch.service /etc/systemd/system/
-	mkdir -p /home/sirius/iocs
+	mkdir -p /home/sirius/iocs-log
 	systemctl daemon-reload
 
 stop-si-ch:
@@ -112,7 +112,7 @@ uninstall-si-ch: stop-si-ch
 install-si-cv:
 	@printf "Installing sirius-ioc-si-ps-diag-cv service...\n"
 	cp -rf sirius-ioc-si-ps-diag-cv.service /etc/systemd/system/
-	mkdir -p /home/sirius/iocs
+	mkdir -p /home/sirius/iocs-log
 	systemctl daemon-reload
 
 stop-si-cv:
@@ -134,7 +134,7 @@ uninstall-si-cv: stop-si-cv
 install-si-qs:
 	@printf "Installing sirius-ioc-si-ps-diag-qs service...\n"
 	cp -rf sirius-ioc-si-ps-diag-qs.service /etc/systemd/system/
-	mkdir -p /home/sirius/iocs
+	mkdir -p /home/sirius/iocs-log
 	systemctl daemon-reload
 
 stop-si-qs:
@@ -156,7 +156,7 @@ uninstall-si-qs: stop-si-qs
 install-si-trim-01:
 	@printf "Installing sirius-ioc-si-ps-diag-trim-01 service...\n"
 	cp -rf sirius-ioc-si-ps-diag-trim-01.service /etc/systemd/system/
-	mkdir -p /home/sirius/iocs
+	mkdir -p /home/sirius/iocs-log
 	systemctl daemon-reload
 
 stop-si-trim-01:
@@ -178,7 +178,7 @@ uninstall-si-trim-01: stop-si-trim-01
 install-si-trim-02:
 	@printf "Installing sirius-ioc-si-ps-diag-trim-02 service...\n"
 	cp -rf sirius-ioc-si-ps-diag-trim-02.service /etc/systemd/system/
-	mkdir -p /home/sirius/iocs
+	mkdir -p /home/sirius/iocs-log
 	systemctl daemon-reload
 
 stop-si-trim-02:
@@ -200,7 +200,7 @@ uninstall-si-trim-02: stop-si-trim-02
 install-si-fc:
 	@printf "Installing sirius-ioc-si-ps-diag-fc service...\n"
 	cp -rf sirius-ioc-si-ps-diag-fc.service /etc/systemd/system/
-	mkdir -p /home/sirius/iocs
+	mkdir -p /home/sirius/iocs-log
 	systemctl daemon-reload
 
 stop-si-fc:

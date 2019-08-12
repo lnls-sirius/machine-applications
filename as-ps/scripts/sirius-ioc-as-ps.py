@@ -52,6 +52,7 @@ def main():
     else:
         args = [arg for arg in sys.argv[1:]]
         simulate = False
+        eth = False
         if '--simul' in args:
             simulate = True
             args.remove('--simul')
@@ -62,8 +63,14 @@ def main():
             hostname = socket.gethostname()
             bbbname = hostname.replace('--', ':')
             args = [bbbname, ]
+        if '--eth' in args:
+            eth = True
+            args.remove('--eth')
+        if eth and simulate:
+            print('Simulation using ethernet PRUserial485 is not implemented!')
+            return
         if args:
-            ioc_module.run(args, simulate=simulate)
+            ioc_module.run(args, simulate=simulate, eth=eth)
 
 
 if __name__ == "__main__":

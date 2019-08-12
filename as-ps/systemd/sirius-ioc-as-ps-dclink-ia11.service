@@ -1,0 +1,14 @@
+[Unit]
+Description=Power Supply IOC - DCLinks - Instrumentation Area 11
+After=multi-user.target
+
+[Service]
+Group=sirius
+User=sirius
+Type=simple
+WorkingDirectory=/home/sirius/iocs-log
+StandardOutput=syslog
+StandardError=syslog
+ExecStartPre=/bin/bash --login -c 'env > /home/sirius/iocs-log/env-sirius-ioc-as-ps-dclink-ia11'
+EnvironmentFile=-/home/sirius/iocs-log/env-sirius-ioc-as-ps-dclink-ia11
+ExecStart=/usr/local/bin/sirius-ioc-as-ps.py --eth IA-11RaCtrl:CO-DCLinkCtrl

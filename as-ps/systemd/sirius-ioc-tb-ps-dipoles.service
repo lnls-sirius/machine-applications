@@ -1,0 +1,14 @@
+[Unit]
+Description=Power Supply IOC - TB Dipoles
+After=multi-user.target
+
+[Service]
+Group=sirius
+User=sirius
+Type=simple
+WorkingDirectory=/home/sirius/iocs-log
+StandardOutput=syslog
+StandardError=syslog
+ExecStartPre=/bin/bash --login -c 'env > /home/sirius/iocs-log/env-sirius-ioc-tb-ps-dipoles'
+EnvironmentFile=-/home/sirius/iocs-log/env-sirius-ioc-tb-ps-dipoles
+ExecStart=/usr/local/bin/sirius-ioc-as-ps.py --eth LA-RaPS02:CO-PSCtrl-TB
