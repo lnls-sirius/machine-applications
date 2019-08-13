@@ -33,8 +33,7 @@ install-services-ioc-ps: preparation
 	cp -rf sirius-ioc-bo-ps-correctors-ia16.service /etc/systemd/system/
 	cp -rf sirius-ioc-bo-ps-correctors-ia17.service /etc/systemd/system/
 	cp -rf sirius-ioc-bo-ps-correctors-ia20.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-dipole-1.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-dipole-2.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-dipoles.service /etc/systemd/system/
 	cp -rf sirius-ioc-as-ps-dclink-tbts.service /etc/systemd/system/
 	cp -rf sirius-ioc-as-ps-dclink-ia01.service /etc/systemd/system/
 	cp -rf sirius-ioc-as-ps-dclink-ia02.service /etc/systemd/system/
@@ -77,8 +76,7 @@ stop:
 	systemctl stop sirius-ioc-bo-ps-correctors-ia16.service
 	systemctl stop sirius-ioc-bo-ps-correctors-ia17.service
 	systemctl stop sirius-ioc-bo-ps-correctors-ia20.service
-	systemctl stop sirius-ioc-si-ps-dipole-1.service
-	systemctl stop sirius-ioc-si-ps-dipole-2.service
+	systemctl stop sirius-ioc-si-ps-dipoles.service
 	systemctl stop sirius-ioc-as-ps-dclink-tbts.service
 	systemctl stop sirius-ioc-as-ps-dclink-ia01.service
 	systemctl stop sirius-ioc-as-ps-dclink-ia02.service
@@ -122,8 +120,7 @@ start-ioc-ps: preparation
 	systemctl start sirius-ioc-bo-ps-correctors-ia16.service
 	systemctl start sirius-ioc-bo-ps-correctors-ia17.service
 	systemctl start sirius-ioc-bo-ps-correctors-ia20.service
-	systemctl start sirius-ioc-si-ps-dipole-1.service
-	systemctl start sirius-ioc-si-ps-dipole-2.service
+	systemctl start sirius-ioc-si-ps-dipoles.service
 	systemctl start sirius-ioc-as-ps-dclink-tbts.service
 	systemctl start sirius-ioc-as-ps-dclink-ia01.service
 	systemctl start sirius-ioc-as-ps-dclink-ia02.service
@@ -167,8 +164,7 @@ disable:
 	systemctl disable sirius-ioc-bo-ps-correctors-ia16.service
 	systemctl disable sirius-ioc-bo-ps-correctors-ia17.service
 	systemctl disable sirius-ioc-bo-ps-correctors-ia20.service
-	systemctl disable sirius-ioc-si-ps-dipole-1.service
-	systemctl disable sirius-ioc-si-ps-dipole-2.service
+	systemctl disable sirius-ioc-si-ps-dipoles.service
 	systemctl disable sirius-ioc-as-ps-dclink-tbts.service
 	systemctl disable sirius-ioc-as-ps-dclink-ia01.service
 	systemctl disable sirius-ioc-as-ps-dclink-ia02.service
@@ -209,8 +205,7 @@ uninstall: stop disable
 	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia16.service
 	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia17.service
 	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia20.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-dipole-1.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-dipole-2.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-dipoles.service
 	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-tbts.service
 	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia01.service
 	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia02.service
