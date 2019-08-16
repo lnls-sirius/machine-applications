@@ -33,6 +33,10 @@ install-services-ioc-ps: preparation
 	cp -rf sirius-ioc-bo-ps-correctors-ia16.service /etc/systemd/system/
 	cp -rf sirius-ioc-bo-ps-correctors-ia17.service /etc/systemd/system/
 	cp -rf sirius-ioc-bo-ps-correctors-ia20.service /etc/systemd/system/
+	cp -rf sirius-ioc-ts-ps-dipoles.service /etc/systemd/system/
+	cp -rf sirius-ioc-ts-ps-quadrupoles-12.service /etc/systemd/system/
+	cp -rf sirius-ioc-ts-ps-quadrupoles-34.service /etc/systemd/system/
+	cp -rf sirius-ioc-ts-ps-correctors.service /etc/systemd/system/
 	cp -rf sirius-ioc-si-ps-dipoles.service /etc/systemd/system/
 	cp -rf sirius-ioc-si-ps-quadrupoles-qf.service /etc/systemd/system/
 	cp -rf sirius-ioc-si-ps-quadrupoles-qd1.service /etc/systemd/system/
@@ -80,6 +84,10 @@ stop:
 	systemctl stop sirius-ioc-bo-ps-correctors-ia16.service
 	systemctl stop sirius-ioc-bo-ps-correctors-ia17.service
 	systemctl stop sirius-ioc-bo-ps-correctors-ia20.service
+	systemctl stop sirius-ioc-ts-ps-dipoles.service
+	systemctl stop sirius-ioc-ts-ps-quadrupoles-12.service
+	systemctl stop sirius-ioc-ts-ps-quadrupoles-34.service
+	systemctl stop sirius-ioc-ts-ps-correctors.service
 	systemctl stop sirius-ioc-si-ps-dipoles.service
 	systemctl stop sirius-ioc-si-ps-quadrupoles-qf.service
 	systemctl stop sirius-ioc-si-ps-quadrupoles-qd1.service
@@ -128,6 +136,10 @@ start-ioc-ps: preparation
 	systemctl start sirius-ioc-bo-ps-correctors-ia16.service
 	systemctl start sirius-ioc-bo-ps-correctors-ia17.service
 	systemctl start sirius-ioc-bo-ps-correctors-ia20.service
+	systemctl start sirius-ioc-ts-ps-dipoles.service
+	systemctl start sirius-ioc-ts-ps-quadrupoles-12.service
+	systemctl start sirius-ioc-ts-ps-quadrupoles-34.service
+	systemctl start sirius-ioc-ts-ps-correctors.service
 	systemctl start sirius-ioc-si-ps-dipoles.service
 	systemctl start sirius-ioc-si-ps-quadrupoles-qf.service
 	systemctl start sirius-ioc-si-ps-quadrupoles-qd1.service
@@ -176,6 +188,10 @@ disable:
 	systemctl disable sirius-ioc-bo-ps-correctors-ia16.service
 	systemctl disable sirius-ioc-bo-ps-correctors-ia17.service
 	systemctl disable sirius-ioc-bo-ps-correctors-ia20.service
+	systemctl disable sirius-ioc-ts-ps-dipoles.service
+	systemctl disable sirius-ioc-ts-ps-quadrupoles-12.service
+	systemctl disable sirius-ioc-ts-ps-quadrupoles-34.service
+	systemctl disable sirius-ioc-ts-ps-correctors.service
 	systemctl disable sirius-ioc-si-ps-dipoles.service
 	systemctl disable sirius-ioc-si-ps-quadrupoles-qf.service
 	systemctl disable sirius-ioc-si-ps-quadrupoles-qd1.service
@@ -221,6 +237,10 @@ uninstall: stop disable
 	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia16.service
 	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia17.service
 	rm -rf /etc/systemd/system/sirius-ioc-bo-ps-correctors-ia20.service
+	rm -rf /etc/systemd/system/sirius-ioc-ts-ps-dipoles.service
+	rm -rf /etc/systemd/system/sirius-ioc-ts-ps-quadrupoles-12.service
+	rm -rf /etc/systemd/system/sirius-ioc-ts-ps-quadrupoles-34.service
+	rm -rf /etc/systemd/system/sirius-ioc-ts-ps-correctors.service
 	rm -rf /etc/systemd/system/sirius-ioc-si-ps-dipoles.service
 	rm -rf /etc/systemd/system/sirius-ioc-si-ps-quadrupoles-qf.service
 	rm -rf /etc/systemd/system/sirius-ioc-si-ps-quadrupoles-qd1.service
