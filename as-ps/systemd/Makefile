@@ -37,6 +37,11 @@ install-services-ioc-ps: preparation
 	cp -rf sirius-ioc-ts-ps-quadrupoles-12.service /etc/systemd/system/
 	cp -rf sirius-ioc-ts-ps-quadrupoles-34.service /etc/systemd/system/
 	cp -rf sirius-ioc-ts-ps-correctors.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-dipoles.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-quadrupoles-qf.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-quadrupoles-qd1.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-quadrupoles-qd2.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-quadrupoles-q.service /etc/systemd/system/
 	cp -rf sirius-ioc-as-ps-dclink-tbts.service /etc/systemd/system/
 	cp -rf sirius-ioc-as-ps-dclink-ia01.service /etc/systemd/system/
 	cp -rf sirius-ioc-as-ps-dclink-ia02.service /etc/systemd/system/
@@ -83,6 +88,11 @@ stop:
 	systemctl stop sirius-ioc-ts-ps-quadrupoles-12.service
 	systemctl stop sirius-ioc-ts-ps-quadrupoles-34.service
 	systemctl stop sirius-ioc-ts-ps-correctors.service
+	systemctl stop sirius-ioc-si-ps-dipoles.service
+	systemctl stop sirius-ioc-si-ps-quadrupoles-qf.service
+	systemctl stop sirius-ioc-si-ps-quadrupoles-qd1.service
+	systemctl stop sirius-ioc-si-ps-quadrupoles-qd2.service
+	systemctl stop sirius-ioc-si-ps-quadrupoles-q.service
 	systemctl stop sirius-ioc-as-ps-dclink-tbts.service
 	systemctl stop sirius-ioc-as-ps-dclink-ia01.service
 	systemctl stop sirius-ioc-as-ps-dclink-ia02.service
@@ -130,6 +140,11 @@ start-ioc-ps: preparation
 	systemctl start sirius-ioc-ts-ps-quadrupoles-12.service
 	systemctl start sirius-ioc-ts-ps-quadrupoles-34.service
 	systemctl start sirius-ioc-ts-ps-correctors.service
+	systemctl start sirius-ioc-si-ps-dipoles.service
+	systemctl start sirius-ioc-si-ps-quadrupoles-qf.service
+	systemctl start sirius-ioc-si-ps-quadrupoles-qd1.service
+	systemctl start sirius-ioc-si-ps-quadrupoles-qd2.service
+	systemctl start sirius-ioc-si-ps-quadrupoles-q.service
 	systemctl start sirius-ioc-as-ps-dclink-tbts.service
 	systemctl start sirius-ioc-as-ps-dclink-ia01.service
 	systemctl start sirius-ioc-as-ps-dclink-ia02.service
@@ -177,6 +192,11 @@ disable:
 	systemctl disable sirius-ioc-ts-ps-quadrupoles-12.service
 	systemctl disable sirius-ioc-ts-ps-quadrupoles-34.service
 	systemctl disable sirius-ioc-ts-ps-correctors.service
+	systemctl disable sirius-ioc-si-ps-dipoles.service
+	systemctl disable sirius-ioc-si-ps-quadrupoles-qf.service
+	systemctl disable sirius-ioc-si-ps-quadrupoles-qd1.service
+	systemctl disable sirius-ioc-si-ps-quadrupoles-qd2.service
+	systemctl disable sirius-ioc-si-ps-quadrupoles-q.service
 	systemctl disable sirius-ioc-as-ps-dclink-tbts.service
 	systemctl disable sirius-ioc-as-ps-dclink-ia01.service
 	systemctl disable sirius-ioc-as-ps-dclink-ia02.service
@@ -221,6 +241,11 @@ uninstall: stop disable
 	rm -rf /etc/systemd/system/sirius-ioc-ts-ps-quadrupoles-12.service
 	rm -rf /etc/systemd/system/sirius-ioc-ts-ps-quadrupoles-34.service
 	rm -rf /etc/systemd/system/sirius-ioc-ts-ps-correctors.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-dipoles.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-quadrupoles-qf.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-quadrupoles-qd1.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-quadrupoles-qd2.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-quadrupoles-q.service
 	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-tbts.service
 	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia01.service
 	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia02.service
