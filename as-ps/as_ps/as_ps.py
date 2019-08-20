@@ -104,9 +104,11 @@ def run(bbbnames, simulate=False, eth=False):
     bbblist = list()
     dbset = dict()
     for bbbname in bbbnames:
-        bbb, db = BBBFactory.create(bbbname=bbbname, simulate=simulate, eth=eth)
+        bbbname = bbbname.replace('--', ':')
+        bbb, dbase = BBBFactory.create(
+            bbbname=bbbname, simulate=simulate, eth=eth)
         bbblist.append(bbb)
-        dbset.update(db)
+        dbset.update(dbase)
 
     dbset = {_PREFIX: dbset}
 
@@ -117,8 +119,8 @@ def run(bbbnames, simulate=False, eth=False):
 
     # Create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
-    for prefix, db in dbset.items():
-        server.createPV(prefix, db)
+    for prefix, dbase in dbset.items():
+        server.createPV(prefix, dbase)
 
     # Create driver to handle requests
     pcas_driver = _PCASDriver(bbblist, dbset)
