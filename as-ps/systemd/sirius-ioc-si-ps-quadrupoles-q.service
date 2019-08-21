@@ -1,0 +1,14 @@
+[Unit]
+Description=Power Supply IOC - SI Quadrupoles Q4 Q3 Q2 Q1
+After=multi-user.target
+
+[Service]
+Group=sirius
+User=sirius
+Type=simple
+WorkingDirectory=/home/sirius/iocs-log
+StandardOutput=syslog
+StandardError=syslog
+ExecStartPre=/bin/bash --login -c 'env > /home/sirius/iocs-log/env-sirius-ioc-si-ps-quadrupoles-q'
+EnvironmentFile=-/home/sirius/iocs-log/env-sirius-ioc-si-ps-quadrupoles-q
+ExecStart=/usr/local/bin/sirius-ioc-as-ps.py --eth PA-RaPSA05:CO-PSCtrl-SI2
