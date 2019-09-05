@@ -1,0 +1,14 @@
+[Unit]
+Description=Power Supply IOC - SI Sextupoles SFP0, SFA0, SDP0, SDA0
+After=multi-user.target
+
+[Service]
+Group=sirius
+User=sirius
+Type=simple
+WorkingDirectory=/home/sirius/iocs-log
+StandardOutput=syslog
+StandardError=syslog
+ExecStartPre=/bin/bash --login -c 'env > /home/sirius/iocs-log/env-sirius-ioc-si-ps-sextupoles-sfa0p0-sda0p0'
+EnvironmentFile=-/home/sirius/iocs-log/env-sirius-ioc-si-ps-sextupoles-sfa0p0-sda0p0
+ExecStart=/usr/local/bin/sirius-ioc-as-ps.py --eth PA-RaPSB02:CO-PSCtrl-SI2
