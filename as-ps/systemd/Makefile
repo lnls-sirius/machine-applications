@@ -42,6 +42,12 @@ install-services-ioc-ps: preparation
 	cp -rf sirius-ioc-si-ps-quadrupoles-qd1.service /etc/systemd/system/
 	cp -rf sirius-ioc-si-ps-quadrupoles-qd2.service /etc/systemd/system/
 	cp -rf sirius-ioc-si-ps-quadrupoles-q.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-sextupoles-sfb0-sdb01.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-sextupoles-sfa0p0-sda0p0.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-sextupoles-sda1b12.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-sextupoles-sfa12-sda3p1.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-sextupoles-sfb12-sdb3.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-sextupoles-sfp12-sdp23.service /etc/systemd/system/
 	cp -rf sirius-ioc-si-ps-correctors-ia01-c2.service /etc/systemd/system/
 	cp -rf sirius-ioc-si-ps-correctors-ia01-c134.service /etc/systemd/system/
 	cp -rf sirius-ioc-si-ps-correctors-ia01-m12.service /etc/systemd/system/
@@ -161,6 +167,12 @@ stop:
 	systemctl stop sirius-ioc-si-ps-quadrupoles-qd1.service
 	systemctl stop sirius-ioc-si-ps-quadrupoles-qd2.service
 	systemctl stop sirius-ioc-si-ps-quadrupoles-q.service
+	systemctl stop sirius-ioc-si-ps-sextupoles-sfb0-sdb01.service
+	systemctl stop sirius-ioc-si-ps-sextupoles-sfa0p0-sda0p0.service
+	systemctl stop sirius-ioc-si-ps-sextupoles-sda1b12.service
+	systemctl stop sirius-ioc-si-ps-sextupoles-sfa12-sda3p1.service
+	systemctl stop sirius-ioc-si-ps-sextupoles-sfb12-sdb3.service
+	systemctl stop sirius-ioc-si-ps-sextupoles-sfp12-sdp23.service
 	systemctl stop sirius-ioc-si-ps-correctors-ia01-c2.service
 	systemctl stop sirius-ioc-si-ps-correctors-ia01-c134.service
 	systemctl stop sirius-ioc-si-ps-correctors-ia01-m12.service
@@ -280,6 +292,12 @@ start-ioc-ps: preparation
 	systemctl start sirius-ioc-si-ps-quadrupoles-qd1.service
 	systemctl start sirius-ioc-si-ps-quadrupoles-qd2.service
 	systemctl start sirius-ioc-si-ps-quadrupoles-q.service
+	systemctl start sirius-ioc-si-ps-sextupoles-sfb0-sdb01.service
+	systemctl start sirius-ioc-si-ps-sextupoles-sfa0p0-sda0p0.service
+	systemctl start sirius-ioc-si-ps-sextupoles-sda1b12.service
+	systemctl start sirius-ioc-si-ps-sextupoles-sfa12-sda3p1.service
+	systemctl start sirius-ioc-si-ps-sextupoles-sfb12-sdb3.service
+	systemctl start sirius-ioc-si-ps-sextupoles-sfp12-sdp23.service
 	systemctl start sirius-ioc-si-ps-correctors-ia01-c2.service
 	systemctl start sirius-ioc-si-ps-correctors-ia01-c134.service
 	systemctl start sirius-ioc-si-ps-correctors-ia01-m12.service
@@ -398,6 +416,12 @@ disable:
 	systemctl disable sirius-ioc-si-ps-quadrupoles-qd1.service
 	systemctl disable sirius-ioc-si-ps-quadrupoles-qd2.service
 	systemctl disable sirius-ioc-si-ps-quadrupoles-q.service
+	systemctl disable sirius-ioc-si-ps-sextupoles-sfb0-sdb01.service
+	systemctl disable sirius-ioc-si-ps-sextupoles-sfa0p0-sda0p0.service
+	systemctl disable sirius-ioc-si-ps-sextupoles-sda1b12.service
+	systemctl disable sirius-ioc-si-ps-sextupoles-sfa12-sda3p1.service
+	systemctl disable sirius-ioc-si-ps-sextupoles-sfb12-sdb3.service
+	systemctl disable sirius-ioc-si-ps-sextupoles-sfp12-sdp23.service
 	systemctl disable sirius-ioc-si-ps-correctors-ia01-c2.service
 	systemctl disable sirius-ioc-si-ps-correctors-ia01-c134.service
 	systemctl disable sirius-ioc-si-ps-correctors-ia01-m12.service
@@ -514,6 +538,12 @@ uninstall: stop disable
 	rm -rf /etc/systemd/system/sirius-ioc-si-ps-quadrupoles-qd1.service
 	rm -rf /etc/systemd/system/sirius-ioc-si-ps-quadrupoles-qd2.service
 	rm -rf /etc/systemd/system/sirius-ioc-si-ps-quadrupoles-q.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-sextupoles-sfb0-sdb01.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-sextupoles-sfa0p0-sda0p0.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-sextupoles-sda1b12.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-sextupoles-sfa12-sda3p1.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-sextupoles-sfb12-sdb3.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-sextupoles-sfp12-sdp23.service
 	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia01-c2.service
 	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia01-c134.service
 	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia01-m12.service
