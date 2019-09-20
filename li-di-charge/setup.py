@@ -5,6 +5,9 @@ from setuptools import setup
 with open('VERSION', 'r') as _f:
     __version__ = _f.read().strip()
 
+with open('requirements.txt', 'r') as _f:
+    _requirements = _f.read().strip().split('\n')
+
 setup(
     name='li-di-charge',
     version=__version__,
@@ -19,6 +22,7 @@ setup(
         'Topic :: Scientific/Engineering'
     ],
     packages=['li_di_charge'],
+    install_requires=_requirements,
     package_data={'li_di_charge': ['VERSION']},
     include_package_data=True,
     scripts=['scripts/sirius-ioc-li-di-charge.py'],

@@ -7,6 +7,7 @@ develop:
 	cd as-ma; sudo ./setup.py develop; cd systemd; sudo make install-services
 	cd as-ti-control; sudo ./setup.py develop; cd systemd; sudo make install-services
 	cd as-ap-sofb; sudo ./setup.py develop; cd systemd; sudo make install-services
+	cd li-di-charge; sudo ./setup.py develop; cd systemd; sudo make install-services
 	sudo systemctl daemon-reload
 
 develop-scripts:
@@ -18,6 +19,7 @@ develop-scripts:
 	cd as-ma; sudo ./setup.py develop
 	cd as-ti-control; sudo ./setup.py develop
 	cd as-ap-sofb; sudo ./setup.py develop
+	cd li-di-charge; sudo ./setup.py develop
 
 develop-services:
 	cd as-ap-currinfo; cd systemd; sudo make install-services
@@ -28,6 +30,7 @@ develop-services:
 	cd as-ma; cd systemd; sudo make install-services
 	cd as-ti-control; cd systemd; sudo make install-services
 	cd as-ap-sofb; cd systemd; sudo make install-services
+	cd li-di-charge; cd systemd; sudo make install-services
 	sudo systemctl daemon-reload
 
 install:
