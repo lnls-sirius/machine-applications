@@ -25,9 +25,13 @@ def print_help():
     print('       --help')
     print('               print this help.')
     print()
-    print('       --simul')
-    print('               create simulated PRU and SerialComm objects, not '
-          'real ones.')
+    print('       --eth')
+    print('               use eth-brigde-pru service to communicate '
+          'with power supplies.')
+    print()
+    print('       --sim')
+    print('               simulate power supplies.')
+    print()
     print('       --hostname')
     print('               take beaglebone name from hostname')
     print()
@@ -53,9 +57,9 @@ def main():
         args = [arg for arg in sys.argv[1:]]
         simulate = False
         eth = False
-        if '--simul' in args:
+        if '--sim' in args:
             simulate = True
-            args.remove('--simul')
+            args.remove('--sim')
         if '--help' in args:
             args.remove('--help')
             print_help()
