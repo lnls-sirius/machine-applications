@@ -9,7 +9,8 @@ from pcaspy import Driver as _PCasDriver
 from .matrix import BaseMatrix as _BaseMatrix
 from .orbit import BaseOrbit as _BaseOrbit
 from .correctors import BaseCorrectors as _BaseCorrectors
-from .base_class import BaseClass as _BaseClass
+from .base_class import BaseClass as _BaseClass, \
+    compare_kicks as _compare_kicks
 
 INTERVAL = 1
 
@@ -33,7 +34,7 @@ class SOFB(_BaseClass):
         self._max_kick = {'ch': 3000, 'cv': 3000}
         self._max_delta_kick = {'ch': 3000, 'cv': 3000}
         self._meas_respmat_kick = {'ch': 300, 'cv': 150}
-        if self.isring:
+        if self.acc == 'SI':
             self._corr_factor['rf'] = 1.00
             self._max_kick['rf'] = 3000
             self._max_delta_kick['rf'] = 500
@@ -67,6 +68,7 @@ class SOFB(_BaseClass):
             }
         if self.isring:
             db['RingSize-SP'] = self.set_ring_extension
+        if self.acc == 'SI':
             db['DeltaFactorRF-SP'] = _part(self.set_corr_factor, 'rf')
             db['MaxKickRF-SP'] = _part(self.set_max_kick, 'rf')
             db['MaxDeltaKickRF-SP'] = _part(self.set_max_delta_kick, 'rf')
@@ -260,19 +262,18 @@ class SOFB(_BaseClass):
             dkicks[nr_ch:] = 0
         elif code == self._csorb.ApplyDelta.CV:
             dkicks[:nr_ch] = 0
-            if self.isring:
+            if self.acc == 'SI':
                 dkicks[-1] = 0
-        elif self.isring and code == self._csorb.ApplyDelta.RF:
+        elif self.acc == 'SI' and code == self._csorb.ApplyDelta.RF:
             dkicks[:-1] = 0
         msg = 'Applying {0:s} kicks.'.format(
                         self._csorb.ApplyDelta._fields[code])
         self._update_log(msg)
         _log.info(msg)
-        dkicks = self._process_kicks(self._ref_corr_kicks, dkicks)
-        if dkicks is None:
+        kicks = self._process_kicks(self._ref_corr_kicks, dkicks)
+        if kicks is None:
             return
-        kicks = self._ref_corr_kicks + dkicks
-        self.correctors.apply_kicks(kicks, code=code)
+        self.correctors.apply_kicks(kicks)
 
     def update_driver(self, pvname, value, **kwargs):
         if self._driver is not None:
@@ -332,36 +333,49 @@ class SOFB(_BaseClass):
             'MeasRespMat-Mon', self._csorb.MeasRespMatMon.Measuring)
         mat = list()
         orig_kicks = self.correctors.get_strength()
+        enbllist = self.matrix.corrs_enbllist
         nr_corrs = len(orig_kicks)
         for i in range(nr_corrs):
             if not self._measuring_respmat:
                 self.run_callbacks(
                     'MeasRespMat-Mon', self._csorb.MeasRespMatMon.Aborted)
-                self.correctors.apply_kicks(orig_kicks)
                 msg = 'Measurement aborted.'
                 self._update_log(msg)
                 _log.info(msg)
                 return
-            msg = 'Varying Corrector {0:d} of {1:d}'.format(i+1, nr_corrs)
+            msg = '{0:d}/{1:d} -> {2:s}'.format(
+                i+1, nr_corrs, self.correctors.corrs[i].name)
             self._update_log(msg)
             _log.info(msg)
+            if not enbllist[i]:
+                mat.append(0.0 * self.orbit.get_orbit(True))
+                msg = '   Not Enabled. Skipping...'
+                self._update_log(msg)
+                _log.info(msg)
+                continue
+
             if i < self._csorb.NR_CH:
                 delta = self._meas_respmat_kick['ch']
             elif i < self._csorb.NR_CH + self._csorb.NR_CV:
                 delta = self._meas_respmat_kick['cv']
             elif i < self._csorb.NR_CORRS:
                 delta = self._meas_respmat_kick['rf']
-            kicks = orig_kicks.copy()
-            kicks[i] += delta/2
+
+            kicks = [None, ] * nr_corrs
+            kicks[i] = orig_kicks[i] + delta/2
             self.correctors.apply_kicks(kicks)
             _time.sleep(self._meas_respmat_wait)
             orbp = self.orbit.get_orbit(True)
-            kicks[i] += -delta
+
+            kicks[i] = orig_kicks[i] - delta/2
             self.correctors.apply_kicks(kicks)
             _time.sleep(self._meas_respmat_wait)
             orbn = self.orbit.get_orbit(True)
             mat.append((orbp-orbn)/delta)
-        self.correctors.apply_kicks(orig_kicks)
+
+            kicks[i] = orig_kicks[i]
+            self.correctors.apply_kicks(kicks)
+
         msg = 'Measurement Completed.'
         self._update_log(msg)
         _log.info(msg)
@@ -386,8 +400,8 @@ class SOFB(_BaseClass):
             kicks = self.correctors.get_strength()
             t3 = _time.time()
             _log.debug(strn.format('get strength:', 1000*(t3-t2)))
-            dkicks = self._process_kicks(kicks, dkicks)
-            if dkicks is None:
+            kicks = self._process_kicks(kicks, dkicks)
+            if kicks is None:
                 self._auto_corr = self._csorb.ClosedLoop.Off
                 msg = 'ERR: Opening the Loop'
                 self._update_log(msg)
@@ -396,7 +410,6 @@ class SOFB(_BaseClass):
                 continue
             t4 = _time.time()
             _log.debug(strn.format('process kicks:', 1000*(t4-t3)))
-            kicks += dkicks
             self.correctors.apply_kicks(kicks)  # slowest part
             t5 = _time.time()
             _log.debug(strn.format('apply kicks:', 1000*(t5-t4)))
@@ -432,43 +445,60 @@ class SOFB(_BaseClass):
     def _process_kicks(self, kicks, dkicks):
         if dkicks is None:
             return
+
+        # keep track of which dkicks were originally different from zero:
+        newkicks = [None, ] * len(dkicks)
+        for i, dkick in enumerate(dkicks):
+            if not _compare_kicks(dkick, 0):
+                newkicks[i] = 0.0
+        idcs_to_process = _np.array(newkicks) != None
+        if not idcs_to_process.any():
+            return newkicks
+
         nr_ch = self._csorb.NR_CH
         slcs = {'ch': slice(None, nr_ch), 'cv': slice(nr_ch, None)}
-        if self.isring:
+        if self.acc == 'SI':
             slcs = {
                 'ch': slice(None, nr_ch),
                 'cv': slice(nr_ch, -1),
                 'rf': slice(-1, None)}
         for pln in sorted(slcs.keys()):
             slc = slcs[pln]
-            dkicks[slc] *= self._corr_factor[pln]
+            idcs_pln = idcs_to_process[slc]
+            if not idcs_pln.any():
+                continue
+            dk_slc = dkicks[slc][idcs_pln]
+            k_slc = kicks[slc][idcs_pln]
+            dk_slc *= self._corr_factor[pln]
 
-            # Check if any delta kick is larger the maximum allowed
-            max_delta_kick = _np.max(_np.abs(dkicks[slc]))
-            factor1 = 1.0
-            if max_delta_kick > self._max_delta_kick[pln]:
-                factor1 = self._max_delta_kick[pln]/max_delta_kick
-                dkicks[slc] *= factor1
-                percent = self._corr_factor[pln] * factor1 * 100
-                msg = 'WARN: reach MaxDeltaKick{0:s}. Using {1:5.2f}%'.format(
-                                                        pln.upper(), percent)
-                self._update_log(msg)
-                _log.warning(msg[6:])
             # Check if any kick is larger than the maximum allowed:
-            ind, *_ = _np.where(_np.abs(kicks[slc]) > self._max_kick[pln])
+            ind, *_ = _np.where(_np.abs(k_slc) > self._max_kick[pln])
             if ind.size:
                 msg = 'ERR: Kicks above MaxKick{0:s}.'.format(pln.upper())
                 self._update_log(msg)
                 _log.error(msg[5:])
                 return
+
+            # Check if any delta kick is larger the maximum allowed
+            max_delta_kick = _np.max(_np.abs(dk_slc))
+            factor1 = 1.0
+            if max_delta_kick > self._max_delta_kick[pln]:
+                factor1 = self._max_delta_kick[pln]/max_delta_kick
+                dk_slc *= factor1
+                percent = self._corr_factor[pln] * factor1 * 100
+                msg = 'WARN: reach MaxDeltaKick{0:s}. Using {1:5.2f}%'.format(
+                                                        pln.upper(), percent)
+                self._update_log(msg)
+                _log.warning(msg[6:])
+
             # Check if any kick + delta kick is larger than the maximum allowed
-            max_kick = _np.max(_np.abs(kicks[slc] + dkicks[slc]))
+            max_kick = _np.max(_np.abs(k_slc + dk_slc))
             factor2 = 1.0
             if max_kick > self._max_kick[pln]:
-                Q = _np.ones((2, kicks[slc].size), dtype=float)
+                Q = _np.ones((2, k_slc.size), dtype=float)
                 # perform the modulus inequality:
-                Q[0, :] = (-self._max_kick[pln] - kicks[slc]) / dkicks[slc]
-                Q[1, :] = (self._max_kick[pln] - kicks[slc]) / dkicks[slc]
+                Q[0, :] = (-self._max_kick[pln] - k_slc) / dk_slc
+                Q[1, :] = (self._max_kick[pln] - k_slc) / dk_slc
                 # since we know that any initial kick is lesser than max_kick
                 # from the previous comparison, at this point each column of Q
                 # has a positive and a negative value. We must consider only
@@ -476,10 +506,16 @@ class SOFB(_BaseClass):
                 # to be the multiplicative factor:
                 Q = _np.max(Q, axis=0)
                 factor2 = min(_np.min(Q), 1.0)
-                dkicks[slc] *= factor2
+                dk_slc *= factor2
                 percent = self._corr_factor[pln] * factor1 * factor2 * 100
                 msg = 'WARN: reach MaxKick{0:s}. Using {1:5.2f}%'.format(
                                                         pln.upper(), percent)
                 self._update_log(msg)
                 _log.warning(msg[6:])
-        return dkicks
+
+            dkicks[slc][idcs_pln] = dk_slc
+
+        for i, dkick in enumerate(dkicks):
+            if newkicks[i] is not None:
+                newkicks[i] = kicks[i] + dkick
+        return newkicks

@@ -1,7 +1,6 @@
 """Module to deal with correctors."""
 
 import time as _time
-import math as _math
 import logging as _log
 import numpy as _np
 from siriuspy.epics import PV as _PV
@@ -11,17 +10,14 @@ from siriuspy.csdevice.pwrsupply import Const as _PSConst
 from siriuspy.csdevice.timesys import Const as _TIConst
 from siriuspy.search import HLTimeSearch as _HLTimesearch
 from siriuspy.envars import vaca_prefix as LL_PREF
-from .base_class import (
-    BaseClass as _BaseClass,
-    BaseTimingConfig as _BaseTimingConfig)
+from .base_class import BaseClass as _BaseClass, \
+    BaseTimingConfig as _BaseTimingConfig, compare_kicks as _compare_kicks
 
 TIMEOUT = 0.05
 
 
 class Corrector(_BaseTimingConfig):
     """Corrector class."""
-
-    TINY_KICK = 1e-3  # urad
 
     def __init__(self, corr_name):
         """Init method."""
@@ -75,18 +71,6 @@ class Corrector(_BaseTimingConfig):
             pv.put(val, wait=False)
 
     @property
-    def ready(self):
-        """Ready status."""
-        if self._rb.connected and self._rb.value is not None:
-            return self.equalKick(self._rb.value)
-        return False
-
-    @property
-    def applied(self):
-        """Status applied."""
-        return self.ready
-
-    @property
     def value(self):
         """Value."""
         if self._rb.connected:
@@ -96,11 +80,9 @@ class Corrector(_BaseTimingConfig):
     def value(self, val):
         self._sp.put(val, wait=False)
 
-    def equalKick(self, value):
-        """Equal kick."""
-        if self._sp.connected and self._sp.value is not None:
-            return _math.isclose(self._sp.value, value, abs_tol=self.TINY_KICK)
-        return False
+    @property
+    def refvalue(self):
+        return self.value
 
 
 class RFCtrl(Corrector):
@@ -190,11 +172,9 @@ class CHCV(Corrector):
         return conn
 
     @property
-    def applied(self):
-        """Status applied."""
-        if self._ref.connected and self._ref.value is not None:
-            return self.equalKick(self._ref.value)
-        return False
+    def refvalue(self):
+        if self._ref.connected:
+            return self._ref.value
 
 
 class TimingConfig(_BaseTimingConfig):
@@ -275,12 +255,17 @@ class EpicsCorrectors(BaseCorrectors):
         self._acq_rate = 2
         self._names = self._csorb.CH_NAMES + self._csorb.CV_NAMES
         self._corrs = [CHCV(dev) for dev in self._names]
-        if self.isring:
+        if self.acc == 'SI':
             self._corrs.append(RFCtrl(self.acc))
+        if self.isring:
             self.timing = TimingConfig(acc)
         self._corrs_thread = _Repeat(
                 1/self._acq_rate, self._update_corrs_strength, niter=0)
         self._corrs_thread.start()
+
+    @property
+    def corrs(self):
+        return self._corrs
 
     def get_map2write(self):
         """Get the write methods of the class."""
@@ -292,36 +277,21 @@ class EpicsCorrectors(BaseCorrectors):
             db['CorrSync-Sel'] = self.set_corrs_mode
         return db
 
-    def apply_kicks(self, values, code=None):
+    def apply_kicks(self, values):
         """Apply kicks."""
-        corrs = self._corrs
-        nr_ch = self._csorb.NR_CH
-        nr_chcv = self._csorb.NR_CHCV
-        if code == self._csorb.ApplyDelta.CH:
-            corrs = corrs[:nr_ch]
-            values = values[:nr_ch]
-        elif code == self._csorb.ApplyDelta.CV:
-            corrs = corrs[nr_ch:nr_chcv]
-            values = values[nr_ch:nr_chcv]
-        elif self.isring and code == self._csorb.ApplyDelta.RF:
-            corrs = [corrs[-1], ]
-            values = [values[-1], ]
-
         strn = '    TIMEIT: {0:20s} - {1:7.3f}'
         _log.debug('    TIMEIT: BEGIN')
         t1 = _time.time()
 
         # Send correctors setpoint
-        for i, corr in enumerate(corrs):
-            self.put_value_in_corr(corr, values[i])
+        for i, corr in enumerate(self._corrs):
+            if values[i] is not None:
+                self.put_value_in_corr(corr, values[i])
         t2 = _time.time()
         _log.debug(strn.format('send sp:', 1000*(t2-t1)))
 
         # Wait for readbacks to be updated
-        if self._timed_out(mode='ready'):
-            msg = 'ERR: timeout waiting correctors RB'
-            self._update_log(msg)
-            _log.error(msg[5:])
+        if self._timed_out(values, mode='ready'):
             return
         t3 = _time.time()
         _log.debug(strn.format('check ready:', 1000*(t3-t2)))
@@ -333,10 +303,8 @@ class EpicsCorrectors(BaseCorrectors):
         _log.debug(strn.format('send evt:', 1000*(t4-t3)))
 
         # Wait for references to be updated
-        if self._timed_out(mode='applied'):
-            msg = 'ERR: timeout waiting correctors Ref'
-            self._update_log(msg)
-            _log.error(msg[5:])
+        if self._timed_out(values, mode='applied'):
+            return
         t5 = _time.time()
         _log.debug(strn.format('check applied:', 1000*(t5-t4)))
         _log.debug('    TIMEIT: END')
@@ -355,12 +323,12 @@ class EpicsCorrectors(BaseCorrectors):
             msg = 'ERR: ' + corr.name + ' mode not configured.'
             self._update_log(msg)
             _log.error(msg[5:])
-        elif not corr.equalKick(value):
+        else:
             corr.value = value
 
     def send_evt(self):
         """Send event method."""
-        if not self.isring and not self._synced_kicks:
+        if not self.isring or not self._synced_kicks:
             return
         if not self.timing.connected:
             msg = 'ERR: timing disconnected.'
@@ -380,11 +348,11 @@ class EpicsCorrectors(BaseCorrectors):
         for i, corr in enumerate(self._corrs):
             if corr.connected and corr.value is not None:
                 corr_values[i] = corr.value
-            # else:
-            #     msg = 'ERR: Failed to get value from '
-            #     msg += corr.name
-            #     self._update_log(msg)
-            #     _log.error(msg[5:])
+            else:
+                msg = 'ERR: Failed to get value from '
+                msg += corr.name
+                self._update_log(msg)
+                _log.error(msg[5:])
         return corr_values
 
     def set_kick_acq_rate(self, value):
@@ -400,7 +368,7 @@ class EpicsCorrectors(BaseCorrectors):
             self.run_callbacks('KickCH-Mon', corr_vals[:self._csorb.NR_CH])
             self.run_callbacks(
                 'KickCV-Mon', corr_vals[self._csorb.NR_CH:self._csorb.NR_CHCV])
-            if self.isring:
+            if self.acc == 'SI':
                 self.run_callbacks('KickRF-Mon', corr_vals[-1])
         except Exception as err:
             self._update_log('ERR: ' + str(err))
@@ -454,7 +422,12 @@ class EpicsCorrectors(BaseCorrectors):
         return True
 
     def _update_status(self):
-        status = 0b1111111 if self.isring else 0b0000111
+        status = 0b0000111
+        if self.acc == 'SI':
+            status = 0b1111111
+        elif self.isring:
+            status = 0b0011111
+
         chcvs = self._corrs[:self._csorb.NR_CHCV]
         status = _util.update_bit(
             status, bit_pos=0,
@@ -466,11 +439,12 @@ class EpicsCorrectors(BaseCorrectors):
             status, bit_pos=2,
             bit_val=not all(corr.state for corr in chcvs))
         if self.isring:
-            rfctrl = self._corrs[-1]
             status = _util.update_bit(
                 status, bit_pos=3, bit_val=not self.timing.connected)
             status = _util.update_bit(
                 status, bit_pos=4, bit_val=not self.timing.is_ok)
+        if self.acc == 'SI':
+            rfctrl = self._corrs[-1]
             status = _util.update_bit(
                 status, bit_pos=5, bit_val=not rfctrl.connected)
             status = _util.update_bit(
@@ -478,17 +452,24 @@ class EpicsCorrectors(BaseCorrectors):
         self._status = status
         self.run_callbacks('CorrStatus-Mon', status)
 
-    def _timed_out(self, mode='ready'):
-        corrs = list()
-        corrs.extend(self._corrs)
+    def _timed_out(self, values, mode='ready'):
         for _ in range(self.NUM_TIMEOUT):
-            okg = True
-            for i, corr in enumerate(corrs):
-                okl = corr.ready if mode == 'ready' else corr.applied
-                if okl:
-                    del corrs[i]
-                okg &= okl
-            if okg:
+            okg = [False, ] * len(self._corrs)
+            for i, corr in enumerate(self._corrs):
+                if not okg[i]:
+                    if values[i] is None:
+                        okg[i] = True
+                        continue
+                    val = corr.value if mode == 'ready' else corr.refvalue
+                    okg[i] = val is not None and _compare_kicks(values[i], val)
+            if all(okg):
                 return False
             _time.sleep(self.TINY_INTERVAL)
+
+        mde = 'RB' if mode == 'ready' else 'Ref'
+        for oki, corr in zip(okg, self._corrs):
+            if not oki:
+                msg = 'ERR: timeout {0:3s}: {1:s}'.format(mde, corr.name)
+                self._update_log(msg)
+                _log.error(msg[5:])
         return True
