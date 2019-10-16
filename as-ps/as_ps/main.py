@@ -59,6 +59,10 @@ class App:
         # build bbb_devices dict (and set _dequethread)
         self._create_bbb_dev_dict()
 
+        # start PRUController threads
+        for bbb in bbblist:
+            bbb.start()
+
     # --- public interface ---
 
     @property
@@ -98,8 +102,8 @@ class App:
 
     def read(self, reason):
         """Read from database."""
-        _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
-            'R ', reason, str(self.driver.getParam(reason))))
+        # _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
+        #     'R ', reason, str(self.driver.getParam(reason))))
         return None
 
     def write(self, reason, value):
