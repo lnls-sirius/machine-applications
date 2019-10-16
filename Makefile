@@ -37,7 +37,7 @@ install:
 	cd as-ap-currinfo; sudo ./setup.py install; cd systemd; sudo make install-services
 	cd as-ap-posang; sudo ./setup.py install; cd systemd; sudo make install-services
 	cd as-ap-opticscorr; sudo ./setup.py install; cd systemd; sudo make install-services
-	cd as-ps; sudo ./setup.py install; cd systemd; sudo make install-services
+	cd as-ps; sudo make install; cd systemd; sudo make install-services
 	cd as-ps-diag; sudo ./setup.py install; cd systemd; sudo make install-services
 	cd as-ma; sudo ./setup.py install; cd systemd; sudo make install-services
 	cd as-ti-control; sudo ./setup.py install; cd systemd; sudo make install-services
