@@ -247,8 +247,12 @@ class App:
                 if new_value != old_value:
                     return True
             except:
+                print()
+                print(' !!!')
                 print('Incompatible types, pv: {}'.format(reason))
                 print('old_value: {}'.format(old_value))
                 print('new_value: {}'.format(new_value))
-                raise
+                print(' !!!')
+                print()
+                return
         return False
