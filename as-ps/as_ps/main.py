@@ -253,6 +253,5 @@ class App:
                 print('old_value: {}'.format(old_value))
                 print('new_value: {}'.format(new_value))
                 print(' !!!')
-                print()
-                return
+                return False
         return False
