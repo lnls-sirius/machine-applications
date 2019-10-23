@@ -1,1 +1,2 @@
+include as_ap_currinfo/access_rules.as
 include as_ap_currinfo/lifetime/access_rules.as
