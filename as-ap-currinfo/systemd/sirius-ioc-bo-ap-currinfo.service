@@ -1,0 +1,14 @@
+[Unit]
+Description=Soft IOC for BO CurrentInfo
+After=multi-user.target
+
+[Service]
+Group=sirius
+User=sirius
+Type=simple
+WorkingDirectory=/home/sirius/iocs-log/
+StandardOutput=syslog
+StandardError=syslog
+ExecStartPre=/bin/bash --login -c 'env > /home/sirius/iocs-log/env-sirius-ioc-bo-ap-currinfo'
+EnvironmentFile=-/home/sirius/iocs-log/env-sirius-ioc-bo-ap-currinfo
+ExecStart=/usr/local/bin/sirius-ioc-bo-ap-currinfo.py

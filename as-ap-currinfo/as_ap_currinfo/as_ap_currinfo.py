@@ -6,8 +6,8 @@ import signal as _signal
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 from siriuspy import util as _util
-import as_ap_currinfo.charge.main as _main
-import as_ap_currinfo.charge.pvs as _pvs
+import as_ap_currinfo.main as _main
+import as_ap_currinfo.pvs as _pvs
 
 
 INTERVAL = 0.1
@@ -30,12 +30,22 @@ def _attribute_access_security_group(server, db):
     server.initAccessSecurityFile(path_ + '/access_rules.as')
 
 
+def _get_app_class(acc):
+    if acc == 'bo':
+        return _main.BOApp
+    elif acc == 'si':
+        return _main.SIApp
+    else:
+        raise ValueError('There is no App defined for accelarator '+acc+'.')
+
+
 class _PCASDriver(_pcaspy.Driver):
 
-    def __init__(self):
+    def __init__(self, acc):
         """Initialize driver."""
         super().__init__()
-        self.app = _main.App(self)
+        app_class = _get_app_class(acc)
+        self.app = app_class(self)
 
     def read(self, reason):
         """Read IOC pvs acording to main application."""
@@ -53,7 +63,7 @@ class _PCASDriver(_pcaspy.Driver):
             return False
 
 
-def run():
+def run(acc):
     """Main module function."""
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
@@ -62,14 +72,15 @@ def run():
     _util.configure_log_file()
 
     # Init pvs database
-    _main.App.init_class()
+    _pvs.select_ioc(acc)
+    _get_app_class(acc).init_class()
 
     # create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
-    db = _main.App.pvs_database
+    db = _get_app_class(acc).pvs_database
     _attribute_access_security_group(server, db)
     server.createPV(_pvs.get_pvs_prefix(), db)
-    pcas_driver = _PCASDriver()
+    pcas_driver = _PCASDriver(acc)
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)

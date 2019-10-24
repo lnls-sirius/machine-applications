@@ -53,7 +53,7 @@ class _PCASDriver(_pcaspy.Driver):
             return False
 
 
-def run(acc):
+def run():
     """Main module function."""
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
@@ -62,7 +62,6 @@ def run(acc):
     _util.configure_log_file()
 
     # define IOC and init pvs database
-    _pvs.select_ioc(acc)
     _main.App.init_class()
 
     # create a new simple pcaspy server and driver to respond client's requests
