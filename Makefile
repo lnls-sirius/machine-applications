@@ -1,69 +1,49 @@
-develop:
-	cd as-ap-currinfo; sudo ./setup.py develop; cd systemd; sudo make install-services
-	cd as-ap-posang; sudo ./setup.py develop; cd systemd; sudo make install-services
-	cd as-ap-opticscorr; sudo ./setup.py develop; cd systemd; sudo make install-services
-	cd as-ps; sudo ./setup.py develop; cd systemd; sudo make install-services
-	cd as-ps-diag; sudo ./setup.py develop; cd systemd; sudo make install-services
-	cd as-ma; sudo ./setup.py develop; cd systemd; sudo make install-services
-	cd as-ti-control; sudo ./setup.py develop; cd systemd; sudo make install-services
-	cd as-ap-sofb; sudo ./setup.py develop; cd systemd; sudo make install-services
-	cd li-di-charge; sudo ./setup.py develop; cd systemd; sudo make install-services
-	sudo systemctl daemon-reload
+develop: develop-scripts
 
 develop-scripts:
-	cd as-ap-currinfo; sudo ./setup.py develop
-	cd as-ap-posang; sudo ./setup.py develop
-	cd as-ap-opticscorr; sudo ./setup.py develop
-	cd as-ps; sudo ./setup.py develop
-	cd as-ps-diag; sudo ./setup.py develop
-	cd as-ma; sudo ./setup.py develop
-	cd as-ti-control; sudo ./setup.py develop
-	cd as-ap-sofb; sudo ./setup.py develop
-	cd li-di-charge; sudo ./setup.py develop
+	cd as-ap-currinfo; sudo make develop
+	cd as-ap-posang; sudo make develop
+	cd as-ap-opticscorr; sudo make develop
+	cd as-ps; sudo make develop
+	cd as-ps-diag; sudo make develop
+	cd as-ma; sudo make develop
+	cd as-ti-control; sudo make develop
+	cd as-ap-sofb; sudo make develop
+	cd li-di-charge; sudo make develop
 
-develop-services:
-	cd as-ap-currinfo; cd systemd; sudo make install-services
-	cd as-ap-posang; cd systemd; sudo make install-services
-	cd as-ap-opticscorr; cd systemd; sudo make install-services
-	cd as-ps; cd systemd; sudo make install-services
-	cd as-ps-diag; cd systemd; sudo make install-services
-	cd as-ma; cd systemd; sudo make install-services
-	cd as-ti-control; cd systemd; sudo make install-services
-	cd as-ap-sofb; cd systemd; sudo make install-services
-	cd li-di-charge; cd systemd; sudo make install-services
-	sudo systemctl daemon-reload
-
-install:
-	cd as-ap-currinfo; sudo ./setup.py install; cd systemd; sudo make install-services
-	cd as-ap-posang; sudo ./setup.py install; cd systemd; sudo make install-services
-	cd as-ap-opticscorr; sudo ./setup.py install; cd systemd; sudo make install-services
-	cd as-ps; sudo ./setup.py install; cd systemd; sudo make install-services
-	cd as-ps-diag; sudo ./setup.py install; cd systemd; sudo make install-services
-	cd as-ma; sudo ./setup.py install; cd systemd; sudo make install-services
-	cd as-ti-control; sudo ./setup.py install; cd systemd; sudo make install-services
-	cd as-ap-sofb; sudo ./setup.py install; cd systemd; sudo make install-services
-	cd li-di-charge; sudo ./setup.py install; cd systemd; sudo make install-services
+install: install-scripts install-services
 	sudo systemctl daemon-reload
 
 install-scripts:
-	cd as-ap-sofb; sudo ./setup.py install
-	cd as-ti-control; sudo ./setup.py install
-	cd as-ps; sudo ./setup.py install
-	cd as-ps-diag; sudo ./setup.py install
-	cd as-ma; sudo ./setup.py install
-	cd as-ap-opticscorr; sudo ./setup.py install
-	cd as-ap-posang; sudo ./setup.py install
-	cd as-ap-currinfo; sudo ./setup.py install
-	cd li-di-charge; sudo ./setup.py install
+	cd as-ap-sofb; sudo make install-scripts
+	cd as-ti-control; sudo make install-scripts
+	cd as-ps; sudo make install-scripts
+	cd as-ps-diag; sudo make install-scripts
+	cd as-ma; sudo make install-scripts
+	cd as-ap-opticscorr; sudo make install-scripts
+	cd as-ap-posang; sudo make install-scripts
+	cd as-ap-currinfo; sudo make install-scripts
+	cd li-di-charge; sudo make install-scripts
 
 install-services:
-	cd as-ap-currinfo; cd systemd; sudo make install-services
-	cd as-ap-posang; cd systemd; sudo make install-services
-	cd as-ap-opticscorr; cd systemd; sudo make install-services
-	cd as-ps; cd systemd; sudo make install-services
-	cd as-ps-diag; cd systemd; sudo make install-services
-	cd as-ma; cd systemd; sudo make install-services
-	cd as-ti-control; cd systemd; sudo make install-services
-	cd as-ap-sofb; cd systemd; sudo make install-services
-	cd li-di-charge; cd systemd; sudo make install-services
+	cd as-ap-currinfo; sudo make install-services
+	cd as-ap-posang; sudo make install-services
+	cd as-ap-opticscorr; sudo make install-services
+	cd as-ps; sudo make install-services
+	cd as-ps-diag; sudo make install-services
+	cd as-ma; sudo make install-services
+	cd as-ti-control; sudo make install-services
+	cd as-ap-sofb; sudo make install-services
+	cd li-di-charge; sudo make install-services
 	sudo systemctl daemon-reload
+
+clean:
+	cd as-ap-currinfo; sudo make clean
+	cd as-ap-posang; sudo make clean
+	cd as-ap-opticscorr; sudo make clean
+	cd as-ps; sudo make clean
+	cd as-ps-diag; sudo make clean
+	cd as-ma; sudo make clean
+	cd as-ti-control; sudo make clean
+	cd as-ap-sofb; sudo make clean
+	cd li-di-charge; sudo make clean
