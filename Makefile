@@ -12,7 +12,8 @@ develop-scripts:
 	cd li-di-charge; sudo make develop
 
 install: install-scripts install-services
-	sudo systemctl daemon-reload
+
+uninstall: uninstall-scripts uninstall-services
 
 install-scripts:
 	cd as-ap-sofb; sudo make install-scripts
@@ -24,6 +25,17 @@ install-scripts:
 	cd as-ap-posang; sudo make install-scripts
 	cd as-ap-currinfo; sudo make install-scripts
 	cd li-di-charge; sudo make install-scripts
+
+uninstall-scripts:
+	cd as-ap-sofb; sudo make uninstall-scripts
+	cd as-ti-control; sudo make uninstall-scripts
+	cd as-ps; sudo make uninstall-scripts
+	cd as-ps-diag; sudo make uninstall-scripts
+	cd as-ma; sudo make uninstall-scripts
+	cd as-ap-opticscorr; sudo make uninstall-scripts
+	cd as-ap-posang; sudo make uninstall-scripts
+	cd as-ap-currinfo; sudo make uninstall-scripts
+	cd li-di-charge; sudo make uninstall-scripts
 
 install-services:
 	cd as-ap-currinfo; sudo make install-services
