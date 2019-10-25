@@ -37,6 +37,18 @@ install-services:
 	cd li-di-charge; sudo make install-services
 	sudo systemctl daemon-reload
 
+uninstall-services:
+	cd as-ap-currinfo; sudo make uninstall-services
+	cd as-ap-posang; sudo make uninstall-services
+	cd as-ap-opticscorr; sudo make uninstall-services
+	cd as-ps; sudo make uninstall-services
+	cd as-ps-diag; sudo make uninstall-services
+	cd as-ma; sudo make uninstall-services
+	cd as-ti-control; sudo make uninstall-services
+	cd as-ap-sofb; sudo make uninstall-services
+	cd li-di-charge; sudo make uninstall-services
+	sudo systemctl daemon-reload
+
 clean:
 	cd as-ap-currinfo; sudo make clean
 	cd as-ap-posang; sudo make clean
