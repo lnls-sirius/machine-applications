@@ -1,15 +1,15 @@
-develop: develop-scripts
+develop: develop-scripts install-services
 
 develop-scripts:
-	cd as-ap-currinfo; sudo make develop
-	cd as-ap-posang; sudo make develop
-	cd as-ap-opticscorr; sudo make develop
-	cd as-ps; sudo make develop
-	cd as-ps-diag; sudo make develop
-	cd as-ma; sudo make develop
-	cd as-ti-control; sudo make develop
-	cd as-ap-sofb; sudo make develop
-	cd li-di-charge; sudo make develop
+	cd as-ap-currinfo; sudo make develop-scripts
+	cd as-ap-posang; sudo make develop-scripts
+	cd as-ap-opticscorr; sudo make develop-scripts
+	cd as-ps; sudo make develop-scripts
+	cd as-ps-diag; sudo make develop-scripts
+	cd as-ma; sudo make develop-scripts
+	cd as-ti-control; sudo make develop-scripts
+	cd as-ap-sofb; sudo make develop-scripts
+	cd li-di-charge; sudo make develop-scripts
 
 install: install-scripts install-services
 
