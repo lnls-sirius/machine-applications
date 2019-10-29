@@ -7,20 +7,20 @@ with open('VERSION', 'r') as _f:
     __version__ = _f.read().strip()
 
 setup(
-    name='SOFB',
+    name='as-ap-sofb',
     version=__version__,
     author='lnls-sirius',
     description='Slow Orbit Feedback System for Sirius',
-    url='PROJECT-URL',
-    download_url='PROJECT-DOWNLOAD-URL',
-    license='MIT License',
+    url='https://github.com/lnls-sirius/machine-applications',
+    download_url='https://github.com/lnls-sirius/machine-applications',
+    license='GNU GPLv3',
     classifiers=[
         'Intended Audience :: Science/Research',
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering'
     ],
     packages=['as_ap_sofb'],
-    package_data={'as_ap_sofb': []},
+    package_data={'as_ap_sofb': ['VERSION']},
     include_package_data=True,
     scripts=['scripts/sirius-ioc-si-ap-sofb.py',
              'scripts/sirius-ioc-bo-ap-sofb.py',

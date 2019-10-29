@@ -237,3 +237,5 @@ stop: stop-tb stop-bo stop-ts stop-si
 start: start-tb start-bo start-ts start-si
 
 uninstall: uninstall-tb uninstall-bo uninstall-ts uninstall-si
+
+uninstall-services: uninstall
