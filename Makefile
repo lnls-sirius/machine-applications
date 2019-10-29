@@ -1,18 +1,19 @@
-develop: develop-scripts
+develop: develop-scripts install-services
 
 develop-scripts:
-	cd as-ap-currinfo; sudo make develop
-	cd as-ap-posang; sudo make develop
-	cd as-ap-opticscorr; sudo make develop
-	cd as-ps; sudo make develop
-	cd as-ps-diag; sudo make develop
-	cd as-ma; sudo make develop
-	cd as-ti-control; sudo make develop
-	cd as-ap-sofb; sudo make develop
-	cd li-di-charge; sudo make develop
+	cd as-ap-currinfo; sudo make develop-scripts
+	cd as-ap-posang; sudo make develop-scripts
+	cd as-ap-opticscorr; sudo make develop-scripts
+	cd as-ps; sudo make develop-scripts
+	cd as-ps-diag; sudo make develop-scripts
+	cd as-ma; sudo make develop-scripts
+	cd as-ti-control; sudo make develop-scripts
+	cd as-ap-sofb; sudo make develop-scripts
+	cd li-di-charge; sudo make develop-scripts
 
 install: install-scripts install-services
-	sudo systemctl daemon-reload
+
+uninstall: uninstall-scripts uninstall-services
 
 install-scripts:
 	cd as-ap-sofb; sudo make install-scripts
@@ -25,6 +26,17 @@ install-scripts:
 	cd as-ap-currinfo; sudo make install-scripts
 	cd li-di-charge; sudo make install-scripts
 
+uninstall-scripts:
+	cd as-ap-sofb; sudo make uninstall-scripts
+	cd as-ti-control; sudo make uninstall-scripts
+	cd as-ps; sudo make uninstall-scripts
+	cd as-ps-diag; sudo make uninstall-scripts
+	cd as-ma; sudo make uninstall-scripts
+	cd as-ap-opticscorr; sudo make uninstall-scripts
+	cd as-ap-posang; sudo make uninstall-scripts
+	cd as-ap-currinfo; sudo make uninstall-scripts
+	cd li-di-charge; sudo make uninstall-scripts
+
 install-services:
 	cd as-ap-currinfo; sudo make install-services
 	cd as-ap-posang; sudo make install-services
@@ -35,6 +47,18 @@ install-services:
 	cd as-ti-control; sudo make install-services
 	cd as-ap-sofb; sudo make install-services
 	cd li-di-charge; sudo make install-services
+	sudo systemctl daemon-reload
+
+uninstall-services:
+	cd as-ap-currinfo; sudo make uninstall-services
+	cd as-ap-posang; sudo make uninstall-services
+	cd as-ap-opticscorr; sudo make uninstall-services
+	cd as-ps; sudo make uninstall-services
+	cd as-ps-diag; sudo make uninstall-services
+	cd as-ma; sudo make uninstall-services
+	cd as-ti-control; sudo make uninstall-services
+	cd as-ap-sofb; sudo make uninstall-services
+	cd li-di-charge; sudo make uninstall-services
 	sudo systemctl daemon-reload
 
 clean:
