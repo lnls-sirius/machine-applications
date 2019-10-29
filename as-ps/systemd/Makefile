@@ -627,3 +627,5 @@ uninstall: stop disable
 	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia20.service
 	systemctl daemon-reload
 	systemctl reset-failed
+
+uninstall-services: uninstall
