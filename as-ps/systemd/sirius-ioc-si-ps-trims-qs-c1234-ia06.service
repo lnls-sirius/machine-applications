@@ -1,0 +1,14 @@
+[Unit]
+Description=Soft IOC for SI Trims Subsections 06C1, 06C2, 06C3, 06C4
+After=multi-user.target
+
+[Service]
+Group=sirius
+User=sirius
+Type=simple
+WorkingDirectory=/home/sirius/iocs-log
+StandardOutput=syslog
+StandardError=syslog
+ExecStartPre=/bin/bash --login -c 'env > /home/sirius/iocs-log/env-sirius-ioc-si-ps-trims-qs-c1234-ia06'
+EnvironmentFile=-/home/sirius/iocs-log/env-sirius-ioc-si-ps-trims-qs-c1234-ia06
+ExecStart=/usr/local/bin/sirius-ioc-as-ps.py --eth IA-06RaCtrl:CO-PSCtrl-SI3

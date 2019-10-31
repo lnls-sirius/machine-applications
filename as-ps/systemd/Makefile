@@ -48,66 +48,86 @@ install-services-ioc-ps: preparation
 	cp -rf sirius-ioc-si-ps-sextupoles-sfa12-sda3p1.service /etc/systemd/system/
 	cp -rf sirius-ioc-si-ps-sextupoles-sfb12-sdb3.service /etc/systemd/system/
 	cp -rf sirius-ioc-si-ps-sextupoles-sfp12-sdp23.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia01-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia01-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia01-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia02-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia02-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia02-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia03-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia03-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia03-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia04-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia04-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia04-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia05-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia05-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia05-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia06-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia06-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia06-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia07-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia07-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia07-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia08-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia08-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia08-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia09-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia09-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia09-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia10-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia10-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia10-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia11-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia11-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia11-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia12-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia12-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia12-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia13-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia13-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia13-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia14-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia14-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia14-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia15-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia15-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia15-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia16-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia16-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia16-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia17-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia17-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia17-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia18-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia18-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia18-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia19-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia19-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia19-m12.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia20-c2.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia20-c134.service /etc/systemd/system/
-	cp -rf sirius-ioc-si-ps-correctors-ia20-m12.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia01.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia02.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia03.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia04.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia05.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia06.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia07.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia08.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia09.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia10.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia11.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia12.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia13.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia14.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia15.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia16.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia17.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia18.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia19.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c2m12-ia20.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia01.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia02.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia03.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia04.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia05.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia06.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia07.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia08.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia09.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia10.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia11.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia12.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia13.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia14.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia15.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia16.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia17.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia18.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia19.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-c134-ia20.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia01.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia02.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia03.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia04.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia05.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia06.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia07.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia08.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia09.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia10.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia11.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia12.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia13.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia14.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia15.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia16.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia17.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia18.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia19.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-c1234-ia20.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia01.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia02.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia03.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia04.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia05.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia06.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia07.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia08.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia09.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia10.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia11.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia12.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia13.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia14.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia15.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia16.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia17.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia18.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia19.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-trims-qs-m12-ia20.service /etc/systemd/system/
 	cp -rf sirius-ioc-as-ps-dclink-tbts.service /etc/systemd/system/
 	cp -rf sirius-ioc-as-ps-dclink-ia01.service /etc/systemd/system/
 	cp -rf sirius-ioc-as-ps-dclink-ia02.service /etc/systemd/system/
@@ -173,66 +193,86 @@ stop:
 	systemctl stop sirius-ioc-si-ps-sextupoles-sfa12-sda3p1.service
 	systemctl stop sirius-ioc-si-ps-sextupoles-sfb12-sdb3.service
 	systemctl stop sirius-ioc-si-ps-sextupoles-sfp12-sdp23.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia01-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia01-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia01-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia02-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia02-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia02-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia03-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia03-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia03-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia04-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia04-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia04-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia05-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia05-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia05-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia06-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia06-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia06-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia07-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia07-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia07-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia08-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia08-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia08-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia09-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia09-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia09-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia10-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia10-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia10-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia11-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia11-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia11-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia12-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia12-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia12-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia13-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia13-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia13-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia14-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia14-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia14-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia15-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia15-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia15-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia16-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia16-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia16-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia17-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia17-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia17-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia18-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia18-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia18-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia19-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia19-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia19-m12.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia20-c2.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia20-c134.service
-	systemctl stop sirius-ioc-si-ps-correctors-ia20-m12.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia01.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia02.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia03.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia04.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia05.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia06.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia07.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia08.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia09.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia10.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia11.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia12.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia13.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia14.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia15.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia16.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia17.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia18.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia19.service
+	systemctl stop sirius-ioc-si-ps-correctors-c2m12-ia20.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia01.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia02.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia03.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia04.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia05.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia06.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia07.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia08.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia09.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia10.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia11.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia12.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia13.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia14.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia15.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia16.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia17.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia18.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia19.service
+	systemctl stop sirius-ioc-si-ps-correctors-c134-ia20.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia01.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia02.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia03.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia04.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia05.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia06.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia07.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia08.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia09.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia10.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia11.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia12.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia13.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia14.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia15.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia16.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia17.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia18.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia19.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-c1234-ia20.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia01.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia02.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia03.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia04.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia05.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia06.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia07.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia08.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia09.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia10.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia11.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia12.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia13.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia14.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia15.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia16.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia17.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia18.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia19.service
+	systemctl stop sirius-ioc-si-ps-trims-qs-m12-ia20.service
 	systemctl stop sirius-ioc-as-ps-dclink-tbts.service
 	systemctl stop sirius-ioc-as-ps-dclink-ia01.service
 	systemctl stop sirius-ioc-as-ps-dclink-ia02.service
@@ -298,66 +338,86 @@ start-ioc-ps: preparation
 	systemctl start sirius-ioc-si-ps-sextupoles-sfa12-sda3p1.service
 	systemctl start sirius-ioc-si-ps-sextupoles-sfb12-sdb3.service
 	systemctl start sirius-ioc-si-ps-sextupoles-sfp12-sdp23.service
-	systemctl start sirius-ioc-si-ps-correctors-ia01-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia01-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia01-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia02-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia02-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia02-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia03-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia03-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia03-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia04-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia04-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia04-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia05-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia05-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia05-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia06-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia06-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia06-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia07-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia07-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia07-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia08-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia08-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia08-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia09-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia09-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia09-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia10-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia10-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia10-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia11-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia11-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia11-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia12-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia12-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia12-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia13-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia13-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia13-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia14-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia14-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia14-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia15-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia15-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia15-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia16-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia16-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia16-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia17-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia17-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia17-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia18-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia18-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia18-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia19-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia19-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia19-m12.service
-	systemctl start sirius-ioc-si-ps-correctors-ia20-c2.service
-	systemctl start sirius-ioc-si-ps-correctors-ia20-c134.service
-	systemctl start sirius-ioc-si-ps-correctors-ia20-m12.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia01.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia02.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia03.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia04.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia05.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia06.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia07.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia08.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia09.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia10.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia11.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia12.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia13.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia14.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia15.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia16.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia17.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia18.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia19.service
+	systemctl start sirius-ioc-si-ps-correctors-c2m12-ia20.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia01.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia02.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia03.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia04.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia05.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia06.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia07.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia08.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia09.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia10.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia11.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia12.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia13.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia14.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia15.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia16.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia17.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia18.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia19.service
+	systemctl start sirius-ioc-si-ps-correctors-c134-ia20.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia01.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia02.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia03.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia04.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia05.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia06.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia07.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia08.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia09.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia10.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia11.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia12.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia13.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia14.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia15.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia16.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia17.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia18.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia19.service
+	systemctl start sirius-ioc-si-ps-trims-qs-c1234-ia20.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia01.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia02.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia03.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia04.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia05.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia06.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia07.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia08.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia09.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia10.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia11.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia12.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia13.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia14.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia15.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia16.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia17.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia18.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia19.service
+	systemctl start sirius-ioc-si-ps-trims-qs-m12-ia20.service
 	systemctl start sirius-ioc-as-ps-dclink-tbts.service
 	systemctl start sirius-ioc-as-ps-dclink-ia01.service
 	systemctl start sirius-ioc-as-ps-dclink-ia02.service
@@ -422,66 +482,86 @@ disable:
 	systemctl disable sirius-ioc-si-ps-sextupoles-sfa12-sda3p1.service
 	systemctl disable sirius-ioc-si-ps-sextupoles-sfb12-sdb3.service
 	systemctl disable sirius-ioc-si-ps-sextupoles-sfp12-sdp23.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia01-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia01-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia01-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia02-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia02-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia02-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia03-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia03-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia03-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia04-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia04-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia04-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia05-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia05-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia05-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia06-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia06-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia06-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia07-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia07-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia07-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia08-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia08-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia08-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia09-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia09-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia09-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia10-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia10-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia10-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia11-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia11-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia11-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia12-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia12-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia12-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia13-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia13-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia13-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia14-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia14-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia14-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia15-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia15-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia15-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia16-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia16-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia16-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia17-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia17-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia17-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia18-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia18-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia18-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia19-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia19-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia19-m12.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia20-c2.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia20-c134.service
-	systemctl disable sirius-ioc-si-ps-correctors-ia20-m12.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia01.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia02.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia03.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia04.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia05.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia06.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia07.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia08.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia09.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia10.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia11.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia12.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia13.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia14.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia15.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia16.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia17.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia18.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia19.service
+	systemctl disable sirius-ioc-si-ps-correctors-c2m12-ia20.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia01.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia02.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia03.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia04.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia05.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia06.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia07.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia08.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia09.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia10.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia11.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia12.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia13.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia14.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia15.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia16.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia17.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia18.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia19.service
+	systemctl disable sirius-ioc-si-ps-correctors-c134-ia20.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia01.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia02.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia03.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia04.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia05.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia06.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia07.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia08.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia09.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia10.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia11.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia12.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia13.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia14.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia15.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia16.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia17.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia18.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia19.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-c1234-ia20.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia01.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia02.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia03.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia04.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia05.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia06.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia07.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia08.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia09.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia10.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia11.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia12.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia13.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia14.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia15.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia16.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia17.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia18.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia19.service
+	systemctl disable sirius-ioc-si-ps-trims-qs-m12-ia20.service
 	systemctl disable sirius-ioc-as-ps-dclink-tbts.service
 	systemctl disable sirius-ioc-as-ps-dclink-ia01.service
 	systemctl disable sirius-ioc-as-ps-dclink-ia02.service
@@ -544,66 +624,86 @@ uninstall: stop disable
 	rm -rf /etc/systemd/system/sirius-ioc-si-ps-sextupoles-sfa12-sda3p1.service
 	rm -rf /etc/systemd/system/sirius-ioc-si-ps-sextupoles-sfb12-sdb3.service
 	rm -rf /etc/systemd/system/sirius-ioc-si-ps-sextupoles-sfp12-sdp23.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia01-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia01-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia01-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia02-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia02-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia02-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia03-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia03-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia03-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia04-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia04-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia04-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia05-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia05-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia05-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia06-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia06-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia06-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia07-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia07-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia07-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia08-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia08-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia08-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia09-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia09-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia09-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia10-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia10-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia10-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia11-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia11-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia11-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia12-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia12-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia12-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia13-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia13-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia13-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia14-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia14-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia14-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia15-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia15-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia15-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia16-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia16-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia16-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia17-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia17-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia17-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia18-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia18-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia18-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia19-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia19-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia19-m12.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia20-c2.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia20-c134.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-ia20-m12.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia01.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia02.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia03.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia04.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia05.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia06.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia07.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia08.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia09.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia10.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia11.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia12.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia13.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia14.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia15.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia16.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia17.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia18.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia19.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c2m12-ia20.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia01.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia02.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia03.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia04.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia05.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia06.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia07.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia08.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia09.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia10.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia11.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia12.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia13.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia14.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia15.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia16.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia17.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia18.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia19.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-c134-ia20.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia01.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia02.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia03.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia04.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia05.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia06.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia07.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia08.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia09.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia10.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia11.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia12.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia13.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia14.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia15.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia16.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia17.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia18.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia19.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-c1234-ia20.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia01.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia02.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia03.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia04.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia05.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia06.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia07.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia08.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia09.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia10.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia11.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia12.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia13.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia14.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia15.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia16.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia17.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia18.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia19.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-trims-qs-m12-ia20.service
 	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-tbts.service
 	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia01.service
 	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia02.service
