@@ -1,4 +1,4 @@
-INSTALL - as-ti-control
+INSTALL - li-ap-energy
 =================
 
 This package can be installed using setuptools (>=16.0). There is no automatic

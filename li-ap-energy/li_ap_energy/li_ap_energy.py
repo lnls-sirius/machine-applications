@@ -1,14 +1,14 @@
 """IOC Module."""
 
 import os as _os
-import time as _time
 import logging as _log
 import signal as _signal
 from threading import Event as _Event
 import pcaspy as _pcaspy
-import pcaspy.tools as _pcaspy_tools
+from pcaspy.tools import ServerThread
 from siriuspy import util as _util
 from siriuspy.csdevice import util as _cutil
+from siriuspy.csdevice.energymeas import EnergyMeas as CSEnergy
 from siriuspy.envars import vaca_prefix as _vaca_prefix
 from .main import App
 
@@ -71,25 +71,7 @@ class _Driver(_pcaspy.Driver):
         return True
 
 
-class _ServerThread(_pcaspy_tools.ServerThread):
-
-    def __init__(self, server, interval=0.1):
-        super().__init__(server)
-        self.interval = interval
-
-    def run(self):
-        """
-        Start the server processing
-        """
-        while self.running:
-            t0 = _time.time()
-            self.server.process(self.interval)
-            dt = _time.time() - t0
-            if dt > self.interval*1.1:
-                _log.info('Process took: {0:.4f} s'.format(dt))
-
-
-def run(debug=False, interval=0.1):
+def run(debug=False):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
@@ -100,9 +82,7 @@ def run(debug=False, interval=0.1):
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # Creates App object
-    _log.debug('Creating App Object.')
-    app = App()
-    db = app.get_database()
+    db = CSEnergy.get_database()
     db[ioc_prefix + 'Version-Cte'] = {'type': 'string', 'value': __version__}
     # add PV Properties-Cte with list of all IOC PVs:
     db = _cutil.add_pvslist_cte(db, prefix=ioc_prefix)
@@ -122,10 +102,11 @@ def run(debug=False, interval=0.1):
     _log.info('Setting Server Database.')
     server.createPV(ioc_prefix, db)
     _log.info('Creating Driver.')
+    app = App()
     _Driver(app)
 
     # initiate a new thread responsible for listening for client connections
-    server_thread = _ServerThread(server, interval)
+    server_thread = ServerThread(server)
     server_thread.daemon = True
     _log.info('Starting Server Thread.')
     server_thread.start()
