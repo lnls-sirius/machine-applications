@@ -5,7 +5,7 @@ from functools import reduce as _reduce
 from operator import and_ as _and_
 import logging as _log
 from siriuspy.csdevice import timesys as _cstime
-from siriuspy.timesys import HLTrigger as _HLTrigger
+from siriuspy.measurements import MeasEnergy
 
 _TIMEOUT = 0.05
 
@@ -20,30 +20,16 @@ class App:
             db.update(obj.get_database())
         return db
 
-    def __init__(self, driver=None, trig_list=[]):
+    def __init__(self, driver=None,):
         """Initialize the instance.
 
         driver : is the driver associated with this app;
         triggers_list: is the list of the high level triggers to be managed;
         """
         self.driver = driver
-        self._objects = list()
-        if trig_list:
-            for pref in trig_list:
-                self._objects.append(_HLTrigger(pref, self._update_driver))
+        self.meas = MeasEnergy(callback=self._update_driver)
         self._map2writepvs = self.get_map2writepvs()
         self._map2readpvs = self.get_map2readpvs()
-
-    @property
-    def locked(self):
-        """Start locking Low Level PVs."""
-        return _reduce(_and_, map(lambda x: x.locked, self._objects))
-
-    @locked.setter
-    def locked(self, lock):
-        """Stop locking Low Level PVs."""
-        for obj in self._objects:
-            obj.locked = lock
 
     def process(self, interval):
         """Run continuously in the main thread."""
@@ -69,21 +55,19 @@ class App:
             value = self.driver.getParam(reason)
         else:
             fun_ = self._map2readpvs.get(reason)
-            value = fun_()['value']
+            value = fun_()
         return value
 
     def get_map2writepvs(self):
         """Get dictionary to write pvs to objects."""
         map2writepvs = dict()
-        for obj in self._objects:
-            map2writepvs.update(obj.get_map2writepvs())
+        map2writepvs.update(self.meas.get_map2write())
         return map2writepvs
 
     def get_map2readpvs(self):
         """Get dictionary to read pvs from objects."""
         map2readpvs = dict()
-        for obj in self._objects:
-            map2readpvs.update(obj.get_map2readpvs())
+        map2readpvs.update(self.meas.get_map2read())
         return map2readpvs
 
     def _update_driver(
