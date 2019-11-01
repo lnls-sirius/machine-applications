@@ -7,11 +7,11 @@ import signal as _signal
 from threading import Event as _Event
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-from as_ti_control import App
 from siriuspy import util as _util
 from siriuspy.csdevice import util as _cutil
 from siriuspy.envars import vaca_prefix as _vaca_prefix
-from siriuspy.search import HLTimeSearch as _HLTimeSearch
+from .main import App
+
 
 __version__ = _util.get_last_commit_hash()
 INTERVAL = 0.5
@@ -89,84 +89,46 @@ class _ServerThread(_pcaspy_tools.ServerThread):
                 _log.info('Process took: {0:.4f} s'.format(dt))
 
 
-def run(timing='trig-all', lock=False, wait=5, debug=False, interval=0.1):
+def run(debug=False, interval=0.1):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
+    ioc_prefix = _vaca_prefix + 'LI-Glob:AP-MeasEnergy:'
 
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
-    # get IOC name and triggers list
-    if not trig_list:
-        _log.fatal('Must select some triggers to run IOC.')
-        return
     # Creates App object
     _log.debug('Creating App Object.')
-    app = App(trig_list=trig_list)
+    app = App()
     db = app.get_database()
-    db[ioc_prefix + ':Version-Cte'] = {'type': 'string', 'value': __version__}
+    db[ioc_prefix + 'Version-Cte'] = {'type': 'string', 'value': __version__}
     # add PV Properties-Cte with list of all IOC PVs:
     db = _cutil.add_pvslist_cte(db, prefix=ioc_prefix)
     # check if IOC is already running
     running = _util.check_pv_online(
-        pvname=_vaca_prefix + sorted(db.keys())[0],
+        pvname=ioc_prefix + sorted(db.keys())[0],
         use_prefix=False, timeout=0.5)
     if running:
-        _log.error('Another ' + ioc_name + ' is already running!')
+        _log.error('Another ' + ioc_prefix + ' is already running!')
         return
     _util.print_ioc_banner(
-            ioc_name, db, 'High Level Timing IOC.', __version__, _vaca_prefix)
+            ioc_prefix, db, 'LI Energy IOC.', __version__, '')
     # create a new simple pcaspy server and driver to respond client's requests
     _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, db)
     _log.info('Setting Server Database.')
-    server.createPV(_vaca_prefix, db)
+    server.createPV(ioc_prefix, db)
     _log.info('Creating Driver.')
     _Driver(app)
-
-    if not lock:
-        tm = max(2, wait)
-        _log.info(
-            'Waiting ' + str(tm) + ' seconds to start locking Low Level.')
-        stop_event.wait(tm)
-        _log.info('Start locking now.')
-
-    if not stop_event.is_set():
-        app.locked = True
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _ServerThread(server, interval)
     server_thread.daemon = True
     _log.info('Starting Server Thread.')
     server_thread.start()
-
-    # set state
-    db = app.get_database()
-    m2w = app.get_map2writepvs()
-    if lock:
-        for pv, fun in m2w.items():
-            if pv.endswith('-Cmd') or pv.endswith('LowLvlLock-Sel'):
-                continue
-            val = db[pv]['value']
-            fun(val)
-    else:  # or update driver state
-        for pv, fun in app.get_map2readpvs().items():
-            val = fun()
-            value = val.pop('value')
-            if value is None:
-                value = db[pv]['value']
-            if pv.endswith(('-SP', '-Sel')) and not pv.endswith('LvlLock-Sel'):
-                m2w[pv](value)
-            try:
-                app.driver.setParam(pv, value)
-            except TypeError as err:
-                print(pv, value)
-                raise err
-            app.driver.setParamStatus(pv, **val)
-            app.driver.updatePV(pv)
 
     # main loop
     while not stop_event.is_set():
