@@ -25,10 +25,6 @@ def print_help():
     print('       --help')
     print('               print this help.')
     print()
-    print('       --eth')
-    print('               use eth-brigde-pru service to communicate '
-          'with power supplies.')
-    print()
     print('       --sim')
     print('               simulate power supplies.')
     print()
@@ -56,7 +52,6 @@ def main():
     else:
         args = [arg for arg in sys.argv[1:]]
         simulate = False
-        eth = False
         if '--sim' in args:
             simulate = True
             args.remove('--sim')
@@ -68,13 +63,12 @@ def main():
             bbbname = hostname.replace('--', ':')
             args = [bbbname, ]
         if '--eth' in args:
-            eth = True
             args.remove('--eth')
-        if eth and simulate:
+        if simulate:
             print('Simulation using ethernet PRUserial485 is not implemented!')
             return
         if args:
-            ioc_module.run(args, simulate=simulate, eth=eth)
+            ioc_module.run(args, simulate=simulate)
 
 
 if __name__ == "__main__":

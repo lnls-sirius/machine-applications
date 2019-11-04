@@ -5,35 +5,33 @@ import sys as _sys
 import signal as _signal
 import logging as _log
 import traceback as _traceback
+
+from copy import deepcopy as _deepcopy
+
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-from copy import deepcopy as _deepcopy
 
 from siriuspy import util as _util
 from siriuspy.envars import vaca_prefix as _VACA_PREFIX
-from as_ps.main import App
 from siriuspy.pwrsupply.beaglebone import BBBFactory
 
-stop_event = False  # _multiprocessing.Event()
-pcas_driver = None
+from as_ps.main import App
+
+STOP_EVENT = False  # _multiprocessing.Event()
+PCAS_DRIVER = None
 
 _PREFIX = _VACA_PREFIX
 _COMMIT_HASH = _util.get_last_commit_hash()
 
 
 def _stop_now(signum, frame):
-    global stop_event
+    global STOP_EVENT
     print(_signal.Signals(signum).name + ' received at ' +
           _util.get_timestamp())
     _sys.stdout.flush()
     _sys.stderr.flush()
-    stop_event = True
-    pcas_driver.app.scan = False
-
-
-def get_devices(bbbs, simulate=False):
-    """Rerturn a controller for each device."""
-    pass
+    STOP_EVENT = True
+    PCAS_DRIVER.app.scan = False
 
 
 def get_database_set(bbblist):
@@ -55,16 +53,6 @@ def _attribute_access_security_group(server, db):
     server.initAccessSecurityFile(path_ + '/access_rules.as')
 
 
-def _is_running(dbset):
-    prefix = tuple(dbset.keys())[0]
-    propty = tuple(dbset[prefix].keys())[0]
-    pvname = prefix + propty
-    # print(pvname)
-    running = _util.check_pv_online(
-        pvname=pvname, use_prefix=False, timeout=0.5)
-    return running
-
-
 class _PCASDriver(_pcaspy.Driver):
 
     def __init__(self, bbblist, dbset):
@@ -82,7 +70,7 @@ class _PCASDriver(_pcaspy.Driver):
         return self.app.write(reason, value)
 
 
-def run(bbbnames, simulate=False, eth=False):
+def run(bbbnames, simulate=False):
     """Run function.
 
     This is the main function of the IOC:
@@ -92,7 +80,7 @@ def run(bbbnames, simulate=False, eth=False):
     4. Creates a Driver to handle requests
     5. Starts a thread (thread_server) that listens to client connections
     """
-    global pcas_driver
+    global PCAS_DRIVER
 
     # Define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
@@ -106,16 +94,11 @@ def run(bbbnames, simulate=False, eth=False):
     for bbbname in bbbnames:
         bbbname = bbbname.replace('--', ':')
         bbb, dbase = BBBFactory.create(
-            bbbname=bbbname, simulate=simulate, eth=eth)
+            bbbname=bbbname, simulate=simulate)
         bbblist.append(bbb)
         dbset.update(dbase)
 
     dbset = {_PREFIX: dbset}
-
-    # Check if IOC is already running
-    if _is_running(dbset):
-        print('Another PS IOC is already running!')
-        return
 
     # Create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
@@ -123,7 +106,7 @@ def run(bbbnames, simulate=False, eth=False):
         server.createPV(prefix, dbase)
 
     # Create driver to handle requests
-    pcas_driver = _PCASDriver(bbblist, dbset)
+    PCAS_DRIVER = _PCASDriver(bbblist, dbset)
 
     # Create a new thread responsible for listening for client connections
     thread_server = _pcaspy_tools.ServerThread(server)
@@ -132,9 +115,9 @@ def run(bbbnames, simulate=False, eth=False):
     thread_server.start()
 
     # Main loop - run app.proccess
-    while not stop_event:
+    while not STOP_EVENT:
         try:
-            pcas_driver.app.process()
+            PCAS_DRIVER.app.process()
         except Exception:
             _log.warning('[!!] - exception while processing main loop')
             _traceback.print_exc()
