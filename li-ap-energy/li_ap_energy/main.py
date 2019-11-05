@@ -30,25 +30,27 @@ class App:
     def process(self, interval):
         """Run continuously in the main thread."""
         t0 = _time.time()
-        stt = None
-        if self.meas.measuring:
-            if not self.should_measure():
-                stt = self.meas.MeasureState.Stopped
-        else:
-            if not self.should_measure():
-                if self._was_measuring:
-                    stt = self.meas.MeasureState.Measuring
-        if stt is not None:
-            self.meas.measuring = stt
-            self._update_driver('MeasureCtrl-Sel', stt)
-            self._update_driver('MeasureCtrl-Sts', stt)
-
+        # self.turnoff_if_no_beam()
         tf = _time.time()
         dt = interval - (tf-t0)
         if dt > 0:
             _time.sleep(dt)
         else:
             _log.warning('process took {0:f}ms.'.format((tf-t0)*1000))
+
+    def turnoff_if_no_beam(self):
+        stt = None
+        if self.meas.measuring:
+            if not self.should_measure():
+                stt = self.meas.MeasureState.Stopped
+        else:
+            if self.should_measure():
+                if self._was_measuring:
+                    stt = self.meas.MeasureState.Measuring
+        if stt is not None:
+            self.meas.measuring = stt
+            self._update_driver('MeasureCtrl-Sel', stt)
+            self._update_driver('MeasureCtrl-Sts', stt)
 
     def should_measure(self):
         return self._egun_pv.value and self._spect_pv.value > 10
