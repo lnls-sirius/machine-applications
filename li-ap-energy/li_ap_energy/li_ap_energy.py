@@ -83,9 +83,9 @@ def run(debug=False):
 
     # Creates App object
     db = CSEnergy.get_database()
-    db[ioc_prefix + 'Version-Cte'] = {'type': 'string', 'value': __version__}
+    db['Version-Cte'] = {'type': 'string', 'value': __version__}
     # add PV Properties-Cte with list of all IOC PVs:
-    db = _cutil.add_pvslist_cte(db, prefix=ioc_prefix)
+    db = _cutil.add_pvslist_cte(db, prefix='')
     # check if IOC is already running
     running = _util.check_pv_online(
         pvname=ioc_prefix + sorted(db.keys())[0],
@@ -94,7 +94,7 @@ def run(debug=False):
         _log.error('Another ' + ioc_prefix + ' is already running!')
         return
     _util.print_ioc_banner(
-            ioc_prefix, db, 'LI Energy IOC.', __version__, '')
+            '', db, 'LI Energy IOC.', __version__, ioc_prefix)
     # create a new simple pcaspy server and driver to respond client's requests
     _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
