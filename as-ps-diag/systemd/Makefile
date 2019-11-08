@@ -153,46 +153,46 @@ uninstall-si-qs: stop-si-qs
 	systemctl reset-failed
 
 
-install-si-trim-01:
-	@printf "Installing sirius-ioc-si-ps-diag-trim-01 service...\n"
-	cp -rf sirius-ioc-si-ps-diag-trim-01.service /etc/systemd/system/
+install-si-trim-q1234:
+	@printf "Installing sirius-ioc-si-ps-diag-trim-q1234 service...\n"
+	cp -rf sirius-ioc-si-ps-diag-trim-q1234.service /etc/systemd/system/
 	mkdir -p /home/sirius/iocs-log
 	systemctl daemon-reload
 
-stop-si-trim-01:
-	@printf "Stopping  sirius-ioc-si-ps-diag-trim-01...\n"
-	systemctl stop sirius-ioc-si-ps-diag-trim-01.service
+stop-si-trim-q1234:
+	@printf "Stopping  sirius-ioc-si-ps-diag-trim-q1234...\n"
+	systemctl stop sirius-ioc-si-ps-diag-trim-q1234.service
 
-start-si-trim-01:
-	@printf "Starting  sirius-ioc-si-ps-diag-trim-01...\n"
-	systemctl start sirius-ioc-si-ps-diag-trim-01.service
+start-si-trim-q1234:
+	@printf "Starting  sirius-ioc-si-ps-diag-trim-q1234...\n"
+	systemctl start sirius-ioc-si-ps-diag-trim-q1234.service
 
-uninstall-si-trim-01: stop-si-trim-01
-	@printf "Uninstalling  sirius-ioc-si-ps-diag-trim-01...\n"
-	systemctl disable sirius-ioc-si-ps-diag-trim-01.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-diag-trim-01.service
+uninstall-si-trim-q1234: stop-si-trim-q1234
+	@printf "Uninstalling  sirius-ioc-si-ps-diag-trim-q1234...\n"
+	systemctl disable sirius-ioc-si-ps-diag-trim-q1234.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-diag-trim-q1234.service
 	systemctl daemon-reload
 	systemctl reset-failed
 
 
-install-si-trim-02:
-	@printf "Installing sirius-ioc-si-ps-diag-trim-02 service...\n"
-	cp -rf sirius-ioc-si-ps-diag-trim-02.service /etc/systemd/system/
+install-si-trim-qfqd:
+	@printf "Installing sirius-ioc-si-ps-diag-trim-qfqd service...\n"
+	cp -rf sirius-ioc-si-ps-diag-trim-qfqd.service /etc/systemd/system/
 	mkdir -p /home/sirius/iocs-log
 	systemctl daemon-reload
 
-stop-si-trim-02:
-	@printf "Stopping  sirius-ioc-si-ps-diag-trim-02...\n"
-	systemctl stop sirius-ioc-si-ps-diag-trim-02.service
+stop-si-trim-qfqd:
+	@printf "Stopping  sirius-ioc-si-ps-diag-trim-qfqd...\n"
+	systemctl stop sirius-ioc-si-ps-diag-trim-qfqd.service
 
-start-si-trim-02:
-	@printf "Starting  sirius-ioc-si-ps-diag-trim-02...\n"
-	systemctl start sirius-ioc-si-ps-diag-trim-02.service
+start-si-trim-qfqd:
+	@printf "Starting  sirius-ioc-si-ps-diag-trim-qfqd...\n"
+	systemctl start sirius-ioc-si-ps-diag-trim-qfqd.service
 
-uninstall-si-trim-02: stop-si-trim-02
-	@printf "Uninstalling  sirius-ioc-si-ps-diag-trim-02...\n"
-	systemctl disable sirius-ioc-si-ps-diag-trim-02.service
-	rm -rf /etc/systemd/system/sirius-ioc-si-ps-diag-trim-02.service
+uninstall-si-trim-qfqd: stop-si-trim-qfqd
+	@printf "Uninstalling  sirius-ioc-si-ps-diag-trim-qfqd...\n"
+	systemctl disable sirius-ioc-si-ps-diag-trim-qfqd.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-diag-trim-qfqd.service
 	systemctl daemon-reload
 	systemctl reset-failed
 
@@ -219,13 +219,13 @@ uninstall-si-fc: stop-si-fc
 	systemctl reset-failed
 
 
-install-si: install-si-fam install-si-ch install-si-cv install-si-qs install-si-trim-01 install-si-trim-02 install-si-fc
+install-si: install-si-fam install-si-ch install-si-cv install-si-qs install-si-trim-q1234 install-si-trim-qfqd install-si-fc
 
-stop-si: stop-si-fam stop-si-ch stop-si-cv stop-si-qs stop-si-trim-01 stop-si-trim-02 stop-si-fc
+stop-si: stop-si-fam stop-si-ch stop-si-cv stop-si-qs stop-si-trim-q1234 stop-si-trim-qfqd stop-si-fc
 
-start-si: start-si-fam start-si-ch start-si-cv start-si-qs start-si-trim-01 start-si-trim-02 start-si-fc
+start-si: start-si-fam start-si-ch start-si-cv start-si-qs start-si-trim-q1234 start-si-trim-qfqd start-si-fc
 
-uninstall-si: uninstall-si-fam uninstall-si-ch uninstall-si-cv uninstall-si-qs uninstall-si-trim-01 uninstall-si-trim-02 uninstall-si-fc
+uninstall-si: uninstall-si-fam uninstall-si-ch uninstall-si-cv uninstall-si-qs uninstall-si-trim-q1234 uninstall-si-trim-qfqd uninstall-si-fc
 
 
 # --- ALL ACCELERATORS ---
