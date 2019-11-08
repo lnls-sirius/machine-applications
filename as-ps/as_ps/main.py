@@ -224,7 +224,6 @@ class App:
 
     def _check_value_changed(self, reason, new_value):
         old_value = self.driver.getParam(reason)
-        # NOTE: convert all WfmData to numpy from bottom up to here!
         if isinstance(new_value, _np.ndarray):
             if not isinstance(old_value, _np.ndarray):
                 # NOTE: this might be necessary only in the initialization.
