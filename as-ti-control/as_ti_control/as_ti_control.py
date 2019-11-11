@@ -34,14 +34,14 @@ def _attribute_access_security_group(server, db):
     server.initAccessSecurityFile(path_ + '/access_rules.as')
 
 
-def _get_ioc_name_and_triggers(sec):
-    if sec.lower() not in TRIG_TYPES:
-        _log.error("wrong input value for parameter 'triggers'.")
-        raise Exception("wrong input value for parameter 'triggers'.")
+def _get_ioc_name_and_triggers(section):
+    if section.lower() not in TRIG_TYPES:
+        _log.error("wrong input value for parameter 'section'.")
+        raise Exception("wrong input value for parameter 'section'.")
 
-    trig_list = _HLTimeSearch.get_hl_triggers({'sec': sec.upper()})
-    ioc_name = sec + '-ti-trig'
-    ioc_prefix = sec.upper() + '-Glob:TI-Trig:'
+    trig_list = _HLTimeSearch.get_hl_triggers({'sec': section.upper()})
+    ioc_name = section.lower() + '-ti-trig'
+    ioc_prefix = section.upper() + '-Glob:TI-Trig:'
     return ioc_name, ioc_prefix, trig_list
 
 
@@ -84,7 +84,7 @@ class _Driver(_pcaspy.Driver):
         return True
 
 
-def run(sec='as', lock=False, wait=5, debug=False):
+def run(section='as', lock=False, wait=5, debug=False):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
@@ -94,7 +94,7 @@ def run(sec='as', lock=False, wait=5, debug=False):
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # get IOC name and triggers list
-    ioc_name, ioc_prefix, trig_list = _get_ioc_name_and_triggers(sec)
+    ioc_name, ioc_prefix, trig_list = _get_ioc_name_and_triggers(section)
     if not trig_list:
         _log.fatal('Must select some triggers to run IOC.')
         return

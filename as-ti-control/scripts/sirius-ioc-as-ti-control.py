@@ -24,4 +24,4 @@ parser.add_argument(
     )
 
 args = parser.parse_args()
-run(sec=args.section, lock=args.lock, wait=args.wait, debug=args.debug)
+run(section=args.section, lock=args.lock, wait=args.wait, debug=args.debug)
