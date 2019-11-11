@@ -5,8 +5,8 @@ from as_ti_control import run, TRIG_TYPES
 
 parser = _argparse.ArgumentParser(description="Run Timing IOC.")
 parser.add_argument(
-    '-t', "--timing", type=str, default='trig-all',
-    help="Which high level Timing properties to manage (trig-all)",
+    '-s', "--section", type=str, default='as',
+    help="Which section high level Timing properties to manage (as)",
     choices=sorted(TRIG_TYPES)
     )
 parser.add_argument(
@@ -22,11 +22,6 @@ parser.add_argument(
     '-d', '--debug', action='store_true', default=False,
     help="Starts IOC in Debug Mode. (False)"
     )
-parser.add_argument(
-    '-i', '--interval', type=float, default=0.1,
-    help="Set interval for server process in seconds. (0.1s)"
-    )
 
 args = parser.parse_args()
-run(timing=args.timing, lock=args.lock, wait=args.wait,
-    debug=args.debug, interval=args.interval)
+run(sec=args.section, lock=args.lock, wait=args.wait, debug=args.debug)

@@ -1,12 +1,11 @@
 """IOC Module."""
 
 import os as _os
-import time as _time
 import logging as _log
 import signal as _signal
 from threading import Event as _Event
 import pcaspy as _pcaspy
-import pcaspy.tools as _pcaspy_tools
+from pcaspy.tools import ServerThread
 from as_ti_control import App
 from siriuspy import util as _util
 from siriuspy.csdevice import util as _cutil
@@ -18,9 +17,7 @@ INTERVAL = 0.5
 stop_event = _Event()
 
 _hl_trig = _HLTimeSearch.get_hl_triggers()
-TRIG_TYPES = {
-    'trig-as', 'trig-si', 'trig-bo', 'trig-tb', 'trig-ts', 'trig-li',
-    'trig-all'}
+TRIG_TYPES = {'as', 'si', 'bo', 'tb', 'ts', 'li'}
 
 
 def _stop_now(signum, frame):
@@ -37,22 +34,14 @@ def _attribute_access_security_group(server, db):
     server.initAccessSecurityFile(path_ + '/access_rules.as')
 
 
-def _get_ioc_name_and_triggers(timing):
-    if timing.lower() not in TRIG_TYPES:
+def _get_ioc_name_and_triggers(sec):
+    if sec.lower() not in TRIG_TYPES:
         _log.error("wrong input value for parameter 'triggers'.")
         raise Exception("wrong input value for parameter 'triggers'.")
 
-    trig_list = []
-    sec = 'as'
-    if timing.endswith('all'):
-        trig_list = _HLTimeSearch.get_hl_triggers()
-        suf = 'AllTrigs'
-    if timing.endswith(('-as', '-li', '-tb', '-bo', '-ts', '-si')):
-        trig_list = _HLTimeSearch.get_hl_triggers({'sec': timing[-2:].upper()})
-        sec = timing[-2:]
-        suf = sec.upper() + 'Trigs'
-    ioc_name = sec + '-ti-' + suf.lower()
-    ioc_prefix = sec.upper() + '-Glob:TI-HighLvl-' + suf
+    trig_list = _HLTimeSearch.get_hl_triggers({'sec': sec.upper()})
+    ioc_name = sec + '-ti-trig'
+    ioc_prefix = sec.upper() + '-Glob:TI-Trig:'
     return ioc_name, ioc_prefix, trig_list
 
 
@@ -95,25 +84,7 @@ class _Driver(_pcaspy.Driver):
         return True
 
 
-class _ServerThread(_pcaspy_tools.ServerThread):
-
-    def __init__(self, server, interval=0.1):
-        super().__init__(server)
-        self.interval = interval
-
-    def run(self):
-        """
-        Start the server processing
-        """
-        while self.running:
-            t0 = _time.time()
-            self.server.process(self.interval)
-            dt = _time.time() - t0
-            if dt > self.interval*1.1:
-                _log.info('Process took: {0:.4f} s'.format(dt))
-
-
-def run(timing='trig-all', lock=False, wait=5, debug=False, interval=0.1):
+def run(sec='as', lock=False, wait=5, debug=False):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
@@ -123,7 +94,7 @@ def run(timing='trig-all', lock=False, wait=5, debug=False, interval=0.1):
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # get IOC name and triggers list
-    ioc_name, ioc_prefix, trig_list = _get_ioc_name_and_triggers(timing)
+    ioc_name, ioc_prefix, trig_list = _get_ioc_name_and_triggers(sec)
     if not trig_list:
         _log.fatal('Must select some triggers to run IOC.')
         return
@@ -131,7 +102,7 @@ def run(timing='trig-all', lock=False, wait=5, debug=False, interval=0.1):
     _log.debug('Creating App Object.')
     app = App(trig_list=trig_list)
     db = app.get_database()
-    db[ioc_prefix + ':Version-Cte'] = {'type': 'string', 'value': __version__}
+    db[ioc_prefix + 'Version-Cte'] = {'type': 'string', 'value': __version__}
     # add PV Properties-Cte with list of all IOC PVs:
     db = _cutil.add_pvslist_cte(db, prefix=ioc_prefix)
     # check if IOC is already running
@@ -163,7 +134,7 @@ def run(timing='trig-all', lock=False, wait=5, debug=False, interval=0.1):
         app.locked = True
 
     # initiate a new thread responsible for listening for client connections
-    server_thread = _ServerThread(server, interval)
+    server_thread = ServerThread(server)
     server_thread.daemon = True
     _log.info('Starting Server Thread.')
     server_thread.start()
