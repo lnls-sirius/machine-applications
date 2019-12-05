@@ -1,5 +1,5 @@
 [Unit]
-Description=Soft IOC for Timing Linac Triggers
+Description=Soft IOC for Linac Triggers
 After=multi-user.target
 
 [Service]
