@@ -11,4 +11,4 @@ StandardOutput=syslog
 StandardError=syslog
 ExecStartPre=/bin/bash --login -c 'env > /home/sirius/iocs-log/env-sirius-ioc-bo-ps-sextupole-sf'
 EnvironmentFile=-/home/sirius/iocs-log/env-sirius-ioc-bo-ps-sextupole-sf
-ExecStart=/usr/local/bin/sirius-ioc-as-ps.py --eth PA-RaPSC03:CO-PSCtrl-BO2
+ExecStart=/usr/local/bin/sirius-ioc-as-ps.py PA-RaPSC03:CO-PSCtrl-BO2
