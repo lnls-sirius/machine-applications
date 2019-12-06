@@ -1,0 +1,26 @@
+[Unit]
+Description=Pulsed Power Supply Conv IOC
+After=multi-user.target
+
+[Service]
+Group=sirius
+User=sirius
+Type=simple
+WorkingDirectory=/home/sirius/iocs-log
+StandardOutput=syslog
+StandardError=syslog
+ExecStartPre=/bin/bash --login -c 'env > /home/sirius/iocs-log/env-sirius-ioc-as-pu-conv'
+EnvironmentFile=-/home/sirius/iocs-log/env-sirius-ioc-as-pu-conv
+ExecStart=/usr/local/bin/sirius-ioc-as-pu-conv.py \
+TB-04:PU-InjSept \
+BO-01D:PU-InjKckr \
+BO-48D:PU-EjeKckr \
+TS-01:PU-EjeSeptF \
+TS-01:PU-EjeSeptG \
+TS-04:PU-InjSeptG-1 \
+TS-04:PU-InjSeptG-2 \
+TS-04:PU-InjSeptF \
+SI-01SA:PU-InjDpKckr \
+SI-01SA:PU-InjNLKckr \
+SI-01SA:PU-PingH \
+SI-19C4:PU-PingV
