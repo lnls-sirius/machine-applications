@@ -16,8 +16,12 @@ __version__ = _util.get_last_commit_hash()
 INTERVAL = 0.5
 stop_event = _Event()
 
-_hl_trig = _HLTimeSearch.get_hl_triggers()
-TRIG_TYPES = {'as', 'si', 'bo', 'tb', 'ts', 'li'}
+SPECIAL_TRIGS = {
+    'si-bpms': 'SI-Fam:TI-BPM', 'si-skews': 'SI-Glob:TI-Mags-Skews',
+    'si-corrs': 'SI-Glob:TI-Mags-Corrs', 'si-qtrims': 'SI-Glob:TI-Mags-QTrims',
+    'bo-corrs': 'BO-Glob:TI-Mags-Corrs', 'bo-bpms': 'BO-Fam:TI-BPM'}
+TRIG_TYPES = {'as', 'tb', 'ts', 'li', 'si', 'bo'}
+TRIG_TYPES |= set(SPECIAL_TRIGS.keys())
 
 
 def _stop_now(signum, frame):
@@ -39,10 +43,21 @@ def _get_ioc_name_and_triggers(section):
         _log.error("wrong input value for parameter 'section'.")
         raise Exception("wrong input value for parameter 'section'.")
 
-    trig_list = _HLTimeSearch.get_hl_triggers({'sec': section.upper()})
-    ioc_name = section.lower() + '-ti-trig'
-    ioc_prefix = section.upper() + '-Glob:TI-Trig:'
-    return ioc_name, ioc_prefix, trig_list
+    if section in SPECIAL_TRIGS:
+        triglist = [SPECIAL_TRIGS[section], ]
+    else:
+        triglist = set(
+            _HLTimeSearch.get_hl_triggers({'sec': section.upper()[:2]}))
+        triglist = triglist - set(SPECIAL_TRIGS.values())
+        triglist = list(triglist)
+
+    ioc_name = section.lower()[:2] + '-ti-trig'
+    ioc_prefix = section.upper()[:2] + '-Glob:TI-Trig'
+    if len(section) > 2:
+        ioc_name += '-' + section[3:]
+        ioc_prefix = triglist[0]
+    ioc_prefix += ':'
+    return ioc_name, ioc_prefix, triglist
 
 
 class _Driver(_pcaspy.Driver):

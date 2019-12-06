@@ -1,5 +1,5 @@
 [Unit]
-Description=Soft IOC for Timing TB Triggers
+Description=Soft IOC for TB Triggers
 After=multi-user.target
 
 [Service]

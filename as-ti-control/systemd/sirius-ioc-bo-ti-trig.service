@@ -1,5 +1,5 @@
 [Unit]
-Description=Soft IOC for Timing Booster Triggers
+Description=Soft IOC for Booster Triggers
 After=multi-user.target
 
 [Service]
