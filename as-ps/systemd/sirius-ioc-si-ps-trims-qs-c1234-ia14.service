@@ -11,4 +11,4 @@ StandardOutput=syslog
 StandardError=syslog
 ExecStartPre=/bin/bash --login -c 'env > /home/sirius/iocs-log/env-sirius-ioc-si-ps-trims-qs-c1234-ia14'
 EnvironmentFile=-/home/sirius/iocs-log/env-sirius-ioc-si-ps-trims-qs-c1234-ia14
-ExecStart=/usr/local/bin/sirius-ioc-as-ps.py --eth IA-14RaCtrl:CO-PSCtrl-SI3
+ExecStart=/usr/local/bin/sirius-ioc-as-ps.py IA-14RaCtrl:CO-PSCtrl-SI3

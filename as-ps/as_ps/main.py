@@ -142,7 +142,9 @@ class App:
 
     def scan_device(self, bbb, device_name, force_update=False):
         """Scan BBB device and update ioc epics DB."""
-        dev_connected = bbb.check_connected(device_name)
+        dev_connected = \
+            bbb.check_connected(device_name) and \
+            bbb.check_connected_strength(device_name)
         self._update_ioc_database(bbb, device_name, dev_connected,
                                   force_update)
 

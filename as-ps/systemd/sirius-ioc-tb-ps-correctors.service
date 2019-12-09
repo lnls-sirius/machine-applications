@@ -11,4 +11,4 @@ StandardOutput=syslog
 StandardError=syslog
 ExecStartPre=/bin/bash --login -c 'env > /home/sirius/iocs-log/env-sirius-ioc-tb-ps-correctors'
 EnvironmentFile=-/home/sirius/iocs-log/env-sirius-ioc-tb-ps-correctors
-ExecStart=/usr/local/bin/sirius-ioc-as-ps.py --eth LA-RaCtrl:CO-PSCtrl-TB2
+ExecStart=/usr/local/bin/sirius-ioc-as-ps.py LA-RaCtrl:CO-PSCtrl-TB2
