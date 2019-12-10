@@ -1,0 +1,14 @@
+[Unit]
+Description=Soft IOC for SI Correctors Trigger
+After=multi-user.target
+
+[Service]
+Group=sirius
+User=sirius
+Type=simple
+WorkingDirectory=/home/sirius/iocs-log
+StandardOutput=syslog
+StandardError=syslog
+ExecStartPre=/bin/bash --login -c 'env > /tmp/sirius-ioc-si-ti-trig-corrs'
+EnvironmentFile=-/tmp/sirius-ioc-si-ti-trig-corrs
+ExecStart=/usr/local/bin/sirius-ioc-as-ti-control.py -s si-corrs

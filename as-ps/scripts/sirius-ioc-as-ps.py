@@ -7,6 +7,10 @@ from as_ps import as_ps as ioc_module
 from siriuspy.search import PSSearch
 
 
+# NOTE: maximum epics array size
+os.environ['EPICS_CA_MAX_ARRAY_BYTES'] = '100000'
+
+
 def print_help():
     """Print help."""
     name = os.path.basename(sys.argv[0])
