@@ -10,7 +10,7 @@ import as_ap_opticscorr.chrom.pvs as _pvs
 import as_ap_opticscorr.chrom.main as _main
 
 
-INTERVAL = 0.1
+INTERVAL = 0.25
 stop_event = False
 
 
@@ -37,11 +37,7 @@ class _PCASDriver(_pcaspy.Driver):
         self.app = _main.App(self)
 
     def read(self, reason):
-        value = self.app.read(reason)
-        if value is None:
-            return super().read(reason)
-        else:
-            return value
+        return super().read(reason)
 
     def write(self, reason, value):
         if self.app.write(reason, value):
