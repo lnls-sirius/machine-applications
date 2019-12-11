@@ -146,12 +146,18 @@ class App:
         streconv = self._streconvs[psname]
         conns = self._connectors[psname]
         values = (conns['-SP'].value, conns['-RB'].value, conns['-Mon'].value)
-        strength = streconv.conv_current_2_strength(values)
+        strengths = streconv.conv_current_2_strength(values)
 
         # update epics database
         for i, proptype in enumerate(conns.keys()):
             reason = psname + ':Kick' + proptype
-            self.driver.setParam(reason, strength[i])
+            if strengths is None or None in strengths:
+                self.driver.setParamStatus(
+                    reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+            else:
+                self.driver.setParam(reason, strengths[i])
+                self.driver.setParamStatus(
+                    reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
             self.driver.updatePV(reason)
 
     # --- private methods ---
