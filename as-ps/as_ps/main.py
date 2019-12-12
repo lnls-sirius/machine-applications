@@ -164,14 +164,12 @@ class App:
                 self._bbb_devices[dev_name] = bbb
 
     def _write_operation(self, bbb, pvname, value):
-        time0 = _time.time()
+        # time0 = _time.time()
         bbb.write(pvname.device_name, pvname.propty, value)
-        # NOTE: This scan_device might be redundent
-        # self.scan_device(bbb, pvname.device_name, force_update=True)
-        time1 = _time.time()
-        _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
-            'T ', pvname,
-            'write operation took {:.3f} ms'.format((time1-time0)*1000)))
+        # time1 = _time.time()
+        # _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
+        #     'T ', pvname,
+        #     'write operation took {:.3f} ms'.format((time1-time0)*1000)))
 
     def _update_ioc_database(self, bbb, device_name,
                              dev_connected=True,
@@ -226,33 +224,35 @@ class App:
 
     def _check_value_changed(self, reason, new_value):
         old_value = self.driver.getParam(reason)
-        if isinstance(new_value, _np.ndarray):
-            if not isinstance(old_value, _np.ndarray):
-                # NOTE: this might be necessary only in the initialization.
-                old_value = _np.array(old_value)
-            if not _np.all(old_value == new_value):
-                # NOTE: for a 4000-element numpy array comparison in
-                # a standard intel CPU takes:
-                # 1) np.all(a == b) -> ~4 us
-                # 2) np.allclose(a, b) -> 30 us
-                # 3) np.array_equal(a, b) -> ~4 us
-                # NOTE: it is not clear if numpy comparisons to avoid updating
-                # this PV do improve performance. how long does it take for
-                # pcaspy to update the numpy PV?
-                return True
-            else:
-                return False
-        else:
-            # NOTE: temporary
-            try:
-                if new_value != old_value:
+        try:
+            if isinstance(old_value, (tuple, list, _np.ndarray)) or \
+                    isinstance(new_value, (tuple, list, _np.ndarray)):
+                # transform to numpy arrays
+                if not isinstance(old_value, _np.ndarray):
+                    old_value = _np.array(old_value)
+                if not isinstance(new_value, _np.ndarray):
+                    new_value = _np.array(new_value)
+                # compare
+                if not _np.all(old_value == new_value):
+                    # NOTE: for a 4000-element numpy array comparison in
+                    # a standard intel CPU takes:
+                    # 1) np.all(a == b) -> ~4 us
+                    # 2) np.allclose(a, b) -> 30 us
+                    # 3) np.array_equal(a, b) -> ~4 us
+                    # NOTE: it is not clear if numpy comparisons to avoid
+                    # updating this PV do improve performance.
+                    # how long does it take for pcaspy to update the numpy PV?
                     return True
-            except:
-                print()
-                print(' !!!')
-                print('Incompatible types, pv: {}'.format(reason))
-                print('old_value: {}'.format(old_value))
-                print('new_value: {}'.format(new_value))
-                print(' !!!')
-                return False
-        return False
+                else:
+                    return False
+            else:
+                # simple type comparison
+                return new_value != old_value
+        except:
+            print()
+            print('--- debug ---')
+            print('reason: {}'.format(reason))
+            print('old_value: {}'.format(str(old_value)[:1000]))
+            print('new_value: {}'.format(str(new_value)[:1000]))
+            print(' !!!')
+            return True
