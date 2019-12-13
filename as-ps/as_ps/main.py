@@ -233,7 +233,8 @@ class App:
                 if not isinstance(new_value, _np.ndarray):
                     new_value = _np.array(new_value)
                 # compare
-                if not _np.all(old_value == new_value):
+                if len(old_value) != len(new_value) or \
+                        not _np.all(old_value == new_value):
                     # NOTE: for a 4000-element numpy array comparison in
                     # a standard intel CPU takes:
                     # 1) np.all(a == b) -> ~4 us
