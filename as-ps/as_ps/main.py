@@ -16,10 +16,6 @@ from siriuspy.thread import DequeThread as _DequeThread
 __version__ = _util.get_last_commit_hash()
 
 
-# Select whether to queue write requests or process them right away.
-_USE_WRITE_QUEUE = True
-
-
 # NOTE on current behaviour of PS IOC:
 #
 # 01. While in RmpWfm, MigWfm or SlowRefSync, the PS_I_LOAD variable read from
@@ -43,7 +39,7 @@ class App:
         self._driver = driver
 
         # write operation queue
-        self._dequethread = _DequeThread() if _USE_WRITE_QUEUE else None
+        self._dequethread = _DequeThread()
 
         # mapping device to bbb
         self._bbblist = bbblist
@@ -111,29 +107,20 @@ class App:
         pvname = _siriuspy.namesys.SiriusPVName(reason)
         _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
             'W ', reason, str(value)))
-        if _USE_WRITE_QUEUE:
-            # NOTE: This modified behaviour is to allow loading
-            # global_config to complete without artificial warning
-            # messages or unnecessary delays. Whether we should extend
-            # it to all power supplies remains to be checked.
-            if App._setpoint_regexp.match(reason):
-                # Accept *-SP and *-Sel right away (not *-Cmd !)
-                self.driver.setParam(reason, value)
-                self.driver.updatePV(reason)
-            bbb = self._bbb_devices[pvname.device_name]
-            operation = (self._write_operation, (bbb, pvname, value))
-            self._dequethread.append(operation)
-            self._dequethread.process()
-        else:
+
+        # NOTE: This modified behaviour is to allow loading
+        # global_config to complete without artificial warning
+        # messages or unnecessary delays. Whether we should extend
+        # it to all power supplies remains to be checked.
+        if App._setpoint_regexp.match(reason):
+            # Accept *-SP and *-Sel right away (not *-Cmd !)
             self.driver.setParam(reason, value)
             self.driver.updatePV(reason)
-            bbb = self._bbb_devices[pvname.device_name]
-            time0 = _time.time()
-            bbb.write(pvname.device_name, pvname.propty, value)
-            time1 = _time.time()
-            # self.scan_device(bbb, pvname.device_name, force_update=True)
-            _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
-                'T ', reason, '{:.3f} ms'.format((time1-time0)*1000)))
+
+        bbb = self._bbb_devices[pvname.device_name]
+        operation = (self._write_operation, (bbb, pvname, value))
+        self._dequethread.append(operation)
+        self._dequethread.process()
 
     def scan_bbb(self, bbb):
         """Scan BBB devices and update ioc epics DB."""
