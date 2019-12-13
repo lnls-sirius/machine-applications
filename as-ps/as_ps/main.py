@@ -210,6 +210,8 @@ class App:
         self._dev_connected[device_name] = dev_connected
 
     def _check_value_changed(self, reason, new_value):
+        if new_value is None:
+            return False
         old_value = self.driver.getParam(reason)
         try:
             if isinstance(old_value, (tuple, list, _np.ndarray)) or \
