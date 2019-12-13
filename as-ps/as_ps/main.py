@@ -249,11 +249,12 @@ class App:
             else:
                 # simple type comparison
                 return new_value != old_value
-        except:
+        except Exception as exception:
             print()
             print('--- debug ---')
-            print('reason: {}'.format(reason))
-            print('old_value: {}'.format(str(old_value)[:1000]))
-            print('new_value: {}'.format(str(new_value)[:1000]))
+            print('exception : {}'.format(type(exception)))
+            print('reason    : {}'.format(reason))
+            print('old_value : {}'.format(str(old_value)[:1000]))
+            print('new_value : {}'.format(str(new_value)[:1000]))
             print(' !!!')
             return True
