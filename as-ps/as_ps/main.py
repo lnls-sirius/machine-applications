@@ -16,10 +16,6 @@ from siriuspy.thread import DequeThread as _DequeThread
 __version__ = _util.get_last_commit_hash()
 
 
-# Select whether to queue write requests or process them right away.
-_USE_WRITE_QUEUE = True
-
-
 # NOTE on current behaviour of PS IOC:
 #
 # 01. While in RmpWfm, MigWfm or SlowRefSync, the PS_I_LOAD variable read from
@@ -43,7 +39,7 @@ class App:
         self._driver = driver
 
         # write operation queue
-        self._dequethread = _DequeThread() if _USE_WRITE_QUEUE else None
+        self._dequethread = _DequeThread()
 
         # mapping device to bbb
         self._bbblist = bbblist
@@ -111,29 +107,20 @@ class App:
         pvname = _siriuspy.namesys.SiriusPVName(reason)
         _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
             'W ', reason, str(value)))
-        if _USE_WRITE_QUEUE:
-            # NOTE: This modified behaviour is to allow loading
-            # global_config to complete without artificial warning
-            # messages or unnecessary delays. Whether we should extend
-            # it to all power supplies remains to be checked.
-            if App._setpoint_regexp.match(reason):
-                # Accept *-SP and *-Sel right away (not *-Cmd !)
-                self.driver.setParam(reason, value)
-                self.driver.updatePV(reason)
-            bbb = self._bbb_devices[pvname.device_name]
-            operation = (self._write_operation, (bbb, pvname, value))
-            self._dequethread.append(operation)
-            self._dequethread.process()
-        else:
+
+        # NOTE: This modified behaviour is to allow loading
+        # global_config to complete without artificial warning
+        # messages or unnecessary delays. Whether we should extend
+        # it to all power supplies remains to be checked.
+        if App._setpoint_regexp.match(reason):
+            # Accept *-SP and *-Sel right away (not *-Cmd !)
             self.driver.setParam(reason, value)
             self.driver.updatePV(reason)
-            bbb = self._bbb_devices[pvname.device_name]
-            time0 = _time.time()
-            bbb.write(pvname.device_name, pvname.propty, value)
-            time1 = _time.time()
-            # self.scan_device(bbb, pvname.device_name, force_update=True)
-            _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
-                'T ', reason, '{:.3f} ms'.format((time1-time0)*1000)))
+
+        bbb = self._bbb_devices[pvname.device_name]
+        operation = (self._write_operation, (bbb, pvname, value))
+        self._dequethread.append(operation)
+        self._dequethread.process()
 
     def scan_bbb(self, bbb):
         """Scan BBB devices and update ioc epics DB."""
@@ -164,14 +151,12 @@ class App:
                 self._bbb_devices[dev_name] = bbb
 
     def _write_operation(self, bbb, pvname, value):
-        time0 = _time.time()
+        # time0 = _time.time()
         bbb.write(pvname.device_name, pvname.propty, value)
-        # NOTE: This scan_device might be redundent
-        # self.scan_device(bbb, pvname.device_name, force_update=True)
-        time1 = _time.time()
-        _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
-            'T ', pvname,
-            'write operation took {:.3f} ms'.format((time1-time0)*1000)))
+        # time1 = _time.time()
+        # _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
+        #     'T ', pvname,
+        #     'write operation took {:.3f} ms'.format((time1-time0)*1000)))
 
     def _update_ioc_database(self, bbb, device_name,
                              dev_connected=True,
@@ -225,34 +210,40 @@ class App:
         self._dev_connected[device_name] = dev_connected
 
     def _check_value_changed(self, reason, new_value):
+        if new_value is None:
+            return False
         old_value = self.driver.getParam(reason)
-        if isinstance(new_value, _np.ndarray):
-            if not isinstance(old_value, _np.ndarray):
-                # NOTE: this might be necessary only in the initialization.
-                old_value = _np.array(old_value)
-            if not _np.all(old_value == new_value):
-                # NOTE: for a 4000-element numpy array comparison in
-                # a standard intel CPU takes:
-                # 1) np.all(a == b) -> ~4 us
-                # 2) np.allclose(a, b) -> 30 us
-                # 3) np.array_equal(a, b) -> ~4 us
-                # NOTE: it is not clear if numpy comparisons to avoid updating
-                # this PV do improve performance. how long does it take for
-                # pcaspy to update the numpy PV?
-                return True
-            else:
-                return False
-        else:
-            # NOTE: temporary
-            try:
-                if new_value != old_value:
+        try:
+            if isinstance(old_value, (tuple, list, _np.ndarray)) or \
+                    isinstance(new_value, (tuple, list, _np.ndarray)):
+                # transform to numpy arrays
+                if not isinstance(old_value, _np.ndarray):
+                    old_value = _np.array(old_value)
+                if not isinstance(new_value, _np.ndarray):
+                    new_value = _np.array(new_value)
+                # compare
+                if len(old_value) != len(new_value) or \
+                        not _np.all(old_value == new_value):
+                    # NOTE: for a 4000-element numpy array comparison in
+                    # a standard intel CPU takes:
+                    # 1) np.all(a == b) -> ~4 us
+                    # 2) np.allclose(a, b) -> 30 us
+                    # 3) np.array_equal(a, b) -> ~4 us
+                    # NOTE: it is not clear if numpy comparisons to avoid
+                    # updating this PV do improve performance.
+                    # how long does it take for pcaspy to update the numpy PV?
                     return True
-            except:
-                print()
-                print(' !!!')
-                print('Incompatible types, pv: {}'.format(reason))
-                print('old_value: {}'.format(old_value))
-                print('new_value: {}'.format(new_value))
-                print(' !!!')
-                return False
-        return False
+                else:
+                    return False
+            else:
+                # simple type comparison
+                return new_value != old_value
+        except Exception as exception:
+            print()
+            print('--- debug ---')
+            print('exception : {}'.format(type(exception)))
+            print('reason    : {}'.format(reason))
+            print('old_value : {}'.format(str(old_value)[:1000]))
+            print('new_value : {}'.format(str(new_value)[:1000]))
+            print(' !!!')
+            return True

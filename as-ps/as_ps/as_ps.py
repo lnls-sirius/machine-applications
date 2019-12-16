@@ -31,7 +31,8 @@ def _stop_now(signum, frame):
     _sys.stdout.flush()
     _sys.stderr.flush()
     STOP_EVENT = True
-    PCAS_DRIVER.app.scan = False
+    if PCAS_DRIVER is not None:
+        PCAS_DRIVER.app.scan = False
 
 
 def get_database_set(bbblist):
