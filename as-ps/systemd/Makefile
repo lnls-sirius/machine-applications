@@ -4,12 +4,7 @@ preparation:
 	@printf "Creating ioc-logs directory...\n"
 	mkdir -p /home/sirius/iocs-log
 
-install-service-bbb:
-	@printf "Installing sirius-bbb-ioc-ps service...\n"
-	cp -rf sirius-bbb-ioc-ps.service /etc/systemd/system/
-	systemctl daemon-reload
-
-install-services-ioc-ps: preparation
+install-services: preparation
 	@printf "Installing sirius-ioc-ps services...\n"
 	cp -rf sirius-ioc-tb-ps-dipoles.service /etc/systemd/system/
 	cp -rf sirius-ioc-tb-ps-quadrupoles.service /etc/systemd/system/
@@ -151,11 +146,9 @@ install-services-ioc-ps: preparation
 	cp -rf sirius-ioc-as-ps-dclink-ia20.service /etc/systemd/system/
 	systemctl daemon-reload
 
-install-services: install-service-bbb install-services-ioc-ps
 
 stop:
 	@printf "Stopping sirius-ioc-ps services...\n"
-	systemctl stop sirius-bbb-ioc-ps.service
 	systemctl stop sirius-ioc-tb-ps-dipoles.service
 	systemctl stop sirius-ioc-tb-ps-quadrupoles.service
 	systemctl stop sirius-ioc-tb-ps-correctors.service
@@ -295,11 +288,7 @@ stop:
 	systemctl stop sirius-ioc-as-ps-dclink-ia19.service
 	systemctl stop sirius-ioc-as-ps-dclink-ia20.service
 
-start-bbb:
-	@printf "Starting sirius-bbb-ioc-ps service...\n"
-	systemctl start sirius-bbb-ioc-ps.service
-
-start-ioc-ps: preparation
+start: preparation
 	@printf "Starting sirius-ioc-ps services...\n"
 	systemctl start sirius-ioc-tb-ps-dipoles.service
 	systemctl start sirius-ioc-tb-ps-quadrupoles.service
@@ -440,11 +429,9 @@ start-ioc-ps: preparation
 	systemctl start sirius-ioc-as-ps-dclink-ia19.service
 	systemctl start sirius-ioc-as-ps-dclink-ia20.service
 
-start: start-ioc-ps
 
 disable:
 	@printf "Disabling sirius-ioc-ps services...\n"
-	systemctl disable sirius-bbb-ioc-ps.service
 	systemctl disable sirius-ioc-tb-ps-dipoles.service
 	systemctl disable sirius-ioc-tb-ps-quadrupoles.service
 	systemctl disable sirius-ioc-tb-ps-correctors.service
@@ -586,7 +573,6 @@ disable:
 
 uninstall: stop disable
 	@printf "Uninstalling sirius-ioc-ps services...\n"
-	rm -rf /etc/systemd/system/sirius-bbb-ioc-ps.service
 	rm -rf /etc/systemd/system/sirius-ioc-tb-ps-dipoles.service
 	rm -rf /etc/systemd/system/sirius-ioc-tb-ps-quadrupoles.service
 	rm -rf /etc/systemd/system/sirius-ioc-tb-ps-correctors.service
