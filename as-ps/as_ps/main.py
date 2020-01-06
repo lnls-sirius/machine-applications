@@ -125,7 +125,7 @@ class App:
     def scan_bbb(self, bbb):
         """Scan BBB devices and update ioc epics DB."""
         for device_name in bbb.psnames:
-            self.scan_device(bbb, device_name)
+            self.scan_device(bbb, device_name, force_update=True)
 
     def scan_device(self, bbb, device_name, force_update=False):
         """Scan BBB device and update ioc epics DB."""
