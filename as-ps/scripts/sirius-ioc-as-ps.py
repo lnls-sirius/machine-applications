@@ -2,7 +2,6 @@
 """BeagleBone Black IOCs Launcher."""
 import sys
 import os
-import socket
 from as_ps import as_ps as ioc_module
 from siriuspy.search import PSSearch
 
@@ -29,16 +28,10 @@ def print_help():
     print('       --help')
     print('               print this help.')
     print()
-    print('       --sim')
-    print('               simulate power supplies.')
-    print()
-    print('       --hostname')
-    print('               take beaglebone name from hostname')
-    print()
 
 
 def main():
-    """Launch BBB IOC."""
+    """Launch PS IOC."""
     bbb_dict = PSSearch.get_bbbname_dict()
     bbbnames = sorted(bbb_dict.keys())
     if len(sys.argv) == 1:
@@ -55,24 +48,11 @@ def main():
             print()
     else:
         args = [arg for arg in sys.argv[1:]]
-        simulate = False
-        if '--sim' in args:
-            simulate = True
-            args.remove('--sim')
         if '--help' in args:
             args.remove('--help')
             print_help()
-        if '--hostname' in args:
-            hostname = socket.gethostname()
-            bbbname = hostname.replace('--', ':')
-            args = [bbbname, ]
-        if '--eth' in args:
-            args.remove('--eth')
-        if simulate:
-            print('Simulation using ethernet PRUserial485 is not implemented!')
-            return
         if args:
-            ioc_module.run(args, simulate=simulate)
+            ioc_module.run(args)
 
 
 if __name__ == "__main__":

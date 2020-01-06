@@ -175,7 +175,21 @@ class App:
         if not updated and not conn_changed:
             return
 
+        # get name of strength
+        strength_name = bbb.strength_name(device_name)
+
         for reason, new_value in data.items():
+
+            # set strength limits
+            if strength_name in reason:
+                lims = bbb.strength_limits(device_name)
+                if None not in lims:
+                    kwargs = self.driver.getParamInfo(reason)
+                    kwargs.update({
+                        'hihi': lims[1], 'high': lims[1], 'hilim': lims[1],
+                        'lolim': lims[0], 'low': lims[0], 'lolo': lims[0]})
+                    self.driver.setParamInfo(reason, kwargs)
+                    self.driver.updatePV(reason)
 
             if self._dequethread and App._setpoint_regexp.match(reason):
                 # While there are pending write operations in the queue we
