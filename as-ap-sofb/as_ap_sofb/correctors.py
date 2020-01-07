@@ -103,6 +103,27 @@ class RFCtrl(Corrector):
         #     'PwrState': _PV(LL_PREF+self._name+':PwrState-Sts', **opt)}
 
     @property
+    def value(self):
+        """Value."""
+        if self._rb.connected:
+            return self._rb.value
+
+    @value.setter
+    def value(self, freq):
+        delta_max = 20  # Hz
+        freq0 = self.value
+        if freq0 is None or freq is None:
+            return
+        delta = abs(freq-freq0)
+        if delta < 0.1 or delta > 10000:
+            return
+        npoints = round(delta/delta_max) + 2
+        freq_span = _np.linspace(freq0, freq, npoints)[1:]
+        for f in freq_span:
+            self._sp.put(f, wait=False)
+            _time.sleep(1)
+
+    @property
     def state(self):
         """State."""
         # TODO: database of RF GEN
@@ -179,16 +200,6 @@ class CHCV(Corrector):
         return conn
 
     @property
-    def value(self):
-        """Value."""
-        if self._rb.connected:
-            return self._rb.value
-
-    @value.setter
-    def value(self, val):
-        self._sp.put(val, wait=False)
-
-    @property
     def refvalue(self):
         if self._ref.connected:
             return self._ref.value
@@ -206,7 +217,7 @@ class Septum(Corrector):
         pvrb = pvsp.substitute(propty_suffix='RB')
         self._sp = _PV(pvsp, **opt)
         self._rb = _PV(pvrb, **opt)
-        self._nominalkick = 99.4  # mrad
+        self._nominalkick = 98.55  # mrad
         self._config_ok_vals = {
             'Pulse': 1,
             'PwrState': _PSConst.PwrStateSel.On}

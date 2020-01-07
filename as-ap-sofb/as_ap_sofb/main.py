@@ -31,15 +31,15 @@ class SOFB(_BaseClass):
         self._measuring_respmat = False
         self._ring_extension = 1
         self._corr_factor = {'ch': 1.00, 'cv': 1.00}
-        self._max_kick = {'ch': 3000, 'cv': 3000}
-        self._max_delta_kick = {'ch': 3000, 'cv': 3000}
-        self._meas_respmat_kick = {'ch': 300, 'cv': 150}
+        self._max_kick = {'ch': 300, 'cv': 300}
+        self._max_delta_kick = {'ch': 300, 'cv': 300}
+        self._meas_respmat_kick = {'ch': 80, 'cv': 80}
         if self.acc == 'SI':
             self._corr_factor['rf'] = 1.00
-            self._max_kick['rf'] = 3000
+            self._max_kick['rf'] = 499663000
             self._max_delta_kick['rf'] = 500
-            self._meas_respmat_kick['rf'] = 200
-        self._meas_respmat_wait = 5  # seconds
+            self._meas_respmat_kick['rf'] = 50
+        self._meas_respmat_wait = 1  # seconds
         self._dtheta = None
         self._ref_corr_kicks = None
         self._thread = None
@@ -334,27 +334,28 @@ class SOFB(_BaseClass):
         mat = list()
         orig_kicks = self.correctors.get_strength()
         enbllist = self.matrix.corrs_enbllist
+        sum_enbld = sum(enbllist)
+        j = 1
         nr_corrs = len(orig_kicks)
-        orborig = self.orbit.get_orbit(True)
+        orbzero = _np.zeros(len(self.matrix.bpm_enbllist), dtype=float)
         for i in range(nr_corrs):
             if not self._measuring_respmat:
                 self.run_callbacks(
                     'MeasRespMat-Mon', self._csorb.MeasRespMatMon.Aborted)
-                msg = 'Measurement aborted.'
+                msg = 'Measurement stopped.'
                 self._update_log(msg)
                 _log.info(msg)
-                return
-
+                for _ in range(i, nr_corrs):
+                    mat.append(orbzero)
+                break
+            if not enbllist[i]:
+                mat.append(orbzero)
+                continue
             msg = '{0:d}/{1:d} -> {2:s}'.format(
-                i+1, nr_corrs, self.correctors.corrs[i].name)
+                j, sum_enbld, self.correctors.corrs[i].name)
             self._update_log(msg)
             _log.info(msg)
-            if not enbllist[i]:
-                mat.append(0.0 * orborig)
-                msg = '   Not Enabled. Skipping...'
-                self._update_log(msg)
-                _log.info(msg)
-                continue
+            j += 1
 
             if i < self._csorb.NR_CH:
                 delta = self._meas_respmat_kick['ch']
