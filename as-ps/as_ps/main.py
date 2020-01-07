@@ -181,7 +181,7 @@ class App:
         for reason, new_value in data.items():
 
             # set strength limits
-            if strength_name in reason:
+            if strength_name is not None and strength_name in reason:
                 lims = bbb.strength_limits(device_name)
                 if None not in lims:
                     kwargs = self.driver.getParamInfo(reason)
