@@ -125,7 +125,7 @@ class App:
     def scan_bbb(self, bbb):
         """Scan BBB devices and update ioc epics DB."""
         for device_name in bbb.psnames:
-            self.scan_device(bbb, device_name)
+            self.scan_device(bbb, device_name, force_update=True)
 
     def scan_device(self, bbb, device_name, force_update=False):
         """Scan BBB device and update ioc epics DB."""
@@ -181,7 +181,7 @@ class App:
         for reason, new_value in data.items():
 
             # set strength limits
-            if strength_name in reason:
+            if strength_name is not None and strength_name in reason:
                 lims = bbb.strength_limits(device_name)
                 if None not in lims:
                     kwargs = self.driver.getParamInfo(reason)
