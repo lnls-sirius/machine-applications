@@ -13,8 +13,8 @@ import siriuspy.util as _util
 from siriuspy.thread import DequeThread as _DequeThread
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 
-from siriuspy.pwrsupply.maepics import PUEpicsConn as _PUEpicsConn
-from siriuspy.pwrsupply.maepics import SConvEpics as _SConvEpics
+from siriuspy.pwrsupply.psconv import PUEpicsConn as _PUEpicsConn
+from siriuspy.pwrsupply.psconv import SConvEpics as _SConvEpics
 
 
 __version__ = _util.get_last_commit_hash()
