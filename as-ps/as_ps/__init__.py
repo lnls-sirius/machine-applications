@@ -1,3 +1,3 @@
 """AS PS package."""
 
-__all__ = ('as_ps', 'pvs', 'main')
+__all__ = ('as_ps', 'main')
