@@ -24,7 +24,7 @@ class App:
         self._map2writepvs = self.get_map2writepvs()
         self._map2readpvs = self.get_map2readpvs()
         self._egun_pv = _PV('LI-01:EG-TriggerPS:status')
-        self._spect_pv = _PV('LI-01:PS-Spect:rdi')
+        self._spect_pv = _PV('LI-01:PS-Spect:Current-Mon')
         self._was_measuring = False
 
     def process(self, interval):
