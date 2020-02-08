@@ -9,7 +9,7 @@ from pcaspy.tools import ServerThread
 from as_ti_control import App
 from siriuspy import util as _util
 from siriuspy.csdevice import util as _cutil
-from siriuspy.envars import vaca_prefix as _vaca_prefix
+from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from siriuspy.search import HLTimeSearch as _HLTimeSearch
 
 __version__ = _util.get_last_commit_hash()

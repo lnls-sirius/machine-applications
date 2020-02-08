@@ -8,7 +8,7 @@ import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 import siriuspy.util as _util
 from siriuspy.csdevice import util as _cutil
-from siriuspy.envars import vaca_prefix as _vaca_prefix
+from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from .main import SOFB as _SOFB
 from .matrix import EpicsMatrix as _EpicsMatrix
 from .orbit import EpicsOrbit as _EpicsOrbit
