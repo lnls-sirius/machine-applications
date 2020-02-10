@@ -10,7 +10,7 @@ import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 
 from siriuspy import util as _util
-from siriuspy.envars import vaca_prefix as _VACA_PREFIX
+from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 from siriuspy.csdevice.pwrsupply import \
     get_pu_conv_propty_database as _get_pu_propty_database
 

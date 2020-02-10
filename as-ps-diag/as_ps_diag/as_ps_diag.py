@@ -13,7 +13,7 @@ from pcaspy import Driver as _Driver
 from .main import App as _App
 
 from siriuspy import util as _util
-from siriuspy.envars import vaca_prefix as _vaca_prefix
+from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from siriuspy.util import get_timestamp as _get_timestamp
 from siriuspy.util import configure_log_file as _config_log_file
 from siriuspy.util import print_ioc_banner as _print_ioc_banner
