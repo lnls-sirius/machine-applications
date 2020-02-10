@@ -11,7 +11,7 @@ from pcaspy import SimpleServer, Driver
 from pcaspy.tools import ServerThread
 from siriuspy import util as _util
 from siriuspy.csdevice import util as _cutil
-from siriuspy.envars import vaca_prefix as _vaca_prefix
+from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 
 __version__ = _util.get_last_commit_hash()
 INTERVAL = 0.5
