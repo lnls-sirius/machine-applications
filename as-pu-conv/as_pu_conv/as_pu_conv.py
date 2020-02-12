@@ -11,8 +11,10 @@ import pcaspy.tools as _pcaspy_tools
 
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
+from siriuspy.search import PSSearch as _PSSearch
 from siriuspy.csdevice.pwrsupply import \
-    get_pu_conv_propty_database as _get_pu_propty_database
+    get_pu_conv_propty_database as _get_pu_conv_propty_database
+
 
 from as_pu_conv.main import App
 
@@ -36,7 +38,8 @@ def _stop_now(signum, frame):
 def get_database_set(psname):
     """Return the database set, one for each prefix."""
     dbase = {}
-    propties = _get_pu_propty_database()
+    pstype = _PSSearch.conv_psname_2_pstype(psname)
+    propties = _get_pu_conv_propty_database(pstype)
     for key, value in propties.items():
         pvname = psname + ':' + key
         dbase[pvname] = value
