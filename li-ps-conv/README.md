@@ -1,4 +1,4 @@
-# AS-PU IOC conversion classes and scripts
+# LI-PS IOC conversion classes and scripts
 
 IOC classes and scripts for voltage conversions.
 
