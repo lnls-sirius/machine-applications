@@ -1,5 +1,5 @@
 #!/usr/local/bin/python-sirius -u
-"""BeagleBone Black IOCs Launcher."""
+"""AS PU Current-Strength Converter IOC Launcher."""
 import sys
 import os
 from as_pu_conv import as_pu_conv as ioc_module

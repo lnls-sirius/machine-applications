@@ -1,5 +1,5 @@
 #!/usr/local/bin/python-sirius -u
-"""BeagleBone Black IOCs Launcher."""
+"""LI PS Current-Strength Converter IOC Launcher."""
 import sys
 import os
 from li_ps_conv import li_ps_conv as ioc_module
