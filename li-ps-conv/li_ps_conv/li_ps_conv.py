@@ -16,7 +16,7 @@ from siriuspy.csdevice.pwrsupply import \
     get_conv_propty_database as _get_conv_propty_database
 
 
-from as_pu_conv.main import App
+from li_ps_conv.main import App
 
 STOP_EVENT = False  # _multiprocessing.Event()
 PCAS_DRIVER = None
@@ -39,7 +39,7 @@ def get_database_set(psname):
     """Return the database set, one for each prefix."""
     dbase = {}
     pstype = _PSSearch.conv_psname_2_pstype(psname)
-    propties = _get_pu_conv_propty_database(pstype)
+    propties = _get_conv_propty_database(pstype)
     for key, value in propties.items():
         pvname = psname + ':' + key
         dbase[pvname] = value
