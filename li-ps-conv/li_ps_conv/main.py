@@ -137,6 +137,7 @@ class App:
     def scan_device(self, psname):
         """Scan BBB device and update ioc epics DB."""
         strenname = self._strenname[psname]
+
         # not connected
         if not self.check_connected(psname):
             conns = self._connectors[psname]
@@ -148,20 +149,37 @@ class App:
 
         # all connected, calculate strengths
         streconv = self._streconvs[psname]
-        conns = self._connectors[psname]
-        values = (conns['-SP'].value, conns['-RB'].value, conns['-Mon'].value)
+        conn = self._connectors[psname]
+        limits = conn['-SP'].limits
+        curr0 = conn['-SP'].value
+        curr1 = conn['-RB'].value
+        curr2 = conn['-Mon'].value
+        curr3 = limits[0]
+        curr4 = limits[-1]
+        values = (curr0, curr1, curr2, curr3, curr4)
         strengths = streconv.conv_current_2_strength(values)
-        # update epics database
-        for i, proptype in enumerate(conns.keys()):
+
+        # update -SP, -RB and -Mon epics database
+        for i, proptype in enumerate(conn.keys()):
             reason = psname + ':' + strenname + proptype
             if strengths is None or None in strengths:
                 self.driver.setParamStatus(
                     reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
             else:
+                # update value
                 self.driver.setParam(reason, strengths[i])
+                # update limits
+                stren = strengths
+                kwargs = self.driver.getParamInfo(reason)
+                kwargs.update({
+                    'lolim': stren[-2], 'low': stren[-2], 'lolo': stren[-2],
+                    'hihi': stren[-1], 'high': stren[-1], 'hilim': stren[-1]})
+                self.driver.setParamInfo(reason, kwargs)
+                # update alarm
                 self.driver.setParamStatus(
                     reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
-            self.driver.updatePV(reason)
+                # update PV info
+                self.driver.updatePV(reason)
 
     # --- private methods ---
 
