@@ -178,8 +178,8 @@ class App:
                 # update alarm
                 self.driver.setParamStatus(
                     reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
-                # update PV info
-                self.driver.updatePV(reason)
+            # update PV info
+            self.driver.updatePV(reason)
 
     # --- private methods ---
 
