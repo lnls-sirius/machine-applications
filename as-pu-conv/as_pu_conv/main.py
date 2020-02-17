@@ -144,20 +144,41 @@ class App:
 
         # all connected, calculate strengths
         streconv = self._streconvs[psname]
-        conns = self._connectors[psname]
-        values = (conns['-SP'].value, conns['-RB'].value, conns['-Mon'].value)
+        conn = self._connectors[psname]
+        limits = conn['-SP'].limits
+        curr0 = conn['-SP'].value
+        curr1 = conn['-RB'].value
+        curr2 = conn['-Mon'].value
+        curr3 = limits[0]
+        curr4 = limits[-1]
+        values = (curr0, curr1, curr2, curr3, curr4)
         strengths = streconv.conv_current_2_strength(values)
+        if strengths is None or None in strengths:
+            slims = None
+        else:
+            slims = strengths[-2:]
+            if slims[0] > slims[1]:
+                slims = slims[1], slims[0]
 
-        # update epics database
-        for i, proptype in enumerate(conns.keys()):
+        # update -SP, -RB and -Mon epics database
+        for i, proptype in enumerate(conn.keys()):
             reason = psname + ':Kick' + proptype
-            if strengths is None or None in strengths:
+            if slims is None:
                 self.driver.setParamStatus(
                     reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
             else:
+                # update value
                 self.driver.setParam(reason, strengths[i])
+                # update limits
+                kwargs = self.driver.getParamInfo(reason)
+                kwargs.update({
+                    'lolim': slims[0], 'low': slims[0], 'lolo': slims[0],
+                    'hihi': slims[1], 'high': slims[1], 'hilim': slims[1]})
+                self.driver.setParamInfo(reason, kwargs)
+                # update alarm
                 self.driver.setParamStatus(
                     reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+            # update PV info
             self.driver.updatePV(reason)
 
     # --- private methods ---
