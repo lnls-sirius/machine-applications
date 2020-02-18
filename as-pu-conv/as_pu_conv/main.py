@@ -151,6 +151,13 @@ class App:
         curr2 = conn['-Mon'].value
         curr3 = limits[0]
         curr4 = limits[-1]
+
+        # NOTE: temporary fix
+        if curr3 != curr3:
+            curr3 = 0
+        if curr4 != curr4:
+            curr4 = 10000
+
         values = (curr0, curr1, curr2, curr3, curr4)
         strengths = streconv.conv_current_2_strength(values)
         if strengths is None or None in strengths:
