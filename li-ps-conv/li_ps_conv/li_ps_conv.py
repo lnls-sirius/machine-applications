@@ -85,6 +85,11 @@ def run(psnames):
         dbase = get_database_set(psname)
         dbset.update(dbase)
 
+    # check if another IOC is running
+    pvname = _PREFIX + next(iter(dbset))
+    if _util.check_pv_online(pvname):
+        raise ValueError('Another IOC is already running !')
+
     # Create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
     server.createPV(_PREFIX, dbset)
