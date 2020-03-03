@@ -75,11 +75,16 @@ class _Driver(_pcaspy.Driver):
         if not self._isValid(reason, value):
             return False
         ret_val = self.app.write(reason, value)
+        oldval = self.getParam(reason)
+        if reason.endswith('-Cmd'):
+            value = oldval + 1
         if ret_val:
             _log.info('YES Write %s: %s', reason, str(value))
         else:
-            value = self.getParam(reason)
-            _log.warning('NO Write %s: %s', reason, str(value))
+            _log.warning(
+                'NO write %s: %s current value is %s',
+                reason, str(oldval), str(value))
+            value = oldval
         self.setParam(reason, value)
         self.updatePV(reason)
         return True
