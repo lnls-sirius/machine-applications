@@ -35,21 +35,10 @@ def _stop_now(signum, frame):
         PCAS_DRIVER.app.scan = False
 
 
-def get_database_set(bbblist):
-    """Return the database set, one for each prefix."""
-    db = {}
-    for bbb in bbblist:
-        dev_db = bbb.e2s_controller.database
-        for field in dev_db:
-            for psname in bbb.psnames:
-                db[psname + ':' + field] = _deepcopy(dev_db[field])
-    return {_PREFIX: db}
-
-
-def _attribute_access_security_group(server, db):
-    for k, v in db.items():
-        if k.endswith(('-RB', '-Sts', '-Cte', '-Mon')):
-            v.update({'asg': 'rbpv'})
+def _attribute_access_security_group(server, dbase):
+    for key, value in dbase.items():
+        if key.endswith(('-RB', '-Sts', '-Cte', '-Mon')):
+            value.update({'asg': 'rbpv'})
     path_ = _os.path.abspath(_os.path.dirname(__file__))
     server.initAccessSecurityFile(path_ + '/access_rules.as')
 
@@ -97,12 +86,18 @@ def run(bbbnames):
         bbb, dbase = BBBFactory.create(bbbname=bbbname)
         bbblist.append(bbb)
         dbset.update(dbase)
-
     dbset = {_PREFIX: dbset}
+
+    # check if another instance of this IOC is already running
+    pvname = _PREFIX + next(iter(dbset[_PREFIX]))
+    if _util.check_pv_online(pvname, use_prefix=False):
+        raise ValueError('Another instance of this IOC is already running !')
 
     # Create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
     for prefix, dbase in dbset.items():
+        # Set security access
+        _attribute_access_security_group(server, dbase)
         server.createPV(prefix, dbase)
 
     # Create driver to handle requests
