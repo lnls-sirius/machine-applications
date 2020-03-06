@@ -1,8 +1,5 @@
 #!/usr/local/bin/python-sirius -u
-"""TB AP PosAng IOC executable for horizontal correctors CH-Sept."""
+"""TB AP PosAng IOC executable."""
 
-import sys
 from as_ap_posang import as_ap_posang as ioc_module
-
-corrs_type = sys.argv[1]
-ioc_module.run('tb', corrs_type)
+ioc_module.run('tb')

@@ -46,7 +46,7 @@ class _PCASDriver(_pcaspy.Driver):
             return False
 
 
-def run(transport_line, correctors_type):
+def run(transport_line):
     """Run main module function."""
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
@@ -55,14 +55,20 @@ def run(transport_line, correctors_type):
     _util.configure_log_file()
 
     # define IOC
-    _pvs.select_ioc(transport_line, correctors_type)
+    _pvs.select_ioc(transport_line)
     _main.App.init_class()
+    prefix = _pvs.get_pvs_prefix()
+    db = _main.App.pvs_database
+
+    # check if another IOC is running
+    pvname = prefix + next(iter(db))
+    if _util.check_pv_online(pvname, use_prefix=False):
+        raise ValueError('Another instance of this IOC is already running!')
 
     # create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
-    db = _main.App.pvs_database
     _attribute_access_security_group(server, db)
-    server.createPV(_pvs.get_pvs_prefix(), db)
+    server.createPV(prefix, db)
     pcas_driver = _PCASDriver()
 
     # initiate a new thread responsible for listening for client connections

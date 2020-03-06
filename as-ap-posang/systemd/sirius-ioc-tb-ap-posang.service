@@ -11,4 +11,4 @@ StandardOutput=syslog
 StandardError=syslog
 ExecStartPre=/bin/bash --login -c 'env > /home/sirius/iocs-log/env-sirius-ioc-tb-ap-posang'
 EnvironmentFile=-/home/sirius/iocs-log/env-sirius-ioc-tb-ap-posang
-ExecStart=/usr/local/bin/sirius-ioc-tb-ap-posang.py ch-sept
+ExecStart=/usr/local/bin/sirius-ioc-tb-ap-posang.py

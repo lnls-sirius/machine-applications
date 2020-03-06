@@ -79,8 +79,7 @@ def run(section='', sub_section='', device='', debug=False):
     _log.info("{:12s}: {}".format('\tSub Section', sub_section or 'None'))
     _log.info("{:12s}: {}".format('\tDevice', device or 'None'))
 
-    # create a new simple pcaspy server
-    server = _pcaspy.SimpleServer()
+    # create PV database
     device_filter = dict()
     if section:
         device_filter['sec'] = section
@@ -95,7 +94,6 @@ def run(section='', sub_section='', device='', debug=False):
         _log.warning('No devices found. Aborting.')
         _sys.exit(0)
 
-    # create PV database
     prefix = _vaca_prefix
     pvdb = dict()
     for psname in psnames:
@@ -106,8 +104,16 @@ def run(section='', sub_section='', device='', debug=False):
                 value['value'] = _COMMIT_HASH
             pvname = psname + ':' + key
             pvdb[pvname] = value
+
+    # check if another IOC is running
+    pvname = prefix + next(iter(pvdb))
+    if _util.check_pv_online(pvname, use_prefix=False):
+        raise ValueError('Another instance of this IOC is already running!')
+
+    # create a new simple pcaspy server
     _log.info("Creating server with %d devices and '%s' prefix",
               len(psnames), prefix)
+    server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, pvdb)
     server.createPV(prefix, pvdb)
 
