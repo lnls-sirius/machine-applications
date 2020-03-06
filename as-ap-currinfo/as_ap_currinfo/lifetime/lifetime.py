@@ -63,12 +63,18 @@ def run():
 
     # define IOC and init pvs database
     _main.App.init_class()
+    prefix = _pvs.get_pvs_prefix()
+    db = _main.App.pvs_database
+
+    # check if another IOC is running
+    pvname = prefix + next(iter(db))
+    if _util.check_pv_online(pvname, use_prefix=False):
+        raise ValueError('Another instance of this IOC is already running!')
 
     # create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
-    db = _main.App.pvs_database
     _attribute_access_security_group(server, db)
-    server.createPV(_pvs.get_pvs_prefix(), db)
+    server.createPV(prefix, db)
     pcas_driver = _PCASDriver()
 
     # initiate a new thread responsible for listening for client connections
