@@ -46,7 +46,7 @@ class _PCASDriver(_pcaspy.Driver):
             return False
 
 
-def run(transport_line):
+def run(transport_line, correctors_type='ch-sept'):
     """Run main module function."""
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
@@ -55,7 +55,7 @@ def run(transport_line):
     _util.configure_log_file()
 
     # define IOC
-    _pvs.select_ioc(transport_line)
+    _pvs.select_ioc(transport_line, correctors_type)
     _main.App.init_class()
     prefix = _pvs.get_pvs_prefix()
     db = _main.App.pvs_database
