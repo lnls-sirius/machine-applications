@@ -201,7 +201,7 @@ class App:
                 _PSProperty(psname, propty='Voltage-RB')
             connectors[psname]['-Mon'] = \
                 _PSProperty(psname, propty='Voltage-Mon')
-            streconv[psname] = _StrengthConv(psname=psname, proptype='Ref-Mon')
+            streconv[psname] = _StrengthConv(psname, proptype='Ref-Mon')
         return connectors, streconv
 
     def _write_operation(self, pvname, value):
