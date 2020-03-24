@@ -195,12 +195,10 @@ class App:
         streconv = dict()
         for psname in self.psnames:
             connectors[psname] = dict()
-            connectors[psname]['-SP'] = \
-                _PSProperty(psname, propty='Voltage-SP')
-            connectors[psname]['-RB'] = \
-                _PSProperty(psname, propty='Voltage-RB')
-            connectors[psname]['-Mon'] = \
-                _PSProperty(psname, propty='Voltage-Mon')
+            conn = connectors[psname]
+            conn['-SP'] = _PSProperty(psname, propty='Voltage-SP')
+            conn['-RB'] = _PSProperty(psname, propty='Voltage-RB')
+            conn['-Mon'] = _PSProperty(psname, propty='Voltage-Mon')
             streconv[psname] = _StrengthConv(psname, proptype='Ref-Mon')
         return connectors, streconv
 
