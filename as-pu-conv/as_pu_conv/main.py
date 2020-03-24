@@ -13,7 +13,7 @@ import siriuspy.util as _util
 from siriuspy.thread import DequeThread as _DequeThread
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 
-from siriuspy.pwrsupply.psconv import PSEpicspicsConn as _PSProperty
+from siriuspy.pwrsupply.psconv import PSProperty as _PSProperty
 from siriuspy.pwrsupply.psconv import StrengthConv as _StrengthConv
 
 
