@@ -13,8 +13,8 @@ import siriuspy.util as _util
 from siriuspy.thread import DequeThread as _DequeThread
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 
-from siriuspy.pwrsupply.psconv import PSProperty as _PSProperty
-from siriuspy.pwrsupply.psconv import StrengthConv as _StrengthConv
+from siriuspy.devices import PSProperty as _PSProperty
+from siriuspy.devices import StrengthConv as _StrengthConv
 
 
 __version__ = _util.get_last_commit_hash()
@@ -196,7 +196,7 @@ class App:
             connectors[psname]['-SP'] = _PSProperty(psname, 'Current-SP')
             connectors[psname]['-RB'] = _PSProperty(psname, 'Current-RB')
             connectors[psname]['-Mon'] = _PSProperty(psname, 'Current-Mon')
-            streconv[psname] = _StrengthConv(psname=psname, proptype='Ref-Mon')
+            streconv[psname] = _StrengthConv(psname, proptype='Ref-Mon')
         return connectors, streconv
 
     def _write_operation(self, pvname, value):
