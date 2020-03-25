@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python-sirius
 """IOC Module."""
 
 import os as _os
@@ -9,10 +9,8 @@ import pcaspy.tools as _pcaspy_tools
 import siriuspy.util as _util
 from siriuspy import csdev as _csdev
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
-from .main import SOFB as _SOFB
-from .matrix import EpicsMatrix as _EpicsMatrix
-from .orbit import EpicsOrbit as _EpicsOrbit
-from .correctors import EpicsCorrectors as _EpicsCorrectors
+from siriuspy.sofb import SOFB as _SOFB, EpicsMatrix as _EpicsMatrix, \
+    EpicsOrbit as _EpicsOrbit, EpicsCorrectors as _EpicsCorrectors
 
 stop_event = False
 __version__ = _util.get_last_commit_hash()
@@ -37,7 +35,7 @@ class _PCASDriver(_pcaspy.Driver):
     def __init__(self, app):
         super().__init__()
         self.app = app
-        self.app.driver = self
+        self.app.add_callback(self.update_pv)
 
     def read(self, reason):
         _log.debug("Reading {0:s}.".format(reason))
@@ -60,6 +58,10 @@ class _PCASDriver(_pcaspy.Driver):
         self.setParam(reason, value)
         self.updatePV(reason)
         return True
+
+    def update_pv(self, pvname, value, **kwargs):
+        self.setParam(pvname, value)
+        self.updatePV(pvname)
 
     def _isValid(self, reason, val):
         if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
@@ -102,8 +104,8 @@ def run(acc='SI', debug=False):
         _log.error('Another ' + ioc_name + ' is already running!')
         return
     _util.print_ioc_banner(
-            ioc_name, db, 'SOFB for '+acc, __version__,
-            _vaca_prefix + ioc_prefix)
+        ioc_name, db, 'SOFB for ' + acc, __version__,
+        _vaca_prefix + ioc_prefix)
     # create a new simple pcaspy server and driver to respond client's requests
     _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()

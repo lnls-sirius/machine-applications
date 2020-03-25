@@ -1,8 +1,5 @@
-from . import as_ap_sofb, correctors, main, matrix, orbit
-from .main import SOFB
-from .matrix import EpicsMatrix
-from .correctors import EpicsCorrectors
-from .orbit import EpicsOrbit
+from .as_ap_sofb import run
 
-__all__ = (
-    'as_ap_sofb', 'correctors', 'main', 'matrix', 'orbit')
+del as_ap_sofb
+
+__all__ = ('as_ap_sofb')
