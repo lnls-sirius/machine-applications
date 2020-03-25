@@ -7,7 +7,7 @@ from threading import Event as _Event
 import pcaspy as _pcaspy
 from pcaspy.tools import ServerThread
 from siriuspy import util as _util
-from siriuspy.csdevice import util as _cutil
+from siriuspy import csdev as _csdev
 from siriuspy.csdevice.energymeas import EnergyMeas as CSEnergy
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from .main import App
@@ -85,7 +85,7 @@ def run(debug=False):
     db = CSEnergy.get_database()
     db['Version-Cte'] = {'type': 'string', 'value': __version__}
     # add PV Properties-Cte with list of all IOC PVs:
-    db = _cutil.add_pvslist_cte(db, prefix='')
+    db = _csdev.add_pvslist_cte(db, prefix='')
     # check if IOC is already running
     running = _util.check_pv_online(
         pvname=ioc_prefix + sorted(db.keys())[0],

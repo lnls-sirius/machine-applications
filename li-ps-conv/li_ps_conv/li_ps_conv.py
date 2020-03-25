@@ -12,7 +12,7 @@ import pcaspy.tools as _pcaspy_tools
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 from siriuspy.search import PSSearch as _PSSearch
-from siriuspy.csdevice.pwrsupply import \
+from siriuspy.pwrsupply.csdev import \
     get_conv_propty_database as _get_conv_propty_database
 
 

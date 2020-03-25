@@ -7,7 +7,7 @@ import signal as _signal
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 import siriuspy.util as _util
-from siriuspy.csdevice import util as _cutil
+from siriuspy import csdev as _csdev
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from .main import SOFB as _SOFB
 from .matrix import EpicsMatrix as _EpicsMatrix
@@ -97,7 +97,7 @@ def run(acc='SI', debug=False):
         pvname=_vaca_prefix + ioc_prefix + sorted(db.keys())[0],
         use_prefix=False, timeout=0.5)
     # add PV Properties-Cte with list of all IOC PVs:
-    db = _cutil.add_pvslist_cte(db)
+    db = _csdev.add_pvslist_cte(db)
     if running:
         _log.error('Another ' + ioc_name + ' is already running!')
         return

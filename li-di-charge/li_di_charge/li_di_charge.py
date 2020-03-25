@@ -10,7 +10,7 @@ import visa
 from pcaspy import SimpleServer, Driver
 from pcaspy.tools import ServerThread
 from siriuspy import util as _util
-from siriuspy.csdevice import util as _cutil
+from siriuspy import csdev as _csdev
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 
 __version__ = _util.get_last_commit_hash()
@@ -166,7 +166,7 @@ def run(debug=False):
     db = _Driver.get_database()
     db[ioc_prefix + ':Version-Cte'] = {'type': 'string', 'value': __version__}
     # add PV Properties-Cte with list of all IOC PVs:
-    db = _cutil.add_pvslist_cte(db, prefix=ioc_prefix)
+    db = _csdev.add_pvslist_cte(db, prefix=ioc_prefix)
     # check if IOC is already running
     running = _util.check_pv_online(
         pvname=_vaca_prefix + sorted(db.keys())[0],
