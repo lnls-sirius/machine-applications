@@ -3,8 +3,8 @@
 import time as _time
 import logging as _log
 from siriuspy.epics import PV as _PV
-from siriuspy.csdevice.energymeas import EnergyMeas as CSEnergy
-from siriuspy.measurements import MeasEnergy
+from siriuspy.meas.lienergy.csdev import Const as _csenergy
+from siriuspy.meas.lienergy import MeasEnergy
 
 _TIMEOUT = 0.05
 
@@ -19,7 +19,7 @@ class App:
         triggers_list: is the list of the high level triggers to be managed;
         """
         self.driver = driver
-        self._database = CSEnergy.get_database()
+        self._database = _csenergy.get_database()
         self.meas = MeasEnergy(callback=self._update_driver)
         self._map2writepvs = self.get_map2writepvs()
         self._map2readpvs = self.get_map2readpvs()
