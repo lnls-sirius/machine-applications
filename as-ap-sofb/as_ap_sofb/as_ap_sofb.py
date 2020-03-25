@@ -35,7 +35,7 @@ class _PCASDriver(_pcaspy.Driver):
     def __init__(self, app):
         super().__init__()
         self.app = app
-        self.app.driver = self
+        self.app.add_callback(self.update_pv)
 
     def read(self, reason):
         _log.debug("Reading {0:s}.".format(reason))
@@ -58,6 +58,10 @@ class _PCASDriver(_pcaspy.Driver):
         self.setParam(reason, value)
         self.updatePV(reason)
         return True
+
+    def update_pv(self, pvname, value, **kwargs):
+        self.setParam(pvname, value)
+        self.updatePV(pvname)
 
     def _isValid(self, reason, val):
         if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
