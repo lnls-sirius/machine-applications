@@ -8,7 +8,7 @@ import pcaspy as _pcaspy
 from pcaspy.tools import ServerThread
 from siriuspy import util as _util
 from siriuspy import csdev as _csdev
-from siriuspy.csdevice.energymeas import EnergyMeas as CSEnergy
+from siriuspy.meas.lienergy.csdev import Const as _csenergy
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from .main import App
 
@@ -82,7 +82,7 @@ def run(debug=False):
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # Creates App object
-    db = CSEnergy.get_database()
+    db = _csenergy.get_database()
     db['Version-Cte'] = {'type': 'string', 'value': __version__}
     # add PV Properties-Cte with list of all IOC PVs:
     db = _csdev.add_pvslist_cte(db, prefix='')
