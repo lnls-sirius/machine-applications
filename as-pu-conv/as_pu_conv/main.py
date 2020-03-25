@@ -13,8 +13,8 @@ import siriuspy.util as _util
 from siriuspy.thread import DequeThread as _DequeThread
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 
-from siriuspy.pwrsupply.psconv import PUEpicsConn as _PUEpicsConn
-from siriuspy.pwrsupply.psconv import SConvEpics as _SConvEpics
+from siriuspy.devices import PSProperty as _PSProperty
+from siriuspy.devices import StrengthConv as _StrengthConv
 
 
 __version__ = _util.get_last_commit_hash()
@@ -195,10 +195,11 @@ class App:
         streconv = dict()
         for psname in self.psnames:
             connectors[psname] = dict()
-            connectors[psname]['-SP'] = _PUEpicsConn(psname, '-SP')
-            connectors[psname]['-RB'] = _PUEpicsConn(psname, '-RB')
-            connectors[psname]['-Mon'] = _PUEpicsConn(psname, '-Mon')
-            streconv[psname] = _SConvEpics(psname=psname, proptype='Ref-Mon')
+            conn = connectors[psname]
+            conn['-SP'] = _PSProperty(psname, propty='Voltage-SP')
+            conn['-RB'] = _PSProperty(psname, propty='Voltage-RB')
+            conn['-Mon'] = _PSProperty(psname, propty='Voltage-Mon')
+            streconv[psname] = _StrengthConv(psname, proptype='Ref-Mon')
         return connectors, streconv
 
     def _write_operation(self, pvname, value):
