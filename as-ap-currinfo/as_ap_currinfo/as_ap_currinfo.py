@@ -1,13 +1,15 @@
-"""SI-AP-CurrInfo-Charge Soft IOC."""
+"""CurrInfo Soft IOC."""
 
 import os as _os
 import sys as _sys
 import signal as _signal
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
+
 from siriuspy import util as _util
-import as_ap_currinfo.main as _main
-import as_ap_currinfo.pvs as _pvs
+from siriuspy.envars import VACA_PREFIX as _vaca_prefix
+
+from .main import BOApp as _BOApp, SIApp as _SIApp
 
 
 INTERVAL = 0.1
@@ -32,20 +34,20 @@ def _attribute_access_security_group(server, db):
 
 def _get_app_class(acc):
     if acc == 'bo':
-        return _main.BOApp
+        return _BOApp
     elif acc == 'si':
-        return _main.SIApp
+        return _SIApp
     else:
         raise ValueError('There is no App defined for accelarator '+acc+'.')
 
 
 class _PCASDriver(_pcaspy.Driver):
 
-    def __init__(self, acc):
+    def __init__(self, app):
         """Initialize driver."""
         super().__init__()
-        app_class = _get_app_class(acc)
-        self.app = app_class(self)
+        self.app = app
+        self.app.add_callback(self.update_pv)
 
     def read(self, reason):
         """Read IOC pvs acording to main application."""
@@ -62,6 +64,10 @@ class _PCASDriver(_pcaspy.Driver):
         else:
             return False
 
+    def update_pv(self, pvname, value, **kwargs):
+        self.setParam(pvname, value)
+        self.updatePV(pvname)
+
 
 def run(acc):
     """Main module function."""
@@ -69,24 +75,36 @@ def run(acc):
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
+    # configure log file
     _util.configure_log_file()
 
-    # Init pvs database
-    _pvs.select_ioc(acc)
-    _get_app_class(acc).init_class()
-    prefix = _pvs.get_pvs_prefix()
-    db = _get_app_class(acc).pvs_database
+    # define IOC, init pvs database and create app object
+    _version = _util.get_last_commit_hash()
+    _ioc_prefix = _vaca_prefix + acc.upper() + '-Glob:AP-CurrInfo:'
+    app_class = _get_app_class(acc)
+    app = app_class()
+    db = app.pvs_database
+    db['Version-Cte']['value'] = _version
 
     # check if another IOC is running
-    pvname = prefix + next(iter(db))
+    pvname = _ioc_prefix + next(iter(db))
     if _util.check_pv_online(pvname, use_prefix=False):
         raise ValueError('Another instance of this IOC is already running!')
+
+    # check if another IOC is running
+    _util.print_ioc_banner(
+        ioc_name=acc.lower()+'-ap-currinfo',
+        db=db,
+        description=acc.upper()+'-AP-CurrInfo Soft IOC',
+        version=_version,
+        prefix=_ioc_prefix)
 
     # create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, db)
-    server.createPV(prefix, db)
-    pcas_driver = _PCASDriver(acc)
+    server.createPV(_ioc_prefix, db)
+    pcas_driver = _PCASDriver(app)
+    app.init_database()
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
