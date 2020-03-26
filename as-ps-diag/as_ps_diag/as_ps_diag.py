@@ -16,7 +16,7 @@ from siriuspy.search import PSSearch as _PSSearch
 
 from siriuspy.psdiag.csdev import get_ps_diag_propty_database as \
     _get_database
-from .main import App as _App
+from siriuspy.psdiag.main import App as _App
 
 
 _COMMIT_HASH = _util.get_last_commit_hash()
