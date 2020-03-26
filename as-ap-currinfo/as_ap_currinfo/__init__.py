@@ -1,3 +1,3 @@
 """AS AP Current Info package."""
 
-__all__ = ('main', 'pvs', 'as_ap_currinfo')
+__all__ = ('as_ap_currinfo', )

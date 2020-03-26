@@ -9,7 +9,7 @@ import pcaspy.tools as _pcaspy_tools
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 
-from .main import BOApp as _BOApp, SIApp as _SIApp
+from siriuspy.currinfo.main import BOApp as _BOApp, SIApp as _SIApp
 
 
 INTERVAL = 0.1
