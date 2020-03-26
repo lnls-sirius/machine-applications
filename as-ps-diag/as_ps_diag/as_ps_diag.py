@@ -10,16 +10,13 @@ import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 from pcaspy import Driver as _Driver
 
-from .main import App as _App
-
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
-from siriuspy.util import get_timestamp as _get_timestamp
-from siriuspy.util import configure_log_file as _config_log_file
-from siriuspy.util import print_ioc_banner as _print_ioc_banner
-from siriuspy.csdevice.psdiag import get_ps_diag_propty_database as \
-    _get_database
 from siriuspy.search import PSSearch as _PSSearch
+
+from siriuspy.psdiag.csdev import get_ps_diag_propty_database as \
+    _get_database
+from .main import App as _App
 
 
 _COMMIT_HASH = _util.get_last_commit_hash()
@@ -31,7 +28,7 @@ _stop_event = False
 def _stop_now(signum, frame):
     global _stop_event
     _log.warning(_signal.Signals(signum).name +
-                 ' received at ' + _get_timestamp())
+                 ' received at ' + _util.get_timestamp())
     _sys.stdout.flush()
     _sys.stderr.flush()
     _stop_event = True
@@ -47,9 +44,10 @@ def _attribute_access_security_group(server, db):
 
 class _PSDiagDriver(_Driver):
 
-    def __init__(self, prefix, psnames):
+    def __init__(self, app):
         super().__init__()
-        self.app = _App(self, prefix, psnames)
+        self.app = app
+        self.app.add_callback(self.update_pv)
 
     def read(self, reason):
         value = self.app.read(reason)
@@ -64,6 +62,13 @@ class _PSDiagDriver(_Driver):
         else:
             return False
 
+    def update_pv(self, pvname, value, field='value', **kwargs):
+        if field == 'value':
+            self.setParam(pvname, value)
+        elif field == 'status':
+            self.setParamStatus(pvname, value)
+        self.updatePV(pvname)
+
 
 def run(section='', sub_section='', device='', debug=False):
     """Run IOC."""
@@ -72,7 +77,7 @@ def run(section='', sub_section='', device='', debug=False):
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # configure log
-    _config_log_file(debug=debug)
+    _util.configure_log_file(debug=debug)
 
     _log.info("Loding power supplies")
     _log.info("{:12s}: {}".format('\tSection', section or 'None'))
@@ -110,6 +115,9 @@ def run(section='', sub_section='', device='', debug=False):
     if _util.check_pv_online(pvname, use_prefix=False):
         raise ValueError('Another instance of this IOC is already running!')
 
+    # create app
+    app = _App(prefix, psnames)
+
     # create a new simple pcaspy server
     _log.info("Creating server with %d devices and '%s' prefix",
               len(psnames), prefix)
@@ -120,12 +128,12 @@ def run(section='', sub_section='', device='', debug=False):
     # create driver
     _log.info('Creating driver')
     try:
-        driver = _PSDiagDriver(prefix, psnames)
+        driver = _PSDiagDriver(app)
     except Exception:
         _log.error('Failed to create driver. Aborting', exc_info=True)
         _sys.exit(1)
 
-    _print_ioc_banner(
+    _util.print_ioc_banner(
         'AS PS Diagnostic', pvdb,
         'IOC that provides current sp/mon diagnostics for the power supplies.',
         '0.2', prefix)
