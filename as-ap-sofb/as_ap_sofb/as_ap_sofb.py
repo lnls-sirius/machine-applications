@@ -113,7 +113,7 @@ def run(acc='SI', debug=False):
     _log.info('Setting Server Database.')
     server.createPV(_vaca_prefix + ioc_prefix, db)
     _log.info('Creating Driver.')
-    _PCASDriver(app)
+    driver = _PCASDriver(app)
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
@@ -122,11 +122,11 @@ def run(acc='SI', debug=False):
     server_thread.start()
 
     app.orbit = _EpicsOrbit(
-        acc=app.acc, prefix=app.prefix, callback=app.update_driver)
+        acc=app.acc, prefix=app.prefix, callback=driver.update_pv)
     app.correctors = _EpicsCorrectors(
-        acc=app.acc, prefix=app.prefix, callback=app.update_driver)
+        acc=app.acc, prefix=app.prefix, callback=driver.update_pv)
     app.matrix = _EpicsMatrix(
-        acc=app.acc, prefix=app.prefix, callback=app.update_driver)
+        acc=app.acc, prefix=app.prefix, callback=driver.update_pv)
 
     # main loop
     while not stop_event:
