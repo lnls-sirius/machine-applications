@@ -1,13 +1,15 @@
-"""SI-AP-CurrInfo IOC."""
+"""CurrInfo Lifetime Soft IOC."""
 
 import os as _os
 import sys as _sys
 import signal as _signal
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
+
 from siriuspy import util as _util
-import as_ap_currinfo.lifetime.main as _main
-import as_ap_currinfo.lifetime.pvs as _pvs
+from siriuspy.envars import VACA_PREFIX as _vaca_prefix
+
+from siriuspy.currinfo.lifetime.main import App as _App
 
 
 INTERVAL = 0.1
@@ -32,10 +34,11 @@ def _attribute_access_security_group(server, db):
 
 class _PCASDriver(_pcaspy.Driver):
 
-    def __init__(self):
+    def __init__(self, app):
         """Initialize driver."""
         super().__init__()
-        self.app = _main.App(self)
+        self.app = app
+        self.app.add_callback(self.update_pv)
 
     def read(self, reason):
         """Read IOC pvs acording to main application."""
@@ -52,6 +55,10 @@ class _PCASDriver(_pcaspy.Driver):
         else:
             return False
 
+    def update_pv(self, pvname, value, **kwargs):
+        self.setParam(pvname, value)
+        self.updatePV(pvname)
+
 
 def run():
     """Main module function."""
@@ -59,23 +66,34 @@ def run():
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
+    # configure log file
     _util.configure_log_file()
 
-    # define IOC and init pvs database
-    _main.App.init_class()
-    prefix = _pvs.get_pvs_prefix()
-    db = _main.App.pvs_database
+    # define IOC, init pvs database and create app object
+    _version = _util.get_last_commit_hash()
+    _ioc_prefix = _vaca_prefix + 'SI-Glob:AP-CurrInfo:'
+    app = _App()
+    db = app.pvs_database
+    db['VersionLifetime-Cte']['value'] = _version
 
     # check if another IOC is running
-    pvname = prefix + next(iter(db))
+    pvname = _ioc_prefix + next(iter(db))
     if _util.check_pv_online(pvname, use_prefix=False):
         raise ValueError('Another instance of this IOC is already running!')
+
+    # print ioc banner
+    _util.print_ioc_banner(
+        ioc_name='si-ap-currinfo-lifetime',
+        db=db,
+        description='SI-AP-CurrInfo-Lifetime Soft IOC',
+        version=_version,
+        prefix=_ioc_prefix)
 
     # create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, db)
-    server.createPV(prefix, db)
-    pcas_driver = _PCASDriver()
+    server.createPV(_ioc_prefix, db)
+    pcas_driver = _PCASDriver(app)
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
