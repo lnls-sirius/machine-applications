@@ -33,7 +33,7 @@ class App:
     Update values and parameters such as alarms.
     """
 
-    _setpoint_regexp = _re.compile('^.*-(SP)$')
+    _regexp_setpoint = _re.compile('^.*-(SP)$')
 
     def __init__(self, driver, psnames, dbset, prefix):
         """Create Power Supply controllers."""
@@ -116,7 +116,7 @@ class App:
             # global_config to complete without artificial warning
             # messages or unnecessary delays. Whether we should extend
             # it to all power supplies remains to be checked.
-            if App._setpoint_regexp.match(reason):
+            if App._regexp_setpoint.match(reason):
                 self.driver.setParam(reason, value)
                 self.driver.updatePV(reason)
                 operation = (self._write_operation, (pvname, value))
