@@ -11,6 +11,8 @@ from siriuspy.util import print_ioc_banner as _print_ioc_banner
 from siriuspy.util import get_last_commit_hash as _get_last_commit_hash
 from siriuspy.thread import DequeThread as _DequeThread
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
+from siriuspy.pwrsupply.csdev import PSSOFB_MAX_NR_UDC as _PSSOFB_MAX_NR_UDC
+from siriuspy.pwrsupply.csdev import UDC_MAX_NR_DEV as _UDC_MAX_NR_DEV
 
 
 __version__ = _get_last_commit_hash()
@@ -29,9 +31,9 @@ __version__ = _get_last_commit_hash()
 class App:
     """Power Supply IOC Application."""
 
-    _sleep_scan_default = 0.050  # [s]
-    _sleep_scan_sofb = 0.005  # [s]
+    _sleep_scan = 0.050  # [s]
     _regexp_setpoint = _re.compile('^.*-(SP|Sel)$')
+    _sofb_value_length = _PSSOFB_MAX_NR_UDC * _UDC_MAX_NR_DEV
 
     def __init__(self, driver, bbblist, dbset, prefix):
         """Init application."""
@@ -39,8 +41,9 @@ class App:
 
         self._driver = driver
 
-        # set sleep_scan
-        self._sleep_scan = App._sleep_scan_default
+        # flag to indicate sofb processing is taking place
+        self._sofb_processing = False
+        self._sofb_value_length = None
 
         # write operation queue
         self._dequethread = _DequeThread()
@@ -79,28 +82,28 @@ class App:
 
     def process(self):
         """Process all write requests in queue and does a BBB scan."""
-        time0 = _time.time()
-        if self._dequethread:  # Not None and not empty
+        t0_ = _time.time()
+
+        # first process write requests, if any in queue
+        if self._dequethread:
             status = self._dequethread.process()
             if status:
                 txt = ("[{:.2s}] - new thread started for write queue item. "
                        "items left: {}")
                 logmsg = txt.format('Q ', len(self._dequethread))
                 _log.info(logmsg)
-            # scanning bbb allows for read-only variables to be updated while
-            # there are pending write operations in the queue, since setpoint
-            # variables will not be updated in the scan, in order not to spoil
-            # the received write value.
-            for bbb in self.bbblist:
-                self.scan_bbb(bbb)
             _time.sleep(self._sleep_scan)
-        else:
-            for bbb in self.bbblist:
-                self.scan_bbb(bbb)
-            time1 = _time.time()
-            # TODO: measure this interval for various BBBs...
-            # _log.info("process.... {:.3f} ms".format(1000*(time1-time0)))
-            _time.sleep(abs(self._interval-(time1-time0)))
+
+        # then scan bbb state for updates.
+        for bbb in self.bbblist:
+            self.scan_bbb(bbb)
+
+        # sleep, if necessary
+        t1_ = _time.time()
+        # NOTE: measure this interval for various BBBs...
+        # _log.info("process.... {:.3f} ms".format(1000*(t1_-t0_)))
+        if t1_ - t0_ < self._interval:
+            _time.sleep(self._interval - (t1_ - t0_))
 
     def read(self, reason):
         """Read from database."""
@@ -119,8 +122,7 @@ class App:
         # global_config to complete without artificial warning
         # messages or unnecessary delays. Whether we should extend
         # it to all power supplies remains to be checked.
-        if App._regexp_setpoint.match(reason):
-            # Accept *-SP and *-Sel right away (not *-Cmd !)
+        if self._check_write_immediate(reason, value):
             self.driver.setParam(reason, value)
             self.driver.updatePV(reason)
 
@@ -128,17 +130,14 @@ class App:
         operation = (self._write_operation, (bbb, pvname, value))
         self._dequethread.append(operation)
 
-        # speed scan if SOFBCurrent-SP
-        if pvname.endswith('SOFBCurrent-SP'):
-            self._sleep_scan = App._sleep_scan_sofb
-
         self._dequethread.process()
 
     def scan_bbb(self, bbb):
         """Scan BBB devices and update ioc epics DB."""
         for devname in bbb.psnames:
             # forcing scan everytime!
-            self.scan_device(bbb, devname, force_update=True)
+            if not self._sofb_processing:
+                self.scan_device(bbb, devname, force_update=True)
 
     def scan_device(self, bbb, devname, force_update=False):
         """Scan BBB device and update ioc epics DB."""
@@ -165,10 +164,41 @@ class App:
         return dev2bbb, dev2conn, interval
 
     def _write_operation(self, bbb, pvname, value):
-        bbb.write(pvname.devname, pvname.propty, value)
+        if pvname.endswith('SOFBCurrent-SP'):
+            #  signal SOFB processing
+            status = self._check_write_sofb(pvname, value)
+            if not status:
+                _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
+                    'W!', pvname, 'Invalid length!'))
+                return
+            self._sofb_processing = True
+
+        # process priority changed PVs
+        priority_pvs = bbb.write(pvname.device_name, pvname.propty, value)
+        for reason, val in priority_pvs.items():
+            if val is not None:
+                self.driver.setParam(reason, val)
+                self.driver.updatePV(reason)
+
+        # signal end of eventual SOFB processing
+        self._sofb_processing = False
 
         print('{:<30s} : {:>9.3f} ms'.format(
             'IOC.write (end)', 1e3*(_time.time() % 1)))
+
+    def _check_write_immediate(self, reason, value):
+        """Check if reason is imediatly writeable."""
+        # Accept *-SP and *-Sel right away (not *-Cmd !)
+        if not App._regexp_setpoint.match(reason):
+            return False
+        return self._check_write_sofb(reason, value)
+
+    def _check_write_sofb(self, reason, value):
+        if not reason.endswith('SOFBCurrent-SP'):
+            return True
+        value_len = 1 if not \
+            isinstance(value, (tuple, list, _np.ndarray)) else len(value)
+        return value_len == App._sofb_value_length
 
     def _update_ioc_database(self, bbb, devname,
                              dev_connected=True,
@@ -191,6 +221,10 @@ class App:
         strength_name = bbb.strength_name(devname)
 
         for reason, new_value in data.items():
+
+            # if sofb processing abort update
+            if self._sofb_processing:
+                return
 
             # set strength limits
             if strength_name is not None and strength_name in reason:
@@ -217,7 +251,6 @@ class App:
 
             # if it changed and is not None, set new value in PV database entry
             if value_changed and new_value is not None:
-                self._check_sofb(reason)
                 self.driver.setParam(reason, new_value)
 
             # update alarm state
@@ -235,12 +268,6 @@ class App:
 
         # update device connection state
         self._dev2conn[devname] = dev_connected
-
-    def _check_sofb(self, reason):
-        if reason.endswith('SOFBCurrent-RB'):
-            self._sleep_scan = App._sleep_scan_default
-            print('{:<30s} : {:>9.3f} ms'.format(
-                'IOC.SOFBCurrent-SP (finish)', 1e3*(_time.time() % 1)))
 
     def _check_value_changed(self, reason, new_value):
         if new_value is None:
