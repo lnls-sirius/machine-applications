@@ -85,7 +85,7 @@ class App:
 
     def process(self):
         """Process all write requests in queue and does a BBB scan."""
-        time0 = _time.time()
+        t0_ = _time.time()
         if self._dequethread:  # Not None and not empty
             status = self._dequethread.process()
             if status:
@@ -99,11 +99,13 @@ class App:
         else:
             for psname in self.psnames:
                 self.scan_device(psname)
-            time1 = _time.time()
-            _time.sleep(abs(self._interval-(time1-time0)))
+            t1_ = _time.time()
+            if t1_ - t0_ < self._interval:
+                _time.sleep(self._interval - (t1_ - t0_))
 
     def read(self, reason):
         """Read from database."""
+        _ = reason
         return None
 
     def write(self, reason, value):
@@ -125,11 +127,11 @@ class App:
         else:
             self.driver.setParam(reason, value)
             self.driver.updatePV(reason)
-            time0 = _time.time()
+            t0_ = _time.time()
             self._write_operation(pvname, value)
-            time1 = _time.time()
+            t1_ = _time.time()
             _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
-                'T ', reason, '{:.3f} ms'.format((time1-time0)*1000)))
+                'T ', reason, '{:.3f} ms'.format((t1_ - t0_)*1000)))
 
     def scan_device(self, psname):
         """Scan BBB device and update ioc epics DB."""
@@ -203,14 +205,14 @@ class App:
         return connectors, streconv
 
     def _write_operation(self, pvname, value):
-        time0 = _time.time()
+        t0_ = _time.time()
         psname = pvname.device_name
         streconv = self._streconvs[psname]
         voltage = streconv.conv_strength_2_current(value)
         conn = self._connectors[psname]['-SP']
         if conn.connected:
             self._connectors[psname]['-SP'].value = voltage
-        time1 = _time.time()
+        t1_ = _time.time()
         _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
             'T ', pvname,
-            'write operation took {:.3f} ms'.format((time1-time0)*1000)))
+            'write operation took {:.3f} ms'.format((t1_-t0_)*1000)))
