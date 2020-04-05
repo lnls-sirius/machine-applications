@@ -112,8 +112,8 @@ class App:
 
     def write(self, reason, value):
         """Enqueue write request."""
-        print('{:<30s} : {:>9.3f} ms'.format(
-            'IOC.write (beg)', 1e3*(_time.time() % 1)))
+        # print('{:<30s} : {:>9.3f} ms'.format(
+        #     'IOC.write (beg)', 1e3*(_time.time() % 1)))
         pvname = _SiriusPVName(reason)
         _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
             'W ', reason, str(value)))
@@ -183,8 +183,8 @@ class App:
         # signal end of eventual SOFB processing
         self._sofb_processing = False
 
-        print('{:<30s} : {:>9.3f} ms'.format(
-            'IOC.write (end)', 1e3*(_time.time() % 1)))
+        # print('{:<30s} : {:>9.3f} ms'.format(
+        #     'IOC.write (end)', 1e3*(_time.time() % 1)))
 
     def _check_write_immediate(self, reason, value):
         """Check if reason is imediatly writeable."""
