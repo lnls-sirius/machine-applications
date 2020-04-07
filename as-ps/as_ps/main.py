@@ -43,7 +43,6 @@ class App:
 
         # flag to indicate sofb processing is taking place
         self._sofb_processing = False
-        self._sofb_value_length = None
 
         # write operation queue
         self._dequethread = _DequeThread()
