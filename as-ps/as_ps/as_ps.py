@@ -23,8 +23,9 @@ _PREFIX = _VACA_PREFIX
 _COMMIT_HASH = __version__
 
 
-def _stop_now(signum, _):
+def _stop_now(signum, frame):
     global STOP_EVENT
+    _ = frame
     print(_signal.Signals(signum).name + ' received at ' +
           _util.get_timestamp())
     _sys.stdout.flush()
