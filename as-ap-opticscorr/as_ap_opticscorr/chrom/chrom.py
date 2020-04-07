@@ -9,7 +9,7 @@ import pcaspy.tools as _pcaspy_tools
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 
-from siriuspy.opticscorr.chrom.main import App as _App
+from siriuspy.opticscorr.chrom import ChromCorrApp as _App
 
 
 INTERVAL = 0.25
