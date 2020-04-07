@@ -102,10 +102,11 @@ class App:
 
         # sleep, if necessary
         t1_ = _time.time()
-        # NOTE: measure this interval for various BBBs...
-        # _log.info("process.... {:.3f} ms".format(1000*(t1_-t0_)))
         if t1_ - t0_ < self._interval:
             _time.sleep(self._interval - (t1_ - t0_))
+
+        # NOTE: measure this interval for various BBBs...
+        # _log.info("process.... {:.3f} ms".format(1000*(t1_-t0_)))
 
     def read(self, reason):
         """Read from database."""
@@ -166,6 +167,7 @@ class App:
         return dev2bbb, dev2conn, interval
 
     def _write_operation(self, bbb, pvname, value):
+        # NOTE: check if using SiriusPVName subs alters efficiency
         if pvname.endswith('SOFBCurrent-SP'):
             #  signal SOFB processing
             status = self._check_write_sofb(pvname, value)
@@ -189,13 +191,14 @@ class App:
         #     'IOC.write (end)', 1e3*(_time.time() % 1)))
 
     def _check_write_immediate(self, reason, value):
-        """Check if reason is imediatly writeable."""
+        """Check if reason is immediatly writeable."""
         # Accept *-SP and *-Sel right away (not *-Cmd !)
         if not App._regexp_setpoint.match(reason):
             return False
         return self._check_write_sofb(reason, value)
 
     def _check_write_sofb(self, reason, value):
+        # NOTE: check if using SiriusPVName subs alters efficiency
         if not reason.endswith('SOFBCurrent-SP'):
             return True
         value_len = 1 if not \
