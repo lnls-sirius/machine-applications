@@ -92,6 +92,8 @@ class App:
                        "items left: {}")
                 logmsg = txt.format('Q ', len(self._dequethread))
                 _log.info(logmsg)
+            # TODO: this sleep seems unnecessary now.
+            # test commenting it out!
             _time.sleep(self._sleep_scan)
 
         # then scan bbb state for updates.
