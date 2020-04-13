@@ -6,8 +6,6 @@ import signal as _signal
 import logging as _log
 import traceback as _traceback
 
-from copy import deepcopy as _deepcopy
-
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 
@@ -15,17 +13,19 @@ from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 from siriuspy.pwrsupply.beaglebone import BBBFactory
 
-from as_ps.main import App
+from .main import App, __version__
+
 
 STOP_EVENT = False  # _multiprocessing.Event()
 PCAS_DRIVER = None
 
 _PREFIX = _VACA_PREFIX
-_COMMIT_HASH = _util.get_last_commit_hash()
+_COMMIT_HASH = __version__
 
 
 def _stop_now(signum, frame):
     global STOP_EVENT
+    _ = frame
     print(_signal.Signals(signum).name + ' received at ' +
           _util.get_timestamp())
     _sys.stdout.flush()
@@ -77,6 +77,9 @@ def run(bbbnames):
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     _util.configure_log_file()
+
+    print('')
+    print('--- PS IOC structures initialization ---\n')
 
     # Create BBBs
     bbblist = list()
