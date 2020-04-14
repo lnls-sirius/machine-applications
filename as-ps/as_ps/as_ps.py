@@ -11,7 +11,7 @@ import pcaspy.tools as _pcaspy_tools
 
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
-from siriuspy.pwrsupply.beaglebone import BBBFactory
+from siriuspy.pwrsupply.factory import BBBFactory
 
 from .main import App, __version__
 
