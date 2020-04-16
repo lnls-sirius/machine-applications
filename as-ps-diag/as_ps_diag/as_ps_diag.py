@@ -67,8 +67,6 @@ class _PSDiagDriver(_Driver):
             **kwargs):
         """."""
         _ = kwargs
-        if 'QFB' in pvname:
-            print(pvname, value, alarm, severity, field)
         if field == 'value':
             self.setParam(pvname, value)
         elif field == 'status':
