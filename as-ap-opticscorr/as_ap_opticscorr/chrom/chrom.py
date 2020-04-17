@@ -48,11 +48,12 @@ class _PCASDriver(_pcaspy.Driver):
         else:
             return False
 
-    def update_pv(self, pvname, value, field='value', **kwargs):
+    def update_pv(self, pvname, value=None, info=None, field='value', **kws):
+        _ = kws
         if field == 'value':
             self.setParam(pvname, value)
         elif field == 'info':
-            self.setParamInfo(pvname, value)
+            self.setParamInfo(pvname, info)
         self.updatePV(pvname)
 
 
