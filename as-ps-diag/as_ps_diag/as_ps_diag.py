@@ -62,13 +62,18 @@ class _PSDiagDriver(_Driver):
         else:
             return False
 
-    def update_pv(self, pvname, value, field='value', **kwargs):
+    def update_pv(
+            self, pvname, value=None, alarm=None, severity=None, field='value',
+            **kwargs):
+        """."""
+        _ = kwargs
         if field == 'value':
             self.setParam(pvname, value)
         elif field == 'status':
-            self.setParamStatus(pvname, value)
+            if value is not None:
+                self.setParam(pvname, value)
+            self.setParamStatus(pvname, alarm, severity)
         self.updatePV(pvname)
-
 
 def run(section='', sub_section='', device='', debug=False):
     """Run IOC."""
