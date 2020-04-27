@@ -180,7 +180,7 @@ class App:
         try:
             strengths = streconv.conv_current_2_strength(values)
         except TypeError:
-            print('Cound not convert voltage to strength!')
+            print('Could not convert voltage to strength!')
             strengths = None
 
         if strengths is None or None in strengths:
