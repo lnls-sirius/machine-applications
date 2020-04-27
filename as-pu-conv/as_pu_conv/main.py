@@ -161,7 +161,27 @@ class App:
             curr4 = 10000
 
         values = (curr0, curr1, curr2, curr3, curr4)
-        strengths = streconv.conv_current_2_strength(values)
+        # NOTE: investigate!
+        #
+        # usr/local/lib/python3.6/site-packages/epics/ca.py:1507:
+        # UserWarning: ca.get('SI-01SA:PU-InjNLKckr:Voltage-Mon') timed out
+        # after 1.00 seconds.
+        # sirius-ioc-as-pu-conv.py[11332]:   warnings.warn(msg %
+        # (name(chid), timeout))
+        # File "/usr/local/lib/python3.6/site-packages/siriuspy/magnet/excdata.py",
+        # line 173, in _calc_interp
+        # xvals, xtab, ytab, left=float('nan'), right=float('inf'))
+        # File "<__array_function__ internals>", line 6, in interp
+        # File "/usr/local/lib/python3.6/site-packages/numpy/lib/function_base.py",
+        # line 1403, in interp
+        # sirius-ioc-as-pu-conv.py[11332]: return interp_func(x, xp, fp, left, right)
+        # TypeError: Cannot cast array data from dtype('O') to dtype('float64')
+        # according to the rule 'safe'
+        try:
+            strengths = streconv.conv_current_2_strength(values)
+        except TypeError:
+            strengths = None
+
         if strengths is None or None in strengths:
             slims = None
         else:
