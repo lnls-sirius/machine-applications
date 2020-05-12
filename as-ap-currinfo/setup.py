@@ -22,8 +22,13 @@ setup(
     packages=find_packages(),
     package_data={'as_ap_currinfo': ['VERSION']},
     include_package_data=True,
-    scripts=['scripts/sirius-ioc-bo-ap-currinfo.py',
-             'scripts/sirius-ioc-si-ap-currinfo.py',
-             'scripts/sirius-ioc-si-ap-currinfo-lifetime.py'],
+    scripts=[
+        'scripts/sirius-ioc-li-ap-currinfo.py',
+        'scripts/sirius-ioc-tb-ap-currinfo.py',
+        'scripts/sirius-ioc-ts-ap-currinfo.py',
+        'scripts/sirius-ioc-bo-ap-currinfo.py',
+        'scripts/sirius-ioc-si-ap-currinfo.py',
+        'scripts/sirius-ioc-si-ap-currinfo-lifetime.py',
+        ],
     zip_safe=False
 )
