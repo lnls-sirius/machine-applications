@@ -9,7 +9,7 @@ import pcaspy.tools as _pcaspy_tools
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 
-from siriuspy.currinfo.lifetime.main import App as _App
+from siriuspy.currinfo import SILifetimeApp as _SILifetimeApp
 
 
 INTERVAL = 0.1
@@ -17,10 +17,11 @@ stop_event = False
 
 
 def _stop_now(signum, frame):
-    global stop_event
+    _ = frame
     print(_signal.Signals(signum).name+' received at '+_util.get_timestamp())
     _sys.stdout.flush()
     _sys.stderr.flush()
+    global stop_event
     stop_event = True
 
 
@@ -56,6 +57,8 @@ class _PCASDriver(_pcaspy.Driver):
             return False
 
     def update_pv(self, pvname, value, **kwargs):
+        """."""
+        _ = kwargs
         self.setParam(pvname, value)
         self.updatePV(pvname)
 
@@ -72,27 +75,27 @@ def run():
     # define IOC, init pvs database and create app object
     _version = _util.get_last_commit_hash()
     _ioc_prefix = _vaca_prefix + 'SI-Glob:AP-CurrInfo:'
-    app = _App()
-    db = app.pvs_database
-    db['VersionLifetime-Cte']['value'] = _version
+    app = _SILifetimeApp()
+    dbase = app.pvs_database
+    dbase['VersionLifetime-Cte']['value'] = _version
 
     # check if another IOC is running
-    pvname = _ioc_prefix + next(iter(db))
+    pvname = _ioc_prefix + next(iter(dbase))
     if _util.check_pv_online(pvname, use_prefix=False):
         raise ValueError('Another instance of this IOC is already running!')
 
     # print ioc banner
     _util.print_ioc_banner(
         ioc_name='si-ap-currinfo-lifetime',
-        db=db,
+        db=dbase,
         description='SI-AP-CurrInfo-Lifetime Soft IOC',
         version=_version,
         prefix=_ioc_prefix)
 
     # create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
-    _attribute_access_security_group(server, db)
-    server.createPV(_ioc_prefix, db)
+    _attribute_access_security_group(server, dbase)
+    server.createPV(_ioc_prefix, dbase)
     pcas_driver = _PCASDriver(app)
 
     # initiate a new thread responsible for listening for client connections
