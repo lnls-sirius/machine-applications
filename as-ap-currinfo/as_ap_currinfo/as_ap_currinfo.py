@@ -138,6 +138,7 @@ def run(acc):
     while not STOP_EVENT:
         app.process(INTERVAL)
 
+    app.close()
     _log.info('Stoping Server Thread...')
     # send stop signal to server thread
     server_thread.stop()
