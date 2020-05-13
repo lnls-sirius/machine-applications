@@ -6,6 +6,7 @@ import signal as _signal
 import logging as _log
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
+import visa
 
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
@@ -35,18 +36,21 @@ def _attribute_access_security_group(server, db):
     server.initAccessSecurityFile(path_ + '/access_rules.as')
 
 
-def _get_app_class(acc):
+def _get_app(acc):
     acc = acc.lower()
     if acc == 'bo':
-        return _BOCurrInfoApp
+        return _BOCurrInfoApp()
     elif acc == 'si':
-        return _SICurrInfoApp
+        return _SICurrInfoApp()
     elif acc == 'li':
-        return _LICurrInfoApp
+        resource_manager = visa.ResourceManager('@py')
+        return _LICurrInfoApp(resource_manager)
     elif acc == 'tb':
-        return _TBCurrInfoApp
+        resource_manager = visa.ResourceManager('@py')
+        return _TBCurrInfoApp(resource_manager)
     elif acc == 'ts':
-        return _TSCurrInfoApp
+        resource_manager = visa.ResourceManager('@py')
+        return _TSCurrInfoApp(resource_manager)
     else:
         raise ValueError('There is no App defined for accelarator '+acc+'.')
 
@@ -98,8 +102,7 @@ def run(acc):
     if acc in {'SI', 'BO'}:
         _ioc_prefix += acc + '-Glob:AP-CurrInfo:'
     _log.debug('Creating App Object.')
-    app_class = _get_app_class(acc)
-    app = app_class()
+    app = _get_app(acc)
     db = app.pvs_database
     if acc in {'SI', 'BO'}:
         db['Version-Cte']['value'] = _version
