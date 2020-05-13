@@ -6,7 +6,7 @@ import signal as _signal
 import logging as _log
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-import visa
+import visa as _visa
 
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
@@ -43,13 +43,13 @@ def _get_app(acc):
     elif acc == 'si':
         return _SICurrInfoApp()
     elif acc == 'li':
-        resource_manager = visa.ResourceManager('@py')
+        resource_manager = _visa.ResourceManager('@py')
         return _LICurrInfoApp(resource_manager)
     elif acc == 'tb':
-        resource_manager = visa.ResourceManager('@py')
+        resource_manager = _visa.ResourceManager('@py')
         return _TBCurrInfoApp(resource_manager)
     elif acc == 'ts':
-        resource_manager = visa.ResourceManager('@py')
+        resource_manager = _visa.ResourceManager('@py')
         return _TSCurrInfoApp(resource_manager)
     else:
         raise ValueError('There is no App defined for accelarator '+acc+'.')
@@ -80,6 +80,7 @@ class _PCASDriver(_pcaspy.Driver):
 
     def update_pv(self, pvname, value, **kwargs):
         """."""
+        _ = kwargs
         self.setParam(pvname, value)
         self.updatePV(pvname)
 
