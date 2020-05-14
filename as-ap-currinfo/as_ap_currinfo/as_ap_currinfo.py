@@ -3,40 +3,54 @@
 import os as _os
 import sys as _sys
 import signal as _signal
+import logging as _log
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
+import visa as _visa
 
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
+from siriuspy.currinfo import BOCurrInfoApp as _BOCurrInfoApp, \
+    SICurrInfoApp as _SICurrInfoApp, LICurrInfoApp as _LICurrInfoApp, \
+    TBCurrInfoApp as _TBCurrInfoApp, TSCurrInfoApp as _TSCurrInfoApp
 
-from siriuspy.currinfo.main import BOApp as _BOApp, SIApp as _SIApp
 
-
-INTERVAL = 0.1
-stop_event = False
+INTERVAL = 0.5
+STOP_EVENT = False
 
 
 def _stop_now(signum, frame):
-    global stop_event
+    _ = frame
     print(_signal.Signals(signum).name+' received at '+_util.get_timestamp())
     _sys.stdout.flush()
     _sys.stderr.flush()
-    stop_event = True
+    global STOP_EVENT
+    STOP_EVENT = True
 
 
 def _attribute_access_security_group(server, db):
-    for k, v in db.items():
+    for k, val in db.items():
         if k.endswith(('-RB', '-Sts', '-Cte', '-Mon')):
-            v.update({'asg': 'rbpv'})
+            val.update({'asg': 'rbpv'})
     path_ = _os.path.abspath(_os.path.dirname(__file__))
     server.initAccessSecurityFile(path_ + '/access_rules.as')
 
 
-def _get_app_class(acc):
+def _get_app(acc):
+    acc = acc.lower()
     if acc == 'bo':
-        return _BOApp
+        return _BOCurrInfoApp()
     elif acc == 'si':
-        return _SIApp
+        return _SICurrInfoApp()
+    elif acc == 'li':
+        resource_manager = _visa.ResourceManager('@py')
+        return _LICurrInfoApp(resource_manager)
+    elif acc == 'tb':
+        resource_manager = _visa.ResourceManager('@py')
+        return _TBCurrInfoApp(resource_manager)
+    elif acc == 'ts':
+        resource_manager = _visa.ResourceManager('@py')
+        return _TSCurrInfoApp(resource_manager)
     else:
         raise ValueError('There is no App defined for accelarator '+acc+'.')
 
@@ -65,26 +79,36 @@ class _PCASDriver(_pcaspy.Driver):
             return False
 
     def update_pv(self, pvname, value, **kwargs):
+        """."""
+        _ = kwargs
         self.setParam(pvname, value)
         self.updatePV(pvname)
 
 
 def run(acc):
     """Main module function."""
+    acc = acc.upper()
+
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # configure log file
     _util.configure_log_file()
+    _log.info('Starting...')
 
     # define IOC, init pvs database and create app object
     _version = _util.get_last_commit_hash()
-    _ioc_prefix = _vaca_prefix + acc.upper() + '-Glob:AP-CurrInfo:'
-    app_class = _get_app_class(acc)
-    app = app_class()
+    _ioc_prefix = _vaca_prefix
+    if acc in {'SI', 'BO'}:
+        _ioc_prefix += acc + '-Glob:AP-CurrInfo:'
+    _log.debug('Creating App Object.')
+    app = _get_app(acc)
     db = app.pvs_database
-    db['Version-Cte']['value'] = _version
+    if acc in {'SI', 'BO'}:
+        db['Version-Cte']['value'] = _version
+    else:
+        db[acc+'-Glob:AP-CurrInfo:Version-Cte']['value'] = _version
 
     # check if another IOC is running
     pvname = _ioc_prefix + next(iter(db))
@@ -100,20 +124,28 @@ def run(acc):
         prefix=_ioc_prefix)
 
     # create a new simple pcaspy server and driver to respond client's requests
+    _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, db)
+    _log.info('Setting Server Database.')
     server.createPV(_ioc_prefix, db)
-    pcas_driver = _PCASDriver(app)
+    _log.info('Creating Driver.')
+    _PCASDriver(app)
     app.init_database()
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
+    _log.info('Starting Server Thread.')
     server_thread.start()
 
     # main loop
-    while not stop_event:
-        pcas_driver.app.process(INTERVAL)
+    while not STOP_EVENT:
+        app.process(INTERVAL)
 
-    # sends stop signal to server thread
+    app.close()
+    _log.info('Stoping Server Thread...')
+    # send stop signal to server thread
     server_thread.stop()
     server_thread.join()
+    _log.info('Server Thread stopped.')
+    _log.info('Good Bye.')
