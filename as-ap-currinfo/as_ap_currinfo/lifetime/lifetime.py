@@ -97,6 +97,7 @@ def run():
     _attribute_access_security_group(server, dbase)
     server.createPV(_ioc_prefix, dbase)
     pcas_driver = _PCASDriver(app)
+    app.init_database()
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
