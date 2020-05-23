@@ -3,6 +3,7 @@
 import os as _os
 import sys as _sys
 import signal as _signal
+import logging as _log
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 
@@ -13,7 +14,7 @@ from siriuspy.currinfo import SILifetimeApp as _SILifetimeApp
 
 
 INTERVAL = 0.1
-stop_event = False
+STOP_EVENT = False
 
 
 def _stop_now(signum, frame):
@@ -21,14 +22,14 @@ def _stop_now(signum, frame):
     print(_signal.Signals(signum).name+' received at '+_util.get_timestamp())
     _sys.stdout.flush()
     _sys.stderr.flush()
-    global stop_event
-    stop_event = True
+    global STOP_EVENT
+    STOP_EVENT = True
 
 
-def _attribute_access_security_group(server, db):
-    for k, v in db.items():
+def _attribute_access_security_group(server, dbase):
+    for k, val in dbase.items():
         if k.endswith(('-RB', '-Sts', '-Cte', '-Mon')):
-            v.update({'asg': 'rbpv'})
+            val.update({'asg': 'rbpv'})
     path_ = _os.path.abspath(_os.path.dirname(__file__))
     server.initAccessSecurityFile(path_ + '/access_rules.as')
 
@@ -57,7 +58,7 @@ class _PCASDriver(_pcaspy.Driver):
             return False
 
     def update_pv(self, pvname, value, **kwargs):
-        """."""
+        """Update PV."""
         _ = kwargs
         self.setParam(pvname, value)
         self.updatePV(pvname)
@@ -93,9 +94,12 @@ def run():
         prefix=_ioc_prefix)
 
     # create a new simple pcaspy server and driver to respond client's requests
+    _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, dbase)
+    _log.info('Setting Server Database.')
     server.createPV(_ioc_prefix, dbase)
+    _log.info('Creating Driver.')
     pcas_driver = _PCASDriver(app)
     app.init_database()
 
@@ -104,7 +108,7 @@ def run():
     server_thread.start()
 
     # main loop
-    while not stop_event:
+    while not STOP_EVENT:
         pcas_driver.app.process(INTERVAL)
 
     # sends stop signal to server thread
