@@ -28,8 +28,8 @@ def _stop_now(signum, frame):
     STOP_EVENT = True
 
 
-def _attribute_access_security_group(server, db):
-    for k, val in db.items():
+def _attribute_access_security_group(server, dbase):
+    for k, val in dbase.items():
         if k.endswith(('-RB', '-Sts', '-Cte', '-Mon')):
             val.update({'asg': 'rbpv'})
     path_ = _os.path.abspath(_os.path.dirname(__file__))
@@ -79,7 +79,7 @@ class _PCASDriver(_pcaspy.Driver):
             return False
 
     def update_pv(self, pvname, value, **kwargs):
-        """."""
+        """Update PV."""
         _ = kwargs
         self.setParam(pvname, value)
         self.updatePV(pvname)
@@ -104,21 +104,21 @@ def run(acc):
         _ioc_prefix += acc + '-Glob:AP-CurrInfo:'
     _log.debug('Creating App Object.')
     app = _get_app(acc)
-    db = app.pvs_database
+    dbase = app.pvs_database
     if acc in {'SI', 'BO'}:
-        db['Version-Cte']['value'] = _version
+        dbase['Version-Cte']['value'] = _version
     else:
-        db[acc+'-Glob:AP-CurrInfo:Version-Cte']['value'] = _version
+        dbase[acc+'-Glob:AP-CurrInfo:Version-Cte']['value'] = _version
 
     # check if another IOC is running
-    pvname = _ioc_prefix + next(iter(db))
+    pvname = _ioc_prefix + next(iter(dbase))
     if _util.check_pv_online(pvname, use_prefix=False):
         raise ValueError('Another instance of this IOC is already running!')
 
     # check if another IOC is running
     _util.print_ioc_banner(
         ioc_name=acc.lower()+'-ap-currinfo',
-        db=db,
+        db=dbase,
         description=acc.upper()+'-AP-CurrInfo Soft IOC',
         version=_version,
         prefix=_ioc_prefix)
@@ -126,9 +126,9 @@ def run(acc):
     # create a new simple pcaspy server and driver to respond client's requests
     _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
-    _attribute_access_security_group(server, db)
+    _attribute_access_security_group(server, dbase)
     _log.info('Setting Server Database.')
-    server.createPV(_ioc_prefix, db)
+    server.createPV(_ioc_prefix, dbase)
     _log.info('Creating Driver.')
     _PCASDriver(app)
     app.init_database()
