@@ -1,5 +1,5 @@
 [Unit]
-Description=Power Supply IOC - DCLinks - IDs - Instrumentation Area 09
+Description=Power Supply IOC - IDs Correctors DCLinks - Instrumentation Area 09
 After=multi-user.target
 
 [Service]
