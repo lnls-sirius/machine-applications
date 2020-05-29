@@ -144,8 +144,9 @@ install-services: preparation
 	cp -rf sirius-ioc-as-ps-dclink-ia18.service /etc/systemd/system/
 	cp -rf sirius-ioc-as-ps-dclink-ia19.service /etc/systemd/system/
 	cp -rf sirius-ioc-as-ps-dclink-ia20.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-dclink-id-ia09.service /etc/systemd/system/
+	cp -rf sirius-ioc-si-ps-correctors-id-ia09.service /etc/systemd/system/
 	systemctl daemon-reload
-
 
 stop:
 	@printf "Stopping sirius-ioc-ps services...\n"
@@ -287,6 +288,8 @@ stop:
 	systemctl stop sirius-ioc-as-ps-dclink-ia18.service
 	systemctl stop sirius-ioc-as-ps-dclink-ia19.service
 	systemctl stop sirius-ioc-as-ps-dclink-ia20.service
+	systemctl stop sirius-ioc-si-ps-dclink-id-ia09.service
+	systemctl stop sirius-ioc-si-ps-correctors-id-ia09.service
 
 start: preparation
 	@printf "Starting sirius-ioc-ps services...\n"
@@ -428,7 +431,8 @@ start: preparation
 	systemctl start sirius-ioc-as-ps-dclink-ia18.service
 	systemctl start sirius-ioc-as-ps-dclink-ia19.service
 	systemctl start sirius-ioc-as-ps-dclink-ia20.service
-
+	systemctl start sirius-ioc-si-ps-dclink-id-ia09.service
+	systemctl start sirius-ioc-si-ps-correctors-id-ia09.service
 
 disable:
 	@printf "Disabling sirius-ioc-ps services...\n"
@@ -570,6 +574,8 @@ disable:
 	systemctl disable sirius-ioc-as-ps-dclink-ia18.service
 	systemctl disable sirius-ioc-as-ps-dclink-ia19.service
 	systemctl disable sirius-ioc-as-ps-dclink-ia20.service
+	systemctl disable sirius-ioc-si-ps-dclink-id-ia09.service
+	systemctl disable sirius-ioc-si-ps-correctors-id-ia09.service
 
 uninstall: stop disable
 	@printf "Uninstalling sirius-ioc-ps services...\n"
@@ -711,6 +717,8 @@ uninstall: stop disable
 	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia18.service
 	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia19.service
 	rm -rf /etc/systemd/system/sirius-ioc-as-ps-dclink-ia20.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-dclink-id-ia09.service
+	rm -rf /etc/systemd/system/sirius-ioc-si-ps-correctors-id-ia09.service
 	systemctl daemon-reload
 	systemctl reset-failed
 
