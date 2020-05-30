@@ -1,0 +1,15 @@
+[Unit]
+Description=Power Supply IOC - IDs Correctors DCLinks - Instrumentation Area 09
+After=multi-user.target
+
+[Service]
+Group=sirius
+User=sirius
+Type=simple
+LimitCORE=infinity
+WorkingDirectory=/home/sirius/iocs-log
+StandardOutput=syslog
+StandardError=syslog
+ExecStartPre=/bin/bash --login -c 'env > /home/sirius/iocs-log/env-sirius-ioc-si-ps-dclink-id-ia09'
+EnvironmentFile=-/home/sirius/iocs-log/env-sirius-ioc-si-ps-dclink-id-ia09
+ExecStart=/usr/local/bin/sirius-ioc-as-ps.py IA-09RaID:CO-PSCtrl-SI1
