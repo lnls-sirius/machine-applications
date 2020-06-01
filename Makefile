@@ -12,6 +12,7 @@ develop-scripts:
 	cd as-pu-conv; sudo make develop-scripts
 	cd li-ps-conv; sudo make develop-scripts
 	cd si-id-conv; sudo make develop-scripts
+	cd as-ap-machshift; sudo make develop-scripts
 
 install: install-scripts install-services
 
@@ -29,6 +30,7 @@ install-scripts:
 	cd as-pu-conv; sudo make install-scripts
 	cd li-ps-conv; sudo make install-scripts
 	cd si-id-conv; sudo make install-scripts
+	cd as-ap-machshift; sudo make install-scripts
 
 uninstall-scripts:
 	cd as-ap-currinfo; sudo make uninstall-scripts
@@ -42,6 +44,7 @@ uninstall-scripts:
 	cd as-pu-conv; sudo make uninstall-scripts
 	cd li-ps-conv; sudo make uninstall-scripts
 	cd si-id-conv; sudo make uninstall-scripts
+	cd as-ap-machshift; sudo make uninstall-scripts
 
 install-services:
 	cd as-ap-currinfo; sudo make install-services
@@ -55,6 +58,7 @@ install-services:
 	cd as-pu-conv; sudo make install-services
 	cd li-ps-conv; sudo make install-services
 	cd si-id-conv; sudo make install-services
+	cd as-ap-machshift; sudo make install-services
 	sudo systemctl daemon-reload
 
 uninstall-services:
@@ -69,6 +73,7 @@ uninstall-services:
 	cd as-pu-conv; sudo make uninstall-services
 	cd li-ps-conv; sudo make uninstall-services
 	cd si-id-conv; sudo make uninstall-services
+	cd as-ap-machshift; sudo make uninstall-services
 	sudo systemctl daemon-reload
 
 clean:
@@ -83,3 +88,4 @@ clean:
 	cd as-pu-conv; sudo make clean
 	cd li-ps-conv; sudo make clean
 	cd si-id-conv; sudo make clean
+	cd as-ap-machshift; sudo make clean
