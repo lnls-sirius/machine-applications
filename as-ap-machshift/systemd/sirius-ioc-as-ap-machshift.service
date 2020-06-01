@@ -1,0 +1,14 @@
+[Unit]
+Description=Soft IOC for Machine Shift Control
+After=multi-user.target
+
+[Service]
+Group=sirius
+User=sirius
+Type=simple
+WorkingDirectory=/home/sirius/iocs-log/as-ap-machshift
+StandardOutput=syslog
+StandardError=syslog
+ExecStartPre=/bin/bash --login -c 'env > /home/sirius/iocs-log/env-sirius-ioc-as-ap-machshift'
+EnvironmentFile=-/home/sirius/iocs-log/env-sirius-ioc-as-ap-machshift
+ExecStart=/usr/local/bin/sirius-ioc-as-ap-machshift.py
