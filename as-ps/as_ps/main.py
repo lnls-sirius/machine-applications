@@ -181,7 +181,10 @@ class App:
         for reason, val in priority_pvs.items():
             if val is not None:
                 self.driver.setParam(reason, val)
-                self.driver.updatePV(reason)
+            else:
+                self.driver.setParamStatus(
+                    reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+            self.driver.updatePV(reason)
 
         # signal end of eventual SOFB processing
         self._sofb_processing = False
