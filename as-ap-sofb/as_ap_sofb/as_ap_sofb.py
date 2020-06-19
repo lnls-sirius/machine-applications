@@ -4,8 +4,11 @@
 import os as _os
 import logging as _log
 import signal as _signal
+
+import numpy as _np
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
+
 import siriuspy.util as _util
 from siriuspy import csdev as _csdev
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
@@ -48,12 +51,19 @@ class _PCASDriver(_pcaspy.Driver):
         oldval = self.getParam(reason)
         if reason.endswith('-Cmd'):
             value = oldval + 1
+        if isinstance(value, (_np.ndarray, list, tuple)):
+            pval = f'{value[0]}...{value[-1]}'
+        else:
+            pval = f'{value}'
+        if isinstance(oldval, (_np.ndarray, list, tuple)):
+            opval = f'{oldval[0]}...{oldval[-1]}'
+        else:
+            opval = f'{oldval}'
         if ret_val:
-            _log.info('YES Write %s: %s', reason, str(value))
+            _log.info('YES Write %s: %s', reason, pval)
         else:
             _log.warning(
-                'NO write %s: %s current value is %s',
-                reason, str(oldval), str(value))
+                'NO write %s: %s current value is %s', reason, opval, pval)
             value = oldval
         self.setParam(reason, value)
         self.updatePV(reason)
