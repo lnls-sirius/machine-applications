@@ -71,6 +71,8 @@ class _PCASDriver(_pcaspy.Driver):
 
     def update_pv(self, pvname, value, **kwargs):
         self.setParam(pvname, value)
+        if kwargs:
+            self.setParamInfo(pvname, kwargs)
         self.updatePV(pvname)
 
     def _isValid(self, reason, val):
