@@ -9,7 +9,7 @@ import traceback as _traceback
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 
-from PRUserial485 import EthBrigdeClient as _EthBrigdeClient
+from PRUserial485 import EthBridgeClient as _EthBridgeClient
 
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
