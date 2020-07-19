@@ -88,7 +88,7 @@ def run(bbbnames):
     dbset = dict()
     for bbbname in bbbnames:
         bbbname = bbbname.replace('--', ':')
-        bbb, dbase = BBBFactory.create(_EthBrigdeClient, bbbname=bbbname)
+        bbb, dbase = BBBFactory.create(_EthBridgeClient, bbbname=bbbname)
         bbblist.append(bbb)
         dbset.update(dbase)
     dbset = {_PREFIX: dbset}
