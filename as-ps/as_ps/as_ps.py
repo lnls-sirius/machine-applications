@@ -9,7 +9,7 @@ import traceback as _traceback
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 
-from PRUserial485 import EthBrigdeClient as _EthBrigdeClient
+from PRUserial485 import EthBridgeClient as _EthBridgeClient
 
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
@@ -88,7 +88,7 @@ def run(bbbnames):
     dbset = dict()
     for bbbname in bbbnames:
         bbbname = bbbname.replace('--', ':')
-        bbb, dbase = BBBFactory.create(_EthBrigdeClient, bbbname=bbbname)
+        bbb, dbase = BBBFactory.create(_EthBridgeClient, bbbname=bbbname)
         bbblist.append(bbb)
         dbset.update(dbase)
     dbset = {_PREFIX: dbset}
