@@ -12,8 +12,10 @@ import pcaspy.tools as _pcaspy_tools
 import siriuspy.util as _util
 from siriuspy import csdev as _csdev
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
-from siriuspy.sofb import SOFB as _SOFB, EpicsMatrix as _EpicsMatrix, \
-    EpicsOrbit as _EpicsOrbit, EpicsCorrectors as _EpicsCorrectors
+from siriuspy.sofb.main import SOFB as _SOFB
+from siriuspy.sofb.matrix import EpicsMatrix as _EpicsMatrix
+from siriuspy.sofb.orbit import EpicsOrbit as _EpicsOrbit
+from siriuspy.sofb.correctors import EpicsCorrectors as _EpicsCorrectors
 
 stop_event = False
 __version__ = _util.get_last_commit_hash()
