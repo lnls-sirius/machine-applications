@@ -1,5 +1,5 @@
 [Unit]
-Description=Soft IOC for Energy Calculation for Sirius Linac
+Description=Soft IOC to process Manaca beam Image
 After=multi-user.target
 
 [Service]
@@ -9,6 +9,6 @@ Type=simple
 WorkingDirectory=/home/sirius/iocs
 StandardOutput=syslog
 StandardError=syslog
-ExecStartPre=/bin/bash --login -c 'env > /tmp/sirius-ioc-li-ap-energy'
-EnvironmentFile=-/tmp/sirius-ioc-li-ap-energy
-ExecStart=/usr/local/bin/sirius-ioc-li-ap-energy.py
+ExecStartPre=/bin/bash --login -c 'env > /tmp/sirius-ioc-si-ap-manaca'
+EnvironmentFile=-/tmp/sirius-ioc-si-ap-manaca
+ExecStart=/usr/local/bin/sirius-ioc-si-ap-manaca.py
