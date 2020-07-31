@@ -49,6 +49,9 @@ class App:
 
         # mapping device to bbb
         self._bbblist = bbblist
+        # NOTE: change IOC to accept only one BBB
+        self._sofbmode_sts_pvname = \
+            self.bbblist[0].psnames[0] + ':SOFBMode-Sts'
 
         # build dictionaries
         self._dev2bbb, self._dev2conn, self._interval = \
@@ -117,8 +120,14 @@ class App:
         # print('{:<30s} : {:>9.3f} ms'.format(
         #     'IOC.write (beg)', 1e3*(_time.time() % 1)))
         pvname = _SiriusPVName(reason)
-        _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
-            'W ', reason, str(value)))
+
+        sofb_state = self.driver.getParam(self._sofbmode_sts_pvname)
+        ignorestr, wstr = \
+            (' (SOFBMode On)', 'W!') if sofb_state and 'SOFB' not in reason \
+            else ('', 'W ')
+
+        _log.info("[{:.2s}] - {:.32s} = {:.50s}{}".format(
+            wstr, reason, str(value), ignorestr))
 
         # NOTE: This modified behaviour is to allow loading
         # global_config to complete without artificial warning
