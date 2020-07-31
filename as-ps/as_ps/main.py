@@ -49,7 +49,9 @@ class App:
 
         # mapping device to bbb
         self._bbblist = bbblist
-        self._sofbmode_sts_pvname = self.bbblist[0].psnames[0] + ':SOFBMode-Sts'
+        # NOTE: change IOC to accept only one BBB
+        self._sofbmode_sts_pvname = \
+            self.bbblist[0].psnames[0] + ':SOFBMode-Sts'
 
         # build dictionaries
         self._dev2bbb, self._dev2conn, self._interval = \
@@ -121,7 +123,8 @@ class App:
 
         sofb_state = self.driver.getParam(self._sofbmode_sts_pvname)
         ignorestr, wstr = \
-            (' (SOFBMode On)', 'W!') if sofb_state and 'SOFB' not in reason else ('', 'W ')
+            (' (SOFBMode On)', 'W!') if sofb_state and 'SOFB' not in reason \
+            else ('', 'W ')
 
         _log.info("[{:.2s}] - {:.32s} = {:.50s}{}".format(
             wstr, reason, str(value), ignorestr))
