@@ -2,9 +2,12 @@
 
 import os
 import argparse as _argparse
+# NOTE: Avoid creation of a large number of threads by numpy.
+# This was making numpy operations very slow in our servers.
+os.environ['OMP_NUM_THREADS'] = '2'
+
 from si_ap_manaca import run
 from siriuspy.meas.manaca.csdev import Const
-
 
 # image size is (1024 X 1280)
 os.environ['EPICS_CA_MAX_ARRAY_BYTES'] = '6000000'
