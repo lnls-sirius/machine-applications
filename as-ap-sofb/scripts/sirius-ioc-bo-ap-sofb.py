@@ -1,5 +1,6 @@
 #!/usr/local/bin/python-sirius -u
 
+import os
 import argparse as _argparse
 # NOTE: Avoid creation of a large number of threads by numpy.
 # This was making numpy operations very slow in our servers.
