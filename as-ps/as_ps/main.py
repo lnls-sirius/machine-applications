@@ -34,6 +34,7 @@ class App:
     _sleep_scan = 0.050  # [s]
     _regexp_setpoint = _re.compile('^.*-(SP|Sel)$')
     _sofb_value_length = _PSSOFB_MAX_NR_UDC * _UDC_MAX_NR_DEV
+    _sofb_update_min_interval = 1/30.0  # [s]
 
     def __init__(self, driver, bbblist, dbset, prefix):
         """Init application."""
@@ -43,6 +44,7 @@ class App:
 
         # flag to indicate sofb processing is taking place
         self._sofb_processing = False
+        self._sofb_update_timestamp = _time.time()
 
         # write operation queue
         self._dequethread = _DequeThread()
@@ -120,6 +122,15 @@ class App:
         # print('{:<30s} : {:>9.3f} ms'.format(
         #     'IOC.write (beg)', 1e3*(_time.time() % 1)))
         pvname = _SiriusPVName(reason)
+
+        # check if SOFBUpdate-Cmd and if minimal sofb update interval is satisfied
+        if reason.endswith('SOFBUpdate-Cmd'):
+            tnow = _time.time()
+            if tnow - self._sofb_update_timestamp < self._sofb_update_min_interval:
+                _log.info("[{:.2s}] - {:.32s} = {:.50s}{}".format(
+                'W!', reason, str(value), ' (Already queued)'))
+                return
+            self._sofb_update_timestamp = tnow
 
         sofb_state = self.driver.getParam(self._sofbmode_sts_pvname)
         ignorestr, wstr = \
