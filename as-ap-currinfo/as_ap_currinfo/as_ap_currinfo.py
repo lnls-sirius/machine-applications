@@ -12,7 +12,7 @@ from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from siriuspy.currinfo import BOCurrInfoApp as _BOCurrInfoApp, \
     SICurrInfoApp as _SICurrInfoApp, LICurrInfoApp as _LICurrInfoApp, \
-    TBCurrInfoApp as _TBCurrInfoApp, TSCurrInfoApp as _TSCurrInfoApp
+    TSCurrInfoApp as _TSCurrInfoApp
 
 
 INTERVAL = 0.5
@@ -45,9 +45,6 @@ def _get_app(acc):
     elif acc == 'li':
         resource_manager = _visa.ResourceManager('@py')
         return _LICurrInfoApp(resource_manager)
-    elif acc == 'tb':
-        resource_manager = _visa.ResourceManager('@py')
-        return _TBCurrInfoApp(resource_manager)
     elif acc == 'ts':
         resource_manager = _visa.ResourceManager('@py')
         return _TSCurrInfoApp(resource_manager)
