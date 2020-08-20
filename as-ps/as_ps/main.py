@@ -49,12 +49,9 @@ class App:
 
         # mapping device to bbb
         self._bbblist = bbblist
+
         # NOTE: change IOC to accept only one BBB
-        sofbmode_pvname = self.bbblist[0].psnames[0] + ':SOFBMode-Sts'
-        if sofbmode_pvname in dbset[prefix]:
-            self._sofbmode_sts_pvname = sofbmode_pvname
-        else:
-            self._sofbmode_sts_pvname = None
+        self._sofbmode = False
 
         # build dictionaries
         self._dev2bbb, self._dev2conn, self._interval = \
@@ -124,17 +121,19 @@ class App:
         #     'IOC.write (beg)', 1e3*(_time.time() % 1)))
         pvname = _SiriusPVName(reason)
 
-        if self._sofbmode_sts_pvname:
-            sofb_state = self.driver.getParam(self._sofbmode_sts_pvname)
-        else:
-            sofb_state = False
+        # check if in SOFBMode and write is acceptable
+        if self._sofbmode and 'SOFB' not in reason:
+            # unacceptable write
+            _log.info("[{:.2s}] - {:.32s} = {:.50s}{}".format(
+                'W!', reason, str(value), '(SOFBMode On)'))
+            return
 
-        ignorestr, wstr = \
-            (' (SOFBMode On)', 'W!') if sofb_state and 'SOFB' not in reason \
-            else ('', 'W ')
+        if 'SOFBMode-Sel' in reason:
+            self._sofbmode = not value == 0
 
-        _log.info("[{:.2s}] - {:.32s} = {:.50s}{}".format(
-            wstr, reason, str(value), ignorestr))
+        # print ack message
+        _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
+            'W', reason, str(value)))
 
         # NOTE: This modified behaviour is to allow loading
         # global_config to complete without artificial warning
