@@ -143,11 +143,11 @@ class App:
             self.driver.setParam(reason, value)
             self.driver.updatePV(reason)
 
-        print('ioc write: ', reason, value)
+        # print('ioc write: ', reason, value)
         bbb = self._dev2bbb[pvname.device_name]
         operation = (self._write_operation, (bbb, pvname, value))
         self._dequethread.append(operation)
-        print('queue len: ', len(self._dequethread))
+        # print('queue len: ', len(self._dequethread))
 
         self._dequethread.process()
 
@@ -184,6 +184,7 @@ class App:
 
     def _write_operation(self, bbb, pvname, value):
         # NOTE: check if using SiriusPVName subs alters efficiency
+        # t0 = _time.time()
         if pvname.endswith('SOFBCurrent-SP'):
             #  signal SOFB processing
             status = self._check_write_sofb(pvname, value)
@@ -194,7 +195,7 @@ class App:
             self._sofb_processing = True
 
         # process priority changed PVs
-        print('write_operation: ', pvname, value)
+        # print('write_operation: ', pvname, value)
         priority_pvs = bbb.write(pvname.device_name, pvname.propty, value)
         for reason, val in priority_pvs.items():
             if val is not None:
@@ -209,6 +210,7 @@ class App:
 
         # print('{:<30s} : {:>9.3f} ms'.format(
         #     'IOC.write (end)', 1e3*(_time.time() % 1)))
+        # print('dtime write_operation (', pvname, ') [ms]: ', 1000*(_time.time() - t0))
 
     def _check_write_immediate(self, reason, value):
         """Check if reason is immediatly writeable."""
