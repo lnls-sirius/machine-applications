@@ -124,7 +124,7 @@ class App:
         # check if in SOFBMode and write is acceptable
         if self._sofbmode and 'SOFB' not in reason:
             # unacceptable write
-            _log.info("[{:.2s}] - {:.32s} = {:.50s}{}".format(
+            _log.info("[{:2s}] - {:.32s} = {:.50s} {}".format(
                 'W!', reason, str(value), '(SOFBMode On)'))
             return
 
@@ -132,7 +132,7 @@ class App:
             self._sofbmode = not value == 0
 
         # print ack message
-        _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
+        _log.info("[{:2s}] - {:.32s} = {:.50s}".format(
             'W', reason, str(value)))
 
         # NOTE: This modified behaviour is to allow loading
@@ -143,9 +143,11 @@ class App:
             self.driver.setParam(reason, value)
             self.driver.updatePV(reason)
 
+        print('ioc write: ', reason, value)
         bbb = self._dev2bbb[pvname.device_name]
         operation = (self._write_operation, (bbb, pvname, value))
         self._dequethread.append(operation)
+        print('queue len: ', len(self._dequethread))
 
         self._dequethread.process()
 
@@ -192,6 +194,7 @@ class App:
             self._sofb_processing = True
 
         # process priority changed PVs
+        print('write_operation: ', pvname, value)
         priority_pvs = bbb.write(pvname.device_name, pvname.propty, value)
         for reason, val in priority_pvs.items():
             if val is not None:
