@@ -14,9 +14,9 @@ from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from siriuspy.search import PSSearch as _PSSearch
 
-from siriuspy.psdiag.csdev import get_ps_diag_propty_database as \
+from siriuspy.diagsys.psdiag.csdev import get_ps_diag_propty_database as \
     _get_database
-from siriuspy.psdiag.main import App as _App
+from siriuspy.diagsys.psdiag.main import PSDiagApp as _App
 
 
 _COMMIT_HASH = _util.get_last_commit_hash()
