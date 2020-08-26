@@ -8,7 +8,7 @@ from as_ps_diag import as_ps_diag
 parser = argparse.ArgumentParser()
 parser.add_argument(
     'section',
-    help='Regexp for the accelerator (TB, BO, TS, SI).')
+    help='Regexp for the accelerator (LI, TB, BO, TS, SI).')
 parser.add_argument(
     'sub_section',
     help='Regexp for the the sub_section (Fam, 01, 01U, ...).')
