@@ -22,22 +22,22 @@ from siriuspy.psdiag.main import App as _App
 _COMMIT_HASH = _util.get_last_commit_hash()
 
 INTERVAL = 0.1
-_stop_event = False
+STOP_EVENT = False
 
 
 def _stop_now(signum, frame):
-    global _stop_event
+    global STOP_EVENT
     _log.warning(_signal.Signals(signum).name +
                  ' received at ' + _util.get_timestamp())
     _sys.stdout.flush()
     _sys.stderr.flush()
-    _stop_event = True
+    STOP_EVENT = True
 
 
-def _attribute_access_security_group(server, db):
-    for k, v in db.items():
+def _attribute_access_security_group(server, dbase):
+    for k, val in dbase.items():
         if k.endswith(('-RB', '-Sts', '-Cte', '-Mon')):
-            v.update({'asg': 'rbpv'})
+            val.update({'asg': 'rbpv'})
     path_ = _os.path.abspath(_os.path.dirname(__file__))
     server.initAccessSecurityFile(path_ + '/access_rules.as')
 
@@ -75,6 +75,7 @@ class _PSDiagDriver(_Driver):
             self.setParamStatus(pvname, alarm, severity)
         self.updatePV(pvname)
 
+
 def run(section='', sub_section='', device='', debug=False):
     """Run IOC."""
     # define abort function
@@ -84,7 +85,7 @@ def run(section='', sub_section='', device='', debug=False):
     # configure log
     _util.configure_log_file(debug=debug)
 
-    _log.info("Loding power supplies")
+    _log.info("Loading power supplies")
     _log.info("{:12s}: {}".format('\tSection', section or 'None'))
     _log.info("{:12s}: {}".format('\tSub Section', sub_section or 'None'))
     _log.info("{:12s}: {}".format('\tDevice', device or 'None'))
@@ -108,8 +109,8 @@ def run(section='', sub_section='', device='', debug=False):
     pvdb = dict()
     for psname in psnames:
         _log.debug('{:32s}'.format(psname))
-        db = _get_database(psname)
-        for key, value in db.items():
+        dbase = _get_database(psname)
+        for key, value in dbase.items():
             if key == 'DiagVersion-Cte':
                 value['value'] = _COMMIT_HASH
             pvname = psname + ':' + key
@@ -149,7 +150,7 @@ def run(section='', sub_section='', device='', debug=False):
 
     # main loop
     driver.app.scanning = True
-    while not _stop_event:
+    while not STOP_EVENT:
         driver.app.process(INTERVAL)
 
     driver.app.scanning = False
