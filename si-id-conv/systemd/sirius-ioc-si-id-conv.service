@@ -12,6 +12,7 @@ StandardError=syslog
 ExecStartPre=/bin/bash --login -c 'env > /home/sirius/iocs-log/env-sirius-ioc-si-id-conv'
 EnvironmentFile=-/home/sirius/iocs-log/env-sirius-ioc-si-id-conv
 ExecStart=/usr/local/bin/sirius-ioc-si-id-conv.py \
+SI-06SB:ID-APU22 \
 SI-07SP:ID-APU22 \
 SI-08SB:ID-APU22 \
 SI-09SA:ID-APU22
