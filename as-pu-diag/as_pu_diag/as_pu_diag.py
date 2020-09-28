@@ -1,5 +1,5 @@
 #!/usr/local/bin/python-sirius
-"""AS PS Diagnostic."""
+"""AS PU Diagnostic."""
 
 import os as _os
 import sys as _sys
@@ -14,9 +14,9 @@ from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from siriuspy.search import PSSearch as _PSSearch
 
-from siriuspy.diagsys.psdiag.csdev import get_ps_diag_propty_database as \
+from siriuspy.diagsys.pudiag.csdev import get_pu_diag_propty_database as \
     _get_database
-from siriuspy.diagsys.psdiag.main import PSDiagApp as _App
+from siriuspy.diagsys.pudiag.main import PUDiagApp as _App
 
 
 _COMMIT_HASH = _util.get_last_commit_hash()
@@ -42,7 +42,7 @@ def _attribute_access_security_group(server, dbase):
     server.initAccessSecurityFile(path_ + '/access_rules.as')
 
 
-class _PSDiagDriver(_Driver):
+class _PUDiagDriver(_Driver):
 
     def __init__(self, app):
         super().__init__()
@@ -76,7 +76,7 @@ class _PSDiagDriver(_Driver):
         self.updatePV(pvname)
 
 
-def run(section='', sub_section='', device='', debug=False):
+def run(debug=False):
     """Run IOC."""
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
@@ -85,35 +85,26 @@ def run(section='', sub_section='', device='', debug=False):
     # configure log
     _util.configure_log_file(debug=debug)
 
-    _log.info("Loading power supplies")
-    _log.info("{:12s}: {}".format('\tSection', section or 'None'))
-    _log.info("{:12s}: {}".format('\tSub Section', sub_section or 'None'))
-    _log.info("{:12s}: {}".format('\tDevice', device or 'None'))
-
+    _log.info("Loading pulsed power supplies")
     # create PV database
     device_filter = dict()
-    if section:
-        device_filter['sec'] = section
-    if sub_section:
-        device_filter['sub'] = sub_section
-    if device:
-        device_filter['dev'] = device
-    device_filter['dis'] = 'PS'
-    psnames = _PSSearch.get_psnames(device_filter)
+    device_filter['dis'] = 'PU'
+    device_filter['dev'] = '.*(Kckr|Sept)'
+    punames = _PSSearch.get_psnames(device_filter)
 
-    if not psnames:
+    if not punames:
         _log.warning('No devices found. Aborting.')
         _sys.exit(0)
 
     prefix = _vaca_prefix
     pvdb = dict()
-    for psname in psnames:
-        _log.debug('{:32s}'.format(psname))
-        dbase = _get_database(psname)
+    for puname in punames:
+        _log.debug('{:32s}'.format(puname))
+        dbase = _get_database(puname)
         for key, value in dbase.items():
             if key == 'DiagVersion-Cte':
                 value['value'] = _COMMIT_HASH
-            pvname = psname + ':' + key
+            pvname = puname + ':' + key
             pvdb[pvname] = value
 
     # check if another IOC is running
@@ -122,11 +113,11 @@ def run(section='', sub_section='', device='', debug=False):
         raise ValueError('Another instance of this IOC is already running!')
 
     # create app
-    app = _App(prefix, psnames)
+    app = _App(prefix, punames)
 
     # create a new simple pcaspy server
     _log.info("Creating server with %d devices and '%s' prefix",
-              len(psnames), prefix)
+              len(punames), prefix)
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, pvdb)
     server.createPV(prefix, pvdb)
@@ -134,15 +125,15 @@ def run(section='', sub_section='', device='', debug=False):
     # create driver
     _log.info('Creating driver')
     try:
-        driver = _PSDiagDriver(app)
+        driver = _PUDiagDriver(app)
     except Exception:
         _log.error('Failed to create driver. Aborting', exc_info=True)
         _sys.exit(1)
 
     _util.print_ioc_banner(
-        'AS PS Diagnostic', pvdb,
-        'IOC that provides current sp/mon diagnostics for the power supplies.',
-        '0.2', prefix)
+        'AS PU Diagnostic', pvdb,
+        'IOC that provides diagnostics for the pulsed power supplies.',
+        _COMMIT_HASH, prefix)
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)

@@ -1,4 +1,26 @@
 
+install-li:
+	@printf "Installing sirius-ioc-li-ps-diag service...\n"
+	cp -rf sirius-ioc-li-ps-diag.service /etc/systemd/system/
+	mkdir -p /home/sirius/iocs-log
+	systemctl daemon-reload
+
+stop-li:
+	@printf "Stopping  sirius-ioc-li-ps-diag...\n"
+	systemctl stop sirius-ioc-li-ps-diag.service
+
+start-li:
+	@printf "Starting  sirius-ioc-li-ps-diag...\n"
+	systemctl start sirius-ioc-li-ps-diag.service
+
+uninstall-li: stop-li
+	@printf "Uninstalling  sirius-ioc-li-ps-diag...\n"
+	systemctl disable sirius-ioc-li-ps-diag.service
+	rm -rf /etc/systemd/system/sirius-ioc-li-ps-diag.service
+	systemctl daemon-reload
+	systemctl reset-failed
+
+
 install-tb:
 	@printf "Installing sirius-ioc-tb-ps-diag service...\n"
 	cp -rf sirius-ioc-tb-ps-diag.service /etc/systemd/system/
@@ -230,12 +252,12 @@ uninstall-si: uninstall-si-fam uninstall-si-ch uninstall-si-cv uninstall-si-qs u
 
 # --- ALL ACCELERATORS ---
 
-install-services: install-tb install-bo install-ts install-si
+install-services: install-li install-tb install-bo install-ts install-si
 
-stop: stop-tb stop-bo stop-ts stop-si
+stop: stop-li stop-tb stop-bo stop-ts stop-si
 
-start: start-tb start-bo start-ts start-si
+start: start-li start-tb start-bo start-ts start-si
 
-uninstall: uninstall-tb uninstall-bo uninstall-ts uninstall-si
+uninstall: uninstall-li uninstall-tb uninstall-bo uninstall-ts uninstall-si
 
 uninstall-services: uninstall
