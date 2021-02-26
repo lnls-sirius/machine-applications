@@ -85,8 +85,7 @@ class _Driver(_pcaspy.Driver):
                 'NO write %s: %s current value is %s',
                 reason, str(oldval), str(value))
             value = oldval
-        self.setParam(reason, value)
-        self.updatePV(reason)
+        # self.setParam(reason, value)
         return True
 
     def _isValid(self, reason, val):
