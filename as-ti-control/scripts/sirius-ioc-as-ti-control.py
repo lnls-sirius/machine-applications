@@ -10,10 +10,6 @@ parser.add_argument(
     choices=sorted(TRIG_TYPES)
     )
 parser.add_argument(
-    '-l', '--lock', action='store_true', default=False,
-    help="Force default initial HL state on LL IOCs. (False)",
-    )
-parser.add_argument(
     '-w', '--wait', type=float, default=5,
     help='In case -l is not given, this is the time to wait in [s]' +
          'before start locking. (5s)'
@@ -24,4 +20,4 @@ parser.add_argument(
     )
 
 args = parser.parse_args()
-run(section=args.section, lock=args.lock, wait=args.wait, debug=args.debug)
+run(section=args.section, wait=args.wait, debug=args.debug)
