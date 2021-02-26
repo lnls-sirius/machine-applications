@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# NOTE: Temporary while IOCs still run in lnlsfac-srv1
+#
 # /usr/local/bin/sirius-ioc-as-ps.py IA-01RaCtrl:CO-PSCtrl-SI4 &> /iocs-log/sirius-ioc-si-ps-correctors-c134-ia01 &
 # /usr/local/bin/sirius-ioc-as-ps.py IA-02RaCtrl:CO-PSCtrl-SI4 &> /iocs-log/sirius-ioc-si-ps-correctors-c134-ia02 &
 # /usr/local/bin/sirius-ioc-as-ps.py IA-03RaCtrl:CO-PSCtrl-SI4 &> /iocs-log/sirius-ioc-si-ps-correctors-c134-ia03 &
