@@ -34,6 +34,16 @@ class App:
         self._map2readpvs = self.get_map2readpvs()
 
     @property
+    def connected(self):
+        """."""
+        return all(map(lambda x: x.connected, self._objects))
+
+    def wait_for_connection(self, timeout=None):
+        """."""
+        return all(map(
+            lambda x: x.wait_for_connection(timeout=timeout), self._objects))
+
+    @property
     def locked(self):
         """Start locking Low Level PVs."""
         return _reduce(_and_, map(lambda x: x.locked, self._objects))
