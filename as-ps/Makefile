@@ -39,6 +39,7 @@ endif
 
 install-services:
 	cd systemd; sudo make install-services
+	cd docker; sudo make install-services
 
 uninstall-services:
 	cd systemd; sudo make uninstall-services
