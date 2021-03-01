@@ -85,8 +85,6 @@ class _Driver(_pcaspy.Driver):
                 'NO write %s: %s current value is %s',
                 reason, str(oldval), str(value))
             value = oldval
-        self.setParam(reason, value)
-        self.updatePV(reason)
         return True
 
     def _isValid(self, reason, val):
@@ -104,7 +102,7 @@ class _Driver(_pcaspy.Driver):
         return True
 
 
-def run(section='as', lock=False, wait=5, debug=False):
+def run(section='as', wait=5, debug=False):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
@@ -118,13 +116,16 @@ def run(section='as', lock=False, wait=5, debug=False):
     if not trig_list:
         _log.fatal('Must select some triggers to run IOC.')
         return
+
     # Creates App object
     _log.debug('Creating App Object.')
     app = App(trig_list=trig_list)
+
     db = app.get_database()
     db[ioc_prefix + 'Version-Cte'] = {'type': 'string', 'value': __version__}
     # add PV Properties-Cte with list of all IOC PVs:
     db = _csdev.add_pvslist_cte(db, prefix=ioc_prefix)
+
     # check if IOC is already running
     running = _util.check_pv_online(
         pvname=_vaca_prefix + sorted(db.keys())[0],
@@ -133,47 +134,39 @@ def run(section='as', lock=False, wait=5, debug=False):
         _log.error('Another ' + ioc_name + ' is already running!')
         return
     _util.print_ioc_banner(
-            ioc_name, db, 'High Level Timing IOC.', __version__, _vaca_prefix)
-    # create a new simple pcaspy server and driver to respond client's requests
+        ioc_name, db, 'High Level Timing IOC.', __version__, _vaca_prefix)
+
     _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, db)
     _log.info('Setting Server Database.')
     server.createPV(_vaca_prefix, db)
+
+    _log.info('Waiting 5s for PVs to connect...')
+    app.wait_for_connection(5)
+
     _log.info('Creating Driver.')
     _Driver(app)
 
-    if not lock:
-        tm = max(2, wait)
-        _log.info(
-            'Waiting ' + str(tm) + ' seconds to start locking Low Level.')
-        stop_event.wait(tm)
-        _log.info('Start locking now.')
-
-    if not stop_event.is_set():
-        app.locked = True
-
-    # initiate a new thread responsible for listening for client connections
+    _log.info('Starting Server Thread.')
     server_thread = ServerThread(server)
     server_thread.daemon = True
-    _log.info('Starting Server Thread.')
     server_thread.start()
 
-    # set state
-    db = app.get_database()
-    m2w = app.get_map2writepvs()
-    if lock:
-        for pv, fun in m2w.items():
-            if pv.endswith('-Cmd') or pv.endswith('LowLvlLock-Sel'):
-                continue
-            val = db[pv]['value']
-            fun(val)
-    else:  # or update driver state
+    tm = max(2, wait)
+    _log.info(
+        'Waiting ' + str(tm) + ' seconds to start locking Low Level.')
+    stop_event.wait(tm)
+    _log.info('Start locking now.')
+    if not stop_event.is_set():
+        # First Set the correct initial state
+        db = app.get_database()
+        m2w = app.get_map2writepvs()
         for pv, fun in app.get_map2readpvs().items():
             val = fun()
             value = val.pop('value')
             if value is None:
-                value = db[pv]['value']
+                continue
             if pv.endswith(('-SP', '-Sel')) and not pv.endswith('LvlLock-Sel'):
                 m2w[pv](value)
             try:
@@ -183,6 +176,9 @@ def run(section='as', lock=False, wait=5, debug=False):
                 raise err
             app.driver.setParamStatus(pv, **val)
             app.driver.updatePV(pv)
+
+        # Start locking
+        app.locked = True
 
     # main loop
     while not stop_event.is_set():
