@@ -8,8 +8,11 @@ os.environ['OMP_NUM_THREADS'] = '2'
 
 from as_ap_sofb import run
 
-parser = _argparse.ArgumentParser(description="Run BO SOFB IOC.")
-parser.add_argument('-d', '--debug', action='store_true', default=False,
-                    help="Starts IOC in Debug Mode.")
-args = parser.parse_args()
-run(acc='BO', debug=args.debug)
+
+if __name__ == '__main__':
+    parser = _argparse.ArgumentParser(description="Run BO SOFB IOC.")
+    parser.add_argument(
+        '-d', '--debug', action='store_true', default=False,
+        help="Starts IOC in Debug Mode.")
+    args = parser.parse_args()
+    run(acc='BO', debug=args.debug)
