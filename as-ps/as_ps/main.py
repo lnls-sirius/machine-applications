@@ -47,6 +47,9 @@ class App:
         # write operation queue
         self._dequethread = _DequeThread()
 
+        # counter of SOFBUpdate-Cmd write events
+        self._counter_sofbupdate_cmd = 0
+
         # mapping device to bbb
         self._bbblist = bbblist
         # NOTE: change IOC to accept only one BBB
@@ -133,8 +136,18 @@ class App:
             (' (SOFBMode On)', 'W!') if sofb_state and 'SOFB' not in reason \
             else ('', 'W ')
 
-        _log.info("[{:.2s}] - {:.32s} = {:.50s}{}".format(
-            wstr, reason, str(value), ignorestr))
+        if 'SOFBUpdate-Cmd' in reason:
+            self._counter_sofbupdate_cmd += 1
+            if self._counter_sofbupdate_cmd == 1000:
+                # prints SOFBUpdate-Cmd after 1000 events
+                ignorestr = ' (1000 events)'
+                _log.info("[{:.2s}] - {:.32s} = {:.50s}{}".format(
+                    wstr, reason, str(value), ignorestr))
+                self._counter_sofbupdate_cmd = 0
+        else:
+            # print all other write events
+            _log.info("[{:.2s}] - {:.32s} = {:.50s}{}".format(
+                wstr, reason, str(value), ignorestr))
 
         # NOTE: This modified behaviour is to allow loading
         # global_config to complete without artificial warning
