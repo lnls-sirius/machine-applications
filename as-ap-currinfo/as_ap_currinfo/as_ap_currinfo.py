@@ -97,12 +97,12 @@ def run(acc):
     # define IOC, init pvs database and create app object
     _version = _util.get_last_commit_hash()
     _ioc_prefix = _vaca_prefix
-    if acc in {'SI', 'BO'}:
+    if acc == 'BO':
         _ioc_prefix += acc + '-Glob:AP-CurrInfo:'
     _log.debug('Creating App Object.')
     app = _get_app(acc)
     dbase = app.pvs_database
-    if acc in {'SI', 'BO'}:
+    if acc == 'BO':
         dbase['Version-Cte']['value'] = _version
     else:
         dbase[acc+'-Glob:AP-CurrInfo:Version-Cte']['value'] = _version
