@@ -58,9 +58,8 @@ class _PSDiagDriver(_Driver):
 
     def write(self, reason, value):
         if self.app.write(reason, value):
-            super().write(reason, value)
-        else:
-            return False
+            return super().write(reason, value)
+        return False
 
     def update_pv(
             self, pvname, value=None, alarm=None, severity=None, field='value',
