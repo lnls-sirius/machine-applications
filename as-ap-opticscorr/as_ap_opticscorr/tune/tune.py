@@ -48,9 +48,8 @@ class _PCASDriver(_pcaspy.Driver):
     def write(self, reason, value):
         """Write IOC pvs acording to main application."""
         if self.app.write(reason, value):
-            super().write(reason, value)
-        else:
-            return False
+            return super().write(reason, value)
+        return False
 
     def update_pv(self, pvname, value, **kwargs):
         """Update PV."""
