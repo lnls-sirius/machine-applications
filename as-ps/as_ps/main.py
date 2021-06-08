@@ -12,21 +12,11 @@ from siriuspy.util import get_last_commit_hash as _get_last_commit_hash
 from siriuspy.thread import DequeThread as _DequeThread
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 from siriuspy.pwrsupply.csdev import PSSOFB_MAX_NR_UDC as _PSSOFB_MAX_NR_UDC
-from siriuspy.pwrsupply.csdev import UDC_MAX_NR_DEV as _UDC_MAX_NR_DEV
+from siriuspy.pwrsupply.bsmp.constants import UDC_MAX_NR_DEV as _UDC_MAX_NR_DEV
 
 
 __version__ = _get_last_commit_hash()
 
-
-# NOTE on current behaviour of PS IOC:
-#
-# 01. While in RmpWfm, MigWfm or SlowRefSync, the PS_I_LOAD variable read from
-#     power supplies after setting the last curve point may not be the
-#     final value given by PS_REFERENCE. This is due to the fact that the
-#     power supply control loop takes some time to converge and the PRU may
-#     block serial comm. before it. This is evident in SlowRefSync mode, where
-#     reference values may change considerably between two setpoints.
-#     (see identical note in BeagleBone class)
 
 class App:
     """Power Supply IOC Application."""
@@ -153,7 +143,7 @@ class App:
         # global_config to complete without artificial warning
         # messages or unnecessary delays. Whether we should extend
         # it to all power supplies remains to be checked.
-        if self._check_write_immediate(reason, value):
+        if self._check_write_immediately(reason, value):
             self.driver.setParam(reason, value)
             self.driver.updatePV(reason)
 
@@ -221,8 +211,8 @@ class App:
         # print('{:<30s} : {:>9.3f} ms'.format(
         #     'IOC.write (end)', 1e3*(_time.time() % 1)))
 
-    def _check_write_immediate(self, reason, value):
-        """Check if reason is immediatly writeable."""
+    def _check_write_immediately(self, reason, value):
+        """Check if reason is immediately writeable."""
         # Accept *-SP and *-Sel right away (not *-Cmd !)
         if not App._regexp_setpoint.match(reason):
             return False
