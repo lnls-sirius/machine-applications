@@ -2,6 +2,7 @@ develop: develop-scripts install-services
 
 develop-scripts:
 	cd as-ap-currinfo; sudo make develop-scripts
+	cd as-ap-injctrl; sudo make develop-scripts
 	cd as-ap-opticscorr; sudo make develop-scripts
 	cd as-ap-posang; sudo make develop-scripts
 	cd as-ap-sofb; sudo make develop-scripts
@@ -24,6 +25,7 @@ uninstall: uninstall-scripts uninstall-services
 
 install-scripts:
 	cd as-ap-currinfo; sudo make install-scripts
+	cd as-ap-injctrl; sudo make install-scripts
 	cd as-ap-opticscorr; sudo make install-scripts
 	cd as-ap-posang; sudo make install-scripts
 	cd as-ap-sofb; sudo make install-scripts
@@ -42,6 +44,7 @@ install-scripts:
 
 uninstall-scripts:
 	cd as-ap-currinfo; sudo make uninstall-scripts
+	cd as-ap-injctrl; sudo make uninstall-scripts
 	cd as-ap-opticscorr; sudo make uninstall-scripts
 	cd as-ap-posang; sudo make uninstall-scripts
 	cd as-ap-sofb; sudo make uninstall-scripts
@@ -60,6 +63,7 @@ uninstall-scripts:
 
 install-services:
 	cd as-ap-currinfo; sudo make install-services
+	cd as-ap-injctrl; sudo make install-services
 	cd as-ap-opticscorr; sudo make install-services
 	cd as-ap-posang; sudo make install-services
 	cd as-ap-sofb; sudo make install-services
@@ -79,6 +83,7 @@ install-services:
 
 uninstall-services:
 	cd as-ap-currinfo; sudo make uninstall-services
+	cd as-ap-injctrl; sudo make uninstall-services
 	cd as-ap-opticscorr; sudo make uninstall-services
 	cd as-ap-posang; sudo make uninstall-services
 	cd as-ap-sofb; sudo make uninstall-services
@@ -98,6 +103,7 @@ uninstall-services:
 
 clean:
 	cd as-ap-currinfo; sudo make clean
+	cd as-ap-injctrl; sudo make clean
 	cd as-ap-opticscorr; sudo make clean
 	cd as-ap-posang; sudo make clean
 	cd as-ap-sofb; sudo make clean

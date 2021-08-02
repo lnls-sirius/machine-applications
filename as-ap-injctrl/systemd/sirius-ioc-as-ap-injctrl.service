@@ -1,0 +1,14 @@
+[Unit]
+Description=Soft IOC for Injection Procedure Control
+After=multi-user.target
+
+[Service]
+Group=sirius
+User=sirius
+Type=simple
+WorkingDirectory=/home/sirius/iocs-log/as-ap-injctrl
+StandardOutput=syslog
+StandardError=syslog
+ExecStartPre=/bin/bash --login -c 'env > /home/sirius/iocs-log/env-sirius-ioc-as-ap-injctrl'
+EnvironmentFile=-/home/sirius/iocs-log/env-sirius-ioc-as-ap-injctrl
+ExecStart=/usr/local/bin/sirius-ioc-as-ap-injctrl.py
