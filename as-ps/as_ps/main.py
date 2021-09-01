@@ -24,6 +24,7 @@ class App:
     _sleep_scan = 0.050  # [s]
     _regexp_setpoint = _re.compile('^.*-(SP|Sel)$')
     _sofb_value_length = _PSSOFB_MAX_NR_UDC * _UDC_MAX_NR_DEV
+    _sofb_mode_sppvs = ('SOFBMode-Sel', 'SOFBUpdate-Cmd')
 
     def __init__(self, driver, bbblist, dbset, prefix):
         """Init application."""
@@ -117,15 +118,16 @@ class App:
         #     'IOC.write (beg)', 1e3*(_time.time() % 1)))
         pvname = _SiriusPVName(reason)
 
-        if self._sofbmode_sts_pvname:
-            sofb_state = self.driver.getParam(self._sofbmode_sts_pvname)
+        # check if readonly in SOFBMode
+        sofb_readonly = self._check_sofb_mode_reject_sp(reason)
+
+        # print strings
+        if sofb_readonly:
+            ignorestr, wstr = ' (SOFBMode On)', 'W!'
         else:
-            sofb_state = False
+            ignorestr, wstr = '', 'W '
 
-        ignorestr, wstr = \
-            (' (SOFBMode On)', 'W!') if sofb_state and 'SOFB' not in reason \
-            else ('', 'W ')
-
+        # print statement
         if 'SOFBUpdate-Cmd' in reason:
             self._counter_sofbupdate_cmd += 1
             if self._counter_sofbupdate_cmd == 1000:
@@ -138,6 +140,10 @@ class App:
             # print all other write events
             _log.info("[{:.2s}] - {:.32s} = {:.50s}{}".format(
                 wstr, reason, str(value), ignorestr))
+
+        if sofb_readonly:
+            # reject setpoint value if in SOFBMode
+            return False
 
         # NOTE: This modified behaviour is to allow loading
         # global_config to complete without artificial warning
@@ -333,3 +339,11 @@ class App:
             print('new_value : {}'.format(str(new_value)[:1000]))
             print(' !!!')
             return True
+
+    def _check_sofb_mode_reject_sp(self, reason):
+        # in SOFB mode?
+        if self._sofbmode_sts_pvname:
+            sofb_state = self.driver.getParam(self._sofbmode_sts_pvname)
+        else:
+            sofb_state = False
+        return sofb_state and reason not in App._sofb_mode_sppvs
