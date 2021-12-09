@@ -75,7 +75,8 @@ def run(debug=False):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
-    ioc_prefix = _vaca_prefix + 'LI-Glob:AP-MeasEnergy:'
+    ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
+    ioc_prefix += 'LI-Glob:AP-MeasEnergy:'
 
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)

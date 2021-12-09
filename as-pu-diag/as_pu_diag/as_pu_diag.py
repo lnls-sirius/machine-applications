@@ -95,7 +95,7 @@ def run(debug=False):
         _log.warning('No devices found. Aborting.')
         _sys.exit(0)
 
-    prefix = _vaca_prefix
+    prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
     pvdb = dict()
     for puname in punames:
         _log.debug('{:32s}'.format(puname))

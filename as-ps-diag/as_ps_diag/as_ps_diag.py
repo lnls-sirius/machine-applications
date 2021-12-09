@@ -104,7 +104,8 @@ def run(section='', sub_section='', device='', debug=False):
         _log.warning('No devices found. Aborting.')
         _sys.exit(0)
 
-    prefix = _vaca_prefix
+    _version = _util.get_last_commit_hash()
+    prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
     pvdb = dict()
     for psname in psnames:
         _log.debug('{:32s}'.format(psname))
@@ -140,8 +141,8 @@ def run(section='', sub_section='', device='', debug=False):
 
     _util.print_ioc_banner(
         'AS PS Diagnostic', pvdb,
-        'IOC that provides current sp/mon diagnostics for the power supplies.',
-        '0.2', prefix)
+        'IOC that provides power supplies diagnostics.',
+        _version, prefix)
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)

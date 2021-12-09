@@ -125,22 +125,23 @@ def run(section='as', wait=5, debug=False):
     db[ioc_prefix + 'Version-Cte'] = {'type': 'string', 'value': __version__}
     # add PV Properties-Cte with list of all IOC PVs:
     db = _csdev.add_pvslist_cte(db, prefix=ioc_prefix)
+    prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
 
     # check if IOC is already running
     running = _util.check_pv_online(
-        pvname=_vaca_prefix + sorted(db.keys())[0],
+        pvname=prefix + sorted(db.keys())[0],
         use_prefix=False, timeout=0.5)
     if running:
         _log.error('Another ' + ioc_name + ' is already running!')
         return
     _util.print_ioc_banner(
-        ioc_name, db, 'High Level Timing IOC.', __version__, _vaca_prefix)
+        ioc_name, db, 'High Level Timing IOC.', __version__, prefix)
 
     _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, db)
     _log.info('Setting Server Database.')
-    server.createPV(_vaca_prefix, db)
+    server.createPV(prefix, db)
 
     _log.info('Waiting 5s for PVs to connect...')
     app.wait_for_connection(5)

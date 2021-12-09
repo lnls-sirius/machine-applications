@@ -87,7 +87,7 @@ def run(debug=False):
     # create PV database
     devices = _Const.ALL_DEVICES
 
-    prefix = _vaca_prefix
+    prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
     pvdb = dict()
     for dev in devices:
         _log.debug('{:32s}'.format(dev))

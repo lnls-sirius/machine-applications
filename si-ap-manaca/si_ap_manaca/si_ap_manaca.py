@@ -75,7 +75,8 @@ def run(debug=False):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
-    ioc_prefix = _vaca_prefix + _csmanaca.PREFIX_IOC
+    ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
+    ioc_prefix += _csmanaca.PREFIX_IOC
 
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
