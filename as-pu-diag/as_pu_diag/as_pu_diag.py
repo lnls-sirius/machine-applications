@@ -112,7 +112,7 @@ def run(debug=False):
         raise ValueError('Another instance of this IOC is already running!')
 
     # create app
-    app = _App(prefix, punames)
+    app = _App(punames)
 
     # create a new simple pcaspy server
     _log.info("Creating server with %d devices and '%s' prefix",
