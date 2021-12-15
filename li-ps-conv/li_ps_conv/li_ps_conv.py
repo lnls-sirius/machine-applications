@@ -21,7 +21,7 @@ from li_ps_conv.main import App
 STOP_EVENT = False  # _multiprocessing.Event()
 PCAS_DRIVER = None
 
-_PREFIX = _VACA_PREFIX
+_PREFIX = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
 _COMMIT_HASH = _util.get_last_commit_hash()
 
 

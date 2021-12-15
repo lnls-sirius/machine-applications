@@ -68,7 +68,8 @@ def run(acc):
 
     # define IOC, init pvs database and create app object
     _version = _util.get_last_commit_hash()
-    _ioc_prefix = _vaca_prefix + acc.upper() + '-Glob:AP-TuneCorr:'
+    _ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
+    _ioc_prefix += acc.upper() + '-Glob:AP-TuneCorr:'
     app = _App(acc)
     dbase = app.pvs_database
     dbase['Version-Cte']['value'] = _version

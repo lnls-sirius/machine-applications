@@ -95,7 +95,7 @@ def run(acc):
 
     # define IOC, init pvs database and create app object
     _version = _util.get_last_commit_hash()
-    _ioc_prefix = _vaca_prefix
+    _ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
     if acc == 'BO':
         _ioc_prefix += acc + '-Glob:AP-CurrInfo:'
     _log.debug('Creating App Object.')

@@ -67,7 +67,8 @@ def run(transport_line, correctors_type='ch-sept'):
 
     # define IOC, init pvs database and create app object
     _version = _util.get_last_commit_hash()
-    _ioc_prefix = _vaca_prefix + transport_line.upper() + '-Glob:AP-PosAng:'
+    _ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
+    _ioc_prefix += transport_line.upper() + '-Glob:AP-PosAng:'
     app = _App(transport_line, corrs_type=correctors_type)
     dbase = app.pvs_database
     dbase['Version-Cte']['value'] = _version

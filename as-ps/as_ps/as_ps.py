@@ -21,7 +21,7 @@ from .main import App, __version__
 STOP_EVENT = False  # _multiprocessing.Event()
 PCAS_DRIVER = None
 
-_PREFIX = _VACA_PREFIX
+_PREFIX = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
 _COMMIT_HASH = __version__
 
 

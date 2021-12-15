@@ -74,7 +74,8 @@ def run():
 
     # define IOC, init pvs database and create app object
     _version = _util.get_last_commit_hash()
-    _ioc_prefix = _vaca_prefix + 'SI-Glob:AP-CurrInfo:'
+    _ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
+    _ioc_prefix += 'SI-Glob:AP-CurrInfo:'
     app = _SILifetimeApp()
     dbase = app.pvs_database
     dbase['VersionLifetime-Cte']['value'] = _version

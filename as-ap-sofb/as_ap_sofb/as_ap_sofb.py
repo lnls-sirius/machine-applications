@@ -106,11 +106,12 @@ def run(acc='SI', debug=False):
     app = _SOFB(acc=acc)
     db = app.csorb.get_ioc_database()
     db.update({'Version-Cte': {'type': 'string', 'value': __version__}})
-    ioc_prefix = acc.upper() + '-Glob:AP-SOFB:'
+    ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
+    ioc_prefix += acc.upper() + '-Glob:AP-SOFB:'
     ioc_name = acc.lower() + '-ap-sofb'
     # check if IOC is already running
     running = _util.check_pv_online(
-        pvname=_vaca_prefix + ioc_prefix + sorted(db.keys())[0],
+        pvname=ioc_prefix + sorted(db.keys())[0],
         use_prefix=False, timeout=0.5)
     # add PV Properties-Cte with list of all IOC PVs:
     db = _csdev.add_pvslist_cte(db)
@@ -118,14 +119,13 @@ def run(acc='SI', debug=False):
         _log.error('Another ' + ioc_name + ' is already running!')
         return
     _util.print_ioc_banner(
-        ioc_name, db, 'SOFB for ' + acc, __version__,
-        _vaca_prefix + ioc_prefix)
+        ioc_name, db, 'SOFB for ' + acc, __version__, ioc_prefix)
     # create a new simple pcaspy server and driver to respond client's requests
     _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, db)
     _log.info('Setting Server Database.')
-    server.createPV(_vaca_prefix + ioc_prefix, db)
+    server.createPV(ioc_prefix, db)
     _log.info('Creating Driver.')
     driver = _PCASDriver(app)
 
