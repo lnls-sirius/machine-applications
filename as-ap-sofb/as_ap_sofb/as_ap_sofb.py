@@ -92,7 +92,7 @@ class _PCASDriver(_pcaspy.Driver):
         return True
 
 
-def run(acc='SI', debug=False):
+def run(acc='SI', debug=False, tests=False):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
@@ -103,7 +103,7 @@ def run(acc='SI', debug=False):
 
     # Creates App object
     _log.debug('Creating SOFB Object.')
-    app = _SOFB(acc=acc)
+    app = _SOFB(acc=acc, tests=tests)
     db = app.csorb.get_ioc_database()
     db.update({'Version-Cte': {'type': 'string', 'value': __version__}})
     ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
@@ -138,7 +138,8 @@ def run(acc='SI', debug=False):
     app.orbit = _EpicsOrbit(
         acc=app.acc, prefix=app.prefix, callback=driver.update_pv)
     app.correctors = _EpicsCorrectors(
-        acc=app.acc, prefix=app.prefix, callback=driver.update_pv)
+        acc=app.acc, prefix=app.prefix, callback=driver.update_pv,
+        dipoleoff=tests)
     app.matrix = _EpicsMatrix(
         acc=app.acc, prefix=app.prefix, callback=driver.update_pv)
 

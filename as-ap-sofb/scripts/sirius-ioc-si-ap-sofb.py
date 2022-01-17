@@ -13,6 +13,12 @@ if __name__ == '__main__':
     parser = _argparse.ArgumentParser(description="Run SI SOFB IOC.")
     parser.add_argument(
         '-d', '--debug', action='store_true', default=False,
-        help="Starts IOC in Debug Mode.")
+        help="Starts IOC in Debug mode.")
+    parser.add_argument(
+        '-t', '--tests', action='store_true', default=False,
+        help=(
+            "Starts IOC in test mode. The automatic loop ignores the "
+            "existence of stored beam, the current of the dipoles and the BPM "
+            "readings, sending random kicks to the correctors."))
     args = parser.parse_args()
-    run(acc='SI', debug=args.debug)
+    run(acc='SI', debug=args.debug, tests=args.tests)
