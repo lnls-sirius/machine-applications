@@ -4,19 +4,13 @@ ISINST=$(shell sudo pip-sirius show $(PACKAGE) | wc -l )
 EGGLINK=$(DISTPATH)/$(PACKAGE).egg-link
 TMPFOLDER=/tmp/install-$(PACKAGE)
 
-install: clean install-scripts install-services
-
-develop: develop-scripts install-services
-
-uninstall: clean uninstall-scripts uninstall-services
-
 clean:
 	git clean -fdX
 
-develop-scripts:
+develop:
 	sudo -H pip-sirius install --no-deps -e ./
 
-install-scripts: clean uninstall-scripts
+install: clean uninstall
 ifneq (, $(wildcard $(TMPFOLDER)))
 	rm -rf /tmp/install-$(PACKAGE)
 endif
@@ -26,7 +20,7 @@ endif
 
 # known issue: It will fail to uninstall scripts
 #  if they were installed in develop mode
-uninstall-scripts:
+uninstall:
 ifneq (,$(wildcard $(EGGLINK)))
 	sudo rm -r $(EGGLINK)
 endif
@@ -36,9 +30,3 @@ ifneq ($(ISINST),0)
 else
 	echo 'already uninstalled $(PACKAGE)'
 endif
-
-install-services:
-	cd systemd; sudo make install-services
-
-uninstall-services:
-	cd systemd; sudo make uninstall-services

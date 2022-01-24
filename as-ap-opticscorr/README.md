@@ -4,11 +4,8 @@ Software IOCs for Booster Tune and Chromaticity Correction.
 
 installation:
 
- sudo ./setup.py develop
- cd systemd; sudo make install-services
+ sudo make install
 
- dependencies:
+development mode:
 
-  numpy
-  pyepics
-  siriuspy
+ make develop

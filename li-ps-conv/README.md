@@ -4,5 +4,8 @@ IOC classes and scripts for voltage conversions.
 
 installation:
 
- sudo ./setup.py develop
- cd systemd; sudo make install-services
+ sudo make install
+
+development mode:
+
+ make develop
