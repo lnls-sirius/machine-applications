@@ -1,4 +1,4 @@
-#!/usr/local/bin/python-sirius -u
+#!/usr/bin/env python-sirius -u
 """AS PU Current-Strength Converter IOC Launcher."""
 import sys
 import os

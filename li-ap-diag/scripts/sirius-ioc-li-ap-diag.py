@@ -1,4 +1,4 @@
-#!/usr/local/bin/python-sirius -u
+#!/usr/bin/env python-sirius -u
 """Script for the Linac Diagnostics IOC."""
 
 from li_ap_diag import li_ap_diag

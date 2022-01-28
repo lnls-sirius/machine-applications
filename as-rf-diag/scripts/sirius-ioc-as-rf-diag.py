@@ -1,4 +1,4 @@
-#!/usr/local/bin/python-sirius -u
+#!/usr/bin/env python-sirius -u
 """Script for the RF Diagnostics IOC."""
 
 from as_rf_diag import as_rf_diag
