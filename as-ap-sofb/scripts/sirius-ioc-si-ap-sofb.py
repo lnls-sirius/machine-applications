@@ -1,4 +1,4 @@
-#!/usr/bin/env python-sirius -u
+#!/usr/bin/env python-sirius
 
 import os
 import argparse as _argparse

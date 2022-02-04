@@ -1,4 +1,4 @@
-#!/usr/bin/env python-sirius -u
+#!/usr/bin/env python-sirius
 """Script for the AS PU Diagnostics IOC."""
 
 from as_pu_diag import as_pu_diag
