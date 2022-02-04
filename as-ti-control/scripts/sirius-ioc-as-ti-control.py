@@ -1,4 +1,4 @@
-#!/usr/bin/env -S python-sirius -u
+#!/usr/bin/env python-sirius
 
 import argparse as _argparse
 from as_ti_control import run, TRIG_TYPES

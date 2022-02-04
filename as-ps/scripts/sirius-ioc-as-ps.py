@@ -1,4 +1,4 @@
-#!/usr/bin/env -S python-sirius -u
+#!/usr/bin/env python-sirius
 """BeagleBone Black IOCs Launcher."""
 import sys
 import os

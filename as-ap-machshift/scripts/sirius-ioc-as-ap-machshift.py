@@ -1,4 +1,4 @@
-#!/usr/bin/env -S python-sirius -u
+#!/usr/bin/env python-sirius
 """Machine Shift IOC executable."""
 
 from as_ap_machshift import as_ap_machshift as ioc_module

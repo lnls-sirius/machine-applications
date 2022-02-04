@@ -1,4 +1,4 @@
-#!/usr/bin/env -S python-sirius -u
+#!/usr/bin/env python-sirius
 """Script for the AS PS Diagnostics IOC."""
 
 import argparse

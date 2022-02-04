@@ -1,4 +1,4 @@
-#!/usr/bin/env -S python-sirius -u
+#!/usr/bin/env python-sirius
 """SI AP Tune Correction IOC executable."""
 
 from as_ap_opticscorr.tune import tune as ioc_module
