@@ -1,121 +1,94 @@
-develop: develop-scripts install-services
+develop-install:
+	cd as-ap-currinfo; make develop-install
+	cd as-ap-injctrl; make develop-install
+	cd as-ap-opticscorr; make develop-install
+	cd as-ap-posang; make develop-install
+	cd as-ap-sofb; make develop-install
+	cd as-ps; make develop-install
+	cd as-ps-diag; make develop-install
+	cd as-ti-control; make develop-install
+	cd li-ap-energy; make develop-install
+	cd si-ap-manaca; make develop-install
+	cd as-pu-conv; make develop-install
+	cd as-pu-diag; make develop-install
+	cd li-ps-conv; make develop-install
+	cd li-ap-diag; make develop-install
+	cd si-id-conv; make develop-install
+	cd as-ap-machshift; make develop-install
+	cd as-rf-diag; make develop-install
 
-develop-scripts:
-	cd as-ap-currinfo; sudo make develop-scripts
-	cd as-ap-injctrl; sudo make develop-scripts
-	cd as-ap-opticscorr; sudo make develop-scripts
-	cd as-ap-posang; sudo make develop-scripts
-	cd as-ap-sofb; sudo make develop-scripts
-	cd as-ps; sudo make develop-scripts
-	cd as-ps-diag; sudo make develop-scripts
-	cd as-ti-control; sudo make develop-scripts
-	cd li-ap-energy; sudo make develop-scripts
-	cd si-ap-manaca; sudo make develop-scripts
-	cd as-pu-conv; sudo make develop-scripts
-	cd as-pu-diag; sudo make develop-scripts
-	cd li-ps-conv; sudo make develop-scripts
-	cd li-ap-diag; sudo make develop-scripts
-	cd si-id-conv; sudo make develop-scripts
-	cd as-ap-machshift; sudo make develop-scripts
-	cd as-rf-diag; sudo make develop-scripts
+develop-uninstall:
+	cd as-ap-currinfo; make develop-uninstall
+	cd as-ap-injctrl; make develop-uninstall
+	cd as-ap-opticscorr; make develop-uninstall
+	cd as-ap-posang; make develop-uninstall
+	cd as-ap-sofb; make develop-uninstall
+	cd as-ps; make develop-uninstall
+	cd as-ps-diag; make develop-uninstall
+	cd as-ti-control; make develop-uninstall
+	cd li-ap-energy; make develop-uninstall
+	cd si-ap-manaca; make develop-uninstall
+	cd as-pu-conv; make develop-uninstall
+	cd as-pu-diag; make develop-uninstall
+	cd li-ps-conv; make develop-uninstall
+	cd li-ap-diag; make develop-uninstall
+	cd si-id-conv; make develop-uninstall
+	cd as-ap-machshift; make develop-uninstall
+	cd as-rf-diag; make develop-uninstall
 
-install: install-scripts install-services
+install:
+	cd as-ap-currinfo; make install
+	cd as-ap-injctrl; make install
+	cd as-ap-opticscorr; make install
+	cd as-ap-posang; make install
+	cd as-ap-sofb; make install
+	cd as-ps; make install
+	cd as-ps-diag; make install
+	cd as-ti-control; make install
+	cd li-ap-energy; make install
+	cd si-ap-manaca; make install
+	cd as-pu-conv; make install
+	cd as-pu-diag; make install
+	cd li-ps-conv; make install
+	cd li-ap-diag; make install
+	cd si-id-conv; make install
+	cd as-ap-machshift; make install
+	cd as-rf-diag; make install
 
-uninstall: uninstall-scripts uninstall-services
-
-install-scripts:
-	cd as-ap-currinfo; sudo make install-scripts
-	cd as-ap-injctrl; sudo make install-scripts
-	cd as-ap-opticscorr; sudo make install-scripts
-	cd as-ap-posang; sudo make install-scripts
-	cd as-ap-sofb; sudo make install-scripts
-	cd as-ps; sudo make install-scripts
-	cd as-ps-diag; sudo make install-scripts
-	cd as-ti-control; sudo make install-scripts
-	cd li-ap-energy; sudo make install-scripts
-	cd si-ap-manaca; sudo make install-scripts
-	cd as-pu-conv; sudo make install-scripts
-	cd as-pu-diag; sudo make install-scripts
-	cd li-ps-conv; sudo make install-scripts
-	cd li-ap-diag; sudo make install-scripts
-	cd si-id-conv; sudo make install-scripts
-	cd as-ap-machshift; sudo make install-scripts
-	cd as-rf-diag; sudo make install-scripts
-
-uninstall-scripts:
-	cd as-ap-currinfo; sudo make uninstall-scripts
-	cd as-ap-injctrl; sudo make uninstall-scripts
-	cd as-ap-opticscorr; sudo make uninstall-scripts
-	cd as-ap-posang; sudo make uninstall-scripts
-	cd as-ap-sofb; sudo make uninstall-scripts
-	cd as-ps; sudo make uninstall-scripts
-	cd as-ps-diag; sudo make uninstall-scripts
-	cd as-ti-control; sudo make uninstall-scripts
-	cd li-ap-energy; sudo make uninstall-scripts
-	cd si-ap-manaca; sudo make uninstall-scripts
-	cd as-pu-conv; sudo make uninstall-scripts
-	cd as-pu-diag; sudo make uninstall-scripts
-	cd li-ps-conv; sudo make uninstall-scripts
-	cd li-ap-diag; sudo make uninstall-scripts
-	cd si-id-conv; sudo make uninstall-scripts
-	cd as-ap-machshift; sudo make uninstall-scripts
-	cd as-rf-diag; sudo make uninstall-scripts
-
-install-services:
-	cd as-ap-currinfo; sudo make install-services
-	cd as-ap-injctrl; sudo make install-services
-	cd as-ap-opticscorr; sudo make install-services
-	cd as-ap-posang; sudo make install-services
-	cd as-ap-sofb; sudo make install-services
-	cd as-ps; sudo make install-services
-	cd as-ps-diag; sudo make install-services
-	cd as-ti-control; sudo make install-services
-	cd li-ap-energy; sudo make install-services
-	cd si-ap-manaca; sudo make install-services
-	cd as-pu-conv; sudo make install-services
-	cd as-pu-diag; sudo make install-services
-	cd li-ps-conv; sudo make install-services
-	cd li-ap-diag; sudo make install-services
-	cd si-id-conv; sudo make install-services
-	cd as-ap-machshift; sudo make install-services
-	cd as-rf-diag; sudo make install-services
-	sudo systemctl daemon-reload
-
-uninstall-services:
-	cd as-ap-currinfo; sudo make uninstall-services
-	cd as-ap-injctrl; sudo make uninstall-services
-	cd as-ap-opticscorr; sudo make uninstall-services
-	cd as-ap-posang; sudo make uninstall-services
-	cd as-ap-sofb; sudo make uninstall-services
-	cd as-ps; sudo make uninstall-services
-	cd as-ps-diag; sudo make uninstall-services
-	cd as-ti-control; sudo make uninstall-services
-	cd li-ap-energy; sudo make uninstall-services
-	cd si-ap-manaca; sudo make uninstall-services
-	cd as-pu-conv; sudo make uninstall-services
-	cd as-pu-diag; sudo make uninstall-services
-	cd li-ps-conv; sudo make uninstall-services
-	cd li-ap-diag; sudo make uninstall-services
-	cd si-id-conv; sudo make uninstall-services
-	cd as-ap-machshift; sudo make uninstall-services
-	cd as-rf-diag; sudo make uninstall-services
-	sudo systemctl daemon-reload
+uninstall:
+	cd as-ap-currinfo; make uninstall
+	cd as-ap-injctrl; make uninstall
+	cd as-ap-opticscorr; make uninstall
+	cd as-ap-posang; make uninstall
+	cd as-ap-sofb; make uninstall
+	cd as-ps; make uninstall
+	cd as-ps-diag; make uninstall
+	cd as-ti-control; make uninstall
+	cd li-ap-energy; make uninstall
+	cd si-ap-manaca; make uninstall
+	cd as-pu-conv; make uninstall
+	cd as-pu-diag; make uninstall
+	cd li-ps-conv; make uninstall
+	cd li-ap-diag; make uninstall
+	cd si-id-conv; make uninstall
+	cd as-ap-machshift; make uninstall
+	cd as-rf-diag; make uninstall
 
 clean:
-	cd as-ap-currinfo; sudo make clean
-	cd as-ap-injctrl; sudo make clean
-	cd as-ap-opticscorr; sudo make clean
-	cd as-ap-posang; sudo make clean
-	cd as-ap-sofb; sudo make clean
-	cd as-ps; sudo make clean
-	cd as-ps-diag; sudo make clean
-	cd as-ti-control; sudo make clean
-	cd li-ap-energy; sudo make clean
-	cd si-ap-manaca; sudo make clean
-	cd as-pu-conv; sudo make clean
-	cd as-pu-diag; sudo make clean
-	cd li-ps-conv; sudo make clean
-	cd li-ap-diag; sudo make clean
-	cd si-id-conv; sudo make clean
-	cd as-ap-machshift; sudo make clean
-	cd as-rf-diag; sudo make clean
+	cd as-ap-currinfo; make clean
+	cd as-ap-injctrl; make clean
+	cd as-ap-opticscorr; make clean
+	cd as-ap-posang; make clean
+	cd as-ap-sofb; make clean
+	cd as-ps; make clean
+	cd as-ps-diag; make clean
+	cd as-ti-control; make clean
+	cd li-ap-energy; make clean
+	cd si-ap-manaca; make clean
+	cd as-pu-conv; make clean
+	cd as-pu-diag; make clean
+	cd li-ps-conv; make clean
+	cd li-ap-diag; make clean
+	cd si-id-conv; make clean
+	cd as-ap-machshift; make clean
+	cd as-rf-diag; make clean
