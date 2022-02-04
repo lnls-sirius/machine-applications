@@ -1,5 +1,6 @@
 develop-install:
 	cd as-ap-currinfo; make develop-install
+	cd as-ap-injctrl; make develop-install
 	cd as-ap-opticscorr; make develop-install
 	cd as-ap-posang; make develop-install
 	cd as-ap-sofb; make develop-install
@@ -18,6 +19,7 @@ develop-install:
 
 develop-uninstall:
 	cd as-ap-currinfo; make develop-uninstall
+	cd as-ap-injctrl; make develop-uninstall
 	cd as-ap-opticscorr; make develop-uninstall
 	cd as-ap-posang; make develop-uninstall
 	cd as-ap-sofb; make develop-uninstall
@@ -36,6 +38,7 @@ develop-uninstall:
 
 install:
 	cd as-ap-currinfo; make install
+	cd as-ap-injctrl; make install
 	cd as-ap-opticscorr; make install
 	cd as-ap-posang; make install
 	cd as-ap-sofb; make install
@@ -54,6 +57,7 @@ install:
 
 uninstall:
 	cd as-ap-currinfo; make uninstall
+	cd as-ap-injctrl; make uninstall
 	cd as-ap-opticscorr; make uninstall
 	cd as-ap-posang; make uninstall
 	cd as-ap-sofb; make uninstall
@@ -72,6 +76,7 @@ uninstall:
 
 clean:
 	cd as-ap-currinfo; make clean
+	cd as-ap-injctrl; make clean
 	cd as-ap-opticscorr; make clean
 	cd as-ap-posang; make clean
 	cd as-ap-sofb; make clean
