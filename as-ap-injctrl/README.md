@@ -4,10 +4,8 @@ Soft IOC for Injection Procedure Control.
 
 installation:
 
- sudo ./setup.py develop
- cd systemd; sudo make install-services
+ sudo make install
 
- dependencies:
+development mode:
 
-  siriuspy
-  pyepics
+ make develop
