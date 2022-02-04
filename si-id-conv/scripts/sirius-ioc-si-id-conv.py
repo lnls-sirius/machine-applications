@@ -1,4 +1,4 @@
-#!/usr/bin/env python-sirius -u
+#!/usr/bin/env -S python-sirius -u
 """SI ID Phase-K Converter IOC Launcher."""
 
 import sys

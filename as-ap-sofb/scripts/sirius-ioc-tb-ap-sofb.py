@@ -1,4 +1,4 @@
-#!/usr/bin/env python-sirius -u
+#!/usr/bin/env -S python-sirius -u
 
 import argparse as _argparse
 from as_ap_sofb import run
