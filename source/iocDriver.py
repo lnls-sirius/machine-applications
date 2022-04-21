@@ -12,6 +12,13 @@ def isPvName(reason, pvname):
     """
     return reason == pvname
 
+def isBoolNum(value):
+    """ This function checks if an integer
+        value could represent a bool, i.e.,
+        if it is 0 or 1
+    """
+    return value == 0 or value == 1
+
 class EPUSupport(pcaspy.Driver):
     """ EPU device support for the pcaspy server
     """
@@ -44,19 +51,29 @@ class EPUSupport(pcaspy.Driver):
         ## change gap set point
         if isPvName(reason, _db.pv_gap_sp):
             if value:
-                status = self.asynExec(reason, globals.dummy, value)
-                if status:
-                    self.setParam(_db.pv_gap_sp, value)
-                    self.updatePVs()
+                if (value >= globals.min_gap
+                        and value <= globals.max_gap
+                        ):
+                    status = self.asynExec(reason, globals.dummy, value)
+                    if status:
+                        self.setParam(_db.pv_gap_sp, value)
+                        self.updatePVs()
+                else:
+                    status = False
             else:
                 status = False
         ## change phase set point
         elif isPvName(reason, _db.pv_phase_sp):
             if value:
-                status = self.asynExec(reason, globals.dummy, value)
-                if status:
-                    self.setParam(_db.pv_phase_sp, value)
-                    self.updatePVs()
+                if (value >= globals.min_phase
+                        and value <= globals.max_phase
+                        ):
+                    status = self.asynExec(reason, globals.dummy, value)
+                    if status:
+                        self.setParam(_db.pv_phase_sp, value)
+                        self.updatePVs()
+                else:
+                    status = False
             else:
                 status = False
         ## cmd to move and change gap
@@ -68,37 +85,49 @@ class EPUSupport(pcaspy.Driver):
         ## select to enable/disable A and B drives
         elif isPvName(reason, _db.pv_enbl_ab_sel):
             if value:
-                status = self.asynExec(reason, globals.dummy, value)
-                if status:
-                    self.setParam(_db.pv_enbl_ab_sel, value)
-                    self.updatePVs()
+                if isBoolNum(value):
+                    status = self.asynExec(reason, globals.dummy, value)
+                    if status:
+                        self.setParam(_db.pv_enbl_ab_sel, value)
+                        self.updatePVs()
+                else:
+                    status = False
             else:
                 status = False
         ## select to enable/disable S and I drives
         elif isPvName(reason, _db.pv_enbl_si_sel):
             if value:
-                status = self.asynExec(reason, globals.dummy, value)
-                if status:
-                    self.setParam(_db.pv_enbl_si_sel, value)
-                    self.updatePVs()
+                if isBoolNum(value):
+                    status = self.asynExec(reason, globals.dummy, value)
+                    if status:
+                        self.setParam(_db.pv_enbl_si_sel, value)
+                        self.updatePVs()
+                else:
+                    status = False
             else:
                 status = False
         ## select to release/halt A and B drives
         elif isPvName(reason, _db.pv_release_ab_sel):
             if value:
-                status = self.asynExec(reason, globals.dummy, value)
-                if status:
-                    self.setParam(_db.pv_release_ab_sel, value)
-                    self.updatePVs()
+                if isBoolNum(value):
+                    status = self.asynExec(reason, globals.dummy, value)
+                    if status:
+                        self.setParam(_db.pv_release_ab_sel, value)
+                        self.updatePVs()
+                else:
+                    status = False
             else:
                 status = False
         ## select to release/halt S and I drives
         elif isPvName(reason, _db.pv_release_si_sel):
             if value:
-                status = self.asynExec(reason, globals.dummy, value)
-                if status:
-                    self.setParam(_db.pv_release_si_sel, value)
-                    self.updatePVs()
+                if isBoolNum(value):
+                    status = self.asynExec(reason, globals.dummy, value)
+                    if status:
+                        self.setParam(_db.pv_release_si_sel, value)
+                        self.updatePVs()
+                else:
+                    status = False
             else:
                 status = False
         ## cmd to enable and release A and B drives
