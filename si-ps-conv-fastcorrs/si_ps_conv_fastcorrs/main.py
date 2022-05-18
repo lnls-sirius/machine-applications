@@ -155,8 +155,8 @@ class App:
         limits = conn['-SP'].limits
         curr0 = conn['-SP'].value
         curr1 = conn['-RB'].value
-        curr2 = limits[0]
-        curr3 = limits[-1]
+        curr2 = limits[3]
+        curr3 = limits[4]
         values = (curr0, curr1, curr2, curr3)
         strengths = streconv.conv_current_2_strength(values)
         if strengths is None or None in strengths:
