@@ -155,9 +155,11 @@ class App:
         limits = conn['-SP'].limits
         curr0 = conn['-SP'].value
         curr1 = conn['-RB'].value
-        curr2 = limits[3]
-        curr3 = limits[4]
-        values = (curr0, curr1, curr2, curr3)
+        curr2 = conn['Ref-Mon'].value
+        curr3 = conn['-Mon'].value
+        curr4 = limits[3]
+        curr5 = limits[4]
+        values = (curr0, curr1, curr2, curr3, curr4, curr5)
         strengths = streconv.conv_current_2_strength(values)
         if strengths is None or None in strengths:
             slims = None
@@ -192,11 +194,13 @@ class App:
     def _create_connectors_and_streconv(self):
         connectors = dict()
         streconv = dict()
-        for psname in self.psnames:
-            connectors[psname] = dict()
-            connectors[psname]['-SP'] = _PSProperty(psname, 'Current-SP')
-            connectors[psname]['-RB'] = _PSProperty(psname, 'Current-RB')
-            streconv[psname] = _StrengthConv(psname, proptype='Ref-Mon')
+        for psn in self.psnames:
+            connectors[psn] = dict()
+            connectors[psn]['-SP'] = _PSProperty(psn, 'Current-SP')
+            connectors[psn]['-RB'] = _PSProperty(psn, 'Current-RB')
+            connectors[psn]['Ref-Mon'] = _PSProperty(psn, 'CurrentRef-Mon')
+            connectors[psn]['-Mon'] = _PSProperty(psn, 'Current-Mon')
+            streconv[psn] = _StrengthConv(psn, proptype='Ref-Mon')
         return connectors, streconv
 
     def _write_operation(self, pvname, value):
