@@ -57,6 +57,8 @@ class App:
     def process(self, interval):
         """Run continuously in the main thread."""
         t0 = _time.time()
+        for obj in self._objects:
+            obj.process()
         tf = _time.time()
         dt = interval - (tf-t0)
         if dt > 0:
