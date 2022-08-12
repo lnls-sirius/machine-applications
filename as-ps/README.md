@@ -4,8 +4,8 @@ IOC classes and scripts for eral and simulated power supplies.
 
 installation:
 
- sudo make install
+ make install
 
 development mode:
 
- make develop
+ make develop-install

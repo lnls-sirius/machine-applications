@@ -4,8 +4,8 @@ Software IOC for Machine Shift Control.
 
 installation:
 
- sudo make install
+ make install
 
 development mode:
 
- make develop
+ make develop-install

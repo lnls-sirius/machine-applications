@@ -4,8 +4,8 @@ Soft IOC for Injection Procedure Control.
 
 installation:
 
- sudo make install
+ make install
 
 development mode:
 
- make develop
+ make develop-install
