@@ -1,6 +1,6 @@
-# AS-AP-MACHSHIFT Soft IOC
+# SI-AP-FOFB Soft IOC
 
-Software IOC for Machine Shift Control.
+Software IOC for High Level FOFB Control.
 
 installation:
 

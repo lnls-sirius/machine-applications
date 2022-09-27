@@ -4,8 +4,8 @@ Software IOCs for magnet control of beam position and angle injection from the t
 
 installation:
 
- sudo make install
+ make install
 
 development mode:
 
- make develop
+ make develop-install

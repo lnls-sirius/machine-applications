@@ -4,8 +4,8 @@ Software IOCs for Booster Tune and Chromaticity Correction.
 
 installation:
 
- sudo make install
+ make install
 
 development mode:
 
- make develop
+ make develop-install
