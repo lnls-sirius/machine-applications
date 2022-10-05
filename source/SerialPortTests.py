@@ -1,32 +1,12 @@
 from urllib.request import install_opener
-import serial, time, threading, yaml, toml, socket
-from pcaspy import SimpleServer, Driver
-from pydantic import BaseModel
-from typing import Optional
+import serial, time, threading, yaml, socket
+import threading
+import globals
 
 # Quando for implementada a leitura do encoder externo, criar um método para calcular o desvio entre ele e o resolver
 # AFTER A E-STOP BECOME DESACTIVATED, THE EXTERNAL ENABLE INPUT MUST RECIEVE A 0-1 EDGE. 
 
-# pydantic data validation
-class EpuConfig(BaseModel):
-    drive_a_port: str
-    drive_b_port: Optional[str] = None
-    drive_a_address: str
-    drive_b_address: Optional[int] = None
-    baud_rate: float
-    drive_a_port: str
-    drive_b_port: Optional[str] = None
-    min_gap: float
-    max_gap: float
-    min_phase: float
-    max_phase: float
-
-# loads config data
-with open('../config/config.toml') as f:
-    config = toml.load('../config/config.toml')
-
-epu_config = EpuConfig(**config['EPU'])
-print(epu_config.min_gap)
+print(globals.min_gap)
 
 class EcoDrive:
     '''Indramat ecodrive 3 class for RS232 communication using ASCII protocol,
@@ -241,8 +221,8 @@ class Epu():
         pass
 
 
-#teste = Epu(a_address=epu_config.drive_a_address, b_address=epu_config.drive_b_address,\
-#        min_gap=epu_config.min_gap, max_gap=epu_config.max_gap, min_phase=epu_config.min_phase, max_phase=epu_config.max_phase)
+#teste = Epu(a_address=globals.drive_A_address, b_address=globals.drive_B_address,\
+#        min_gap=globals.min_gap, max_gap=globals.max_gap, min_phase=globals.min_phase, max_phase=globals.max_phase)
 
 
 eco_test = EcoDrive(address=21, serial_port="/dev/tty0")
