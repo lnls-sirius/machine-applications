@@ -16,6 +16,18 @@ pv_allowed_change_gap_mon = 'AllowedToChangeGap-Mon'
 pv_allowed_change_phase_mon = 'AllowedToChangePhase-Mon'
 pv_change_gap_cmd = 'ChangeGap-Cmd'
 pv_change_phase_cmd = 'ChangePhase-Cmd'
+pv_enbl_ab_sel = 'EnblAB-Sel'
+pv_enbl_ab_sts = 'EnblAB-Sts'
+pv_enbl_si_sel = 'EnblSI-Sel'
+pv_enbl_si_sts = 'EnblSI-Sts'
+pv_release_ab_sel = 'ReleaseAB-Sel'
+pv_release_ab_sts = 'ReleaseAB-Sts'
+pv_release_si_sel = 'ReleaseSI-Sel'
+pv_release_si_sts = 'ReleaseSI-Sts'
+pv_enbl_and_release_ab_cmd = 'EnblAndReleaseAB-Cmd'
+pv_enbl_and_release_si_cmd = 'EnblAndReleaseSI-Cmd'
+pv_dsbl_and_halt_ab_cmd = 'DsblAndHaltAB-Cmd'
+pv_dsbl_and_halt_si_cmd = 'DsblAndHaltSI-Cmd'
 ## drive A
 pv_drive_a_resolver_pos_mon = 'DriveAResolverPos-Mon'
 pv_drive_a_encoder_pos_mon = 'DriveAEncoderPos-Mon'
@@ -64,7 +76,7 @@ pvdb = {
         'count' : 1,
         'unit' : globals.position_units,
         'mdel' : -1,
-        'asyn' : False,
+        'asyn' : True,
         'asg' : 'default',
     },
     pv_gap_rb : {
@@ -74,7 +86,7 @@ pvdb = {
         'unit' : globals.position_units,
         'mdel' : -1,
         'asyn' : False,
-        'asg' : 'default',
+        'asg' : 'readonly',
     },
     pv_phase_sp : {
         'type' : 'float',
@@ -82,7 +94,7 @@ pvdb = {
         'count' : 1,
         'unit' : globals.position_units,
         'mdel' : -1,
-        'asyn' : False,
+        'asyn' : True,
         'asg' : 'default',
     },
     pv_phase_rb : {
@@ -92,7 +104,7 @@ pvdb = {
         'unit' : globals.position_units,
         'mdel' : -1,
         'asyn' : False,
-        'asg' : 'default',
+        'asg' : 'readonly',
     },
     pv_allowed_change_gap_mon : {
         'type' : 'enum',
@@ -102,7 +114,7 @@ pvdb = {
         'mdel' : -1,
         'scan' : globals.scan_rate,
         'asyn' : False,
-        'asg' : 'default',
+        'asg' : 'readonly',
     },
     pv_allowed_change_phase_mon : {
         'type' : 'enum',
@@ -112,7 +124,7 @@ pvdb = {
         'mdel' : -1,
         'scan' : globals.scan_rate,
         'asyn' : False,
-        'asg' : 'default',
+        'asg' : 'readonly',
     },
     pv_change_gap_cmd : {
         'type' : 'int',
@@ -122,6 +134,106 @@ pvdb = {
         'asg' : 'default',
     },
     pv_change_phase_cmd : {
+        'type' : 'int',
+        'count' : 1,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+    },
+    pv_enbl_ab_sel : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : globals.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+    },
+    pv_enbl_ab_sts : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : globals.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_enbl_si_sel : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : globals.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+    },
+    pv_enbl_si_sts : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : globals.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_release_ab_sel : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : globals.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+    },
+    pv_release_ab_sts : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : globals.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_release_si_sel : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : globals.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+    },
+    pv_release_si_sts : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : globals.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_enbl_and_release_ab_cmd : {
+        'type' : 'int',
+        'count' : 1,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+    },
+    pv_enbl_and_release_si_cmd : {
+        'type' : 'int',
+        'count' : 1,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+    },
+    pv_dsbl_and_halt_ab_cmd : {
+        'type' : 'int',
+        'count' : 1,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+    },
+    pv_dsbl_and_halt_si_cmd : {
         'type' : 'int',
         'count' : 1,
         'mdel' : -1,
