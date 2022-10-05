@@ -10,12 +10,16 @@ import traceback
 driver_update_rate = 0.2
 
 ## EPICS record fields
-### position rec units string
+### rec units string
 position_units = 'mm'
+velo_units = 'mm/s'
 ### rec decimal places
 position_precision = 3
 ### rec scan rate in sec
 scan_rate = 0.1
+
+## EPICS access security
+access_security_filename = 'epu.as'
 
 ## CA server
 ### transaction update rate

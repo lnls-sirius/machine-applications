@@ -7,8 +7,15 @@ import iocDriver
 import epu_db
 
 if __name__ == '__main__':
+    # create CA server
     server = pcaspy.SimpleServer()
+    # config access security
+    server.initAccessSecurityFile(
+        globals.access_security_filename, PREFIX=epu_db.pv_prefix
+        )
+    # instantiate PV database
     server.createPV(epu_db.pv_prefix, epu_db.pvdb)
+    # create pcaspy driver
     driver = iocDriver.EPUDriver()
 
     while True:
