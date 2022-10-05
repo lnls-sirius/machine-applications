@@ -11,8 +11,13 @@ driver_update_rate = 0.2
 
 ## EPICS record fields
 ### rec units string
+no_units = ''
 position_units = 'mm'
 velo_units = 'mm/s'
+# array size limits
+max_msg_size = 200
+### rec enums
+bool_enums = ['No', 'Yes']
 ### rec decimal places
 position_precision = 3
 ### rec scan rate in sec
