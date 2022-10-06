@@ -8,6 +8,8 @@ pv_prefix = args.pv_prefix
 #############################################
 # Map variable -> pv name
 ## general
+pv_is_busy_mon = 'IsBusy-Mon'
+pv_ioc_msg_mon = 'IOCLastException-Mon'
 pv_gap_sp = 'Gap-SP'
 pv_gap_rb = 'Gap-RB'
 pv_phase_sp = 'Phase-SP'
@@ -70,6 +72,24 @@ pv_drive_i_is_moving_mon = 'DriveIIsMoving-Mon'
 pvdb = {
     #############################################
     # General
+    pv_is_busy_mon : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : globals.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'scan' : globals.scan_rate,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_ioc_msg_mon : {
+        'type' : 'char',
+        'count' : globals.max_long_msg_size,
+        'mdel' : -1,
+        'scan' : globals.scan_rate,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
     pv_gap_sp : {
         'type' : 'float',
         'prec' : globals.position_precision,
