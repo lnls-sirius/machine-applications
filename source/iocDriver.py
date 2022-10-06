@@ -23,7 +23,11 @@ class EPUSupport(pcaspy.Driver):
         self.diag_msg_list = []
         # EPU driver will manage and control
         # main features of device operation
-        self.epu_driver = SerialPortTests.Epu()
+        try:
+            self.epu_driver = SerialPortTests.Epu()
+            print('Epu driver initialized')
+        except Exception:
+            print('Could not init epu driver')
         # start periodic polling function
         self.eid = threading.Event()
         self.tid_periodic = threading.Thread(target=self.periodic, daemon=True)
@@ -32,7 +36,7 @@ class EPUSupport(pcaspy.Driver):
     def periodic(self):
         while True:
             self.eid.wait(globals.poll_interval)
-            print('do something')
+            pass
     # EPICS write
     def write(self, reason, value):
         status = True
@@ -41,12 +45,18 @@ class EPUSupport(pcaspy.Driver):
         if isPvName(reason, _db.pv_gap_sp):
             if value:
                 status = self.asynExec(reason, globals.dummy, value)
+                if status:
+                    self.setParam(_db.pv_gap_sp, value)
+                    self.updatePVs()
             else:
                 status = False
         ## change phase set point
         elif isPvName(reason, _db.pv_phase_sp):
             if value:
                 status = self.asynExec(reason, globals.dummy, value)
+                if status:
+                    self.setParam(_db.pv_phase_sp, value)
+                    self.updatePVs()
             else:
                 status = False
         ## cmd to move and change gap
@@ -59,50 +69,66 @@ class EPUSupport(pcaspy.Driver):
         elif isPvName(reason, _db.pv_enbl_ab_sel):
             if value:
                 status = self.asynExec(reason, globals.dummy, value)
+                if status:
+                    self.setParam(_db.pv_enbl_ab_sel, value)
+                    self.updatePVs()
             else:
                 status = False
         ## select to enable/disable S and I drives
         elif isPvName(reason, _db.pv_enbl_si_sel):
             if value:
                 status = self.asynExec(reason, globals.dummy, value)
+                if status:
+                    self.setParam(_db.pv_enbl_si_sel, value)
+                    self.updatePVs()
             else:
                 status = False
         ## select to release/halt A and B drives
         elif isPvName(reason, _db.pv_release_ab_sel):
             if value:
                 status = self.asynExec(reason, globals.dummy, value)
+                if status:
+                    self.setParam(_db.pv_release_ab_sel, value)
+                    self.updatePVs()
             else:
                 status = False
         ## select to release/halt S and I drives
         elif isPvName(reason, _db.pv_release_si_sel):
             if value:
                 status = self.asynExec(reason, globals.dummy, value)
+                if status:
+                    self.setParam(_db.pv_release_si_sel, value)
+                    self.updatePVs()
             else:
                 status = False
         ## cmd to enable and release A and B drives
         elif isPvName(reason, _db.pv_enbl_and_release_ab_cmd):
             status = self.asynExec(reason, globals.dummy)
-            self.setParam(_db.pv_enbl_ab_sel, globals.bool_yes)
-            self.setParam(_db.pv_release_ab_sel, globals.bool_yes)
-            self.updatePVs()
+            if status:
+                self.setParam(_db.pv_enbl_ab_sel, globals.bool_yes)
+                self.setParam(_db.pv_release_ab_sel, globals.bool_yes)
+                self.updatePVs()
         ## cmd to enable and release S and I drives
         elif isPvName(reason, _db.pv_enbl_and_release_si_cmd):
             status = self.asynExec(reason, globals.dummy)
-            self.setParam(_db.pv_enbl_si_sel, globals.bool_yes)
-            self.setParam(_db.pv_release_si_sel, globals.bool_yes)
-            self.updatePVs()
+            if status:
+                self.setParam(_db.pv_enbl_si_sel, globals.bool_yes)
+                self.setParam(_db.pv_release_si_sel, globals.bool_yes)
+                self.updatePVs()
         ## cmd to disable and halt A and B drives
         elif isPvName(reason, _db.pv_dsbl_and_halt_ab_cmd):
             status = self.asynExec(reason, globals.dummy)
-            self.setParam(_db.pv_enbl_ab_sel, globals.bool_no)
-            self.setParam(_db.pv_release_ab_sel, globals.bool_no)
-            self.updatePVs()
+            if status:
+                self.setParam(_db.pv_enbl_ab_sel, globals.bool_no)
+                self.setParam(_db.pv_release_ab_sel, globals.bool_no)
+                self.updatePVs()
         ## cmd to disable and halt S and I drives
         elif isPvName(reason, _db.pv_dsbl_and_halt_si_cmd):
             status = self.asynExec(reason, globals.dummy)
-            self.setParam(_db.pv_enbl_si_sel, globals.bool_no)
-            self.setParam(_db.pv_release_si_sel, globals.bool_no)
-            self.updatePVs()
+            if status:
+                self.setParam(_db.pv_enbl_si_sel, globals.bool_no)
+                self.setParam(_db.pv_release_si_sel, globals.bool_no)
+                self.updatePVs()
         ## no match to pv names
         else:
             status = False

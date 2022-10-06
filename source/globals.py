@@ -5,8 +5,11 @@ from typing import Optional
 import traceback
 
 # dummy function for debugging
-def dummy():
-    print('dummy')
+def dummy(val=0):
+    if val != 0:
+        print('dummy {}'.format(val))
+    else:
+        print('dummy')
 
 # constants
 
