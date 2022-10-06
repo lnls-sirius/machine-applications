@@ -2,8 +2,7 @@ import globals
 from pcaspy import Severity as _Severity
 
 # prefix
-args = globals.pv_prefix
-pv_prefix = args.pv_prefix
+pv_prefix = globals.pv_prefix
 
 #############################################
 # Map variable -> pv name
