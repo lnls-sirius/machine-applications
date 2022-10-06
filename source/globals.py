@@ -4,10 +4,22 @@ from pydantic import BaseModel
 from typing import Optional
 import traceback
 
+# dummy function for debugging
+def dummy():
+    print('dummy')
+
 # constants
 
 ## Driver configuration
 driver_update_rate = 0.2
+
+## Device support
+### error msg array size
+error_msg_arr_size = 10
+### interval for reading from driver
+poll_interval = 0.1
+### IOC messages
+msg_device_busy = 'Cmd failed: Device is busy'
 
 ## EPICS record fields
 ### rec units string
@@ -16,8 +28,12 @@ position_units = 'mm'
 velo_units = 'mm/s'
 # array size limits
 max_msg_size = 200
+max_long_msg_size = 2000
 ### rec enums
 bool_enums = ['No', 'Yes']
+### bool constants
+bool_no = 0
+bool_yes = 1
 ### rec decimal places
 position_precision = 3
 ### rec scan rate in sec

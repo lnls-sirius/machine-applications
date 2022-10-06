@@ -16,7 +16,7 @@ if __name__ == '__main__':
     # instantiate PV database
     server.createPV(epu_db.pv_prefix, epu_db.pvdb)
     # create pcaspy driver
-    driver = iocDriver.EPUDriver()
+    driver = iocDriver.EPUSupport()
 
     while True:
         try:
