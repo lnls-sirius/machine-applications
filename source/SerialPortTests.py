@@ -2,6 +2,7 @@ from urllib.request import install_opener
 import serial, time, threading, yaml, socket
 import threading
 import globals
+from utils import asynch, schedule
 
 # Quando for implementada a leitura do encoder externo, criar um método para calcular o desvio entre ele e o resolver
 # AFTER A E-STOP BECOME DESACTIVATED, THE EXTERNAL ENABLE INPUT MUST RECIEVE A 0-1 EDGE. 
@@ -171,6 +172,12 @@ class Epu():
         self.max_gap = max_gap
         self.min_phase = min_phase
         self.max_phase = max_phase
+
+    # Example periodic function
+    @asynch
+    @schedule(globals.driver_update_rate)
+    def periodic_update(self):
+        print('example')
 
     def verify_gap_limits(self, t_gap) -> bool:
         if self.min_gap <= t_gap <= self.max_gap: return True
