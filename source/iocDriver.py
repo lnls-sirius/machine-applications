@@ -78,10 +78,16 @@ class EPUSupport(pcaspy.Driver):
                 status = False
         ## cmd to move and change gap
         elif isPvName(reason, _db.pv_change_gap_cmd):
-            status = self.asynExec(reason, globals.dummy)
+            if _db.pv_allowed_change_gap_mon == globals.bool_yes:
+                status = self.asynExec(reason, globals.dummy)
+            else:
+                status = False
         ## cmd to move and change phase
         elif isPvName(reason, _db.pv_change_phase_cmd):
-            status = self.asynExec(reason, globals.dummy)
+            if _db.pv_allowed_change_phase_mon == globals.bool_yes:
+                status = self.asynExec(reason, globals.dummy)
+            else:
+                status = False
         ## select to enable/disable A and B drives
         elif isPvName(reason, _db.pv_enbl_ab_sel):
             if value:
