@@ -33,8 +33,6 @@ pv_dsbl_and_halt_si_cmd = 'DsblAndHaltSI-Cmd'
 pv_drive_a_resolver_pos_mon = 'DriveAResolverPos-Mon'
 pv_drive_a_encoder_pos_mon = 'DriveAEncoderPos-Mon'
 pv_drive_a_velo_mon = 'DriveAVelo-Mon'
-pv_drive_a_enbl_mon = 'DriveAEnbl-Mon'
-pv_drive_a_halt_mon = 'DriveAHalt-Mon'
 pv_drive_a_diag_code_mon = 'DriveADiagCode-Mon'
 pv_drive_a_diag_msg_mon = 'DriveADiagMsg-Mon'
 pv_drive_a_is_moving_mon = 'DriveAIsMoving-Mon'
@@ -42,26 +40,20 @@ pv_drive_a_is_moving_mon = 'DriveAIsMoving-Mon'
 pv_drive_b_resolver_pos_mon = 'DriveBResolverPos-Mon'
 pv_drive_b_encoder_pos_mon = 'DriveBEncoderPos-Mon'
 pv_drive_b_velo_mon = 'DriveBVelo-Mon'
-pv_drive_b_enbl_mon = 'DriveBEnbl-Mon'
-pv_drive_b_halt_mon = 'DriveBHalt-Mon'
 pv_drive_b_diag_code_mon = 'DriveBDiagCode-Mon'
 pv_drive_b_diag_msg_mon = 'DriveBDiagMsg-Mon'
 pv_drive_b_is_moving_mon = 'DriveBIsMoving-Mon'
 ## drive S
-pv_drive_s_resolver_pos_mon = 'DriveCResolverPos-Mon'
-pv_drive_s_encoder_pos_mon = 'DriveCEncoderPos-Mon'
-pv_drive_s_velo_mon = 'DriveCVelo-Mon'
-pv_drive_s_enbl_mon = 'DriveCEnbl-Mon'
-pv_drive_s_halt_mon = 'DriveCHalt-Mon'
-pv_drive_s_diag_code_mon = 'DriveCDiagCode-Mon'
-pv_drive_s_diag_msg_mon = 'DriveCDiagMsg-Mon'
-pv_drive_s_is_moving_mon = 'DriveCIsMoving-Mon'
+pv_drive_s_resolver_pos_mon = 'DriveSResolverPos-Mon'
+pv_drive_s_encoder_pos_mon = 'DriveSEncoderPos-Mon'
+pv_drive_s_velo_mon = 'DriveSVelo-Mon'
+pv_drive_s_diag_code_mon = 'DriveSDiagCode-Mon'
+pv_drive_s_diag_msg_mon = 'DriveSDiagMsg-Mon'
+pv_drive_s_is_moving_mon = 'DriveSIsMoving-Mon'
 ## drive I
 pv_drive_i_resolver_pos_mon = 'DriveIResolverPos-Mon'
 pv_drive_i_encoder_pos_mon = 'DriveIEncoderPos-Mon'
 pv_drive_i_velo_mon = 'DriveIVelo-Mon'
-pv_drive_i_enbl_mon = 'DriveIEnbl-Mon'
-pv_drive_i_halt_mon = 'DriveIHalt-Mon'
 pv_drive_i_diag_code_mon = 'DriveIDiagCode-Mon'
 pv_drive_i_diag_msg_mon = 'DriveIDiagMsg-Mon'
 pv_drive_i_is_moving_mon = 'DriveIIsMoving-Mon'
@@ -287,26 +279,6 @@ pvdb = {
         'asyn' : False,
         'asg' : 'readonly',
     },
-    pv_drive_a_enbl_mon : {
-        'type' : 'enum',
-        'count' : 1,
-        'enums' : globals.bool_enums,
-        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
-        'mdel' : -1,
-        'scan' : globals.scan_rate,
-        'asyn' : False,
-        'asg' : 'readonly',
-    },
-    pv_drive_a_halt_mon : {
-        'type' : 'enum',
-        'count' : 1,
-        'enums' : globals.bool_enums,
-        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
-        'mdel' : -1,
-        'scan' : globals.scan_rate,
-        'asyn' : False,
-        'asg' : 'readonly',
-    },
     pv_drive_a_diag_code_mon : {
         'type' : 'int',
         'count' : 1,
@@ -361,26 +333,6 @@ pvdb = {
         'prec' : globals.position_precision,
         'count' : 1,
         'unit' : globals.velo_units,
-        'mdel' : -1,
-        'scan' : globals.scan_rate,
-        'asyn' : False,
-        'asg' : 'readonly',
-    },
-    pv_drive_b_enbl_mon : {
-        'type' : 'enum',
-        'count' : 1,
-        'enums' : globals.bool_enums,
-        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
-        'mdel' : -1,
-        'scan' : globals.scan_rate,
-        'asyn' : False,
-        'asg' : 'readonly',
-    },
-    pv_drive_b_halt_mon : {
-        'type' : 'enum',
-        'count' : 1,
-        'enums' : globals.bool_enums,
-        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
         'mdel' : -1,
         'scan' : globals.scan_rate,
         'asyn' : False,
@@ -445,26 +397,6 @@ pvdb = {
         'asyn' : False,
         'asg' : 'readonly',
     },
-    pv_drive_s_enbl_mon : {
-        'type' : 'enum',
-        'count' : 1,
-        'enums' : globals.bool_enums,
-        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
-        'mdel' : -1,
-        'scan' : globals.scan_rate,
-        'asyn' : False,
-        'asg' : 'readonly',
-    },
-    pv_drive_s_halt_mon : {
-        'type' : 'enum',
-        'count' : 1,
-        'enums' : globals.bool_enums,
-        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
-        'mdel' : -1,
-        'scan' : globals.scan_rate,
-        'asyn' : False,
-        'asg' : 'readonly',
-    },
     pv_drive_s_diag_code_mon : {
         'type' : 'int',
         'count' : 1,
@@ -519,26 +451,6 @@ pvdb = {
         'prec' : globals.position_precision,
         'count' : 1,
         'unit' : globals.velo_units,
-        'mdel' : -1,
-        'scan' : globals.scan_rate,
-        'asyn' : False,
-        'asg' : 'readonly',
-    },
-    pv_drive_i_enbl_mon : {
-        'type' : 'enum',
-        'count' : 1,
-        'enums' : globals.bool_enums,
-        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
-        'mdel' : -1,
-        'scan' : globals.scan_rate,
-        'asyn' : False,
-        'asg' : 'readonly',
-    },
-    pv_drive_i_halt_mon : {
-        'type' : 'enum',
-        'count' : 1,
-        'enums' : globals.bool_enums,
-        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
         'mdel' : -1,
         'scan' : globals.scan_rate,
         'asyn' : False,
