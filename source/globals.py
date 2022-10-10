@@ -49,7 +49,7 @@ access_security_filename = 'epu.as'
 ### transaction update rate
 ca_process_rate = 0.1
 
-# pydantic data validation
+## pydantic data validation
 class EpuConfig(BaseModel):
     drive_A_address: str
     drive_B_address: Optional[int] = None
@@ -61,7 +61,7 @@ class EpuConfig(BaseModel):
     min_phase: float
     max_phase: float
 
-# loads config data
+## loads config data
 with open('../config/config.toml') as f:
     config = toml.load('../config/config.toml')
 
@@ -77,22 +77,12 @@ drive_A_address = epu_config.drive_A_address
 drive_B_address = epu_config.drive_B_address
 drive_S_address = epu_config.drive_S_address
 drive_I_address = epu_config.drive_I_address
-## position limits
-drive_A_highlim = 300
-drive_A_lowlim = 22
-drive_B_highlim = 300
-drive_B_lowlim = 20
-drive_S_highlim = 300
-drive_S_lowlim = 20
-drive_I_highlim = 300
-drive_I_lowlim = 20
-## velocity limits
-drive_A_velolim = 2
-drive_B_velolim = 2
-drive_S_velolim = 2
-drive_I_velolim = 2
 
-# read input arguments
+## velocity limits
+min_velo = 1
+max_velo = 1
+
+# input arguments
 def getArgs():
     """ Return command line arguments
     """

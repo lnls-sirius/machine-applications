@@ -232,9 +232,9 @@ class Epu():
 #        min_gap=globals.min_gap, max_gap=globals.max_gap, min_phase=globals.min_phase, max_phase=globals.max_phase)
 
 
-eco_test = EcoDrive(address=21, serial_port="/dev/tty0")
-eco_test.send('BCD:21')
-print(eco_test.raw_read())
+#eco_test = EcoDrive(address=21, serial_port="/dev/tty0")
+#eco_test.send('BCD:21')
+#print(eco_test.raw_read())
 
 
 # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
