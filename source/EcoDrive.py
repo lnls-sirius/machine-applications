@@ -76,12 +76,12 @@ class EcoDrive():
                 raise e
         else:
             try:
-                self.send('BCD:{}'.format(self.SERIAL_ADDRESS))
+                byte_message = self.send_and_read('BCD:{}'.format(self.SERIAL_ADDRESS))
             except Exception as e:
-                logger.exception('Error while trying to send message.')
+                logger.exception('Communication error in send_and_read.')
                 raise e
             else:
-                str_message = self.raw_read().decode().split()
+                str_message = byte_message.decode().split()
                 if not (f'E{self.SERIAL_ADDRESS}:>' in str_message[0]):
                     logger.error(f'Drive addres (E{self.SERIAL_ADDRESS}) was expcted in drive answer, but was not found.')
                     raise Exception(f'Drive addres (E{self.SERIAL_ADDRESS}) was expcted in drive answer, but was not found.')
@@ -115,6 +115,12 @@ class EcoDrive():
             logging.error('Serial closed while trying to send message.')
             raise Exception('Serial port not open.')
 
+    def send_and_read(self, message: str) -> Bytes:
+        with self._lock:
+            self.send(message)
+            byte_encoded_message = self.raw_read()
+        return byte_encoded_message
+
     def raw_read(self) -> Bytes:
         if self.ser.in_waiting:
             try:
@@ -129,104 +135,145 @@ class EcoDrive():
 
     def get_resolver_position(self) -> float:
         '''Get sresolver reading. Raises AssertError if it answer don't match expected pattern.'''
-        self.send(message='S-0-0051,7,R')
-        str_message = self.raw_read().decode()
-        if not (f'E{self.SERIAL_ADDRESS}:>' in str_message and 'S-0-0051,7,R' in str_message):
-            logger.error('Drive did not repond as expeted to "S-0-0051,7,R".', f'{str_message}')
-            raise Exception('Drive did not repond as expeted to "S-0-0051,7,R".', f'{str_message}')
-        resolver_position = str_message.split('\r\n')[1]
-        self.resolver_position = resolver_position
-        print("get_resolver_position was called")
-        return float(resolver_position)
+        try:
+            byte_message = self.send_and_read('S-0-0051,7,R')
+        except Exception as e:
+            logger.exception('Communication error in send_and_read.')
+            raise e
+        else:
+            str_message = byte_message.decode()
+            if not (f'E{self.SERIAL_ADDRESS}:>' in str_message and 'S-0-0051,7,R' in str_message):
+                logger.error('Drive did not repond as expeted to "S-0-0051,7,R".', f'{str_message}')
+                raise Exception('Drive did not repond as expeted to "S-0-0051,7,R".', f'{str_message}')
+            resolver_position = str_message.split('\r\n')[1]
+            self.resolver_position = resolver_position
+            print("get_resolver_position was called")
+            return float(resolver_position)
 
     def get_diagnostic_code(self) -> str:
         '''Gets the diagnostic message code of the drive. the same code can be seen in the seven segment display. Raises AssertError if it answer don't match expected pattern.'''
-        self.send('S-0-0390,7,R')
-        str_message = self.raw_read().decode()
-        if not (f'E{self.SERIAL_ADDRESS}:>' in str_message and 'S-0-0390,7,R' in str_message):
-            logger.error('Drive did not repond as expeted to "S-0-0390,7,R".', f'{str_message}')
-            raise Exception('Drive did not repond as expeted to "S-0-0390,7,R".', f'{str_message}')
+        try:
+            byte_message = self.send_and_read('S-0-0390,7,R')
+        except Exception as e:
+            logger.exception('Communication error in send_and_read.')
+            raise e
         else:
-            # Crie uma lista com todos os códigos possíveis e então coloque um assert para verificar se o código lido está na lista.
-            _d_code = str_message.split('\r\n')[1]
-            self.diagnostic_code = _d_code
-            return _d_code
+            str_message = byte_message.decode()
+            if not (f'E{self.SERIAL_ADDRESS}:>' in str_message and 'S-0-0390,7,R' in str_message):
+                logger.error('Drive did not repond as expeted to "S-0-0390,7,R".', f'{str_message}')
+                raise Exception('Drive did not repond as expeted to "S-0-0390,7,R".', f'{str_message}')
+            else:
+                # Crie uma lista com todos os códigos possíveis e então coloque um assert para verificar se o código lido está na lista.
+                _d_code = str_message.split('\r\n')[1]
+                self.diagnostic_code = _d_code
+                return _d_code
 
     # Uma dúvida (p. 232 func. desc.): para liberar o freio são necessárias duas coisas, bit 13 igual a 1 na master control word & entrada analógica igual alta?
     def get_halten_status(self) -> tuple:
         '''Returns a tuple with Drive Halt and Drive Enable functions status: (halt, enable); 1 for enable, 0 for disable.'''
-        self.send('S-0-0134,7,R')
-        str_message = self.raw_read().decode()
-        if not (f'E{self.SERIAL_ADDRESS}:>' in str_message and 'S-0-0134,7,R' in str_message):
-            logger.error('Drive did not repond as expeted to "S-0-0134,7,R".', f'{str_message}')
-            raise Exception('Drive did not repond as expeted to "S-0-0134,7,R".', f'{str_message}')
+        try:
+            byte_message = self.send_and_read('S-0-0134,7,R')
+        except Exception as e:
+            logger.exception('Communication error in send_and_read.')
+            raise e
         else:
-            try:
-                drive_halt_status = int(str_message.split('\r\n')[1][13])
-            except ValueError as e:
-                logger.exception('Error while evaluating drive halt status bit.')
-                raise e
+            str_message = byte_message.decode()
+            if not (f'E{self.SERIAL_ADDRESS}:>' in str_message and 'S-0-0134,7,R' in str_message):
+                logger.error('Drive did not repond as expeted to "S-0-0134,7,R".', f'{str_message}')
+                raise Exception('Drive did not repond as expeted to "S-0-0134,7,R".', f'{str_message}')
             else:
                 try:
-                    drive_enable_status = int(str_message.split('\r\n')[1][14])
+                    drive_halt_status = int(str_message.split('\r\n')[1][13])
                 except ValueError as e:
                     logger.exception('Error while evaluating drive halt status bit.')
                     raise e
                 else:
-                    self.halt_status, self.enable_status = (drive_halt_status, drive_enable_status)
-                    return(drive_halt_status, drive_enable_status)
+                    try:
+                        drive_enable_status = int(str_message.split('\r\n')[1][14])
+                    except ValueError as e:
+                        logger.exception('Error while evaluating drive halt status bit.')
+                        raise e
+                    else:
+                        self.halt_status, self.enable_status = (drive_halt_status, drive_enable_status)
+                        return(drive_halt_status, drive_enable_status)
 
     def get_target_position_reached(self) -> int:
         '''The message 'target position reached' is defined as a bit in the class 3 diagnostics. It is set when the position command value S-0-0047 given by the drive internal interpolator is equal to the target position S-0-0258.'''
-        self.send('S-0-0342,7,R')
-        str_message = self.raw_read().decode()
-        if not ('S-0-0342,7,R' in str_message):
-             logger.error('Drive did not respond as axpected to "S-0-0342,7,R".')
-             raise Exception('Drive did not respond as axpected to "S-0-0342,7,R".')
+        try:
+            byte_message = self.send_and_read('S-0-0342,7,R')
+        except Exception as e:
+            logger.exception('Communication error in send_and_read.')
+            raise e
         else:
-            targ_pos_reached_bit = str_message.split('\r\n')[1][0]
-            if not (targ_pos_reached_bit == '0' or targ_pos_reached_bit == '1'):
-                logger.error('Drive did not respond as axpected: targ_pos_reached bit is not 0 neither 1')
-                raise Exception('Drive did not respond as axpected: targ_pos_reached bit is not 0 neither 1')
-            self.target_position_reached = targ_pos_reached_bit
-            return int(targ_pos_reached_bit)
+            str_message = byte_message.decode()
+            if not ('S-0-0342,7,R' in str_message):
+                logger.error('Drive did not respond as axpected to "S-0-0342,7,R".')
+                raise Exception('Drive did not respond as axpected to "S-0-0342,7,R".')
+            else:
+                targ_pos_reached_bit = str_message.split('\r\n')[1][0]
+                if not (targ_pos_reached_bit == '0' or targ_pos_reached_bit == '1'):
+                    logger.error('Drive did not respond as axpected: targ_pos_reached bit is not 0 neither 1')
+                    raise Exception('Drive did not respond as axpected: targ_pos_reached bit is not 0 neither 1')
+                self.target_position_reached = targ_pos_reached_bit
+                return int(targ_pos_reached_bit)
 
     def set_target_position(self, target_position: float) -> float:
         '''Set drive target position.'''
         if not (self.LOWER_LIMIT <= target_position <= self.UPPER_LIMIT): raise ValueError('Target position out of limits.')
         else:
-            self.send('P-0-4006,7,W,>')
-            str_message = self.raw_read().decode()
-            if not 'P-0-4006,7,W,>' in str_message:
-                logger.error('Drive did not respond as axpected to "P-0-4006,7,W,>" request.')
-                raise Exception('Drive did not respond as axpected to "P-0-4006,7,W,>" request.')
-            self.send(f'{target_position}')
-            str_target_position_readback = self.raw_read().decode()
-            if not f'{target_position}' in str_target_position_readback:
-                logger.error('Intended target position not found in drive answer.')
-                raise Exception('Intended target position not found in drive answer.')
-            self.send('<')
-            str_message = self.raw_read().decode()
-            if not f'E{self.SERIAL_ADDRESS}' in str_message:
-                logger.error(f'Drive addres (E{self.SERIAL_ADDRESS}) was expcted in drive answer, but was not found.')
-                raise Exception(f'Drive addres (E{self.SERIAL_ADDRESS}) was expcted in drive answer, but was not found.')
-            target_position = float(str_target_position_readback.split('\r')[0])
-            return target_position
+            try:
+                byte_message = self.send_and_read('P-0-4006,7,W,>')
+            except Exception as e:
+                logger.exception('Communication error in send_and_read.')
+                raise e
+            else:
+                str_message = byte_message.decode()
+                if not 'P-0-4006,7,W,>' in str_message:
+                    logger.error('Drive did not respond as axpected to "P-0-4006,7,W,>" request.')
+                    raise Exception('Drive did not respond as axpected to "P-0-4006,7,W,>" request.')
+                else:
+                    try:
+                        byte_message = self.send_and_read(f'{target_position}')
+                    except Exception as e:
+                        logger.exception('Communication error in send_and_read.')
+                        raise e
+                    else:
+                        str_target_position_readback = byte_message.decode()
+                        if not f'{target_position}' in str_target_position_readback:
+                            logger.error('Intended target position not found in drive answer.')
+                            raise Exception('Intended target position not found in drive answer.')
+                        else:
+                            try:
+                                byte_message = self.send_and_read('<')
+                            except Exception as e:
+                                logger.exception('Communication error in send_and_read.')
+                                raise e
+                            else:
+                                self.send('<')
+                                str_message = self.raw_read().decode()
+                                if not f'E{self.SERIAL_ADDRESS}' in str_message:
+                                    logger.error(f'Drive addres (E{self.SERIAL_ADDRESS}) was expcted in drive answer, but was not found.')
+                                    raise Exception(f'Drive addres (E{self.SERIAL_ADDRESS}) was expcted in drive answer, but was not found.')
+                                else:
+                                    target_position = float(str_target_position_readback.split('\r')[0])
+                                    return target_position
 
     def get_target_position(self):
         try:
-            self.send('P-0-4006,7,R')
+            byte_message = self.send_and_read('P-0-4006,7,R')
         except Exception as e:
-            logger.exception('Error while trying to send "P-0-4006,7,R" message.')
+            logger.exception('Communication error in send_and_read.')
             raise e
         else:
-            str_message = self.raw_read().decode().replace('\r', '').split('\n')
+            str_message = byte_message.decode().replace('\r', '').split('\n')
             try:
                 target_position = float(str_message[1])
-            except ValueError:
+            except ValueError as e:
                 logger.exception('Error while trying to convert target position value received from drive.')
-            self.target_position = target_position
-            return target_position
+                raise e
+            else:
+                self.target_position = target_position
+                return target_position
 
     def start(self):
         pass
@@ -236,6 +283,8 @@ class EcoDrive():
 
 if __name__ == '__main__':
     eco_test = EcoDrive(address='21', baud_rate=constants.BAUD_RATE, max_limit=constants.MAXIMUM_GAP, min_limit=constants.MINIMUN_GAP, serial_port="/dev/pts/3")
-    # eco_test.connect()
-    # print(eco_test.get_target_position())
-    # # print(eco_test.diagnostic_code())
+    while True:
+        time.sleep(2)
+        print(eco_test.diagnostic_code)
+        print(eco_test.target_position)
+        # print(eco_test.diagnostic_code())

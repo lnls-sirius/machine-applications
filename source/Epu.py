@@ -1,27 +1,37 @@
 
+from curses import baudrate
 import threading, logging
 from . import constants, EcoDrive
 
 class Epu():
 
-    MAX_PHASE = 
+    BAUD_RATE=constants.BAUD_RATE
+    MAX_GAP = 300
+    MIN_GAP = 22
+    MAX_PHASE = +25
+    MIN_PHASE = -25
+    A_DRIVE_ADDRESS = constants.A_DRIVE_ADDRESS
+    B_DRIVE_ADDRESS = 22
+    I_DRIVE_ADDRESS = 11
+    S_DRIVE_ADDRESS = 12
 
-    def __init__(self, a_address, b_address, min_gap, max_gap, min_phase, max_phase):
+    def __init__(self, min_gap, max_gap, min_phase, max_phase):
 
         self.lock = threading.RLock()
 
-        self.a_drive = EcoDrive(address=a_address, min_limit=min_gap, max_limit=max_gap)
-        self.b_drive = EcoDrive(address=b_address, min_limit=min_gap, max_limit=max_gap)
-        self.i_drive = EcoDrive(address=a_address, min_limit=min_phase, max_limit=max_gap)
-        self.s_drive = EcoDrive(address=b_address, min_limit=min_phase, max_limit=max_gap)
+        self.a_drive = EcoDrive(address=self.A_DRIVE_ADDRESS, baudrate=self.BAUD_RATE,
+                        min_limit=self.MIN_GAP, max_limit=self.MAX_GAP)
+        self.b_drive = EcoDrive(address=constants.B_DRIVE_ADDRESS, min_limit=min_gap, max_limit=max_gap)
+        self.i_drive = EcoDrive(address=constants.I_DRIVE_ADDRESS, min_limit=min_phase, max_limit=max_gap)
+        self.s_drive = EcoDrive(address=constants.S_DRIVE_ADDRESS, min_limit=min_phase, max_limit=max_gap)
         
         self.MIN_GAP = min_gap
         self.MAX_GAP = max_gap
         self.MIN_PHASE = min_phase
         self.MAX_PHASE = max_phase
 
-        self.a_gap = self.a_drive.resolver_position()
-        self.a_status = self.a_drive.diagnostic_message()
+        self.a_gap = self.a_drive.resolver_position
+        self.a_status = self.a_drive.diagnostic_code
         self.a_target = self.a_drive.get_target_position()
         self.a_target_reached = self.a_drive.target_position_reached()
         self.a_halt, self.a_enable = self.a_drive.get_halten_status()
