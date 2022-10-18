@@ -43,7 +43,19 @@ class EPUSupport(pcaspy.Driver):
     def periodic(self):
         while True:
             self.eid.wait(globals.poll_interval)
-            pass
+            if (
+                self.getParam(
+                    _db.pv_drive_a_is_moving_mon) == globals.bool_yes
+                    or self.getParam(
+                        _db.pv_drive_b_is_moving_mon) == globals.bool_yes
+                    or self.getParam(
+                        _db.pv_drive_s_is_moving_mon) == globals.bool_yes
+                    or self.getParam(
+                        _db.pv_drive_i_is_moving_mon) == globals.bool_yes
+                    ):
+                self.setParam(_db.pv_is_moving_mon, globals.bool_yes)
+            else:
+                self.setParam(_db.pv_is_moving_mon, globals.bool_no)
     # EPICS write
     def write(self, reason, value):
         status = True
