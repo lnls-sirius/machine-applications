@@ -3,7 +3,7 @@ import threading
 import traceback
 import globals
 import epu_db as _db
-import SerialPortTests
+import Epu
 
 def isPvName(reason, pvname):
     """ This function is a wrapper to allow
@@ -31,7 +31,7 @@ class EPUSupport(pcaspy.Driver):
         # EPU driver will manage and control
         # main features of device operation
         try:
-            self.epu_driver = SerialPortTests.Epu()
+            self.epu_driver = Epu.Epu()
             print('Epu driver initialized')
         except Exception:
             print('Could not init epu driver')
@@ -85,12 +85,20 @@ class EPUSupport(pcaspy.Driver):
         elif isPvName(reason, _db.pv_change_gap_cmd):
             if _db.pv_allowed_change_gap_mon == globals.bool_yes:
                 status = self.asynExec(reason, globals.dummy)
+                # increment cmd pv
+                _db.pv_change_gap_cmd += 1
+                self.setParam(_db.pv_change_gap_cmd, value)
+                self.updatePVs()
             else:
                 status = False
         ## cmd to move and change phase
         elif isPvName(reason, _db.pv_change_phase_cmd):
             if _db.pv_allowed_change_phase_mon == globals.bool_yes:
                 status = self.asynExec(reason, globals.dummy)
+                # increment cmd pv
+                _db.pv_change_phase_cmd += 1
+                self.setParam(_db.pv_change_phase_cmd, value)
+                self.updatePVs()
             else:
                 status = False
         ## select to enable/disable A and B drives
@@ -135,6 +143,10 @@ class EPUSupport(pcaspy.Driver):
         elif isPvName(reason, _db.pv_enbl_and_release_ab_cmd):
             status = self.asynExec(reason, globals.dummy)
             if status:
+                # increment cmd pv
+                _db.pv_enbl_and_release_ab_cmd += 1
+                self.setParam(_db.pv_enbl_and_release_ab_cmd, value)
+                # update enbl and release pvs
                 self.setParam(_db.pv_enbl_ab_sel, globals.bool_yes)
                 self.setParam(_db.pv_release_ab_sel, globals.bool_yes)
                 self.updatePVs()
@@ -142,6 +154,10 @@ class EPUSupport(pcaspy.Driver):
         elif isPvName(reason, _db.pv_enbl_and_release_si_cmd):
             status = self.asynExec(reason, globals.dummy)
             if status:
+                # increment cmd pv
+                _db.pv_enbl_and_release_si_cmd += 1
+                self.setParam(_db.pv_enbl_and_release_si_cmd, value)
+                # update enbl and release pvs
                 self.setParam(_db.pv_enbl_si_sel, globals.bool_yes)
                 self.setParam(_db.pv_release_si_sel, globals.bool_yes)
                 self.updatePVs()
@@ -149,6 +165,10 @@ class EPUSupport(pcaspy.Driver):
         elif isPvName(reason, _db.pv_dsbl_and_halt_ab_cmd):
             status = self.asynExec(reason, globals.dummy)
             if status:
+                # increment cmd pv
+                _db.pv_dsbl_and_halt_ab_cmd += 1
+                self.setParam(_db.pv_dsbl_and_halt_ab_cmd, value)
+                # update enbl and release pvs
                 self.setParam(_db.pv_enbl_ab_sel, globals.bool_no)
                 self.setParam(_db.pv_release_ab_sel, globals.bool_no)
                 self.updatePVs()
@@ -156,6 +176,10 @@ class EPUSupport(pcaspy.Driver):
         elif isPvName(reason, _db.pv_dsbl_and_halt_si_cmd):
             status = self.asynExec(reason, globals.dummy)
             if status:
+                # increment cmd pv
+                _db.pv_dsbl_and_halt_si_cmd += 1
+                self.setParam(_db.pv_dsbl_and_halt_si_cmd, value)
+                # update enbl and release pvs
                 self.setParam(_db.pv_enbl_si_sel, globals.bool_no)
                 self.setParam(_db.pv_release_si_sel, globals.bool_no)
                 self.updatePVs()

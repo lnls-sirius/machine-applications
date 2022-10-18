@@ -159,6 +159,7 @@ pvdb = {
         'mdel' : -1,
         'asyn' : True,
         'asg' : 'default',
+        'value' : 0,
     },
     pv_change_phase_cmd : {
         'type' : 'int',
@@ -166,6 +167,7 @@ pvdb = {
         'mdel' : -1,
         'asyn' : True,
         'asg' : 'default',
+        'value' : 0,
     },
     pv_enbl_ab_sel : {
         'type' : 'enum',
@@ -245,6 +247,7 @@ pvdb = {
         'mdel' : -1,
         'asyn' : True,
         'asg' : 'default',
+        'value' : 0,
     },
     pv_enbl_and_release_si_cmd : {
         'type' : 'int',
@@ -252,6 +255,7 @@ pvdb = {
         'mdel' : -1,
         'asyn' : True,
         'asg' : 'default',
+        'value' : 0,
     },
     pv_dsbl_and_halt_ab_cmd : {
         'type' : 'int',
@@ -259,6 +263,7 @@ pvdb = {
         'mdel' : -1,
         'asyn' : True,
         'asg' : 'default',
+        'value' : 0,
     },
     pv_dsbl_and_halt_si_cmd : {
         'type' : 'int',
@@ -266,6 +271,7 @@ pvdb = {
         'mdel' : -1,
         'asyn' : True,
         'asg' : 'default',
+        'value' : 0,
     },
     #############################################
     # Drive A
