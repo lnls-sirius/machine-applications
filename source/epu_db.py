@@ -27,10 +27,10 @@ pv_release_ab_sel = 'ReleaseAB-Sel'
 pv_release_ab_sts = 'ReleaseAB-Sts'
 pv_release_si_sel = 'ReleaseSI-Sel'
 pv_release_si_sts = 'ReleaseSI-Sts'
-pv_enbl_and_release_ab_cmd = 'EnblAndReleaseAB-Cmd'
-pv_enbl_and_release_si_cmd = 'EnblAndReleaseSI-Cmd'
-pv_dsbl_and_halt_ab_cmd = 'DsblAndHaltAB-Cmd'
-pv_dsbl_and_halt_si_cmd = 'DsblAndHaltSI-Cmd'
+pv_enbl_and_release_ab_sel = 'EnblAndReleaseAB-Sel'
+pv_enbl_and_release_si_sel = 'EnblAndReleaseSI-Sel'
+pv_enbl_and_release_ab_sts = 'EnblAndReleaseAB-Sts'
+pv_enbl_and_release_si_sts = 'EnblAndReleaseSI-Sts'
 ## drive A
 pv_drive_a_resolver_pos_mon = 'DriveAResolverPos-Mon'
 pv_drive_a_encoder_pos_mon = 'DriveAEncoderPos-Mon'
@@ -241,37 +241,41 @@ pvdb = {
         'asyn' : False,
         'asg' : 'readonly',
     },
-    pv_enbl_and_release_ab_cmd : {
-        'type' : 'int',
+    pv_enbl_and_release_ab_sel : {
+        'type' : 'enum',
         'count' : 1,
+        'enums' : globals.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
         'mdel' : -1,
         'asyn' : True,
         'asg' : 'default',
-        'value' : 0,
     },
-    pv_enbl_and_release_si_cmd : {
-        'type' : 'int',
+    pv_enbl_and_release_si_sel : {
+        'type' : 'enum',
         'count' : 1,
+        'enums' : globals.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
         'mdel' : -1,
         'asyn' : True,
         'asg' : 'default',
-        'value' : 0,
     },
-    pv_dsbl_and_halt_ab_cmd : {
-        'type' : 'int',
+    pv_enbl_and_release_ab_sts : {
+        'type' : 'enum',
         'count' : 1,
+        'enums' : globals.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
         'mdel' : -1,
-        'asyn' : True,
+        'asyn' : False,
         'asg' : 'default',
-        'value' : 0,
     },
-    pv_dsbl_and_halt_si_cmd : {
-        'type' : 'int',
+    pv_enbl_and_release_si_sts : {
+        'type' : 'enum',
         'count' : 1,
+        'enums' : globals.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
         'mdel' : -1,
-        'asyn' : True,
+        'asyn' : False,
         'asg' : 'default',
-        'value' : 0,
     },
     #############################################
     # Drive A

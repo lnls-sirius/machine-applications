@@ -140,49 +140,31 @@ class EPUSupport(pcaspy.Driver):
             else:
                 status = False
         ## cmd to enable and release A and B drives
-        elif isPvName(reason, _db.pv_enbl_and_release_ab_cmd):
-            status = self.asynExec(reason, globals.dummy)
-            if status:
-                # increment cmd pv
-                _db.pv_enbl_and_release_ab_cmd += 1
-                self.setParam(_db.pv_enbl_and_release_ab_cmd, value)
-                # update enbl and release pvs
-                self.setParam(_db.pv_enbl_ab_sel, globals.bool_yes)
-                self.setParam(_db.pv_release_ab_sel, globals.bool_yes)
-                self.updatePVs()
+        elif isPvName(reason, _db.pv_enbl_and_release_ab_sel):
+            if isBoolNum(value):
+                status = self.asynExec(reason, globals.dummy, value)
+                if status:
+                    # update enbl and release pvs
+                    self.setParam(_db.pv_enbl_ab_sel, value)
+                    self.setParam(_db.pv_release_ab_sel, value)
+                    # update pv
+                    self.setParam(_db.pv_enbl_and_release_ab_sel, value)
+                    self.updatePVs()
+            else:
+                status = False
         ## cmd to enable and release S and I drives
-        elif isPvName(reason, _db.pv_enbl_and_release_si_cmd):
-            status = self.asynExec(reason, globals.dummy)
-            if status:
-                # increment cmd pv
-                _db.pv_enbl_and_release_si_cmd += 1
-                self.setParam(_db.pv_enbl_and_release_si_cmd, value)
-                # update enbl and release pvs
-                self.setParam(_db.pv_enbl_si_sel, globals.bool_yes)
-                self.setParam(_db.pv_release_si_sel, globals.bool_yes)
-                self.updatePVs()
-        ## cmd to disable and halt A and B drives
-        elif isPvName(reason, _db.pv_dsbl_and_halt_ab_cmd):
-            status = self.asynExec(reason, globals.dummy)
-            if status:
-                # increment cmd pv
-                _db.pv_dsbl_and_halt_ab_cmd += 1
-                self.setParam(_db.pv_dsbl_and_halt_ab_cmd, value)
-                # update enbl and release pvs
-                self.setParam(_db.pv_enbl_ab_sel, globals.bool_no)
-                self.setParam(_db.pv_release_ab_sel, globals.bool_no)
-                self.updatePVs()
-        ## cmd to disable and halt S and I drives
-        elif isPvName(reason, _db.pv_dsbl_and_halt_si_cmd):
-            status = self.asynExec(reason, globals.dummy)
-            if status:
-                # increment cmd pv
-                _db.pv_dsbl_and_halt_si_cmd += 1
-                self.setParam(_db.pv_dsbl_and_halt_si_cmd, value)
-                # update enbl and release pvs
-                self.setParam(_db.pv_enbl_si_sel, globals.bool_no)
-                self.setParam(_db.pv_release_si_sel, globals.bool_no)
-                self.updatePVs()
+        elif isPvName(reason, _db.pv_enbl_and_release_si_sel):
+            if isBoolNum(value):
+                status = self.asynExec(reason, globals.dummy, value)
+                if status:
+                    # update enbl and release pvs
+                    self.setParam(_db.pv_enbl_si_sel, value)
+                    self.setParam(_db.pv_release_si_sel, value)
+                    # update pv
+                    self.setParam(_db.pv_enbl_and_release_si_sel, value)
+                    self.updatePVs()
+            else:
+                status = False
         ## no match to pv names
         else:
             status = False
