@@ -86,8 +86,8 @@ class EPUSupport(pcaspy.Driver):
             if _db.pv_allowed_change_gap_mon == globals.bool_yes:
                 status = self.asynExec(reason, globals.dummy)
                 # increment cmd pv
-                _db.pv_change_gap_cmd += 1
-                self.setParam(_db.pv_change_gap_cmd, value)
+                old_value = self.getParam(_db.pv_change_gap_cmd)
+                self.setParam(_db.pv_change_gap_cmd, old_value+1)
                 self.updatePVs()
             else:
                 status = False
@@ -96,8 +96,8 @@ class EPUSupport(pcaspy.Driver):
             if _db.pv_allowed_change_phase_mon == globals.bool_yes:
                 status = self.asynExec(reason, globals.dummy)
                 # increment cmd pv
-                _db.pv_change_phase_cmd += 1
-                self.setParam(_db.pv_change_phase_cmd, value)
+                old_value = self.getParam(_db.pv_change_phase_cmd)
+                self.setParam(_db.pv_change_phase_cmd, old_value+1)
                 self.updatePVs()
             else:
                 status = False
