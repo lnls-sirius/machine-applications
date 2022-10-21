@@ -21,8 +21,12 @@ driver_update_rate = 0.2
 error_msg_arr_size = 10
 ### interval for reading from driver
 poll_interval = 0.1
+### tolerance for speed difference between drives
+speed_tol = 0.0
 ### IOC messages
 msg_device_busy = 'Cmd failed: Device is busy'
+msg_speed_tolerance_error = (
+    'Error: Inconsistent speed configuration between drives')
 
 ## EPICS record fields
 ### rec units string

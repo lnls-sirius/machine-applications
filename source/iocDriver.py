@@ -3,7 +3,7 @@ import threading
 import traceback
 import globals
 import epu_db as _db
-import SerialPortTests
+import Epu
 
 def isPvName(reason, pvname):
     """ This function is a wrapper to allow
@@ -19,6 +19,9 @@ def isBoolNum(value):
     """
     return value == 0 or value == 1
 
+def inTolerance(value1, value2, tol):
+    return abs(value1 - value2) <= tol
+
 class EPUSupport(pcaspy.Driver):
     """ EPU device support for the pcaspy server
     """
@@ -31,7 +34,7 @@ class EPUSupport(pcaspy.Driver):
         # EPU driver will manage and control
         # main features of device operation
         try:
-            self.epu_driver = SerialPortTests.Epu()
+            self.epu_driver = Epu.Epu()
             print('Epu driver initialized')
         except Exception:
             print('Could not init epu driver')
@@ -43,7 +46,46 @@ class EPUSupport(pcaspy.Driver):
     def periodic(self):
         while True:
             self.eid.wait(globals.poll_interval)
-            pass
+            # reset allowed to move status before periodic checks
+            self.setParam(_db.pv_allowed_change_gap_mon, globals.bool_yes)
+            self.setParam(_db.pv_allowed_change_phase_mon, globals.bool_yes)
+            # update speed pvs
+            if (
+                not inTolerance(
+                    self.epu_driver.a_speed,
+                    self.epu_driver.b_speed,
+                    globals.speed_tol)
+                    or not inTolerance(
+                    self.epu_driver.s_speed,
+                    self.epu_driver.i_speed,
+                    globals.speed_tol)
+                    ):
+                    # Speed inconsistency error
+                    self.setParam(_db.pv_allowed_change_gap_mon, globals.bool_no)
+                    self.setParam(_db.pv_allowed_change_phase_mon, globals.bool_no)
+                    self.setParam(_db.pv_ioc_msg_mon, globals.msg_speed_tolerance_error)
+            self.setParam(_db.pv_gap_velo_mon, self.epu_driver.a_speed)
+            self.setParam(_db.pv_phase_velo_mon, self.epu_driver.s_speed)
+            self.setParam(_db.pv_drive_a_velo_mon, self.epu_driver.a_speed)
+            self.setParam(_db.pv_drive_b_velo_mon, self.epu_driver.b_speed)
+            self.setParam(_db.pv_drive_s_velo_mon, self.epu_driver.s_speed)
+            self.setParam(_db.pv_drive_i_velo_mon, self.epu_driver.i_speed)
+            # update moving status
+            if (
+                self.getParam(
+                    _db.pv_drive_a_is_moving_mon) == globals.bool_yes
+                    or self.getParam(
+                        _db.pv_drive_b_is_moving_mon) == globals.bool_yes
+                    or self.getParam(
+                        _db.pv_drive_s_is_moving_mon) == globals.bool_yes
+                    or self.getParam(
+                        _db.pv_drive_i_is_moving_mon) == globals.bool_yes
+                    ):
+                self.setParam(_db.pv_is_moving_mon, globals.bool_yes)
+            else:
+                self.setParam(_db.pv_is_moving_mon, globals.bool_no)
+            # update read-only PVs
+            self.updatePVs()
     # EPICS write
     def write(self, reason, value):
         status = True
@@ -70,27 +112,24 @@ class EPUSupport(pcaspy.Driver):
                     self.updatePVs()
             else:
                 status = False
-        ## change velocity set point
-        elif isPvName(reason, _db.pv_velo_sp):
-            if (value >= globals.min_velo
-                    and value <= globals.max_velo
-                    ):
-                status = self.asynExec(reason, globals.dummy, value)
-                if status:
-                    self.setParam(_db.pv_velo_sp, value)
-                    self.updatePVs()
-            else:
-                status = False
         ## cmd to move and change gap
         elif isPvName(reason, _db.pv_change_gap_cmd):
             if _db.pv_allowed_change_gap_mon == globals.bool_yes:
                 status = self.asynExec(reason, globals.dummy)
+                # increment cmd pv
+                old_value = self.getParam(_db.pv_change_gap_cmd)
+                self.setParam(_db.pv_change_gap_cmd, old_value+1)
+                self.updatePVs()
             else:
                 status = False
         ## cmd to move and change phase
         elif isPvName(reason, _db.pv_change_phase_cmd):
             if _db.pv_allowed_change_phase_mon == globals.bool_yes:
                 status = self.asynExec(reason, globals.dummy)
+                # increment cmd pv
+                old_value = self.getParam(_db.pv_change_phase_cmd)
+                self.setParam(_db.pv_change_phase_cmd, old_value+1)
+                self.updatePVs()
             else:
                 status = False
         ## select to enable/disable A and B drives
@@ -132,33 +171,41 @@ class EPUSupport(pcaspy.Driver):
             else:
                 status = False
         ## cmd to enable and release A and B drives
-        elif isPvName(reason, _db.pv_enbl_and_release_ab_cmd):
-            status = self.asynExec(reason, globals.dummy)
-            if status:
-                self.setParam(_db.pv_enbl_ab_sel, globals.bool_yes)
-                self.setParam(_db.pv_release_ab_sel, globals.bool_yes)
-                self.updatePVs()
+        elif isPvName(reason, _db.pv_enbl_and_release_ab_sel):
+            if isBoolNum(value):
+                status = self.asynExec(reason, globals.dummy, value)
+                if status:
+                    # update enbl and release pvs
+                    self.setParam(_db.pv_enbl_ab_sel, value)
+                    self.setParam(_db.pv_release_ab_sel, value)
+                    # update pv
+                    self.setParam(_db.pv_enbl_and_release_ab_sel, value)
+                    self.updatePVs()
+            else:
+                status = False
         ## cmd to enable and release S and I drives
-        elif isPvName(reason, _db.pv_enbl_and_release_si_cmd):
+        elif isPvName(reason, _db.pv_enbl_and_release_si_sel):
+            if isBoolNum(value):
+                status = self.asynExec(reason, globals.dummy, value)
+                if status:
+                    # update enbl and release pvs
+                    self.setParam(_db.pv_enbl_si_sel, value)
+                    self.setParam(_db.pv_release_si_sel, value)
+                    # update pv
+                    self.setParam(_db.pv_enbl_and_release_si_sel, value)
+                    self.updatePVs()
+            else:
+                status = False
+        elif isPvName(reason, _db.pv_stop_cmd):
             status = self.asynExec(reason, globals.dummy)
-            if status:
-                self.setParam(_db.pv_enbl_si_sel, globals.bool_yes)
-                self.setParam(_db.pv_release_si_sel, globals.bool_yes)
-                self.updatePVs()
-        ## cmd to disable and halt A and B drives
-        elif isPvName(reason, _db.pv_dsbl_and_halt_ab_cmd):
-            status = self.asynExec(reason, globals.dummy)
-            if status:
-                self.setParam(_db.pv_enbl_ab_sel, globals.bool_no)
-                self.setParam(_db.pv_release_ab_sel, globals.bool_no)
-                self.updatePVs()
-        ## cmd to disable and halt S and I drives
-        elif isPvName(reason, _db.pv_dsbl_and_halt_si_cmd):
-            status = self.asynExec(reason, globals.dummy)
-            if status:
-                self.setParam(_db.pv_enbl_si_sel, globals.bool_no)
-                self.setParam(_db.pv_release_si_sel, globals.bool_no)
-                self.updatePVs()
+            # increment cmd pv
+            old_value = self.getParam(_db.pv_stop_cmd)
+            self.setParam(_db.pv_stop_cmd, old_value+1)
+            # halt motor drives
+            self.setParam(_db.pv_release_ab_sel, globals.bool_no)
+            self.setParam(_db.pv_release_si_sel, globals.bool_no)
+            # update pvs
+            self.updatePVs()
         ## no match to pv names
         else:
             status = False
