@@ -19,6 +19,9 @@ def isBoolNum(value):
     """
     return value == 0 or value == 1
 
+def inTolerance(value1, value2, tol):
+    return abs(value1 - value2) <= tol
+
 class EPUSupport(pcaspy.Driver):
     """ EPU device support for the pcaspy server
     """
@@ -43,6 +46,31 @@ class EPUSupport(pcaspy.Driver):
     def periodic(self):
         while True:
             self.eid.wait(globals.poll_interval)
+            # reset allowed to move status before periodic checks
+            self.setParam(_db.pv_allowed_change_gap_mon, globals.bool_yes)
+            self.setParam(_db.pv_allowed_change_phase_mon, globals.bool_yes)
+            # update speed pvs
+            if (
+                not inTolerance(
+                    self.epu_driver.a_speed,
+                    self.epu_driver.b_speed,
+                    globals.speed_tol)
+                    or not inTolerance(
+                    self.epu_driver.s_speed,
+                    self.epu_driver.i_speed,
+                    globals.speed_tol)
+                    ):
+                    # Speed inconsistency error
+                    self.setParam(_db.pv_allowed_change_gap_mon, globals.bool_no)
+                    self.setParam(_db.pv_allowed_change_phase_mon, globals.bool_no)
+                    self.setParam(_db.pv_ioc_msg_mon, globals.msg_speed_tolerance_error)
+            self.setParam(_db.pv_gap_velo_mon, self.epu_driver.a_speed)
+            self.setParam(_db.pv_phase_velo_mon, self.epu_driver.s_speed)
+            self.setParam(_db.pv_drive_a_velo_mon, self.epu_driver.a_speed)
+            self.setParam(_db.pv_drive_b_velo_mon, self.epu_driver.b_speed)
+            self.setParam(_db.pv_drive_s_velo_mon, self.epu_driver.s_speed)
+            self.setParam(_db.pv_drive_i_velo_mon, self.epu_driver.i_speed)
+            # update moving status
             if (
                 self.getParam(
                     _db.pv_drive_a_is_moving_mon) == globals.bool_yes
@@ -56,6 +84,8 @@ class EPUSupport(pcaspy.Driver):
                 self.setParam(_db.pv_is_moving_mon, globals.bool_yes)
             else:
                 self.setParam(_db.pv_is_moving_mon, globals.bool_no)
+            # update read-only PVs
+            self.updatePVs()
     # EPICS write
     def write(self, reason, value):
         status = True
@@ -79,17 +109,6 @@ class EPUSupport(pcaspy.Driver):
                 status = self.asynExec(reason, globals.dummy, value)
                 if status:
                     self.setParam(_db.pv_phase_sp, value)
-                    self.updatePVs()
-            else:
-                status = False
-        ## change velocity set point
-        elif isPvName(reason, _db.pv_velo_sp):
-            if (value >= globals.min_velo
-                    and value <= globals.max_velo
-                    ):
-                status = self.asynExec(reason, globals.dummy, value)
-                if status:
-                    self.setParam(_db.pv_velo_sp, value)
                     self.updatePVs()
             else:
                 status = False
