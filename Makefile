@@ -15,7 +15,6 @@ develop-install:
 	cd li-ap-energy; make develop-install
 	cd li-ps-conv; make develop-install
 	cd si-ap-fofb; make develop-install
-	cd si-ap-manaca; make develop-install
 	cd si-id-conv; make develop-install
 	cd si-ps-conv-fastcorrs; make develop-install
 
@@ -36,7 +35,6 @@ develop-uninstall:
 	cd li-ap-energy; make develop-uninstall
 	cd li-ps-conv; make develop-uninstall
 	cd si-ap-fofb; make develop-uninstall
-	cd si-ap-manaca; make develop-uninstall
 	cd si-id-conv; make develop-uninstall
 	cd si-ps-conv-fastcorrs; make develop-uninstall
 
@@ -57,7 +55,6 @@ install:
 	cd li-ap-energy; make install
 	cd li-ps-conv; make install
 	cd si-ap-fofb; make install
-	cd si-ap-manaca; make install
 	cd si-id-conv; make install
 	cd si-ps-conv-fastcorrs; make install
 
@@ -78,7 +75,6 @@ uninstall:
 	cd li-ap-energy; make uninstall
 	cd li-ps-conv; make uninstall
 	cd si-ap-fofb; make uninstall
-	cd si-ap-manaca; make uninstall
 	cd si-id-conv; make uninstall
 	cd si-ps-conv-fastcorrs; make uninstall
 
@@ -99,6 +95,5 @@ clean:
 	cd li-ap-energy; make clean
 	cd li-ps-conv; make clean
 	cd si-ap-fofb; make clean
-	cd si-ap-manaca; make clean
 	cd si-id-conv; make clean
 	cd si-ps-conv-fastcorrs; make clean
