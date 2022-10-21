@@ -11,6 +11,7 @@ pv_is_busy_mon = 'IsBusy-Mon'
 pv_ioc_msg_mon = 'Log-Mon'
 pv_gap_sp = 'Gap-SP'
 pv_gap_rb = 'Gap-RB'
+pv_gap_mon = 'Gap-Mon'
 pv_phase_sp = 'Phase-SP'
 pv_phase_rb = 'Phase-RB'
 pv_phase_mon = 'Phase-Mon'
@@ -33,6 +34,7 @@ pv_enbl_and_release_si_sel = 'EnblAndReleaseSI-Sel'
 pv_enbl_and_release_ab_sts = 'EnblAndReleaseAB-Sts'
 pv_enbl_and_release_si_sts = 'EnblAndReleaseSI-Sts'
 pv_is_moving_mon = 'Moving-Mon'
+pv_stop_cmd = 'Stop-Cmd'
 ## drive A
 pv_drive_a_resolver_pos_mon = 'DriveAResolverPos-Mon'
 pv_drive_a_encoder_pos_mon = 'DriveAEncoderPos-Mon'
@@ -101,6 +103,15 @@ pvdb = {
         'asyn' : False,
         'asg' : 'readonly',
     },
+    pv_gap_mon : {
+        'type' : 'float',
+        'prec' : globals.position_precision,
+        'count' : 1,
+        'unit' : globals.position_units,
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
     pv_phase_sp : {
         'type' : 'float',
         'prec' : globals.position_precision,
@@ -111,6 +122,15 @@ pvdb = {
         'asg' : 'default',
     },
     pv_phase_rb : {
+        'type' : 'float',
+        'prec' : globals.position_precision,
+        'count' : 1,
+        'unit' : globals.position_units,
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_phase_mon : {
         'type' : 'float',
         'prec' : globals.position_precision,
         'count' : 1,
@@ -278,6 +298,14 @@ pvdb = {
         'mdel' : -1,
         'asyn' : False,
         'asg' : 'default',
+    },
+    pv_stop_cmd : {
+        'type' : 'int',
+        'count' : 1,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+        'value' : 0,
     },
     #############################################
     # Drive A

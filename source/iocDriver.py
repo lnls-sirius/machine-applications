@@ -196,6 +196,16 @@ class EPUSupport(pcaspy.Driver):
                     self.updatePVs()
             else:
                 status = False
+        elif isPvName(reason, _db.pv_stop_cmd):
+            status = self.asynExec(reason, globals.dummy)
+            # increment cmd pv
+            old_value = self.getParam(_db.pv_stop_cmd)
+            self.setParam(_db.pv_stop_cmd, old_value+1)
+            # halt motor drives
+            self.setParam(_db.pv_release_ab_sel, globals.bool_no)
+            self.setParam(_db.pv_release_si_sel, globals.bool_no)
+            # update pvs
+            self.updatePVs()
         ## no match to pv names
         else:
             status = False
