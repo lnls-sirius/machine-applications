@@ -47,6 +47,7 @@ class EcoDrive():
         self.diagnostic_code = self.get_diagnostic_code()
         self.halt_status = self.get_halten_status()[0]
         self.enable_status = self.get_halten_status()[1]
+        self.start_status = 
         self.target_position = self.get_target_position()
         self.target_position_reached = self.get_target_position_reached()
         self.max_velocity = self.get_max_velocity()

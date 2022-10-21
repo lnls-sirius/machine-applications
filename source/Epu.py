@@ -53,35 +53,37 @@ class Epu():
         self.s_drive = EcoDrive(serial_port=self.SERIAL_PORT, address=self.S_DRIVE_ADDRESS,
                     baudrate=self.BAUD_RATE, min_limit=self.MINIMUM_PHASE, max_limit=self.MAXIMUM_PHASE)
 
-        self.a_resolver_gap = self.a_drive.resolver_position
+
+        self.a_resolver_gap = self.a_drive.get_resolver_position()
         self.a_encoder_gap = self.a_drive.endoder_position
-
-        self.b_resolver_gap = self.b_drive.resolver_position
+        self.b_resolver_gap = self.b_drive.get_resolver_position()
         self.b_encoder_gap = self.b_drive.endoder_position
-
-        self.i_resolver_phase = self.i_drive.resolver_position
+        self.i_resolver_phase = self.i_drive.get_resolver_position()
         self.i_resolver_phase = self.i_drive.endoder_position
-
-        self.s_resolver_gap = self.s_drive.resolver_position
+        self.s_resolver_gap = self.s_drive.get_resolver_position()
         self.s_encoder_gap = self.s_drive.endoder_position
+
+        self.gap = (self.a_encoder_gap + self.b_encoder_gap)/2
+        self.gap_halt_status = self.a_drive.get_halten_status()[0] and self.a_drive.get_halten_status()[0]
+        self.gap_enable_status = self.a_drive.get_halten_status()[1] and self.a_drive.get_halten_status()[1]
+        self.gap_setpoint = self.a_drive.get_target_position()
+        self.a_target_position = self.get_target_position()
+        self.a_target_position_reached = self.get_target_position_reached()
+        self.a_max_velocity = self.get_max_velocity()
+        self.soft_drive_message = ''
 
         self.update()
 
     @asynch
-    @schedule(1)
-    def update(self):
-        '''Updates class attributes. If used with schedule(x) decorator, updates class attributes once every x seconds. With asynch decorator, runs on a separated thread.'''
-        
-        self.a_resolver_gap = self.a_drive.resolver_position
+    @schedule(.05)
+    def update(self):      
+        self.a_resolver_gap = self.a_drive.get_resolver_position()
         self.a_encoder_gap = self.a_drive.endoder_position
-
-        self.b_resolver_gap = self.b_drive.resolver_position
+        self.b_resolver_gap = self.b_drive.get_resolver_position()
         self.b_encoder_gap = self.b_drive.endoder_position
-
-        self.i_resolver_phase = self.i_drive.resolver_position
+        self.i_resolver_phase = self.i_drive.get_resolver_position()
         self.i_resolver_phase = self.i_drive.endoder_position
-
-        self.s_resolver_gap = self.s_drive.resolver_position
+        self.s_resolver_gap = self.s_drive.get_resolver_position()
         self.s_encoder_gap = self.s_drive.endoder_position
 
     def set_gap(self, target_gap: float):
@@ -137,12 +139,20 @@ class Epu():
                         logger.error('Target position read is different from target position setted!')
                         return None
 
-    def start(self):
+    def enable_gap(self):
+        return
+    def release_gap_halt(self):
         pass
-    def release_halt(self):
+    def start_gap(self):
         pass
-    def enable(self):
+    
+    def enable_phase(self):
+        return
+    def release_phase_halt(self):
         pass
+    def start_phase(self):
+        pass
+        
 
 #teste = Epu(a_address=epu_config.drive_a_address, b_address=epu_config.drive_b_address,\
 #        min_gap=epu_config.min_gap, max_gap=epu_config.max_gap, min_phase=epu_config.min_phase, max_phase=epu_config.max_phase)
