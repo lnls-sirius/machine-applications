@@ -4,26 +4,22 @@ __author__ = "Rafael Cardoso e Andrei Pereira"
 __version__ = "0.0.1"
 
 from ast import Bytes
-from concurrent.futures import thread
 import threading
 import serial, time, yaml, logging
 import constants
-from functools import wraps
 from utils import *
 
-# If desired, the code returned by EcoDrive.get_status() can be used as index to the diag_messages dictionary, which returns the diagnostic message.
+# Deixe a classe EcoDrive independente de variáveis externas a ela.
 with open('../config/drive_messages.yaml', 'r') as f:
     diag_messages = yaml.safe_load(f)['diagnostic_messages']
-
-constants.BAUD_RATE
 
 logger = logging.getLogger('__name__')
 logging.basicConfig(filename='/tmp/EcoDrive.log', filemode='w', level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 
 class EcoDrive():
     '''Indramat ecodrive 3 class for RS232 communication using ASCII protocol based on functional description SMT-02VRS'''
-
-    def __init__(self, address, baud_rate, serial_port, max_limit, min_limit, ):
+    
+    def __init__(self, address, baud_rate, serial_port, max_limit, min_limit):
         self.SERIAL_PORT = serial_port
         self.SERIAL_ADDRESS = address
         self.BAUD_RATE = baud_rate
@@ -53,6 +49,8 @@ class EcoDrive():
         self.enable_status = self.get_halten_status()[1]
         self.target_position = self.get_target_position()
         self.target_position_reached = self.get_target_position_reached()
+        self.max_velocity = self.get_max_velocity()
+        self.soft_drive_message = ''
         self.update()
 
     @asynch
@@ -147,7 +145,6 @@ class EcoDrive():
                 raise Exception('Drive did not repond as expeted to "S-0-0051,7,R".', f'{str_message}')
             resolver_position = str_message.split('\r\n')[1]
             self.resolver_position = resolver_position
-            print("get_resolver_position was called")
             return float(resolver_position)
 
     def get_diagnostic_code(self) -> str:
@@ -163,10 +160,12 @@ class EcoDrive():
                 logger.error('Drive did not repond as expeted to "S-0-0390,7,R".', f'{str_message}')
                 raise Exception('Drive did not repond as expeted to "S-0-0390,7,R".', f'{str_message}')
             else:
+                diagnostic_codes = list(diag_messages.keys())
                 # Crie uma lista com todos os códigos possíveis e então coloque um assert para verificar se o código lido está na lista.
-                _d_code = str_message.split('\r\n')[1]
-                self.diagnostic_code = _d_code
-                return _d_code
+                _d_code = [code for code in diagnostic_codes if (code in str_message)]
+                assert len(_d_code) == 1
+                self.diagnostic_code = _d_code[0]
+                return _d_code[0]
 
     # Uma dúvida (p. 232 func. desc.): para liberar o freio são necessárias duas coisas, bit 13 igual a 1 na master control word & entrada analógica igual alta?
     def get_halten_status(self) -> tuple:
@@ -275,16 +274,73 @@ class EcoDrive():
                 self.target_position = target_position
                 return target_position
 
-    def start(self):
-        pass
+    def get_max_velocity(self):
+        try:
+            byte_message = self.send_and_read('P-0-4007,7,R')
+        except Exception as e:
+            logger.exception('Communication error in send_and_read.')
+            raise e
+        else:
+            str_message = byte_message.decode().replace('\r', '').split('\n')
+            try:
+                max_velocity = float(str_message[1])
+            except ValueError as e:
+                logger.exception('Error while trying to convert max velocity value received from drive.')
+                raise e
+            else:
+                self.max_velocity = max_velocity
+                return max_velocity
 
-    def halt(self):
-        pass
+    def enable(self):
+        if not self.enable_status:
+            if self.diagnostic_code == 'A012':
+                # send enable signal
+                pass
+            else:
+                logger.log(f'Enable signal not send due to diagnostic code {self.diagnostic_code}')
+                self.soft_drive_message = f'Enable signal not send due to diagnostic code {self.diagnostic_code}'
+        else:
+            logger.log('Enable signal not send due to: enable signal aready present.')
+            self.soft_drive_message = 'Enable signal not send due to: enable signal aready present.'
+
+    def release_halt(self):
+        if self.enable:
+            if not self.halt_status:
+                if self.diagnostic_code == 'A010':
+                    return
+                else:
+                    logger.log(f'Enable signal not send due to diagnostic code {self.diagnostic_code}')
+                    self.soft_drive_message = f'Enable signal not send due to diagnostic code {self.diagnostic_code}'
+                    return
+            else:
+                logger.log('Drive halt signal not send due to: drive halt signal aready present.')
+                self.soft_drive_message = 'Drive halt signal not send due to: drive halt signal aready present.'
+                return
+        else:
+            logger.log('Drive halt signal not send due to: enable signal not present.')
+            self.soft_drive_message = 'Drive halt signal not send due to: enable signal not present.'
+            return
+
+    def start(self):
+        if self.enable_status:
+            if self.halt_status:
+                if self.diagnostic_code == 'A211':
+                    # start movement.
+                    return
+                else:
+                    logger.log(f'Start signal not sent due to incorrect diagnostic code: {self.diagnostic_code}')
+                    self.soft_drive_message = f'Start signal not sent due to incorrect diagnostic code: {self.diagnostic_code}'
+                    return
+            else:
+                logger.log('Start signal not sent because halt was not released')
+                self.soft_drive_message = 'Start signal not sent because halt was not released'
+                return
+        else:
+            logger.log('Start signal not sent because enable signal is zero.')
+            self.soft_drive_message = 'Start signal not sent because enable signal is zero.'
+            return
 
 if __name__ == '__main__':
-    eco_test = EcoDrive(address='21', baud_rate=constants.BAUD_RATE, max_limit=constants.MAXIMUM_GAP, min_limit=constants.MINIMUN_GAP, serial_port="/dev/pts/3")
-    while True:
-        time.sleep(2)
-        print(eco_test.diagnostic_code)
-        print(eco_test.target_position)
-        # print(eco_test.diagnostic_code())
+    eco_test = EcoDrive(address='21', baud_rate=constants.BAUD_RATE, max_limit=constants.MAXIMUM_GAP, min_limit=constants.MINIMUN_GAP, serial_port="/dev/pts/6")
+    time.sleep(1)
+    print(eco_test.get_diagnostic_code())

@@ -1,9 +1,13 @@
 
 diagnostic_messages:
-  C204h: 'C204 - Motor type P-0-4014 incorrect'
-  F644h: 'F644 - Negative travel limit switch detected'
-  E834h: 'E834 - Emergency-Stop active'
-  A013h: 'A013 - Ready for power on'
+  C204: 'C204 - Motor type P-0-4014 incorrect'
+  F644: 'F644 - Negative travel limit switch detected'
+  E834: 'E834 - Emergency-Stop active'
+  A013: 'A013 (bb) - Ready for power on'
+  A012: 'A012 (Ab) - Power is switched on, power and control section are ready for operation'
+  A010: 'A010 (AH) - Drive Halt'
+  A211: 'A211 (AF) - Process block mode lagless, encoder 2'
+
 messages:
   0: 'P0'
   1: 'P1'
@@ -16,3 +20,4 @@ messages:
   208: 'JF'
   211: 'AF'
   400: 'AC'
+  401: 'AE'

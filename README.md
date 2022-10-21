@@ -32,5 +32,5 @@ Existe um número mágico na função send do drive. Ele é o tempo mínimo entr
 
 Se a serial falhar em qualquer momento, aborte.
 serial.read(100) -> se o buffer possuir 10 bytes, ele espera o timeout para saber que leu tudo?
-se uma excessão é levantada por uma função (f1), dentro de outra função (f2), quando uma função f3 chama a f1 e a f2 levanta a excessão, essa excessão pode ser tratada por f3?
 Tratar exceções da seguinte forma: caso ela ocorra, acione uma flag e tente repetir x vezes!
+Implementar função para solicitar lista cronológica de diagnósticos.

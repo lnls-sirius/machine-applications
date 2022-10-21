@@ -10,4 +10,5 @@ I_DRIVE_ADDRESS=21
 S_DRIVE_ADDRESS=21
 BAUD_RATE=19200
 
-LOG_FILE_PATH='epu_control.log'
+ECODRIVE_LOG_FILE_PATH='ecodrive_control.log'
+EPU_LOG_FILE_PATH='epu_control.log'
