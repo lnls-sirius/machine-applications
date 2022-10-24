@@ -34,7 +34,7 @@ class EPUSupport(pcaspy.Driver):
         # EPU driver will manage and control
         # main features of device operation
         try:
-            self.epu_driver = Epu.Epu()
+            self.epu_driver = Epu.Epu(self.priority_call)
             print('Epu driver initialized')
         except Exception:
             print('Could not init epu driver')
@@ -42,6 +42,18 @@ class EPUSupport(pcaspy.Driver):
         self.eid = threading.Event()
         self.tid_periodic = threading.Thread(target=self.periodic, daemon=True)
         self.tid_periodic.start()
+    # priority callback
+    def priority_call(self):
+        self.setParam(
+            _db.pv_drive_a_encoder_pos_mon, self.epu_driver.a_encoder_gap)
+        self.setParam(
+            _db.pv_drive_b_encoder_pos_mon, self.epu_driver.b_encoder_gap)
+        self.setParam(
+            _db.pv_drive_s_encoder_pos_mon, self.epu_driver.s_encoder_phase)
+        self.setParam(
+            _db.pv_drive_i_encoder_pos_mon, self.epu_driver.i_encoder_phase)
+        self.updatePVs()
+        pass
     # periodic function
     def periodic(self):
         while True:
