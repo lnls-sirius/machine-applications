@@ -1,16 +1,13 @@
 from urllib.request import install_opener
 import serial, time, threading, yaml
 from pcaspy import SimpleServer, Driver
+import constants
 
 # Quando for implementada a leitura do encoder externo, criar um método para calcular o desvio entre ele e o resolver
 # AFTER A E-STOP BECOME DESACTIVATED, THE EXTERNAL ENABLE INPUT MUST RECIEVE A 0-1 EDGE. 
 
 # Passar isso para TOML
-drive_address='21'
-baud_rate = 19200
 port="/dev/ttyUSB0"
-maximum_limit = 300
-minimum_limit = 22
 
 with open('drive_messages.yaml', 'r') as f:
     diag_messages = yaml.safe_load(f)['diagnostic_messages']
@@ -298,7 +295,7 @@ if __name__ == '__main__':
     server = SimpleServer()
 
 server.createPV(prefix, pvdb)
-driver = EcoDrive(serial_port=port, address=drive_address, baud_rate=baud_rate)
+driver = EcoDrive(serial_port=port, address=constants.drive_A_address, baud_rate=constants.baud_rate)
 
 while True:
     # process CA transactions
