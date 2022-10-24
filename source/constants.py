@@ -5,7 +5,7 @@ from typing import Optional
 
 ###########################################
 # Temporary global constants
-MINIMUN_GAP=+22
+MINIMUM_GAP=+22
 MAXIMUM_GAP=+300
 MINIMUM_PHASE=-25
 MAXIMUM_PHASE=+25
