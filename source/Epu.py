@@ -127,17 +127,55 @@ class Epu():
                         logger.error('Target position read is different from target position setted!')
                         return None
 
-    def enable_gap(self):
+    def enable_gap(self, option):
+        if option:
+            # enable
+            pass
+        else:
+            # disable
+            pass
         return
-    def release_gap_halt(self):
+    def release_gap_halt(self, option):
+        if option:
+            # release
+            pass
+        else:
+            # halt
+            pass
         pass
+    def enable_release_gap(self, option):
+        if option:
+            # enable and release
+            pass
+        else:
+            # disable and halt
+            pass
     def start_gap(self):
         pass
     
-    def enable_phase(self):
+    def enable_phase(self, option):
+        if option:
+            # enable
+            pass
+        else:
+            # disable
+            pass
         return
-    def release_phase_halt(self):
+    def release_phase_halt(self, option):
+        if option:
+            # release
+            pass
+        else:
+            # halt
+            pass
         pass
+    def enable_release_phase(self, option):
+        if option:
+            # enable and release
+            pass
+        else:
+            # disable and halt
+            pass
     def start_phase(self):
         pass
         
