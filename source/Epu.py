@@ -152,7 +152,6 @@ class Epu():
             pass
     def start_gap(self):
         pass
-    
     def enable_phase(self, option):
         if option:
             # enable
@@ -178,7 +177,8 @@ class Epu():
             pass
     def start_phase(self):
         pass
-        
+    def stop(self):
+        pass
 
 #teste = Epu(a_address=constants.drive_a_address, b_address=constants.drive_b_address,\
 #        min_gap=constants.min_gap, max_gap=constants.max_gap, min_phase=constants.min_phase, max_phase=constants.max_phase)
