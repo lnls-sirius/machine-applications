@@ -1,11 +1,14 @@
 import toml, logging, EcoDrive
 from pydantic import BaseModel
-from typing import Optional
 from utils import *
 
 logger = logging.getLogger('__name__')
-logging.basicConfig(filename='/tmp/EpuClass.log', filemode='w', level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+logging.basicConfig(filename='/tmp/EpuClass.log',
+    filemode='w', level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%d-%b-%y %H:%M:%S')
 
+# pydantic class for data validation
 class EpuConfig(BaseModel):
     MINIMUN_GAP: float
     MAXIMUM_GAP: float
@@ -20,7 +23,6 @@ class EpuConfig(BaseModel):
     ECODRIVE_LOG_FILE_PATH: str
     EPU_LOG_FILE_PATH: str
 
-# loads config data
 with open('../config/config.toml') as f:
     config = toml.load('../config/config.toml')
 epu_config = EpuConfig(**config['EPU2'])
@@ -123,6 +125,8 @@ class Epu():
     @asynch
     @schedule(.5)
     def update_1(self):
+
+        
         self.gap_target = self.a_target_position
         self.gap = (self.a_encoder_gap + self.b_encoder_gap)*.5
         self.gap_enable = self.a_enable and self.b_enable
@@ -315,7 +319,7 @@ class Epu():
         drive_s_max_velocity = self.s_drive.get_max_velocity()
         if drive_i_max_velocity == drive_s_max_velocity:
             drive_i_target_position = self.s_drive.get_encoder_position()
-            drive_i_target_position = self.s_drive.get_encoder_position()
+            drive_s_target_position = self.s_drive.get_encoder_position()
             if drive_i_target_position == drive_s_target_position:
                 return True
             else:

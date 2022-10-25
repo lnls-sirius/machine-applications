@@ -1,10 +1,8 @@
 from ast import Bytes
-import threading
-import serial, time, yaml, logging
-import constants
+import serial, time, yaml, logging, threading, toml
+from pydantic import BaseModel
 from utils import *
 
-# Deixe a classe EcoDrive independente de variáveis externas a ela.
 with open('../config/drive_messages.yaml', 'r') as f:
     diag_messages = yaml.safe_load(f)['diagnostic_messages']
 
@@ -15,10 +13,8 @@ logging.basicConfig(
     datefmt='%d-%b-%y %H:%M:%S')
 
 class EcoDrive():
-    '''Indramat ecodrive 3 class for RS232 communication using
-    ASCII protocol based on functional description SMT-02VRS'''
     
-    def __init__(self, address, baud_rate, serial_port, max_limit, min_limit):
+    def __init__(self, address, baud_rate, serial_port, max_limit, min_limit, drive_name='"Drive name"'):
         self.SERIAL_PORT = serial_port
         self.SERIAL_ADDRESS = address
         self.BAUD_RATE = baud_rate
@@ -28,49 +24,31 @@ class EcoDrive():
         self.connected = False
         self._lock = threading.Lock()
 
-        try:
-            self.ser = serial.Serial(
-                self.SERIAL_PORT, baudrate=self.BAUD_RATE,
-                timeout=.3, parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE)
-        except ValueError as e:
-            print(e)
-            logger.exception(
-                f'init(): Could not open serial port: {self.SERIAL_PORT}')
-            return
-        except serial.SerialException as e:
-            print(e)
-            logger.exception(
-                f'init(): Could no open serial port: {self.SERIAL_PORT}')
-            return
+        while not self.connected:
+            try:
+                self.ser = serial.Serial(
+                    self.SERIAL_PORT, baudrate=self.BAUD_RATE,
+                    timeout=.3, parity=serial.PARITY_NONE,
+                    stopbits=serial.STOPBITS_ONE)
+            except ValueError as e:
+                print(e)
+                logger.exception(
+                    f'init(): Could not open serial port: {self.SERIAL_PORT}')
+                return
+            except serial.SerialException as e:
+                print(e)
+                logger.exception(
+                    f'init(): Could no open serial port: {self.SERIAL_PORT}')
+                return
+            else:
+                try:
+                    self.connect()
+                    logger.log(f'Drive {drive_name} connected!')
+                    print(f'Drive {drive_name} connected!')
+                except Exception:
+                    pass
 
-
-        self.connect()
-        self.resolver_position = self.get_resolver_position()
-        self.encoder_position = None
-        self.diagnostic_code = self.get_diagnostic_code()
-        self.halt_status = self.get_halten_status()[0]
-        self.enable_status = self.get_halten_status()[1]
-        self.start_status = 
-        self.target_position = self.get_target_position()
-        self.target_position_reached = self.get_target_position_reached()
-        self.max_velocity = self.get_max_velocity()
         self.soft_drive_message = ''
-        self.update()
-
-    @asynch
-    @schedule(1)
-    def update(self):
-        '''Updates class attributes. If used with schedule(x) decorator,
-        updates class attributes once every x seconds. With asynch decorator,
-        runs on a separated thread.'''
-
-        self.get_resolver_position()
-        self.get_diagnostic_code()
-        self.get_halten_status()
-        self.get_halten_status()
-        self.get_target_position()
-        self.get_target_position_reached()
 
     def connect(self) -> None:
         if not self.ser.is_open:
@@ -145,8 +123,6 @@ class EcoDrive():
         else: return b''
 
     def get_resolver_position(self) -> float:
-        '''Get sresolver reading. Raises AssertError
-        if it answer don't match expected pattern.'''
         try:
             byte_message = self.send_and_read('S-0-0051,7,R')
         except Exception as e:
@@ -158,8 +134,21 @@ class EcoDrive():
                 logger.error('Drive did not repond as expeted to "S-0-0051,7,R".', f'{str_message}')
                 raise Exception('Drive did not repond as expeted to "S-0-0051,7,R".', f'{str_message}')
             resolver_position = str_message.split('\r\n')[1]
-            self.resolver_position = resolver_position
             return float(resolver_position)
+    
+    def get_encoder_position(self) -> float:
+        try:
+            byte_message = self.send_and_read('S-0-0053,7,R')
+        except Exception as e:
+            logger.exception('Communication error in send_and_read.')
+            raise e
+        else:
+            str_message = byte_message.decode()
+            if not (f'E{self.SERIAL_ADDRESS}:>' in str_message and 'S-0-0053,7,R' in str_message):
+                logger.error('Drive did not repond as expeted to "S-0-0053,7,R".', f'{str_message}')
+                raise Exception('Drive did not repond as expeted to "S-0-0053,7,R".', f'{str_message}')
+            encoder_position = str_message.split('\r\n')[1]
+            return float(encoder_position)
 
     def get_diagnostic_code(self) -> str:
         '''Gets the diagnostic message code of the drive. the same code
@@ -214,10 +203,6 @@ class EcoDrive():
                         return(drive_halt_status, drive_enable_status)
 
     def get_target_position_reached(self) -> int:
-        '''The message 'target position reached' is defined as a bit in
-        the class 3 diagnostics. It is set when the position command value
-        S-0-0047 given by the drive internal interpolator is equal to the
-        target position S-0-0258.'''
         try:
             byte_message = self.send_and_read('S-0-0342,7,R')
         except Exception as e:
@@ -239,7 +224,7 @@ class EcoDrive():
                 return int(targ_pos_reached_bit)
 
     def set_target_position(self, target_position: float) -> float:
-        '''Set drive target position.'''
+
         if not (
             self.LOWER_LIMIT <= target_position <= self.UPPER_LIMIT):
             raise ValueError('Target position out of limits.')
@@ -322,16 +307,37 @@ class EcoDrive():
             else:
                 self.max_velocity = max_velocity
                 return max_velocity
-                
+
     def get_movement_status(self):
         ''' If actual velocity is less than standstill window, the motor is considered in standstill'''
         # implement
         pass
+
+
 if __name__ == '__main__':
+    class EpuConfig(BaseModel):
+        MINIMUN_GAP: float
+        MAXIMUM_GAP: float
+        MINIMUM_PHASE: float
+        MAXIMUM_PHASE: float
+        SERIAL_PORT: str
+        A_DRIVE_ADDRESS: int
+        B_DRIVE_ADDRESS: int
+        I_DRIVE_ADDRESS: int
+        S_DRIVE_ADDRESS: int
+        BAUD_RATE: int
+        ECODRIVE_LOG_FILE_PATH: str
+    EPU_LOG_FILE_PATH: str
+
+    with open('../config/config.toml') as f:
+        config = toml.load('../config/config.toml')
+    epu_config = EpuConfig(**config['EPU2'])
+
     eco_test = EcoDrive(
-        address='21', baud_rate=constants.BAUD_RATE,
-        max_limit=constants.MAXIMUM_GAP,
-        min_limit=constants.MINIMUN_GAP,
-        serial_port="/dev/pts/6")
+            serial_port=epu_config.SERIAL_PORT,
+            address=epu_config.A_DRIVE_ADDRESS,
+            baud_rate=epu_config.BAUD_RATE,
+            min_limit=epu_config.MINIMUN_GAP,
+            max_limit=epu_config.MAXIMUM_GAP)
     time.sleep(1)
     print(eco_test.get_diagnostic_code())
