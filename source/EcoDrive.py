@@ -292,37 +292,6 @@ class EcoDrive():
                 self.max_velocity = max_velocity
                 return max_velocity
 
-    def enable(self):
-        if not self.enable_status:
-            if self.diagnostic_code == 'A012':
-                # send enable signal
-                pass
-            else:
-                logger.log(f'Enable signal not send due to diagnostic code {self.diagnostic_code}')
-                self.soft_drive_message = f'Enable signal not send due to diagnostic code {self.diagnostic_code}'
-        else:
-            logger.log('Enable signal not send due to: enable signal aready present.')
-            self.soft_drive_message = 'Enable signal not send due to: enable signal aready present.'
-
-    def release_halt(self):
-        if self.enable:
-            if not self.halt_status:
-                if self.diagnostic_code == 'A010':
-                    return
-                else:
-                    logger.log(f'Enable signal not send due to diagnostic code {self.diagnostic_code}')
-                    self.soft_drive_message = f'Enable signal not send due to diagnostic code {self.diagnostic_code}'
-                    return
-            else:
-                logger.log('Drive halt signal not send due to: drive halt signal aready present.')
-                self.soft_drive_message = 'Drive halt signal not send due to: drive halt signal aready present.'
-                return
-        else:
-            logger.log('Drive halt signal not send due to: enable signal not present.')
-            self.soft_drive_message = 'Drive halt signal not send due to: enable signal not present.'
-            return
-
-    def start(self):
         if self.enable_status:
             if self.halt_status:
                 if self.diagnostic_code == 'A211':
@@ -340,6 +309,11 @@ class EcoDrive():
             logger.log('Start signal not sent because enable signal is zero.')
             self.soft_drive_message = 'Start signal not sent because enable signal is zero.'
             return
+
+    def get_movement_status(self):
+        ''' If actual velocity is less than standstill window, the motor is considered in standstill'''
+        # implement
+        pass
 
 if __name__ == '__main__':
     eco_test = EcoDrive(address='21', baud_rate=constants.BAUD_RATE, max_limit=constants.MAXIMUM_GAP, min_limit=constants.MINIMUN_GAP, serial_port="/dev/pts/6")

@@ -1,10 +1,9 @@
 """EPU IOC package."""
 
-from . import globals
+from . import constants
 from . import epu_db
 from . import iocDriver
 from . import utils
-from . import constants
-from . import ecodrive-ioc
+from . import ecodrive_ioc
 from . import EcoDrive
 from . import Epu
