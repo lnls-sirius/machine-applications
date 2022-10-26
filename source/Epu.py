@@ -155,8 +155,8 @@ class Epu():
         self.b_encoder_gap = self.b_drive.endoder_position()
         self.i_resolver_phase = self.i_drive.get_resolver_position()
         self.i_resolver_phase = self.i_drive.endoder_position()
-        self.s_resolver_gap = self.s_drive.get_resolver_position()
-        self.s_encoder_gap = self.s_drive.endoder_position()
+        self.s_resolver_phase = self.s_drive.get_resolver_position()
+        self.s_encoder_phase = self.s_drive.endoder_position()
 
     # Gap stuff
 
