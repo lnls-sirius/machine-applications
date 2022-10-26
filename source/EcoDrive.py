@@ -1,7 +1,10 @@
 from ast import Bytes
-import serial, time, yaml, logging, threading, toml
+import serial, time, yaml, logging, threading, toml, socket
 from pydantic import BaseModel
 from utils import *
+
+HOST = '10.1.2.10'
+PORT = 9993
 
 with open('../config/drive_messages.yaml', 'r') as f:
     diag_messages = yaml.safe_load(f)['diagnostic_messages']
@@ -14,6 +17,8 @@ logging.basicConfig(
 
 class EcoDrive():
     
+    SOCKET_TIMEOUT = .1
+
     def __init__(self, address, baud_rate, serial_port, max_limit, min_limit, drive_name='"Drive name"'):
         self.SERIAL_PORT = serial_port
         self.SERIAL_ADDRESS = address
@@ -23,8 +28,12 @@ class EcoDrive():
         self.MAX_RESOLVER_ENCODER_DIFF = False
         self.connected = False
         self._lock = threading.Lock()
+        self.connect()
+
+
 
         while not self.connected:
+            break
             try:
                 self.ser = serial.Serial(
                     self.SERIAL_PORT, baudrate=self.BAUD_RATE,
@@ -50,7 +59,22 @@ class EcoDrive():
 
         self.soft_drive_message = ''
 
-    def connect(self) -> None:
+    def connect(self) -> bool:
+        try:
+            byte_message = self.send_and_read(f'BCD:{self.SERIAL_ADDRESS}')
+        except Exception:
+            logger.exception('Communication error in send_and_read.')
+        else:
+            str_message = byte_message.decode().split()
+            if not (f'E{self.SERIAL_ADDRESS}:>' in str_message[0]):
+                logger.error(
+                        f'Drive addres (E{self.SERIAL_ADDRESS}) was expcted in drive answer, but was not found.')
+                return False
+            else:
+                self.connected = True
+                return True
+
+    def serial_connect(self) -> None:
         if not self.ser.is_open:
             try:
                 self.ser.open()
@@ -75,13 +99,7 @@ class EcoDrive():
                     self.connected = True
                     return
 
-    def disconnect(self) -> None:
-        self.ser.is_open
-        self.ser.close()
-        self.connected = False
-        return
-
-    def send(self, message: str) -> None:
+    def serial_send(self, message: str) -> None:
         '''Send message to serial device. Returns None,
         raises SerialTimeoutException, SerialException or Exception.'''
         if self.ser.is_open:
@@ -104,13 +122,25 @@ class EcoDrive():
             logging.error('Serial closed while trying to send message.')
             raise Exception('Serial port not open.')
 
-    def send_and_read(self, message: str) -> Bytes:
+    def serial_send_and_read(self, message: str) -> Bytes:
         with self._lock:
-            self.send(message)
-            byte_encoded_message = self.raw_read()
+            self.serial_send(message)
+            byte_encoded_message = self.serial_read()
         return byte_encoded_message
 
-    def raw_read(self) -> Bytes:
+    def send_and_read(self, message: str) -> Bytes:
+        with self._lock:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(.1)
+                s.connect((HOST, PORT))
+                s.sendall(f'{message}\r\n'.encode())
+                time.sleep(.05) # magic number!!!!
+                while True:
+                    data = s.recv(1024)
+                    if not data: break
+                    return data
+                
+    def serial_read(self) -> Bytes:
         if self.ser.in_waiting:
             try:
                 tmp = self.ser.read(self.ser.in_waiting)
@@ -308,10 +338,25 @@ class EcoDrive():
                 self.max_velocity = max_velocity
                 return max_velocity
 
+    ### FALTA TRATAR A MENSAGEM
     def get_movement_status(self):
         ''' If actual velocity is less than standstill window, the motor is considered in standstill'''
-        # implement
-        pass
+        try:
+            byte_message = self.send_and_read('P-0-0013,7,R')
+        except Exception as e:
+            logger.exception('Communication error in send_and_read.')
+            raise e
+        else:
+            str_message = byte_message.decode().replace('\r', '').split('\n')
+            try:
+                max_velocity = float(str_message[1])
+            except ValueError as e:
+                logger.exception(
+                    'Error while trying to convert max velocity value received from drive.')
+                raise e
+            else:
+                self.max_velocity = max_velocity
+                return max_velocity
 
 
 if __name__ == '__main__':
@@ -340,4 +385,7 @@ if __name__ == '__main__':
             min_limit=epu_config.MINIMUN_GAP,
             max_limit=epu_config.MAXIMUM_GAP)
     time.sleep(1)
-    print(eco_test.get_diagnostic_code())
+    while True:
+        m = input(str("Mensagem: "))
+        #time.sleep(1)
+        print(eco_test.send_and_read(m))

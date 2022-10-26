@@ -36,25 +36,27 @@ class Epu():
             address=epu_config.A_DRIVE_ADDRESS,
             baudrate=epu_config.BAUD_RATE,
             min_limit=epu_config.MINIMUN_GAP,
-            max_limit=epu_config.MAXIMUM_GAP)
+            max_limit=epu_config.MAXIMUM_GAP, drive_name='A')
         self.b_drive = EcoDrive(
             serial_port=epu_config.SERIAL_PORT,
             address=epu_config.B_DRIVE_ADDRESS,
             baudrate=epu_config.BAUD_RATE,
             min_limit=epu_config.MINIMUN_GAP,
-            max_limit=epu_config.MAXIMUM_GAP)
+            max_limit=epu_config.MAXIMUM_GAP, drive_name='B')
         self.i_drive = EcoDrive(
             serial_port=epu_config.SERIAL_PORT,
             address=epu_config.I_DRIVE_ADDRESS,
             baudrate=epu_config.BAUD_RATE,
             min_limit=epu_config.MINIMUM_PHASE,
-            max_limit=epu_config.MAXIMUM_PHASE)
+            max_limit=epu_config.MAXIMUM_PHASE, drive_name='I')
         self.s_drive = EcoDrive(
             serial_port=epu_config.SERIAL_PORT,
             address=epu_config.S_DRIVE_ADDRESS,
             baudrate=epu_config.BAUD_RATE,
             min_limit=epu_config.MINIMUM_PHASE,
-            max_limit=epu_config.MAXIMUM_PHASE)
+            max_limit=epu_config.MAXIMUM_PHASE, drive_name='S')
+
+        self.MAX_POSITION_DIFF = 1
 
         # drive a variables
         self.a_resolver_gap = self.a_drive.get_resolver_position()
@@ -111,6 +113,10 @@ class Epu():
         self.phase = (self.i_encoder_phase + self.s_encoder_phase)*.5
         self.gap_halt_released = 0
         self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
+        self.res_position_diff = self.a_drive.get_resolver_position() - self.b_drive.get_resolver_position()
+        self.enc_position_diff = self.a_drive.get_encoder_position() - self.b_drive.encoder_position()
+        self.gap_change_allowed = self.allowed_gap_change()
+        self.gap_is_moving = self.a_is_moving or self.b_is_moving
         # undulator phase variables
         self.phase_target = self.i_target_position
         self.phase = (self.i_encoder_phase + self.s_encoder_phase)*.5
@@ -118,6 +124,9 @@ class Epu():
         self.phase_enable = 0
         self.phase_halt_released = 0
         self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
+        self.res_position_diff = self.i_drive.get_resolver_position() - self.s_drive.get_resolver_position()
+        self.enc_position_diff = self.i_drive.get_encoder_position() - self.s_drive.encoder_position()
+        self.phase_change_allowed = self.allowed_phase_change()
 
         self.update_1()
 
@@ -125,8 +134,6 @@ class Epu():
     @asynch
     @schedule(.5)
     def update_1(self):
-
-        
         self.gap_target = self.a_target_position
         self.gap = (self.a_encoder_gap + self.b_encoder_gap)*.5
         self.gap_enable = self.a_enable and self.b_enable
@@ -236,7 +243,7 @@ class Epu():
             logger.warning('Movement not allowed. Drives A and B have different maximum velocities.')
             return False
 
-    def gap_start(self) -> bool:
+    def gap_start(self, value: int) -> bool:
         if self.gap_check_for_move():
             # start
             return True
@@ -244,6 +251,13 @@ class Epu():
             logger.error('Gap movement not started because one or more conditions have not been met. Check log for more information.')
             return False
 
+    def allowed_gap_change(self) -> bool:
+        if self.a_drive.target_position() != self.b_drive.target_position():
+            return False
+        elif self.a_drive.max_velocity() != self.a_drive.max_velocity():
+            return False
+        else: return True
+        
     # Phase stuff
 
     def phase_get_setpoint(self) -> float:
@@ -329,10 +343,17 @@ class Epu():
             logger.warning('Movement not allowed. Drives I and S have different maximum velocities.')
             return False
 
-    def phase_start(self) -> bool:
+    def phase_start(self, value: int) -> bool:
         if self.phase_check_for_move():
             # start
             return True
         else:
             logger.error('Phase movement not started because one or more conditions have not been met. Check log for more information.')
             return False
+
+    def allowed_phase_change(self) -> bool:
+            if self.i_drive.target_position() != self.s_drive.target_position():
+                return False
+            elif self.i_drive.max_velocity() != self.s_drive.max_velocity():
+                return False
+            else: return True
