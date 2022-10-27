@@ -24,6 +24,7 @@ def asynch(func):
         return func_hl
     return async_func
 
+#https://realpython.com/primer-on-python-decorators/
 def timer(func):
     """Print the runtime of the decorated function"""
     @wraps(func)

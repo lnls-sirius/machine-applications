@@ -1,4 +1,5 @@
-import toml, logging, EcoDrive
+import toml, logging, threading
+from EcoDrive import EcoDrive
 from pydantic import BaseModel
 from utils import *
 
@@ -34,33 +35,36 @@ class Epu():
         self.a_drive = EcoDrive(
             serial_port=epu_config.SERIAL_PORT,
             address=epu_config.A_DRIVE_ADDRESS,
-            baudrate=epu_config.BAUD_RATE,
+            baud_rate=epu_config.BAUD_RATE,
             min_limit=epu_config.MINIMUN_GAP,
-            max_limit=epu_config.MAXIMUM_GAP, drive_name='A')
+            max_limit=epu_config.MAXIMUM_GAP)
         self.b_drive = EcoDrive(
             serial_port=epu_config.SERIAL_PORT,
             address=epu_config.B_DRIVE_ADDRESS,
-            baudrate=epu_config.BAUD_RATE,
+            baud_rate=epu_config.BAUD_RATE,
             min_limit=epu_config.MINIMUN_GAP,
-            max_limit=epu_config.MAXIMUM_GAP, drive_name='B')
+            max_limit=epu_config.MAXIMUM_GAP)
         self.i_drive = EcoDrive(
             serial_port=epu_config.SERIAL_PORT,
             address=epu_config.I_DRIVE_ADDRESS,
-            baudrate=epu_config.BAUD_RATE,
+            baud_rate=epu_config.BAUD_RATE,
             min_limit=epu_config.MINIMUM_PHASE,
-            max_limit=epu_config.MAXIMUM_PHASE, drive_name='I')
+            max_limit=epu_config.MAXIMUM_PHASE)
         self.s_drive = EcoDrive(
             serial_port=epu_config.SERIAL_PORT,
             address=epu_config.S_DRIVE_ADDRESS,
-            baudrate=epu_config.BAUD_RATE,
+            baud_rate=epu_config.BAUD_RATE,
             min_limit=epu_config.MINIMUM_PHASE,
-            max_limit=epu_config.MAXIMUM_PHASE, drive_name='S')
+            max_limit=epu_config.MAXIMUM_PHASE)
+
+        print('opa')
+        self._epu_lock = threading.RLock()
 
         self.MAX_POSITION_DIFF = 1
 
         # drive a variables
         self.a_resolver_gap = self.a_drive.get_resolver_position()
-        self.a_encoder_gap = self.a_drive.get_endoder_position()
+        self.a_encoder_gap = self.a_drive.get_encoder_position()
         self.a_halt_released = not self.a_drive.get_halten_status()[0]
         self.a_enable = not self.a_drive.get_halten_status()[1]
         self.a_target_position = self.a_drive.get_target_position()
@@ -71,7 +75,7 @@ class Epu():
         self.a_is_moving = self.a_drive.get_movement_status()
         # drive b variables
         self.b_resolver_gap = self.b_drive.get_resolver_position()
-        self.b_encoder_gap = self.b_drive.get_endoder_position()
+        self.b_encoder_gap = self.b_drive.get_encoder_position()
         self.b_halt_released = not self.b_drive.get_halten_status()[0]
         self.b_enable = not self.b_drive.get_halten_status()[1]
         self.b_target_position = self.b_drive.get_target_position()
@@ -82,7 +86,7 @@ class Epu():
         self.b_is_moving = self.b_drive.get_movement_status()
         # drive i variables
         self.i_resolver_phase = self.i_drive.get_resolver_position()
-        self.i_encoder_phase = self.i_drive.get_endoder_position()
+        self.i_encoder_phase = self.i_drive.get_encoder_position()
         self.i_halt_released = not self.i_drive.get_halten_status()[0]
         self.i_enable = not self.i_drive.get_halten_status()[1]
         self.i_target_position = self.i_drive.get_target_position()
@@ -93,7 +97,7 @@ class Epu():
         self.i_is_moving = self.i_drive.get_movement_status()
         # drive s variables
         self.s_resolver_phase = self.s_drive.get_resolver_position()
-        self.s_encoder_phase = self.s_drive.get_endoder_position()
+        self.s_encoder_phase = self.s_drive.get_encoder_position()
         self.s_halt_released = not self.s_drive.get_halten_status()[0]
         self.s_enable = not self.s_drive.get_halten_status()[1]
         self.s_target_position = self.s_drive.get_target_position()
@@ -102,7 +106,7 @@ class Epu():
         self.s_act_velocity = self.a_drive.get_act_velocity()
         self.s_diag_code = self.s_drive.get_diagnostic_code()
         self.s_is_moving = self.s_drive.get_movement_status()
-        # undulator status
+        #undulator status
         self.is_moving = self.a_is_moving or self.b_is_moving or self.i_is_moving or self.s_is_moving
         self.soft_message = ''
         # undulator gap variables
@@ -129,34 +133,90 @@ class Epu():
         self.phase_change_allowed = self.allowed_phase_change()
 
         self.update_1()
+        self.update_2()
 
 
     @asynch
-    @schedule(.5)
+    @schedule(5)
+    @timer
     def update_1(self):
-        self.gap_target = self.a_target_position
-        self.gap = (self.a_encoder_gap + self.b_encoder_gap)*.5
-        self.gap_enable = self.a_enable and self.b_enable
-        self.gap_halt_released = self.a_halt_released and self.b_halt_released
-        self.gap_enable_and_halt_released = self.gap_enable_and_halt_released and self.gap_halt_released
+        try:
+            # drive a
+            self.a_resolver_gap = self.a_drive.get_resolver_position()
+            # self.a_encoder_gap = self.a_drive.get_encoder_position()
+            self.a_halt_released = not self.a_drive.get_halten_status()[0]
+            self.a_enable = not self.a_drive.get_halten_status()[1]
+            self.a_target_position = self.a_drive.get_target_position()
+            self.a_target_position_reached = self.a_drive.get_target_position_reached()
+            # self.a_max_velocity = self.a_drive.get_max_velocity()
+            self.a_act_velocity = self.a_drive.get_act_velocity()
+            # self.a_diag_code = self.a_drive.get_diagnostic_code()
+            self.a_is_moving = self.a_drive.get_movement_status()
 
-        self.phase_target = (self.i_target_position + self.s_target_position)*.5
-        self.phase = self.i_encoder_phase
-        self.phase_enable = self.i_enable and self.s_enable
-        self.phase_halt_released = self.i_halt_released and self.s_halt_released
-        self.phase_enable_and_halt_released = self.phase_enable_and_halt_released and self.phase_halt_released
+            # drive b
+            self.b_resolver_gap = self.b_drive.get_resolver_position()
+            # self.b_encoder_gap = self.b_drive.get_encoder_position()
+            self.b_halt_released = not self.b_drive.get_halten_status()[0]
+            self.b_enable = not self.b_drive.get_halten_status()[1]
+            self.b_target_position = self.b_drive.get_target_position()
+            self.b_target_position_reached = self.b_drive.get_target_position_reached()
+            # self.b_max_velocity = self.b_drive.get_max_velocity()
+            self.b_act_velocity = self.a_drive.get_act_velocity()
+            # self.b_diag_code = self.b_drive.get_diagnostic_code()
+            self.b_is_moving = self.b_drive.get_movement_status()
+
+            # drive i
+            self.i_resolver_phase = self.i_drive.get_resolver_position()
+            # self.i_encoder_phase = self.i_drive.get_encoder_position()
+            self.i_halt_released = not self.i_drive.get_halten_status()[0]
+            self.i_enable = not self.i_drive.get_halten_status()[1]
+            self.i_target_position = self.i_drive.get_target_position()
+            self.i_target_position_reached = self.i_drive.get_target_position_reached()
+            # self.i_max_velocity = self.i_drive.get_max_velocity()
+            self.i_act_velocity = self.a_drive.get_act_velocity()
+            # self.i_diag_code = self.i_drive.get_diagnostic_code()
+            self.i_is_moving = self.i_drive.get_movement_status()
+
+            # drive s
+            self.s_resolver_phase = self.s_drive.get_resolver_position()
+            # self.s_encoder_phase = self.s_drive.get_encoder_position()
+            self.s_halt_released = not self.s_drive.get_halten_status()[0]
+            self.s_enable = not self.s_drive.get_halten_status()[1]
+            self.s_target_position = self.s_drive.get_target_position()
+            self.s_target_position_reached = self.s_drive.get_target_position_reached()
+            # self.s_max_velocity = self.s_drive.get_max_velocity()
+            self.s_act_velocity = self.a_drive.get_act_velocity()
+            # self.s_diag_code = self.s_drive.get_diagnostic_code()
+            self.s_is_moving = self.s_drive.get_movement_status()
+
+            # # gap
+            self.gap_enable = self.a_enable and self.b_enable
+            self.gap_halt_released = self.a_halt_released and self.b_halt_released
+            self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
+            # # phase
+            self.phase_enable = self.i_enable and self.s_enable
+            self.phase_halt_released = self.i_halt_released and self.s_halt_released
+            self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
+        except Exception:
+            logger.exception('Could not update_1.')
+            print('Exception raised.')
 
     @asynch
     @schedule(.5)
-    def update_1(self):      
-        self.a_resolver_gap = self.a_drive.get_resolver_position()
-        self.a_encoder_gap = self.a_drive.endoder_position()
-        self.b_resolver_gap = self.b_drive.get_resolver_position()
-        self.b_encoder_gap = self.b_drive.endoder_position()
-        self.i_resolver_phase = self.i_drive.get_resolver_position()
-        self.i_resolver_phase = self.i_drive.endoder_position()
-        self.s_resolver_phase = self.s_drive.get_resolver_position()
-        self.s_encoder_phase = self.s_drive.endoder_position()
+    @timer
+    def update_2(self):
+        with self._epu_lock:
+            try:    
+                self.a_encoder_gap = self.a_drive.get_encoder_position()
+                self.b_encoder_gap = self.b_drive.get_encoder_position()
+                self.gap = (self.a_encoder_gap + self.b_encoder_gap)*.5
+                self.i_encoder_phase = self.i_drive.get_encoder_position()
+                self.s_encoder_phase = self.s_drive.get_encoder_position()
+                self.phase = (self.i_encoder_phase + self.s_encoder_phase)*.5
+                print('foi')
+            except:
+                logger.exception('Could not update encoder variables.')
+                print('Exception raised.')
 
     # Gap stuff
 
@@ -257,7 +317,10 @@ class Epu():
         elif self.a_drive.max_velocity() != self.a_drive.max_velocity():
             return False
         else: return True
-        
+    
+    def gap_stop(self):
+        self.gap_release_halt(0)
+    
     # Phase stuff
 
     def phase_get_setpoint(self) -> float:
@@ -357,3 +420,6 @@ class Epu():
             elif self.i_drive.max_velocity() != self.s_drive.max_velocity():
                 return False
             else: return True
+    
+    def phase_stop(self):
+        self.phase_release_halt(0)

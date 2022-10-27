@@ -3,7 +3,7 @@ import serial, time, yaml, logging, threading, toml, socket
 from pydantic import BaseModel
 from utils import *
 
-HOST = '10.1.2.10'
+HOST = '10.0.28.100'
 PORT = 9993
 
 with open('../config/drive_messages.yaml', 'r') as f:
@@ -18,6 +18,7 @@ logging.basicConfig(
 class EcoDrive():
     
     SOCKET_TIMEOUT = .1
+    _lock = threading.RLock()
 
     def __init__(self, address, baud_rate, serial_port, max_limit, min_limit, drive_name='"Drive name"'):
         self.SERIAL_PORT = serial_port
@@ -27,8 +28,7 @@ class EcoDrive():
         self.LOWER_LIMIT = min_limit
         self.MAX_RESOLVER_ENCODER_DIFF = False
         self.connected = False
-        self._lock = threading.Lock()
-        self.connect()
+        #self.connect()
 
 
 
@@ -133,10 +133,15 @@ class EcoDrive():
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(.1)
                 s.connect((HOST, PORT))
+                s.sendall(f'BCD:{self.SERIAL_ADDRESS}\r\n'.encode())
+                time.sleep(.03) # magic number!!!!
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(.1)
+                s.connect((HOST, PORT))
                 s.sendall(f'{message}\r\n'.encode())
-                time.sleep(.05) # magic number!!!!
+                time.sleep(.07) # magic number!!!!
                 while True:
-                    data = s.recv(1024)
+                    data = s.recv(128)
                     if not data: break
                     return data
                 
@@ -338,7 +343,24 @@ class EcoDrive():
                 self.max_velocity = max_velocity
                 return max_velocity
 
-    ### FALTA TRATAR A MENSAGEM
+    def get_act_velocity(self):
+        try:
+            byte_message = self.send_and_read('S-0-0040,7,R')
+        except Exception as e:
+            logger.exception('Communication error in send_and_read.')
+            raise e
+        else:
+            str_message = byte_message.decode().replace('\r', '').split('\n')
+            try:
+                act_velocity = float(str_message[1])
+            except ValueError as e:
+                logger.exception(
+                    'Error while trying to convert max velocity value received from drive.')
+                raise e
+            else:
+                self.act_velocity = act_velocity
+                return act_velocity
+
     def get_movement_status(self):
         ''' If actual velocity is less than standstill window, the motor is considered in standstill'''
         try:
@@ -349,41 +371,41 @@ class EcoDrive():
         else:
             str_message = byte_message.decode().replace('\r', '').split('\n')
             try:
-                max_velocity = float(str_message[1])
+                is_moving = int(str_message[1][1])
             except ValueError as e:
                 logger.exception(
                     'Error while trying to convert max velocity value received from drive.')
                 raise e
             else:
-                self.max_velocity = max_velocity
-                return max_velocity
+                return is_moving
 
 
-if __name__ == '__main__':
-    class EpuConfig(BaseModel):
-        MINIMUN_GAP: float
-        MAXIMUM_GAP: float
-        MINIMUM_PHASE: float
-        MAXIMUM_PHASE: float
-        SERIAL_PORT: str
-        A_DRIVE_ADDRESS: int
-        B_DRIVE_ADDRESS: int
-        I_DRIVE_ADDRESS: int
-        S_DRIVE_ADDRESS: int
-        BAUD_RATE: int
-        ECODRIVE_LOG_FILE_PATH: str
+
+class EpuConfig(BaseModel):
+    MINIMUN_GAP: float
+    MAXIMUM_GAP: float
+    MINIMUM_PHASE: float
+    MAXIMUM_PHASE: float
+    SERIAL_PORT: str
+    A_DRIVE_ADDRESS: int
+    B_DRIVE_ADDRESS: int
+    I_DRIVE_ADDRESS: int
+    S_DRIVE_ADDRESS: int
+    BAUD_RATE: int
+    ECODRIVE_LOG_FILE_PATH: str
     EPU_LOG_FILE_PATH: str
 
-    with open('../config/config.toml') as f:
-        config = toml.load('../config/config.toml')
-    epu_config = EpuConfig(**config['EPU2'])
+with open('../config/config.toml') as f:
+    config = toml.load('../config/config.toml')
+epu_config = EpuConfig(**config['EPU2'])
 
-    eco_test = EcoDrive(
-            serial_port=epu_config.SERIAL_PORT,
-            address=epu_config.A_DRIVE_ADDRESS,
-            baud_rate=epu_config.BAUD_RATE,
-            min_limit=epu_config.MINIMUN_GAP,
-            max_limit=epu_config.MAXIMUM_GAP)
+eco_test = EcoDrive(
+        serial_port=epu_config.SERIAL_PORT,
+        address=11,
+        baud_rate=epu_config.BAUD_RATE,
+        min_limit=epu_config.MINIMUN_GAP,
+        max_limit=epu_config.MAXIMUM_GAP)
+if __name__ == '__main__':
     time.sleep(1)
     while True:
         m = input(str("Mensagem: "))
