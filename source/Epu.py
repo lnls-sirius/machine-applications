@@ -57,9 +57,7 @@ class Epu():
             min_limit=epu_config.MINIMUM_PHASE,
             max_limit=epu_config.MAXIMUM_PHASE)
 
-        print('opa')
         self._epu_lock = threading.RLock()
-
         self.MAX_POSITION_DIFF = 1
 
         # drive a variables
@@ -106,30 +104,32 @@ class Epu():
         self.s_act_velocity = self.a_drive.get_act_velocity()
         self.s_diag_code = self.s_drive.get_diagnostic_code()
         self.s_is_moving = self.s_drive.get_movement_status()
-        #undulator status
+
+        ##undulator status
         self.is_moving = self.a_is_moving or self.b_is_moving or self.i_is_moving or self.s_is_moving
         self.soft_message = ''
-        # undulator gap variables
+
+        ### undulator gap variables
         self.gap_target = self.a_target_position
         self.gap = (self.a_encoder_gap + self.b_encoder_gap)*.5
-        self.gap_velocity = (self.a_act_velocity + self.b_act_velocity)*.5
+        # self.gap_velocity = (self.a_act_velocity + self.b_act_velocity)*.5
         self.gap_enable = 0
         self.phase = (self.i_encoder_phase + self.s_encoder_phase)*.5
         self.gap_halt_released = 0
         self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
-        self.res_position_diff = self.a_drive.get_resolver_position() - self.b_drive.get_resolver_position()
-        self.enc_position_diff = self.a_drive.get_encoder_position() - self.b_drive.encoder_position()
+        self.gap_res_position_diff = self.a_resolver_gap - self.b_resolver_gap
+        self.gap_enc_position_diff = self.a_encoder_gap - self.b_encoder_gap
         self.gap_change_allowed = self.allowed_gap_change()
         self.gap_is_moving = self.a_is_moving or self.b_is_moving
-        # undulator phase variables
+        ### undulator phase variables
         self.phase_target = self.i_target_position
         self.phase = (self.i_encoder_phase + self.s_encoder_phase)*.5
-        self.phase_velocity = (self.i_act_velocity + self.s_act_velocity)*.5
+        #self.phase_velocity = (self.i_act_velocity + self.s_act_velocity)*.5
         self.phase_enable = 0
         self.phase_halt_released = 0
         self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
-        self.res_position_diff = self.i_drive.get_resolver_position() - self.s_drive.get_resolver_position()
-        self.enc_position_diff = self.i_drive.get_encoder_position() - self.s_drive.encoder_position()
+        self.phase_res_position_diff = self.i_resolver_phase - self.s_resolver_phase
+        self.phase_enc_position_diff = self.i_encoder_phase - self.s_encoder_phase
         self.phase_change_allowed = self.allowed_phase_change()
 
         self.update_1()
@@ -137,7 +137,7 @@ class Epu():
 
 
     @asynch
-    @schedule(5)
+    @schedule(4)
     @timer
     def update_1(self):
         try:
@@ -193,6 +193,18 @@ class Epu():
             self.gap_enable = self.a_enable and self.b_enable
             self.gap_halt_released = self.a_halt_released and self.b_halt_released
             self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
+            self.gap_target = self.a_target_position
+            self.gap = (self.a_encoder_gap + self.b_encoder_gap)*.5
+            self.gap_enable = 0
+            self.phase = (self.i_encoder_phase + self.s_encoder_phase)*.5
+            self.gap_halt_released = 0
+            self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
+            self.gap_res_position_diff = self.a_resolver_gap - self.b_resolver_gap
+            self.gap_enc_position_diff = self.a_encoder_gap - self.b_encoder_gap
+            self.gap_change_allowed = self.allowed_gap_change()
+            self.a_is_moving = self.a_drive.get_movement_status()
+            self.b_is_moving = self.b_drive.get_movement_status()
+            self.gap_is_moving = self.a_is_moving or self.b_is_moving
             # # phase
             self.phase_enable = self.i_enable and self.s_enable
             self.phase_halt_released = self.i_halt_released and self.s_halt_released
@@ -213,7 +225,6 @@ class Epu():
                 self.i_encoder_phase = self.i_drive.get_encoder_position()
                 self.s_encoder_phase = self.s_drive.get_encoder_position()
                 self.phase = (self.i_encoder_phase + self.s_encoder_phase)*.5
-                print('foi')
             except:
                 logger.exception('Could not update encoder variables.')
                 print('Exception raised.')
@@ -312,9 +323,7 @@ class Epu():
             return False
 
     def allowed_gap_change(self) -> bool:
-        if self.a_drive.target_position() != self.b_drive.target_position():
-            return False
-        elif self.a_drive.max_velocity() != self.a_drive.max_velocity():
+        if self.a_target_position != self.b_target_position:
             return False
         else: return True
     
@@ -415,11 +424,13 @@ class Epu():
             return False
 
     def allowed_phase_change(self) -> bool:
-            if self.i_drive.target_position() != self.s_drive.target_position():
-                return False
-            elif self.i_drive.max_velocity() != self.s_drive.max_velocity():
-                return False
-            else: return True
+        if self.i_target_position != self.s_target_position:
+            return False
+        else: return True
     
     def phase_stop(self):
         self.phase_release_halt(0)
+
+
+
+epu = Epu()
