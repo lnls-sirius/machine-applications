@@ -12,7 +12,7 @@ ecodrive_log_file_path='ecodrive_control.log'
 epu_log_file_path='epu_control.log'
 
 [EPU2]
-MINIMUN_GAP=+22
+MINIMUM_GAP=+22
 MAXIMUM_GAP=+300
 MINIMUM_PHASE=-25
 MAXIMUM_PHASE=+25

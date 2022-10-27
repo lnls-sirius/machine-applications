@@ -3,13 +3,12 @@ import toml
 from pydantic import BaseModel
 from typing import Optional
 
-###########################################
-# Temporary global constants
+########## Global constants #############
 MINIMUM_GAP=+22
 MAXIMUM_GAP=+300
 MINIMUM_PHASE=-25
 MAXIMUM_PHASE=+25
-SERIAL_PORT='/dev/USB0'
+SERIAL_PORT='/dev/pts/12'
 A_DRIVE_ADDRESS=21
 B_DRIVE_ADDRESS=22
 I_DRIVE_ADDRESS=11
@@ -21,6 +20,24 @@ GPIO_TCP_PORT=5050
 RS485_TCP_PORT=9993
 TCP_IP='10.0.28.100'
 ###########################################
+
+############# BSMP stuff ##################
+def includeChecksum(list_values):
+    counter = 0
+    i = 0
+    while (i < len(list_values)):
+        counter += list_values[i]
+        i += 1
+    counter = (counter & 0xFF)
+    counter = (256 - counter) & 0xFF
+    return(list_values + [counter])
+def bsmp_send(command_type, command = 0x00):
+    #assert command == 0x10 or command == 0x20
+    print([struct.pack("!h", 1)])
+    send_message = [0x00, command_type] + [c for c in struct.pack("!h", 1)] + [command]
+    send_message = includeChecksum(send_message)
+    return("".join(map(chr, send_message)))
+############################################
 
 # dummy function for debugging
 def dummy(val=0):
@@ -104,7 +121,7 @@ max_phase = epu_config.max_phase
 ecodrive_log_file_path = epu_config.ecodrive_log_file_path
 epu_log_file_path = epu_config.epu_log_file_path
 
-# input arguments
+#input arguments
 def getArgs():
     """ Return command line arguments
     """
@@ -120,7 +137,7 @@ def getArgs():
 
 args = getArgs()
 
-## IOC parameters
+# IOC parameters
 pv_prefix = args.pv_prefix
 drive_A_port = args.drive_A_port
 drive_B_port = args.drive_B_port

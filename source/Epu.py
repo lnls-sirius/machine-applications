@@ -1,7 +1,8 @@
-import toml, logging, threading
+import toml, logging, threading, socket
 from EcoDrive import EcoDrive
 from pydantic import BaseModel
 from utils import *
+from constants import TCP_IP, GPIO_TCP_PORT, bsmp_send
 
 logger = logging.getLogger('__name__')
 logging.basicConfig(filename='/tmp/EpuClass.log',
@@ -9,9 +10,8 @@ logging.basicConfig(filename='/tmp/EpuClass.log',
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%d-%b-%y %H:%M:%S')
 
-# pydantic class for data validation
 class EpuConfig(BaseModel):
-    MINIMUN_GAP: float
+    MINIMUM_GAP: float
     MAXIMUM_GAP: float
     MINIMUM_PHASE: float
     MAXIMUM_PHASE: float
@@ -28,6 +28,17 @@ with open('../config/config.toml') as f:
     config = toml.load('../config/config.toml')
 epu_config = EpuConfig(**config['EPU2'])
 
+BSMP_WRITE = 0X20
+BSMP_READ = 0X10
+
+HALT_CH_AB =   0x10
+START_CH_AB =  0x20
+ENABLE_CH_AB = 0x30
+
+HALT_CH_SI =   0x11
+START_CH_SI =  0x21
+ENABLE_CH_SI = 0x31
+
 class Epu():
 
     def __init__(self):
@@ -36,13 +47,13 @@ class Epu():
             serial_port=epu_config.SERIAL_PORT,
             address=epu_config.A_DRIVE_ADDRESS,
             baud_rate=epu_config.BAUD_RATE,
-            min_limit=epu_config.MINIMUN_GAP,
+            min_limit=epu_config.MINIMUM_GAP,
             max_limit=epu_config.MAXIMUM_GAP)
         self.b_drive = EcoDrive(
             serial_port=epu_config.SERIAL_PORT,
             address=epu_config.B_DRIVE_ADDRESS,
             baud_rate=epu_config.BAUD_RATE,
-            min_limit=epu_config.MINIMUN_GAP,
+            min_limit=epu_config.MINIMUM_GAP,
             max_limit=epu_config.MAXIMUM_GAP)
         self.i_drive = EcoDrive(
             serial_port=epu_config.SERIAL_PORT,
@@ -244,7 +255,7 @@ class Epu():
                 self.b_drive.set_target_position(a_target)
 
     def gap_set(self, target_gap: float) -> float:
-        if not (epu_config.MINIMUN_GAP < target_gap < epu_config.MAXIMUM_GAP):
+        if not (epu_config.MINIMUM_GAP < target_gap < epu_config.MAXIMUM_GAP):
             logger.error(f'Gap valeu given, ({target_gap}), is out of range.')
             print(f'Gap value given, ({target_gap}), is out of range.')
             return None
@@ -272,9 +283,16 @@ class Epu():
     def gap_set_enable(self, value: int):
         if not (self.a_drive.enable_status and self.b_drive.enable_status):
             if self.a_drive.diagnostic_code == self.b_drive.diagnostic_code =='A012':
-                # send enable signal logic
-                self.gap_enable = value
-                return True
+                bsmp_enable_message = bsmp_send(BSMP_WRITE, command=ENABLE_CH_AB).encode()
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.settimeout(.1)
+                    s.connect((TCP_IP, GPIO_TCP_PORT))
+                    s.sendall(bsmp_enable_message)
+                    time.sleep(.01) # magic number!!!!
+                    while True:
+                        data = s.recv(16)
+                        if not data: break
+                        if data[1] == 224: return True
             else:
                 logger.log(f'Enable signal not send due to diagnostic code Drive A code:{self.a_drive.diagnostic_code}, Drive B code:{self.b_drive.diagnostic_code}')
                 self.soft_drive_message = f'Enable signal not send due to diagnostic code Drive A code:{self.a_drive.diagnostic_code}, Drive B code:{self.b_drive.diagnostic_code}'
@@ -345,7 +363,7 @@ class Epu():
                 self.s_drive.set_target_position(a_target)
 
     def phase_set(self, target_phase: float) -> float:
-        if not (epu_config.MINIMUN_phase < target_phase < epu_config.MAXIMUM_phase):
+        if not (epu_config.MINIMUM_phase < target_phase < epu_config.MAXIMUM_phase):
             logger.error(f'phase valeu given, ({target_phase}), is out of range.')
             print(f'phase valeu given, ({target_phase}), is out of range.')
             return None

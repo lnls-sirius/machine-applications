@@ -2,6 +2,7 @@ from ast import Bytes
 import serial, time, yaml, logging, threading, toml, socket
 from pydantic import BaseModel
 from utils import *
+from constants import TCP_IP, RS485_TCP_PORT
 
 HOST = '10.0.28.100'
 PORT = 9993
@@ -20,7 +21,7 @@ class EcoDrive():
     SOCKET_TIMEOUT = .1
     _lock = threading.RLock()
 
-    def __init__(self, address, baud_rate, serial_port, max_limit, min_limit, drive_name='"Drive name"'):
+    def __init__(self, address, baud_rate, serial_port, max_limit, min_limit, tcp_ip=constants.TCP_IP, tcp_port=constants.RS485_TCP_PORT, drive_name='"Drive name"'):
         self.SERIAL_PORT = serial_port
         self.SERIAL_ADDRESS = address
         self.BAUD_RATE = baud_rate
@@ -132,12 +133,12 @@ class EcoDrive():
         with self._lock:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(.1)
-                s.connect((HOST, PORT))
+                s.connect((TCP_IP, RS485_TCP_PORT))
                 s.sendall(f'BCD:{self.SERIAL_ADDRESS}\r\n'.encode())
                 time.sleep(.03) # magic number!!!!
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(.1)
-                s.connect((HOST, PORT))
+                s.connect((TCP_IP, RS485_TCP_PORT))
                 s.sendall(f'{message}\r\n'.encode())
                 time.sleep(.07) # magic number!!!!
                 while True:
@@ -382,7 +383,7 @@ class EcoDrive():
 
 
 class EpuConfig(BaseModel):
-    MINIMUN_GAP: float
+    MINIMUM_GAP: float
     MAXIMUM_GAP: float
     MINIMUM_PHASE: float
     MAXIMUM_PHASE: float
@@ -403,7 +404,7 @@ eco_test = EcoDrive(
         serial_port=epu_config.SERIAL_PORT,
         address=11,
         baud_rate=epu_config.BAUD_RATE,
-        min_limit=epu_config.MINIMUN_GAP,
+        min_limit=epu_config.MINIMUM_GAP,
         max_limit=epu_config.MAXIMUM_GAP)
 if __name__ == '__main__':
     time.sleep(1)
