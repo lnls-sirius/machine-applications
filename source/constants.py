@@ -19,6 +19,7 @@ ECODRIVE_LOG_FILE_PATH='ecodrive_control.log'
 EPU_LOG_FILE_PATH='epu_control.log'
 GPIO_TCP_PORT=5050
 RS485_TCP_PORT=9993
+TCP_IP='10.0.28.100'
 ###########################################
 
 # dummy function for debugging
