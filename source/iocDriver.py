@@ -44,19 +44,6 @@ class EPUSupport(pcaspy.Driver):
         self.tid_periodic.start()
     # priority callback
     def priority_call(self):
-        # update resolver readings
-        self.setParam(
-            _db.pv_drive_a_resolver_pos_mon,
-            self.epu_driver.a_resolver_gap)
-        self.setParam(
-            _db.pv_drive_b_resolver_pos_mon,
-            self.epu_driver.b_resolver_gap)
-        self.setParam(
-            _db.pv_drive_s_resolver_pos_mon,
-            self.epu_driver.s_resolver_phase)
-        self.setParam(
-            _db.pv_drive_i_resolver_pos_mon,
-            self.epu_driver.i_resolver_phase)
         # update encoder readings
         self.setParam(
             _db.pv_drive_a_encoder_pos_mon,
@@ -76,13 +63,23 @@ class EPUSupport(pcaspy.Driver):
     def periodic(self):
         while True:
             self.eid.wait(constants.poll_interval)
-            # reset allowed to move status before periodic checks
-            self.setParam(
-                _db.pv_allowed_change_gap_mon,
-                constants.bool_yes)
-            self.setParam(
-                _db.pv_allowed_change_phase_mon,
-                constants.bool_yes)
+            # read allowed to move status
+            if self.epu_driver.gap_change_allowed:
+                self.setParam(
+                    _db.pv_allowed_change_gap_mon,
+                    constants.bool_yes)
+            else:
+                self.setParam(
+                    _db.pv_allowed_change_gap_mon,
+                    constants.bool_no)
+            if self.epu_driver.phase_change_allowed:
+                self.setParam(
+                    _db.pv_allowed_change_phase_mon,
+                    constants.bool_yes)
+            else:
+                self.setParam(
+                    _db.pv_allowed_change_phase_mon,
+                    constants.bool_no)
             # update combined position pvs
             self.setParam(
                 _db.pv_gap_rb,
@@ -96,19 +93,19 @@ class EPUSupport(pcaspy.Driver):
             self.setParam(
                 _db.pv_phase_mon,
                 self.epu_driver.phase)
-            # update individual position pvs
-            #self.setParam(
-            #    _db.pv_drive_a_resolver_pos_mon,
-            #    self.epu_driver.a_resolver_gap)
-            #self.setParam(
-            #    _db.pv_drive_b_resolver_pos_mon,
-            #    self.epu_driver.b_resolver_gap)
-            #self.setParam(
-            #    _db.pv_drive_s_resolver_pos_mon,
-            #    self.epu_driver.s_resolver_phase)
-            #self.setParam(
-            #    _db.pv_drive_i_resolver_pos_mon,
-            #    self.epu_driver.i_resolver_phase)
+            # update resolver readings
+            self.setParam(
+                _db.pv_drive_a_resolver_pos_mon,
+                self.epu_driver.a_resolver_gap)
+            self.setParam(
+                _db.pv_drive_b_resolver_pos_mon,
+                self.epu_driver.b_resolver_gap)
+            self.setParam(
+                _db.pv_drive_s_resolver_pos_mon,
+                self.epu_driver.s_resolver_phase)
+            self.setParam(
+                _db.pv_drive_i_resolver_pos_mon,
+                self.epu_driver.i_resolver_phase)
             # update enable and halt status
             self.setParam(
                 _db.pv_enbl_ab_sts,
@@ -129,20 +126,6 @@ class EPUSupport(pcaspy.Driver):
                 _db.pv_enbl_and_release_si_sts,
                 self.epu_driver.phase_enable_and_halt_released)
             # update speed pvs
-            #if (
-            #    not inTolerance(
-            #        self.epu_driver.a_speed,
-            #        self.epu_driver.b_speed,
-            #        constants.speed_tol)
-            #        or not inTolerance(
-            #        self.epu_driver.s_speed,
-            #        self.epu_driver.i_speed,
-            #        constants.speed_tol)
-            #        ):
-            #        # Speed inconsistency error
-            #        self.setParam(_db.pv_allowed_change_gap_mon, constants.bool_no)
-            #        self.setParam(_db.pv_allowed_change_phase_mon, constants.bool_no)
-            #        self.setParam(_db.pv_ioc_msg_mon, constants.msg_speed_tolerance_error)
             self.setParam(
                 _db.pv_gap_velo_mon,
                 self.epu_driver.gap_velocity)
@@ -187,12 +170,7 @@ class EPUSupport(pcaspy.Driver):
             self.setParam(
                 _db.pv_drive_i_is_moving_mon,
                 self.epu_driver.i_is_moving)
-            if (
-                self.epu_driver.a_is_moving == constants.bool_yes
-                or self.epu_driver.b_is_moving == constants.bool_yes
-                or self.epu_driver.s_is_moving == constants.bool_yes
-                or self.epu_driver.i_is_moving == constants.bool_yes
-                ):
+            if self.epu_driver.is_moving:
                 self.setParam(_db.pv_is_moving_mon, constants.bool_yes)
             else:
                 self.setParam(_db.pv_is_moving_mon, constants.bool_no)
