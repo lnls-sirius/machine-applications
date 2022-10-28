@@ -60,8 +60,6 @@ poll_interval = 0.1
 speed_tol = 0.0
 ### IOC messages
 msg_device_busy = 'Cmd failed: Device is busy'
-#msg_speed_tolerance_error = (
-#    'Error: Inconsistent speed configuration between drives')
 
 ## EPICS record fields
 ### rec units string
