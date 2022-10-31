@@ -97,14 +97,19 @@ class Epu():
         self.s_diag_code = self.s_drive.get_diagnostic_code()
         self.s_is_moving = self.s_drive.get_movement_status()
 
-        ## undulator status
-        self.is_moving = self.a_is_moving or self.b_is_moving or self.i_is_moving or self.s_is_moving
+        ##undulator status
+        self.is_moving = (
+            self.a_is_moving
+            or self.b_is_moving
+            or self.i_is_moving
+            or self.s_is_moving
+            )
         self.soft_message = ''
 
         ## undulator gap variables
         self.gap_target = self.a_target_position
         self.gap = (self.a_encoder_gap + self.b_encoder_gap)*.5
-        # self.gap_velocity = (self.a_act_velocity + self.b_act_velocity)*.5
+        self.gap_velocity = (self.a_act_velocity + self.b_act_velocity)*.5
         self.gap_enable = 0
         self.phase = (self.i_encoder_phase + self.s_encoder_phase)*.5
         self.gap_halt_released = 0
@@ -116,7 +121,7 @@ class Epu():
         ### undulator phase variables
         self.phase_target = self.i_target_position
         self.phase = (self.i_encoder_phase + self.s_encoder_phase)*.5
-        #self.phase_velocity = (self.i_act_velocity + self.s_act_velocity)*.5
+        self.phase_velocity = (self.i_act_velocity + self.s_act_velocity)*.5
         self.phase_enable = 0
         self.phase_halt_released = 0
         self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
@@ -180,12 +185,21 @@ class Epu():
             # self.s_diag_code = self.s_drive.get_diagnostic_code()
             self.s_is_moving = self.s_drive.get_movement_status()
 
+            # undulator status
+            self.is_moving = (
+                self.a_is_moving
+                or self.b_is_moving
+                or self.i_is_moving
+                or self.s_is_moving
+                )
+
             # # gap
             self.gap_enable = self.a_enable and self.b_enable
             self.gap_halt_released = self.a_halt_released and self.b_halt_released
             self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
             self.gap_target = self.a_target_position
             self.gap = (self.a_encoder_gap + self.b_encoder_gap)*.5
+            self.gap_velocity = (self.a_act_velocity + self.b_act_velocity)*.5
             self.gap_enable = 0
             self.phase = (self.i_encoder_phase + self.s_encoder_phase)*.5
             self.gap_halt_released = 0
@@ -197,6 +211,7 @@ class Epu():
             self.b_is_moving = self.b_drive.get_movement_status()
             self.gap_is_moving = self.a_is_moving or self.b_is_moving
             # # phase
+            self.phase_velocity = (self.s_act_velocity + self.i_act_velocity)*.5
             self.phase_enable = self.i_enable and self.s_enable
             self.phase_halt_released = self.i_halt_released and self.s_halt_released
             self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
