@@ -1,11 +1,23 @@
-from ast import Bytes
-import serial, time, yaml, logging, threading, toml, socket
+import time, yaml, logging, threading, toml, socket
 from pydantic import BaseModel
 from utils import *
-from constants import TCP_IP, RS485_TCP_PORT
 
-HOST = '10.0.28.100'
-PORT = 9993
+############### GPIO COMMANDS ##################
+BSMP_WRITE = 0X20
+BSMP_READ = 0X10
+
+HALT_CH_AB =   0x10
+START_CH_AB =  0x20
+ENABLE_CH_AB = 0x30
+
+HALT_CH_SI =   0x11
+START_CH_SI =  0x21
+ENABLE_CH_SI = 0x31
+
+################ TCP/IP CONSTANTS #################
+GPIO_TCP_PORT = 5050
+RS485_TCP_PORT=9993
+BBB_HOSTNAME='BBB-DRIVERS-EPU-2022'
 
 with open('../config/drive_messages.yaml', 'r') as f:
     diag_messages = yaml.safe_load(f)['diagnostic_messages']
@@ -18,155 +30,88 @@ logging.basicConfig(
 
 class EcoDrive():
     
-    SOCKET_TIMEOUT = .1
+    _SOCKET_TIMEOUT = .1
     _lock = threading.RLock()
 
-    def __init__(self, address, baud_rate, serial_port, max_limit, min_limit, tcp_ip=constants.TCP_IP, tcp_port=constants.RS485_TCP_PORT, drive_name='"Drive name"'):
-        self.SERIAL_PORT = serial_port
-        self.SERIAL_ADDRESS = address
-        self.BAUD_RATE = baud_rate
+    def __init__(self, address, max_limit=+25, min_limit=-25, bbb_hostname = BBB_HOSTNAME, rs458_tcp_port=RS485_TCP_PORT, drive_name = 'EcoDrive'):
+        self.ADDRESS = address
         self.UPPER_LIMIT = max_limit
         self.LOWER_LIMIT = min_limit
-        self.MAX_RESOLVER_ENCODER_DIFF = False
-        self.connected = False
-        #self.connect()
-
-
-
-        while not self.connected:
-            break
-            try:
-                self.ser = serial.Serial(
-                    self.SERIAL_PORT, baudrate=self.BAUD_RATE,
-                    timeout=.3, parity=serial.PARITY_NONE,
-                    stopbits=serial.STOPBITS_ONE)
-            except ValueError as e:
-                print(e)
-                logger.exception(
-                    f'init(): Could not open serial port: {self.SERIAL_PORT}')
-                return
-            except serial.SerialException as e:
-                print(e)
-                logger.exception(
-                    f'init(): Could no open serial port: {self.SERIAL_PORT}')
-                return
-            else:
-                try:
-                    self.connect()
-                    logger.log(f'Drive {drive_name} connected!')
-                    print(f'Drive {drive_name} connected!')
-                except Exception:
-                    pass
-
+        self.DRIVE_NAME = drive_name
+        self.MAX_RESOLVER_ENCODER_DIFF = .1 # Needs to be found.
         self.soft_drive_message = ''
+        self.BBB_HOSTNAME = bbb_hostname
+        self.RS458_TCP_PORT = rs458_tcp_port
+        self.test_connection()
+
+    def test_connection(self):
+        found_bbb = False
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            while not found_bbb:
+                try:
+                    s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
+                except ConnectionRefusedError:
+                    logger.exception('ConnectionRefusedError')
+                    self.soft_drive_message = f'Drive {self.DRIVE_NAME} ConnectionRefusedError'
+                    print(self.soft_drive_message)
+                    time.sleep(.1)
+                else:
+                    self.soft_drive_message = 'Connected'
+                    print(self.soft_drive_message)
+                    found_bbb = True
 
     def connect(self) -> bool:
         try:
-            byte_message = self.send_and_read(f'BCD:{self.SERIAL_ADDRESS}')
+            byte_message = self.tcp_read_parameter(f'BCD:{self.ADDRESS}')
         except Exception:
-            logger.exception('Communication error in send_and_read.')
+            logger.exception('Communication error in tcp_read_parameter.')
         else:
             str_message = byte_message.decode().split()
-            if not (f'E{self.SERIAL_ADDRESS}:>' in str_message[0]):
+            if not (f'E{self.ADDRESS}:>' in str_message[0]):
                 logger.error(
-                        f'Drive addres (E{self.SERIAL_ADDRESS}) was expcted in drive answer, but was not found.')
+                        f'Drive addres (E{self.ADDRESS}) expected in drive answer, but was not found.')
                 return False
             else:
-                self.connected = True
                 return True
 
-    def serial_connect(self) -> None:
-        if not self.ser.is_open:
-            try:
-                self.ser.open()
-            except serial.SerialException as e:
-                logger.exception('Could not open serial port.')
-                raise e
-        else:
-            try:
-                byte_message = self.send_and_read(
-                    'BCD:{}'.format(self.SERIAL_ADDRESS))
-            except Exception as e:
-                logger.exception('Communication error in send_and_read.')
-                raise e
-            else:
-                str_message = byte_message.decode().split()
-                if not (f'E{self.SERIAL_ADDRESS}:>' in str_message[0]):
-                    logger.error(
-                        f'Drive addres (E{self.SERIAL_ADDRESS}) was expcted in drive answer, but was not found.')
-                    raise Exception(
-                        f'Drive addres (E{self.SERIAL_ADDRESS}) was expcted in drive answer, but was not found.')
-                else:
-                    self.connected = True
-                    return
-
-    def serial_send(self, message: str) -> None:
-        '''Send message to serial device. Returns None,
-        raises SerialTimeoutException, SerialException or Exception.'''
-        if self.ser.is_open:
-            self.ser.reset_input_buffer()
-            try:
-                self.ser.write('{}\r\n'.format(message).encode())
-            except serial.SerialTimeoutException as e:
-                logging.exception(
-                    'Timeout when sending command to serial port.')
-                raise e
-            except serial.SerialException() as e:
-                logging.exception(
-                    'An exception ocurrerd while trying to send data to serial port.')
-                raise e
-            else:
-                time.sleep(.5) # magic number!!!!
-                return
-
-        else:
-            logging.error('Serial closed while trying to send message.')
-            raise Exception('Serial port not open.')
-
-    def serial_send_and_read(self, message: str) -> Bytes:
-        with self._lock:
-            self.serial_send(message)
-            byte_encoded_message = self.serial_read()
-        return byte_encoded_message
-
-    def send_and_read(self, message: str) -> Bytes:
+    def tcp_read_parameter(self, message: str) -> bytes:
         with self._lock:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(.1)
-                s.connect((TCP_IP, RS485_TCP_PORT))
-                s.sendall(f'BCD:{self.SERIAL_ADDRESS}\r\n'.encode())
-                time.sleep(.03) # magic number!!!!
+                s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
+                s.sendall(f'BCD:{self.ADDRESS}\r\n'.encode())
+                time.sleep(.07) # magic number!!!!
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(.1)
-                s.connect((TCP_IP, RS485_TCP_PORT))
-                s.sendall(f'{message}\r\n'.encode())
+                s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
+                byte_message = f'{message}\r\n'.encode()
+                s.sendall(byte_message)
                 time.sleep(.07) # magic number!!!!
                 while True:
-                    data = s.recv(128)
+                    data = s.recv(64)
                     if not data: break
                     return data
-                
-    def serial_read(self) -> Bytes:
-        if self.ser.in_waiting:
-            try:
-                tmp = self.ser.read(self.ser.in_waiting)
-            except serial.SerialException:
-                logger.exception('raw_read(): serial port is probably closed.')
-                raise Exception('Could not read, serial port is probably closed.')
-            else:
-                self.ser.reset_input_buffer()
-                return tmp
-        else: return b''
+
+    def tcp_write_parameter(self, value):
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(.1)
+                s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
+                byte_message = f'{value}\r\n'.encode()
+                s.sendall(byte_message)
+                time.sleep(.04) # magic number!!!!
+                while True:
+                    data = s.recv(64)
+                    if not data: break
+                    return(data)
 
     def get_resolver_position(self) -> float:
         try:
-            byte_message = self.send_and_read('S-0-0051,7,R')
+            byte_message = self.tcp_read_parameter('S-0-0051,7,R')
         except Exception as e:
-            logger.exception('Communication error in send_and_read.')
-            raise e
+            logger.exception('Communication error in tcp_read_parameter().')
         else:
-            str_message = byte_message.decode()
-            if not (f'E{self.SERIAL_ADDRESS}:>' in str_message and 'S-0-0051,7,R' in str_message):
+            str_message = byte_message.decode('latin-1')
+            if not (f'E{self.ADDRESS}:>' in str_message and 'S-0-0051,7,R' in str_message):
                 logger.error('Drive did not repond as expeted to "S-0-0051,7,R".', f'{str_message}')
                 raise Exception('Drive did not repond as expeted to "S-0-0051,7,R".', f'{str_message}')
             resolver_position = str_message.split('\r\n')[1]
@@ -174,30 +119,25 @@ class EcoDrive():
     
     def get_encoder_position(self) -> float:
         try:
-            byte_message = self.send_and_read('S-0-0053,7,R')
+            byte_message = self.tcp_read_parameter('S-0-0053,7,R')
         except Exception as e:
-            logger.exception('Communication error in send_and_read.')
-            raise e
+            logger.exception('Communication error in tcp_read_parameter().')
         else:
             str_message = byte_message.decode()
-            if not (f'E{self.SERIAL_ADDRESS}:>' in str_message and 'S-0-0053,7,R' in str_message):
+            if not (f'E{self.ADDRESS}:>' in str_message and 'S-0-0053,7,R' in str_message):
                 logger.error('Drive did not repond as expeted to "S-0-0053,7,R".', f'{str_message}')
                 raise Exception('Drive did not repond as expeted to "S-0-0053,7,R".', f'{str_message}')
             encoder_position = str_message.split('\r\n')[1]
             return float(encoder_position)
 
     def get_diagnostic_code(self) -> str:
-        '''Gets the diagnostic message code of the drive. the same code
-        can be seen in the seven segment display. Raises AssertError if it
-        answer don't match expected pattern.'''
         try:
-            byte_message = self.send_and_read('S-0-0390,7,R')
+            byte_message = self.tcp_read_parameter('S-0-0390,7,R')
         except Exception as e:
-            logger.exception('Communication error in send_and_read.')
-            raise e
+            logger.exception('Communication error in tcp_read_parameter().')
         else:
             str_message = byte_message.decode()
-            if not (f'E{self.SERIAL_ADDRESS}:>' in str_message and 'S-0-0390,7,R' in str_message):
+            if not (f'E{self.ADDRESS}:>' in str_message and 'S-0-0390,7,R' in str_message):
                 logger.error('Drive did not repond as expeted to "S-0-0390,7,R".', f'{str_message}')
                 raise Exception('Drive did not repond as expeted to "S-0-0390,7,R".', f'{str_message}')
             else:
@@ -208,18 +148,29 @@ class EcoDrive():
                 self.diagnostic_code = _d_code[0]
                 return _d_code[0]
 
-    # Uma dúvida (p. 232 func. desc.): para liberar o freio são necessárias duas coisas, bit 13 igual a 1 na master control word & entrada analógica igual alta?
-    def get_halten_status(self) -> tuple:
-        '''Returns a tuple with Drive Halt and Drive Enable functions
-        status: (halt, enable); 1 for enable, 0 for disable.'''
+    def get_diagnostic_message(self) -> str:
         try:
-            byte_message = self.send_and_read('S-0-0134,7,R')
+            byte_message = self.tcp_read_parameter('S-0-0095,7,R')
         except Exception as e:
-            logger.exception('Communication error in send_and_read.')
-            raise e
+            logger.exception('Communication error in tcp_read_parameter.')
         else:
             str_message = byte_message.decode()
-            if not (f'E{self.SERIAL_ADDRESS}:>' in str_message and 'S-0-0134,7,R' in str_message):
+            if not (f'E{self.ADDRESS}:>' in str_message and 'S-0-0095,7,R' in str_message):
+                logger.error('Drive did not repond as expeted to "S-0-0095,7,R".', f'{str_message}')
+                raise Exception('Drive did not repond as expeted to "S-0-0095,7,R".', f'{str_message}')
+            else:
+                _d_message = str_message.split('\r\n')[1]
+                return _d_message
+
+    # Uma dúvida (p. 232 func. desc.): para liberar o freio são necessárias duas coisas, bit 13 igual a 1 na master control word & entrada analógica igual alta?
+    def get_halten_status(self) -> tuple:
+        try:
+            byte_message = self.tcp_read_parameter('S-0-0134,7,R')
+        except Exception as e:
+            logger.exception('Communication error in tcp_read_parameter().')
+        else:
+            str_message = byte_message.decode()
+            if not (f'E{self.ADDRESS}:>' in str_message and 'S-0-0134,7,R' in str_message):
                 logger.error('Drive did not repond as expeted to "S-0-0134,7,R".', f'{str_message}')
                 raise Exception('Drive did not repond as expeted to "S-0-0134,7,R".', f'{str_message}')
             else:
@@ -227,7 +178,6 @@ class EcoDrive():
                     drive_halt_status = int(str_message.split('\r\n')[1][13])
                 except ValueError as e:
                     logger.exception('Error while evaluating drive halt status bit.')
-                    raise e
                 else:
                     try:
                         drive_enable_status = int(str_message.split('\r\n')[1][14])
@@ -238,12 +188,11 @@ class EcoDrive():
                         self.halt_status, self.enable_status = (drive_halt_status, drive_enable_status)
                         return(drive_halt_status, drive_enable_status)
 
-    def get_target_position_reached(self) -> int:
+    def get_target_position_reached(self) -> bool:
         try:
-            byte_message = self.send_and_read('S-0-0342,7,R')
+            byte_message = self.tcp_read_parameter('S-0-0342,7,R')
         except Exception as e:
-            logger.exception('Communication error in send_and_read.')
-            raise e
+            logger.exception('Communication error in tcp_read_parameter.')
         else:
             str_message = byte_message.decode()
             if not ('S-0-0342,7,R' in str_message):
@@ -257,81 +206,76 @@ class EcoDrive():
                     raise Exception(
                         'Drive did not respond as axpected: targ_pos_reached bit is not 0 neither 1')
                 self.target_position_reached = targ_pos_reached_bit
-                return int(targ_pos_reached_bit)
+                return bool(targ_pos_reached_bit)
 
     def set_target_position(self, target_position: float) -> float:
-
         if not (
             self.LOWER_LIMIT <= target_position <= self.UPPER_LIMIT):
+            logger.exception('Target position out of limits.')
             raise ValueError('Target position out of limits.')
         else:
             try:
-                byte_message = self.send_and_read('P-0-4006,7,W,>')
+                byte_message = self.tcp_read_parameter('P-0-4006,7,W,>')
             except Exception as e:
-                logger.exception('Communication error in send_and_read.')
-                raise e
+                logger.exception('Communication error in tcp_read_parameter().')
             else:
                 str_message = byte_message.decode()
                 if not 'P-0-4006,7,W,>' in str_message:
                     logger.error(
-                        'Drive did not respond as axpected to "P-0-4006,7,W,>" request.')
+                        '"P-0-4006,7,W,>" not found in drive answer for "P-0-4006,7,W,>" command')
+                    print(
+                        '"P-0-4006,7,W,>" not found in drive answer to "P-0-4006,7,W,>" command')
                     raise Exception(
-                        'Drive did not respond as axpected to "P-0-4006,7,W,>" request.')
+                        '"P-0-4006,7,W,>" not found in drive answer to "P-0-4006,7,W,>" command')
                 else:
                     try:
-                        byte_message = self.send_and_read(f'{target_position}')
+                        byte_message = self.tcp_write_parameter(f'{target_position}')
                     except Exception as e:
-                        logger.exception('Communication error in send_and_read.')
-                        raise e
+                        logger.exception('Could not set target position.')
                     else:
                         str_target_position_readback = byte_message.decode()
                         if not f'{target_position}' in str_target_position_readback:
                             logger.error(
-                                'Intended target position not found in drive answer.')
+                                'Target position not setted. Intended target position not found in drive answer.')
                             raise Exception(
-                                'Intended target position not found in drive answer.')
+                                'Target position not setted. Intended target position not found in drive answer.')
                         else:
                             try:
-                                byte_message = self.send_and_read('<')
+                                byte_message = self.tcp_write_parameter('<')
                             except Exception as e:
-                                logger.exception('Communication error in send_and_read.')
-                                raise e
+                                logger.exception('Communication error in tcp_read_parameter().')
                             else:
-                                self.send('<')
-                                str_message = self.raw_read().decode()
-                                if not f'E{self.SERIAL_ADDRESS}' in str_message:
+                                str_message = byte_message.decode()
+                                if not f'E{self.ADDRESS}' in str_message:
                                     logger.error(
-                                        f'Drive addres (E{self.SERIAL_ADDRESS}) was expcted in drive answer, but was not found.')
+                                        f'Drive addres (E{self.ADDRESS}) was expcted in drive answer, but was not found.')
                                     raise Exception(
-                                        f'Drive addres (E{self.SERIAL_ADDRESS}) was expcted in drive answer, but was not found.')
+                                        f'Drive addres (E{self.ADDRESS}) was expcted in drive answer, but was not found.')
                                 else:
                                     target_position = float(str_target_position_readback.split('\r')[0])
                                     return target_position
 
     def get_target_position(self):
         try:
-            byte_message = self.send_and_read('P-0-4006,7,R')
-        except Exception as e:
-            logger.exception('Communication error in send_and_read.')
-            raise e
+            byte_message = self.tcp_read_parameter('P-0-4006,7,R')
+        except Exception:
+            logger.exception('Communication error in tcp_read_parameter.')
         else:
             str_message = byte_message.decode().replace('\r', '').split('\n')
             try:
                 target_position = float(str_message[1])
-            except ValueError as e:
+            except ValueError:
                 logger.exception(
-                    'Error while trying to convert target position value received from drive.')
-                raise e
+                    'get_target_position(): error while trying to read drive answer.')
             else:
                 self.target_position = target_position
                 return target_position
 
     def get_max_velocity(self):
         try:
-            byte_message = self.send_and_read('P-0-4007,7,R')
+            byte_message = self.tcp_read_parameter('P-0-4007,7,R')
         except Exception as e:
-            logger.exception('Communication error in send_and_read.')
-            raise e
+            logger.exception('Communication error in tcp_read_parameter.')
         else:
             str_message = byte_message.decode().replace('\r', '').split('\n')
             try:
@@ -339,16 +283,15 @@ class EcoDrive():
             except ValueError as e:
                 logger.exception(
                     'Error while trying to convert max velocity value received from drive.')
-                raise e
             else:
                 self.max_velocity = max_velocity
                 return max_velocity
 
     def get_act_velocity(self):
         try:
-            byte_message = self.send_and_read('S-0-0040,7,R')
+            byte_message = self.tcp_read_parameter('S-0-0040,7,R')
         except Exception as e:
-            logger.exception('Communication error in send_and_read.')
+            logger.exception('Communication error in tcp_read_parameter.')
             raise e
         else:
             str_message = byte_message.decode().replace('\r', '').split('\n')
@@ -363,11 +306,10 @@ class EcoDrive():
                 return act_velocity
 
     def get_movement_status(self):
-        ''' If actual velocity is less than standstill window, the motor is considered in standstill'''
         try:
-            byte_message = self.send_and_read('P-0-0013,7,R')
+            byte_message = self.tcp_read_parameter('P-0-0013,7,R')
         except Exception as e:
-            logger.exception('Communication error in send_and_read.')
+            logger.exception('Communication error in tcp_read_parameter().')
             raise e
         else:
             str_message = byte_message.decode().replace('\r', '').split('\n')
@@ -380,19 +322,23 @@ class EcoDrive():
             else:
                 return is_moving
 
+    def set_rs485_delay(self, value):
+        answer = self.tcp_read_parameter(f'P-0-4050,7,W,{value}')
+        delay = answer.decode().split('\r\n')
+        return delay
 
+
+################### MODULE TESTING ##################
 
 class EpuConfig(BaseModel):
     MINIMUM_GAP: float
     MAXIMUM_GAP: float
     MINIMUM_PHASE: float
     MAXIMUM_PHASE: float
-    SERIAL_PORT: str
     A_DRIVE_ADDRESS: int
     B_DRIVE_ADDRESS: int
     I_DRIVE_ADDRESS: int
     S_DRIVE_ADDRESS: int
-    BAUD_RATE: int
     ECODRIVE_LOG_FILE_PATH: str
     EPU_LOG_FILE_PATH: str
 
@@ -401,14 +347,13 @@ with open('../config/config.toml') as f:
 epu_config = EpuConfig(**config['EPU2'])
 
 eco_test = EcoDrive(
-        serial_port=epu_config.SERIAL_PORT,
-        address=11,
-        baud_rate=epu_config.BAUD_RATE,
+        address=21,
         min_limit=epu_config.MINIMUM_GAP,
-        max_limit=epu_config.MAXIMUM_GAP)
+        max_limit=epu_config.MAXIMUM_GAP,
+        drive_name='Teste')
 if __name__ == '__main__':
     time.sleep(1)
     while True:
         m = input(str("Mensagem: "))
         #time.sleep(1)
-        print(eco_test.send_and_read(m))
+        print(eco_test.tcp_read_parameter(m))
