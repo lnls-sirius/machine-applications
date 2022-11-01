@@ -34,3 +34,14 @@ Se a serial falhar em qualquer momento, aborte.
 serial.read(100) -> se o buffer possuir 10 bytes, ele espera o timeout para saber que leu tudo?
 Tratar exceções da seguinte forma: caso ela ocorra, acione uma flag e tente repetir x vezes!
 Implementar função para solicitar lista cronológica de diagnósticos.
+
+## Comentários para desenvolvimento:
+### Ideias para aumentar taxa de aquisição:
+
+1) Pegar status do halt e do enable da eletrônica da bbb e não do drive
+2) Target position: não tem necessidade de ficar atualizando, ou atualizar a uma taxa bem menor (~ 5 s)
+3) Target position reached: Tem necessidade de ficar atualizando? Se sim, talvez com período de 5 ~ ou maior.
+A IDEIA É CRIAR UMA LÓGICA ROBUSTA QUE GARANTA O VALOR DE CERTAS VARIÁVEIS COM BASE EM OUTRAS, REDUZINDO A QUANTIDADE DE VARIÁVEIS ATUALIZADAS VIA SERIAL.
+4) Velocidade atual: DESNECESSÁRIA
+5) Drive is moving? Manter atualização periódica sob certas condições: drive halt e drive enable ativados.
+

@@ -1,20 +1,23 @@
 import toml, logging, threading, socket
-from EcoDrive import EcoDrive
+from ecodrive import EcoDrive
 from pydantic import BaseModel
 from utils import *
+from datetime import datetime
 
 ################## LOGGING #####################
 logger = logging.getLogger('__name__')
-logging.basicConfig(filename='/tmp/EpuClass.log',
-    filemode='w', level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%d-%b-%y %H:%M:%S')
-logger.info('--------------- Epu level logging ---------------\
-        \nStart at:')     
+logging.basicConfig(filename='./epu.log',
+                    filemode='w', level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    datefmt='%d-%b-%y %H:%M:%S')
+
+logger.info(datetime.now().strftime('%m/%d/%Y, %H:%M:%S'))
+  
 ################# ETHERNET #####################
 GPIO_TCP_PORT=5050
 RS485_TCP_PORT=9993
 BBB_HOSTNAME = 'BBB-DRIVERS-EPU-2022'
+
 ############### GPIO COMMANDS ##################
 BSMP_WRITE = 0X20
 BSMP_READ = 0X10
@@ -26,7 +29,8 @@ ENABLE_CH_AB = 0x30
 HALT_CH_SI =   0x11
 START_CH_SI =  0x21
 ENABLE_CH_SI = 0x31
-################################################
+
+#################################################
 
 class Epu():
 
@@ -129,12 +133,12 @@ class Epu():
         self.phase_enc_position_diff = self.i_encoder_phase - self.s_encoder_phase
         self.phase_change_allowed = self.allowed_phase_change()
 
-        # self.update_1()
-        # self.update_2()
+        #self.update_1()
+        #self.update_2()
 
     @asynch
-    @schedule(4)
-    @timer
+    @schedule(5)
+    #@timer
     def update_1(self):
         try:
             # drive a
@@ -193,7 +197,7 @@ class Epu():
                 or self.s_is_moving
                 )
 
-            # # gap
+            # gap
             self.gap_enable = self.a_enable and self.b_enable
             self.gap_halt_released = self.a_halt_released and self.b_halt_released
             self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
@@ -219,9 +223,10 @@ class Epu():
             logger.exception('Could not update_1.')
             print('Exception raised.')
 
+
     @asynch
-    @schedule(.5)
-    @timer
+    @schedule(.6)
+    #@timer
     def update_2(self):
         with self._epu_lock:
             try:    
@@ -252,7 +257,7 @@ class Epu():
     def gap_set(self, target_gap: float) -> float:
         ''' Set gap for drives A and B. If all runs ok, returns gap setted, if not, returns None.'''
         previous_gap = self.a_drive.get_target_position()
-        if epu_config.MINIMUM_GAP < target_gap < epu_config.MAXIMUM_GAP:
+        if epu_config.MINIMUM_GAP <= target_gap <= epu_config.MAXIMUM_GAP:
             try:
                 self.a_drive.set_target_position(target_gap)
             except:
@@ -278,45 +283,29 @@ class Epu():
 
     def gap_set_enable(self, val: bool):
         assert val==True or val==False
-        if self.a_drive.diagnostic_code == self.b_drive.diagnostic_code =='A012':
-            bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=ENABLE_CH_AB, value=val).encode()
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(.1)
-                s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
-                s.sendall(bsmp_enable_message)
-                time.sleep(.01) # magic number!!!!
-                while True:
-                    data = s.recv(16)
-                    if not data: break
-                    return data
-        else:
-            logger.log(
-                f'Enable signal not send due to diagnostic code Drive A code:\
-                    {self.a_drive.diagnostic_code},\Drive B code:{self.b_drive.diagnostic_code}')
-            self.soft_drive_message = \
-                f'Enable signal not send due to diagnostic code Drive A code:\
-                    {self.a_drive.diagnostic_code}, Drive B code:{self.b_drive.diagnostic_code}'
+        bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=ENABLE_CH_AB, value=val).encode()
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(.1)
+            s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+            s.sendall(bsmp_enable_message)
+            time.sleep(.01) # magic number!!!!
+            while True:
+                data = s.recv(16)
+                if not data: break
+                return data
     
     def gap_release_halt(self, val: bool):
         assert val==True or val==False
-        if self.a_drive.diagnostic_code == self.b_drive.diagnostic_code =='A010':
-            bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=HALT_CH_AB, value=val).encode()
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(.1)
-                s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
-                s.sendall(bsmp_enable_message)
-                time.sleep(.01) # magic number!!!!
-                while True:
-                    data = s.recv(8)
-                    if not data: break
-                    return data
-        else:
-            logger.log(
-                f'Halt signal not send due to diagnostic code Drive A code:\
-                    {self.a_drive.diagnostic_code},\Drive B code:{self.b_drive.diagnostic_code}')
-            self.soft_drive_message = \
-                f'Halt signal not send due to diagnostic code Drive A code:\
-                    {self.a_drive.diagnostic_code}, Drive B code:{self.b_drive.diagnostic_code}'
+        bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=HALT_CH_AB, value=val).encode()
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(.1)
+            s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+            s.sendall(bsmp_enable_message)
+            time.sleep(.01) # magic number!!!!
+            while True:
+                data = s.recv(8)
+                if not data: break
+                return data
 
     def gap_enable_and_release_halt(self, val: bool):
         assert val==True or val==False
@@ -339,29 +328,16 @@ class Epu():
             return False
 
     def gap_start(self, val: bool) -> bool:
-        if self.gap_check_for_move():
-            assert val==True or val==False
-            if self.a_drive.diagnostic_code == self.b_drive.diagnostic_code =='A010':
-                bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=START_CH_AB, value=val).encode()
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                    s.settimeout(.1)
-                    s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
-                    s.sendall(bsmp_enable_message)
-                    time.sleep(.01) # magic number!!!!
-                    while True:
-                        data = s.recv(8)
-                        if not data: break
-                        return data
-            else:
-                logger.log(
-                    f'Start signal not send due to diagnostic code Drive A code:\
-                        {self.a_drive.diagnostic_code},\Drive B code:{self.b_drive.diagnostic_code}')
-                self.soft_drive_message = \
-                    f'Start signal not send due to diagnostic code Drive A code:\
-                        {self.a_drive.diagnostic_code}, Drive B code:{self.b_drive.diagnostic_code}'
-        else:
-            logger.error('Gap movement not started because one or more conditions have not been met. Check log for more information.')
-            return False
+        bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=START_CH_AB, value=val).encode()
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(.1)
+            s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+            s.sendall(bsmp_enable_message)
+            time.sleep(.01) # magic number!!!!
+            while True:
+                data = s.recv(8)
+                if not data: break
+                return data
 
     def gap_enable_status(self):
         bsmp_enable_message = bsmp_send(BSMP_READ, variableID=ENABLE_CH_AB, size=0).encode()
@@ -411,7 +387,7 @@ class Epu():
 
     def phase_set(self, target_phase: float) -> float:
         previous_gap = self.i_drive.get_target_position()
-        if epu_config.MINIMUM_GAP < target_phase < epu_config.MAXIMUM_GAP:
+        if epu_config.MINIMUM_PHASE < target_phase < epu_config.MAXIMUM_PHASE:
             try:
                 self.i_drive.set_target_position(target_phase)
             except:
@@ -470,7 +446,7 @@ class Epu():
                     if not data: break
                     return data
         else:
-            logger.log(
+            logger.warning(
                 f'Halt signal not send due to diagnostic code Drive I code:\
                     {self.i_drive.diagnostic_code},\Drive S code:{self.s_drive.diagnostic_code}')
             self.soft_drive_message = \

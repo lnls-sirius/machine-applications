@@ -74,61 +74,58 @@ class EcoDrive():
             else:
                 return True
 
-    def tcp_read_parameter(self, message: str) -> bytes:
+    def tcp_read_parameter(self, message, change_drive=True, answer_size=64) -> bytes:
+        ''' change_drive parameter: change target rs485 drive.'''
         with self._lock:
+            if change_drive:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.settimeout(self._SOCKET_TIMEOUT)
+                    s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
+                    s.sendall(f'BCD:{self.ADDRESS}\r\n'.encode())
+                    time.sleep(.03) # magic number!!!!
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(.1)
-                s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
-                s.sendall(f'BCD:{self.ADDRESS}\r\n'.encode())
-                time.sleep(.07) # magic number!!!!
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(.1)
+                s.settimeout(self._SOCKET_TIMEOUT)
                 s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
                 byte_message = f'{message}\r\n'.encode()
                 s.sendall(byte_message)
                 time.sleep(.07) # magic number!!!!
                 while True:
-                    data = s.recv(64)
+                    data = s.recv(answer_size)
                     if not data: break
                     return data
 
     def tcp_write_parameter(self, value):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(.1)
+                s.settimeout(self._SOCKET_TIMEOUT)
                 s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
                 byte_message = f'{value}\r\n'.encode()
                 s.sendall(byte_message)
-                time.sleep(.04) # magic number!!!!
+                time.sleep(.05) # magic number!!!!
                 while True:
                     data = s.recv(64)
                     if not data: break
                     return(data)
 
     def get_resolver_position(self) -> float:
-        try:
-            byte_message = self.tcp_read_parameter('S-0-0051,7,R')
-        except Exception as e:
-            logger.exception('Communication error in tcp_read_parameter().')
-        else:
-            str_message = byte_message.decode('latin-1')
-            if not (f'E{self.ADDRESS}:>' in str_message and 'S-0-0051,7,R' in str_message):
-                logger.error('Drive did not repond as expeted to "S-0-0051,7,R".', f'{str_message}')
-                raise Exception('Drive did not repond as expeted to "S-0-0051,7,R".', f'{str_message}')
-            resolver_position = str_message.split('\r\n')[1]
-            return float(resolver_position)
+        return float(self.read_parameter_data('S-0-0051,7,R'))
     
+    def get_resolver_nominal_position(self):
+        return float(self.read_parameter_data('S-0-0047,7,R'))
+
+    def get_encoder_nominal_position(self):
+        return float(self.read_parameter_data('S-0-0048,7,R'))
+
+    def get_upper_limit_position(self):
+        return float(self.read_parameter_data('S-0-0049,7,R'))
+
+    def get_lower_limit_position(self) -> float:
+        return float(self.read_parameter_data('S-0-0050,7,R'))
+
+    def get_act_torque(self) -> float:
+        return float(self.read_parameter_data('S-0-0079,7,R'))
+
     def get_encoder_position(self) -> float:
-        try:
-            byte_message = self.tcp_read_parameter('S-0-0053,7,R')
-        except Exception as e:
-            logger.exception('Communication error in tcp_read_parameter().')
-        else:
-            str_message = byte_message.decode()
-            if not (f'E{self.ADDRESS}:>' in str_message and 'S-0-0053,7,R' in str_message):
-                logger.error('Drive did not repond as expeted to "S-0-0053,7,R".', f'{str_message}')
-                raise Exception('Drive did not repond as expeted to "S-0-0053,7,R".', f'{str_message}')
-            encoder_position = str_message.split('\r\n')[1]
-            return float(encoder_position)
+        return float(self.read_parameter_data('S-0-0053,7,R'))
 
     def get_diagnostic_code(self) -> str:
         try:
@@ -149,20 +146,8 @@ class EcoDrive():
                 return _d_code[0]
 
     def get_diagnostic_message(self) -> str:
-        try:
-            byte_message = self.tcp_read_parameter('S-0-0095,7,R')
-        except Exception as e:
-            logger.exception('Communication error in tcp_read_parameter.')
-        else:
-            str_message = byte_message.decode()
-            if not (f'E{self.ADDRESS}:>' in str_message and 'S-0-0095,7,R' in str_message):
-                logger.error('Drive did not repond as expeted to "S-0-0095,7,R".', f'{str_message}')
-                raise Exception('Drive did not repond as expeted to "S-0-0095,7,R".', f'{str_message}')
-            else:
-                _d_message = str_message.split('\r\n')[1]
-                return _d_message
+        return self.read_parameter_data('S-0-0095,7,R')
 
-    # Uma dúvida (p. 232 func. desc.): para liberar o freio são necessárias duas coisas, bit 13 igual a 1 na master control word & entrada analógica igual alta?
     def get_halten_status(self) -> tuple:
         try:
             byte_message = self.tcp_read_parameter('S-0-0134,7,R')
@@ -256,36 +241,10 @@ class EcoDrive():
                                     return target_position
 
     def get_target_position(self):
-        try:
-            byte_message = self.tcp_read_parameter('P-0-4006,7,R')
-        except Exception:
-            logger.exception('Communication error in tcp_read_parameter.')
-        else:
-            str_message = byte_message.decode().replace('\r', '').split('\n')
-            try:
-                target_position = float(str_message[1])
-            except ValueError:
-                logger.exception(
-                    'get_target_position(): error while trying to read drive answer.')
-            else:
-                self.target_position = target_position
-                return target_position
+        return float(self.read_parameter_data('P-0-4006,7,R'))
 
     def get_max_velocity(self):
-        try:
-            byte_message = self.tcp_read_parameter('P-0-4007,7,R')
-        except Exception as e:
-            logger.exception('Communication error in tcp_read_parameter.')
-        else:
-            str_message = byte_message.decode().replace('\r', '').split('\n')
-            try:
-                max_velocity = float(str_message[1])
-            except ValueError as e:
-                logger.exception(
-                    'Error while trying to convert max velocity value received from drive.')
-            else:
-                self.max_velocity = max_velocity
-                return max_velocity
+        return float(self.read_parameter_data(('P-0-4007,7,R')))
 
     def get_act_velocity(self):
         try:
@@ -327,6 +286,21 @@ class EcoDrive():
         delay = answer.decode().split('\r\n')
         return delay
 
+    def read_parameter_data(self, parameter, change_drive=True, treat_answer=True, ans_size=64) -> str:
+        try:
+            drive_answer = self.tcp_read_parameter(parameter, change_drive, ans_size).decode()
+        except Exception:
+            logger.exception()
+        else:
+            if not (f'E{self.ADDRESS}:>' in drive_answer and '{parameter},7,R' in drive_answer):
+                logger.error(
+                    f'Corrupt drive answer', f'Drive {self.DRIVE_NAME} answer to "{parameter},7,R" {drive_answer}')
+                raise Exception(
+                    'Corrupt drive answer', f'Drive {self.DRIVE_NAME} answer to "{parameter},7,R": {drive_answer}')
+            if treat_answer:
+                parameter_data = drive_answer.split('\r\n')[1]
+                return parameter_data
+            else: return drive_answer    
 
 ################### MODULE TESTING ##################
 
