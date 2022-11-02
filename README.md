@@ -25,6 +25,16 @@ Isso criará uma porta serial virtual, é necessário saber o nome dessa porta p
 Melhorias: padronizar nome da serial virtual criada.
 Automatizar a mudança do dono da virtual serial criada.
 
+## PyDM graphical interface
+
+PyDM is required to run the user graphical interface. To install it, run:
+
+conda install -c conda-forge pydm
+
+To start the GUI, from the "ui" folder run:
+
+pydm -m PREFIX=<PV name prefix> epu.ui
+
 ## Notas importantes sobre o desenvolvimento
 A função de escrever na serial, não verifica se tem algo no buffer de saída, sempre que utilizada, ela apaga esse buffer e escreve. O inconveniente de verificar se tem algo no buffer de saída é que pode acontecer um problema que faz com que o buffer fique "cheio". Veja bem, é de responsabilidade do cliente das funções do drive, saber quando ou não usar cada função. Se tem uma mensagem/requisição no buffer de saída, então a resposta dela ainda não chegou, se essa resposta não chegou, outra requisição não deve ser feita. O cliente, no caso, é quem escreve o fluxograma de funcionamento da classe Epu, atente-se a isso.
 
