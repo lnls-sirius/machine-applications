@@ -1,8 +1,8 @@
 ['EPU']
-drive_A_address=21
-drive_B_address=21
-drive_S_address=21
-drive_I_address=21
+A_drive_address=21
+B_drive_address=22
+S_drive_address=12
+I_drive_address=11
 baud_rate=19200
 min_gap=+22
 max_gap=+300
