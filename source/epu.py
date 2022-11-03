@@ -34,7 +34,7 @@ ENABLE_CH_SI = 0x31
 
 class Epu():
 
-    def __init__(self):
+    def __init__(self, callback_update=lambda x:1):
 
         self.a_drive = EcoDrive(
             address=epu_config.A_DRIVE_ADDRESS,
@@ -178,6 +178,12 @@ class Epu():
             while self.gap_is_moving: time.sleep(2)
             self.s_diag_code = self.s_drive.get_diagnostic_code()
             while self.gap_is_moving: time.sleep(2)
+
+    # General
+
+    def stop_all(self):
+        self.gap_stop()
+        self.phase_stop()
 
     # Gap stuff
 

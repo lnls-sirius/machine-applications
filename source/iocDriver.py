@@ -3,7 +3,7 @@ import threading
 import traceback
 import constants
 import epu_db as _db
-import epu
+import Epu
 
 def isPvName(reason, pvname):
     """ This function is a wrapper to allow
@@ -29,12 +29,10 @@ class EPUSupport(pcaspy.Driver):
         super(EPUSupport, self).__init__()
         # lock for critical operations
         self.lock = threading.Lock()
-        # list of diagnostic messages
-        self.diag_msg_list = []
         # EPU driver will manage and control
         # main features of device operation
         try:
-            self.epu_driver = epu.Epu(self.priority_call)
+            self.epu_driver = Epu.Epu(callback_update=self.priority_call)
             print('Epu driver initialized')
         except Exception:
             print('Could not init epu driver')
@@ -180,6 +178,13 @@ class EPUSupport(pcaspy.Driver):
     def write(self, reason, value):
         status = True
         # take action according to PV name
+        if isPvName(reason, _db.pv_clear_log_cmd):
+            # clear ioc msg
+            self.setParam(_db.pv_ioc_msg_mon, constants.msg_clear)
+            # increment cmd pv
+            old_value = self.getParam(_db.pv_change_gap_cmd)
+            self.setParam(_db.pv_change_gap_cmd, old_value+1)
+            self.updatePVs()
         ## change gap set point
         if isPvName(reason, _db.pv_gap_sp):
             if (value >= constants.min_gap
@@ -295,12 +300,30 @@ class EPUSupport(pcaspy.Driver):
             else:
                 status = False
         elif isPvName(reason, _db.pv_stop_cmd):
-            status = self.asynExec(reason, self.epu_driver.stop)
+            status = self.asynExec(reason, self.epu_driver.stop_all)
             # increment cmd pv
             old_value = self.getParam(_db.pv_stop_cmd)
             self.setParam(_db.pv_stop_cmd, old_value+1)
             # halt motor drives
             self.setParam(_db.pv_release_ab_sel, constants.bool_no)
+            self.setParam(_db.pv_release_si_sel, constants.bool_no)
+            # update pvs
+            self.updatePVs()
+        elif isPvName(reason, _db.pv_stop_ab_cmd):
+            status = self.asynExec(reason, self.epu_driver.gap_stop)
+            # increment cmd pv
+            old_value = self.getParam(_db.pv_stop_ab_cmd)
+            self.setParam(_db.pv_stop_ab_cmd, old_value+1)
+            # halt motor drives
+            self.setParam(_db.pv_release_ab_sel, constants.bool_no)
+            # update pvs
+            self.updatePVs()
+        elif isPvName(reason, _db.pv_stop_si_cmd):
+            status = self.asynExec(reason, self.epu_driver.phase_stop)
+            # increment cmd pv
+            old_value = self.getParam(_db.pv_stop_si_cmd)
+            self.setParam(_db.pv_stop_si_cmd, old_value+1)
+            # halt motor drives
             self.setParam(_db.pv_release_si_sel, constants.bool_no)
             # update pvs
             self.updatePVs()

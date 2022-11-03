@@ -41,6 +41,7 @@ poll_interval = 0.1
 ### tolerance for speed difference between drives
 speed_tol = 0.0
 ### IOC messages
+msg_clear = ""
 msg_device_busy = 'Cmd failed: Device is busy'
 
 ## EPICS record fields
@@ -70,10 +71,10 @@ ca_process_rate = 0.1
 
 ## pydantic data validation
 class EpuConfig(BaseModel):
-    drive_A_address: str
-    drive_B_address: Optional[int] = None
-    drive_S_address: Optional[int] = None
-    drive_I_address: Optional[int] = None
+    A_drive_address: str
+    B_drive_address: Optional[int] = None
+    S_drive_address: Optional[int] = None
+    I_drive_address: Optional[int] = None
     baud_rate: int
     min_gap: float
     max_gap: float
@@ -89,10 +90,10 @@ with open('../config/config.toml') as f:
 epu_config = EpuConfig(**config['EPU'])
 
 ## EPU config
-drive_A_address = epu_config.drive_A_address
-drive_B_address = epu_config.drive_B_address
-drive_S_address = epu_config.drive_S_address
-drive_I_address = epu_config.drive_I_address
+A_drive_address = epu_config.A_drive_address
+B_drive_address = epu_config.B_drive_address
+S_drive_address = epu_config.S_drive_address
+I_drive_address = epu_config.I_drive_address
 baud_rate = epu_config.baud_rate
 min_gap = epu_config.min_gap
 max_gap = epu_config.max_gap
@@ -107,10 +108,8 @@ def getArgs():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('--pv-prefix', dest='pv_prefix', type=str, required=True, help="$P EPICS IOC prefix")
-    parser.add_argument('--drive-A-port', dest='drive_A_port', type=str, required=False, default='', help="Drive A serial port name")
-    parser.add_argument('--drive-B-port', dest='drive_B_port', type=str, required=False, default='', help="Drive B serial port name")
-    parser.add_argument('--drive-S-port', dest='drive_S_port', type=str, required=False, default='', help="Drive S serial port name")
-    parser.add_argument('--drive-I-port', dest='drive_I_port', type=str, required=False, default='', help="Drive I serial port name")
+    parser.add_argument('--drive-msg-port', dest='msg_port', type=str, required=False, default='', help="TCP port for drive messages")
+    parser.add_argument('--drive-io-port', dest='io_port', type=str, required=False, default='', help="TCP port for virtual I/O commands")
     parser.add_argument('--beaglebone-addr', dest='beaglebone_addr', type=str, required=False, default='', help="Beaglebone IP address")
     args = parser.parse_args()
     return args
@@ -119,8 +118,6 @@ args = getArgs()
 
 # IOC parameters
 pv_prefix = args.pv_prefix
-drive_A_port = args.drive_A_port
-drive_B_port = args.drive_B_port
-drive_S_port = args.drive_S_port
-drive_I_port = args.drive_I_port
+msg_port = args.msg_port
+io_port = args.io_port
 beaglebone_addr = args.beaglebone_addr
