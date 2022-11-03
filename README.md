@@ -45,3 +45,8 @@ A IDEIA É CRIAR UMA LÓGICA ROBUSTA QUE GARANTA O VALOR DE CERTAS VARIÁVEIS CO
 4) Velocidade atual: DESNECESSÁRIA
 5) Drive is moving? Manter atualização periódica sob certas condições: drive halt e drive enable ativados.
 
+
+# Documentação
+Se o freio está livre, então todas as outras condições para se iniciar o movimento foram satisfeitas, por isso a variável que define se pode ou não ter movimentação é atualizada com base nas leituras via bsmp, da beagle bone, apenas. Isso economisa banda do barramento RS485. As variáveis de status do enable e do halt também são baseadas nas leituras das GPIOs da bbb.
+Com qualquer sinal digital de saída em nível lógico alto, nada pode ser escrito no drive. Isso é uma premissa importante, já que a lógica de alguns métodos se baseia nela. Por isso é importante uma leitura periodia do status da saída digital da bbb.
+A função check_*movement() é chamada a cada vez que o sinal de start é enviado. Ela monitora o movimento até ele acabar ou até timeout. Ela está sem robustez, carece de melhorias.

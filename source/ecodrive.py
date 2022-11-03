@@ -82,13 +82,13 @@ class EcoDrive():
                     s.settimeout(self._SOCKET_TIMEOUT)
                     s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
                     s.sendall(f'BCD:{self.ADDRESS}\r\n'.encode())
-                    time.sleep(.03) # magic number!!!!
+                    time.sleep(.03) # .015
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(self._SOCKET_TIMEOUT)
                 s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
                 byte_message = f'{message}\r\n'.encode()
                 s.sendall(byte_message)
-                time.sleep(.07) # magic number!!!!
+                time.sleep(.07) # .047
                 while True:
                     data = s.recv(answer_size)
                     if not data: break
@@ -107,25 +107,25 @@ class EcoDrive():
                     return(data)
 
     def get_resolver_position(self) -> float:
-        return float(self.read_parameter_data('S-0-0051,7,R'))
+        return float(self.read_parameter_data('S-0-0051'))
     
     def get_resolver_nominal_position(self):
-        return float(self.read_parameter_data('S-0-0047,7,R'))
+        return float(self.read_parameter_data('S-0-0047'))
 
     def get_encoder_nominal_position(self):
-        return float(self.read_parameter_data('S-0-0048,7,R'))
+        return float(self.read_parameter_data('S-0-0048'))
 
     def get_upper_limit_position(self):
-        return float(self.read_parameter_data('S-0-0049,7,R'))
+        return float(self.read_parameter_data('S-0-0049'))
 
     def get_lower_limit_position(self) -> float:
-        return float(self.read_parameter_data('S-0-0050,7,R'))
+        return float(self.read_parameter_data('S-0-0050'))
 
     def get_act_torque(self) -> float:
-        return float(self.read_parameter_data('S-0-0079,7,R'))
+        return float(self.read_parameter_data('S-0-0079'))
 
     def get_encoder_position(self) -> float:
-        return float(self.read_parameter_data('S-0-0053,7,R'))
+        return float(self.read_parameter_data('S-0-0053'))
 
     def get_diagnostic_code(self) -> str:
         try:
@@ -144,9 +144,6 @@ class EcoDrive():
                 assert len(_d_code) == 1
                 self.diagnostic_code = _d_code[0]
                 return _d_code[0]
-
-    def get_diagnostic_message(self) -> str:
-        return self.read_parameter_data('S-0-0095,7,R')
 
     def get_halten_status(self) -> tuple:
         try:
@@ -264,7 +261,7 @@ class EcoDrive():
                 self.act_velocity = act_velocity
                 return act_velocity
 
-    def get_movement_status(self):
+    def get_movement_status(self) -> bool:
         try:
             byte_message = self.tcp_read_parameter('P-0-0013,7,R')
         except Exception as e:
@@ -273,7 +270,7 @@ class EcoDrive():
         else:
             str_message = byte_message.decode().replace('\r', '').split('\n')
             try:
-                is_moving = int(str_message[1][1])
+                is_moving = bool(str_message[1][1])
             except ValueError as e:
                 logger.exception(
                     'Error while trying to convert max velocity value received from drive.')
@@ -288,11 +285,11 @@ class EcoDrive():
 
     def read_parameter_data(self, parameter, change_drive=True, treat_answer=True, ans_size=64) -> str:
         try:
-            drive_answer = self.tcp_read_parameter(parameter, change_drive, ans_size).decode()
+            drive_answer = self.tcp_read_parameter(f'{parameter},7,R', change_drive, answer_size=ans_size).decode()
         except Exception:
-            logger.exception()
+            logger.exception('Erro while tcp reading.')
         else:
-            if not (f'E{self.ADDRESS}:>' in drive_answer and '{parameter},7,R' in drive_answer):
+            if not (f'E{self.ADDRESS}:>' in drive_answer and f'{parameter},7,R' in drive_answer):
                 logger.error(
                     f'Corrupt drive answer', f'Drive {self.DRIVE_NAME} answer to "{parameter},7,R" {drive_answer}')
                 raise Exception(
