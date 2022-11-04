@@ -54,6 +54,7 @@ max_msg_size = 200
 max_long_msg_size = 2000
 ### rec enums
 bool_enums = ['No', 'Yes']
+bool_dsbl_enbl = ['Dsbl', 'Enbl']
 ### bool constants
 bool_no = 0
 bool_yes = 1

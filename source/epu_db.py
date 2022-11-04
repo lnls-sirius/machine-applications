@@ -7,6 +7,10 @@ pv_prefix = constants.pv_prefix
 #############################################
 # Map variable -> pv name
 ## general
+pv_beamline_enbl_sel = 'BeamLineCtrlEnbl-Sel'
+pv_beamline_enbl_sts = 'BeamLineCtrlEnbl-Sts'
+pv_beamline_enbl_mon = 'BeamLineCtrl-Mon'
+pv_status_mon = 'Status-Mon'
 pv_is_busy_mon = 'IsBusy-Mon'
 pv_ioc_msg_mon = 'Log-Mon'
 pv_clear_log_cmd = 'ClearLog-Cmd'
@@ -72,6 +76,42 @@ pv_drive_i_is_moving_mon = 'DriveIMoving-Mon'
 pvdb = {
     #############################################
     # General
+    pv_beamline_enbl_sel : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : constants.bool_dsbl_enbl,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'default',
+    },
+    pv_beamline_enbl_sts : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : constants.bool_dsbl_enbl,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_beamline_enbl_mon : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : constants.bool_dsbl_enbl,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'scan' : constants.scan_rate,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_status_mon : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : constants.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'scan' : constants.scan_rate,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
     pv_is_busy_mon : {
         'type' : 'enum',
         'count' : 1,
