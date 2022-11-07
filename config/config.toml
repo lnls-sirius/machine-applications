@@ -8,6 +8,7 @@ min_gap=+22
 max_gap=+300
 min_phase=-25
 max_phase=+25
+max_velo=+500
 ecodrive_log_file_path='ecodrive_control.log'
 epu_log_file_path='epu_control.log'
 

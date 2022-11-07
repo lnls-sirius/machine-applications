@@ -20,7 +20,15 @@ pv_gap_mon = 'Gap-Mon'
 pv_phase_sp = 'Phase-SP'
 pv_phase_rb = 'Phase-RB'
 pv_phase_mon = 'Phase-Mon'
+pv_gap_max_velo_sp = 'MaxGapSpeed-SP'
+pv_gap_max_velo_rb = 'MaxGapSpeed-RB'
+pv_gap_velo_sp = 'GapSpeed-SP'
+pv_gap_velo_rb = 'GapSpeed-RB'
 pv_gap_velo_mon = 'GapSpeed-Mon'
+pv_phase_max_velo_sp = 'MaxPhaseSpeed-SP'
+pv_phase_max_velo_rb = 'MaxPhaseSpeed-RB'
+pv_phase_velo_sp = 'PhaseSpeed-SP'
+pv_phase_velo_rb = 'PhaseSpeed-RB'
 pv_phase_velo_mon = 'PhaseSpeed-Mon'
 pv_allowed_change_gap_mon = 'AllowedToChangeGap-Mon'
 pv_allowed_change_phase_mon = 'AllowedToChangePhase-Mon'
@@ -190,7 +198,79 @@ pvdb = {
         'asyn' : False,
         'asg' : 'readonly',
     },
+    pv_gap_max_velo_sp : {
+        'type' : 'float',
+        'prec' : constants.position_precision,
+        'count' : 1,
+        'unit' : constants.velo_units,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+    },
+    pv_gap_max_velo_rb : {
+        'type' : 'float',
+        'prec' : constants.position_precision,
+        'count' : 1,
+        'unit' : constants.velo_units,
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_gap_velo_sp : {
+        'type' : 'float',
+        'prec' : constants.position_precision,
+        'count' : 1,
+        'unit' : constants.velo_units,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+    },
+    pv_gap_velo_rb : {
+        'type' : 'float',
+        'prec' : constants.position_precision,
+        'count' : 1,
+        'unit' : constants.velo_units,
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
     pv_gap_velo_mon : {
+        'type' : 'float',
+        'prec' : constants.position_precision,
+        'count' : 1,
+        'unit' : constants.velo_units,
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_phase_max_velo_sp : {
+        'type' : 'float',
+        'prec' : constants.position_precision,
+        'count' : 1,
+        'unit' : constants.velo_units,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+    },
+    pv_phase_max_velo_rb : {
+        'type' : 'float',
+        'prec' : constants.position_precision,
+        'count' : 1,
+        'unit' : constants.velo_units,
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_phase_velo_sp : {
+        'type' : 'float',
+        'prec' : constants.position_precision,
+        'count' : 1,
+        'unit' : constants.velo_units,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+    },
+    pv_phase_velo_rb : {
         'type' : 'float',
         'prec' : constants.position_precision,
         'count' : 1,

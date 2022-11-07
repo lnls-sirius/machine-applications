@@ -227,6 +227,54 @@ class EPUSupport(pcaspy.Driver):
                     self.updatePVs()
             else:
                 status = False
+        ## change gap maximum velocity set point
+        elif isPvName(reason, _db.pv_gap_max_velo_sp):
+            if (value > 0
+                    and value <= constants.max_velo
+                    ):
+                self.setParam(_db.pv_gap_max_velo_sp, value)
+                self.setParam(_db.pv_gap_max_velo_rb, value)
+                self.updatePVs()
+            else:
+                status = False
+        ## change phase maximum velocity set point
+        elif isPvName(reason, _db.pv_phase_max_velo_sp):
+            if (value > 0
+                    and value <= constants.max_velo
+                    ):
+                self.setParam(_db.pv_phase_max_velo_sp, value)
+                self.setParam(_db.pv_phase_max_velo_rb, value)
+                self.updatePVs()
+            else:
+                status = False
+        ## change gap velocity set point
+        elif isPvName(reason, _db.pv_gap_velo_sp):
+            soft_max_velo = self.getParam(_db.pv_gap_max_velo_sp)
+            if (value > 0
+                    and value <= constants.max_velo
+                    and value <= soft_max_velo
+                    ):
+                status = self.asynExec(
+                    reason, self.epu_driver.gap_velo_config_set, value)
+                if status:
+                    self.setParam(_db.pv_gap_velo_sp, value)
+                    self.updatePVs()
+            else:
+                status = False
+        ## change phase velocity set point
+        elif isPvName(reason, _db.pv_phase_velo_sp):
+            soft_max_velo = self.getParam(_db.pv_phase_max_velo_sp)
+            if (value > 0
+                    and value <= constants.max_velo
+                    and value <= soft_max_velo
+                    ):
+                status = self.asynExec(
+                    reason, self.epu_driver.phase_velo_config_set, value)
+                if status:
+                    self.setParam(_db.pv_phase_velo_sp, value)
+                    self.updatePVs()
+            else:
+                status = False
         ## cmd to move and change gap
         elif isPvName(reason, _db.pv_change_gap_cmd):
             if _db.pv_allowed_change_gap_mon == constants.bool_yes:
