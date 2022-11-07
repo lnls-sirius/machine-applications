@@ -54,6 +54,7 @@ max_msg_size = 200
 max_long_msg_size = 2000
 ### rec enums
 bool_enums = ['No', 'Yes']
+bool_dsbl_enbl = ['Dsbl', 'Enbl']
 ### bool constants
 bool_no = 0
 bool_yes = 1
@@ -80,6 +81,7 @@ class EpuConfig(BaseModel):
     max_gap: float
     min_phase: float
     max_phase: float
+    max_velo: float
     ecodrive_log_file_path: str
     epu_log_file_path: str
 
@@ -99,6 +101,8 @@ min_gap = epu_config.min_gap
 max_gap = epu_config.max_gap
 min_phase = epu_config.min_phase
 max_phase = epu_config.max_phase
+max_velo_mm_per_min = epu_config.max_velo # mm/min
+max_velo = max_velo_mm_per_min / 60 # mm/sec
 ecodrive_log_file_path = epu_config.ecodrive_log_file_path
 epu_log_file_path = epu_config.epu_log_file_path
 

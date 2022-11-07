@@ -142,7 +142,7 @@ class EPUSupport(pcaspy.Driver):
             self.setParam(
                 _db.pv_drive_i_velo_mon,
                 self.epu_driver.i_act_velocity)
-            # update diagnostic messages
+            # update diagnostic codes
             self.setParam(
                 _db.pv_drive_a_diag_code_mon,
                 self.epu_driver.a_diag_code)
@@ -155,6 +155,16 @@ class EPUSupport(pcaspy.Driver):
             self.setParam(
                 _db.pv_drive_i_diag_code_mon,
                 self.epu_driver.i_diag_code)
+            # check overall fault state
+            not_ok = not (
+                self.epu_driver.a_diag_code == ' A211'
+                and self.epu_driver.b_diag_code == ' A211'
+                and self.epu_driver.b_diag_code == ' A211'
+                and self.epu_driver.b_diag_code == ' A211'
+            )
+            self.setParam(
+                _db.pv_status_mon,
+                not_ok)
             # update moving status
             self.setParam(
                 _db.pv_drive_a_is_moving_mon,
@@ -178,7 +188,15 @@ class EPUSupport(pcaspy.Driver):
     def write(self, reason, value):
         status = True
         # take action according to PV name
-        if isPvName(reason, _db.pv_clear_log_cmd):
+        ## enable control from beamlines
+        if isPvName(reason, _db.pv_beamline_enbl_sel):
+            if isBoolNum(value):
+                self.setParam(_db.pv_beamline_enbl_sel, value)
+                self.updatePVs()
+            else:
+                status = False
+        ## clear IOC log
+        elif isPvName(reason, _db.pv_clear_log_cmd):
             # clear ioc msg
             self.setParam(_db.pv_ioc_msg_mon, constants.msg_clear)
             # increment cmd pv
@@ -206,6 +224,54 @@ class EPUSupport(pcaspy.Driver):
                     reason, self.epu_driver.phase_set, value)
                 if status:
                     self.setParam(_db.pv_phase_sp, value)
+                    self.updatePVs()
+            else:
+                status = False
+        ## change gap maximum velocity set point
+        elif isPvName(reason, _db.pv_gap_max_velo_sp):
+            if (value > 0
+                    and value <= constants.max_velo
+                    ):
+                self.setParam(_db.pv_gap_max_velo_sp, value)
+                self.setParam(_db.pv_gap_max_velo_rb, value)
+                self.updatePVs()
+            else:
+                status = False
+        ## change phase maximum velocity set point
+        elif isPvName(reason, _db.pv_phase_max_velo_sp):
+            if (value > 0
+                    and value <= constants.max_velo
+                    ):
+                self.setParam(_db.pv_phase_max_velo_sp, value)
+                self.setParam(_db.pv_phase_max_velo_rb, value)
+                self.updatePVs()
+            else:
+                status = False
+        ## change gap velocity set point
+        elif isPvName(reason, _db.pv_gap_velo_sp):
+            soft_max_velo = self.getParam(_db.pv_gap_max_velo_sp)
+            if (value > 0
+                    and value <= constants.max_velo
+                    and value <= soft_max_velo
+                    ):
+                status = self.asynExec(
+                    reason, self.epu_driver.gap_velo_config_set, value)
+                if status:
+                    self.setParam(_db.pv_gap_velo_sp, value)
+                    self.updatePVs()
+            else:
+                status = False
+        ## change phase velocity set point
+        elif isPvName(reason, _db.pv_phase_velo_sp):
+            soft_max_velo = self.getParam(_db.pv_phase_max_velo_sp)
+            if (value > 0
+                    and value <= constants.max_velo
+                    and value <= soft_max_velo
+                    ):
+                status = self.asynExec(
+                    reason, self.epu_driver.phase_velo_config_set, value)
+                if status:
+                    self.setParam(_db.pv_phase_velo_sp, value)
                     self.updatePVs()
             else:
                 status = False

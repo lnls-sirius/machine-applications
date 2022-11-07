@@ -7,6 +7,10 @@ pv_prefix = constants.pv_prefix
 #############################################
 # Map variable -> pv name
 ## general
+pv_beamline_enbl_sel = 'BeamLineCtrlEnbl-Sel'
+pv_beamline_enbl_sts = 'BeamLineCtrlEnbl-Sts'
+pv_beamline_enbl_mon = 'BeamLineCtrl-Mon'
+pv_status_mon = 'Status-Mon'
 pv_is_busy_mon = 'IsBusy-Mon'
 pv_ioc_msg_mon = 'Log-Mon'
 pv_clear_log_cmd = 'ClearLog-Cmd'
@@ -16,28 +20,36 @@ pv_gap_mon = 'Gap-Mon'
 pv_phase_sp = 'Phase-SP'
 pv_phase_rb = 'Phase-RB'
 pv_phase_mon = 'Phase-Mon'
+pv_gap_max_velo_sp = 'MaxGapSpeed-SP'
+pv_gap_max_velo_rb = 'MaxGapSpeed-RB'
+pv_gap_velo_sp = 'GapSpeed-SP'
+pv_gap_velo_rb = 'GapSpeed-RB'
 pv_gap_velo_mon = 'GapSpeed-Mon'
+pv_phase_max_velo_sp = 'MaxPhaseSpeed-SP'
+pv_phase_max_velo_rb = 'MaxPhaseSpeed-RB'
+pv_phase_velo_sp = 'PhaseSpeed-SP'
+pv_phase_velo_rb = 'PhaseSpeed-RB'
 pv_phase_velo_mon = 'PhaseSpeed-Mon'
 pv_allowed_change_gap_mon = 'AllowedToChangeGap-Mon'
 pv_allowed_change_phase_mon = 'AllowedToChangePhase-Mon'
 pv_change_gap_cmd = 'ChangeGap-Cmd'
 pv_change_phase_cmd = 'ChangePhase-Cmd'
-pv_enbl_ab_sel = 'EnblAB-Sel'
-pv_enbl_ab_sts = 'EnblAB-Sts'
-pv_enbl_si_sel = 'EnblSI-Sel'
-pv_enbl_si_sts = 'EnblSI-Sts'
-pv_release_ab_sel = 'ReleaseAB-Sel'
-pv_release_ab_sts = 'ReleaseAB-Sts'
-pv_release_si_sel = 'ReleaseSI-Sel'
-pv_release_si_sts = 'ReleaseSI-Sts'
-pv_enbl_and_release_ab_sel = 'EnblAndReleaseAB-Sel'
-pv_enbl_and_release_si_sel = 'EnblAndReleaseSI-Sel'
-pv_enbl_and_release_ab_sts = 'EnblAndReleaseAB-Sts'
-pv_enbl_and_release_si_sts = 'EnblAndReleaseSI-Sts'
+pv_enbl_ab_sel = 'EnblGap-Sel'
+pv_enbl_ab_sts = 'EnblGap-Sts'
+pv_enbl_si_sel = 'EnblPhase-Sel'
+pv_enbl_si_sts = 'EnblPhase-Sts'
+pv_release_ab_sel = 'ReleaseGap-Sel'
+pv_release_ab_sts = 'ReleaseGap-Sts'
+pv_release_si_sel = 'ReleasePhase-Sel'
+pv_release_si_sts = 'ReleasePhase-Sts'
+pv_enbl_and_release_ab_sel = 'EnblAndReleaseGap-Sel'
+pv_enbl_and_release_si_sel = 'EnblAndReleasePhase-Sel'
+pv_enbl_and_release_ab_sts = 'EnblAndReleaseGap-Sts'
+pv_enbl_and_release_si_sts = 'EnblAndReleasePhase-Sts'
 pv_is_moving_mon = 'Moving-Mon'
 pv_stop_cmd = 'Stop-Cmd'
-pv_stop_ab_cmd = 'StopAB-Cmd'
-pv_stop_si_cmd = 'StopSI-Cmd'
+pv_stop_ab_cmd = 'StopGap-Cmd'
+pv_stop_si_cmd = 'StopPhase-Cmd'
 ## drive A
 pv_drive_a_resolver_pos_mon = 'DriveAResolverPos-Mon'
 pv_drive_a_encoder_pos_mon = 'DriveAEncoderPos-Mon'
@@ -72,6 +84,42 @@ pv_drive_i_is_moving_mon = 'DriveIMoving-Mon'
 pvdb = {
     #############################################
     # General
+    pv_beamline_enbl_sel : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : constants.bool_dsbl_enbl,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'default',
+    },
+    pv_beamline_enbl_sts : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : constants.bool_dsbl_enbl,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_beamline_enbl_mon : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : constants.bool_dsbl_enbl,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'scan' : constants.scan_rate,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_status_mon : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : constants.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'scan' : constants.scan_rate,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
     pv_is_busy_mon : {
         'type' : 'enum',
         'count' : 1,
@@ -150,7 +198,79 @@ pvdb = {
         'asyn' : False,
         'asg' : 'readonly',
     },
+    pv_gap_max_velo_sp : {
+        'type' : 'float',
+        'prec' : constants.position_precision,
+        'count' : 1,
+        'unit' : constants.velo_units,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+    },
+    pv_gap_max_velo_rb : {
+        'type' : 'float',
+        'prec' : constants.position_precision,
+        'count' : 1,
+        'unit' : constants.velo_units,
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_gap_velo_sp : {
+        'type' : 'float',
+        'prec' : constants.position_precision,
+        'count' : 1,
+        'unit' : constants.velo_units,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+    },
+    pv_gap_velo_rb : {
+        'type' : 'float',
+        'prec' : constants.position_precision,
+        'count' : 1,
+        'unit' : constants.velo_units,
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
     pv_gap_velo_mon : {
+        'type' : 'float',
+        'prec' : constants.position_precision,
+        'count' : 1,
+        'unit' : constants.velo_units,
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_phase_max_velo_sp : {
+        'type' : 'float',
+        'prec' : constants.position_precision,
+        'count' : 1,
+        'unit' : constants.velo_units,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+    },
+    pv_phase_max_velo_rb : {
+        'type' : 'float',
+        'prec' : constants.position_precision,
+        'count' : 1,
+        'unit' : constants.velo_units,
+        'mdel' : -1,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_phase_velo_sp : {
+        'type' : 'float',
+        'prec' : constants.position_precision,
+        'count' : 1,
+        'unit' : constants.velo_units,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+    },
+    pv_phase_velo_rb : {
         'type' : 'float',
         'prec' : constants.position_precision,
         'count' : 1,
