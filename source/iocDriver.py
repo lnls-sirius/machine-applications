@@ -192,6 +192,8 @@ class EPUSupport(pcaspy.Driver):
         if isPvName(reason, _db.pv_beamline_enbl_sel):
             if isBoolNum(value):
                 self.setParam(_db.pv_beamline_enbl_sel, value)
+                self.setParam(_db.pv_beamline_enbl_sts, value)
+                self.setParam(_db.pv_beamline_enbl_mon, value)
                 self.updatePVs()
             else:
                 status = False
