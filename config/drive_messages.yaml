@@ -7,6 +7,7 @@ diagnostic_messages:
   A012: 'A012 (Ab) - Power is switched on, power and control section are ready for operation'
   A010: 'A010 (AH) - Drive Halt'
   A211: 'A211 (AF) - Process block mode lagless, encoder 2'
+  F226: 'Undervoltage in power section'
 
 messages:
   0: 'P0'

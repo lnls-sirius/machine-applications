@@ -46,33 +46,35 @@ class EcoDrive():
 
     def test_connection(self):
         found_bbb = False
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            while not found_bbb:
-                try:
-                    s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
-                except ConnectionRefusedError:
-                    logger.exception('ConnectionRefusedError')
-                    self.soft_drive_message = f'Drive {self.DRIVE_NAME} ConnectionRefusedError'
-                    print(self.soft_drive_message)
-                    time.sleep(.1)
-                else:
-                    self.soft_drive_message = 'Connected'
-                    print(self.soft_drive_message)
-                    found_bbb = True
+        with self._lock:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                while not found_bbb:
+                    try:
+                        s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
+                    except ConnectionRefusedError:
+                        logger.exception('ConnectionRefusedError')
+                        self.soft_drive_message = f'Drive {self.DRIVE_NAME} ConnectionRefusedError'
+                        #print(self.soft_drive_message)
+                        time.sleep(.1)
+                    else:
+                        self.soft_drive_message = 'Connected'
+                        print(f'Drive {self.DRIVE_NAME} connected.')
+                        found_bbb = True
 
     def connect(self) -> bool:
-        try:
-            byte_message = self.tcp_read_parameter(f'BCD:{self.ADDRESS}')
-        except Exception:
-            logger.exception('Communication error in tcp_read_parameter.')
-        else:
-            str_message = byte_message.decode().split()
-            if not (f'E{self.ADDRESS}:>' in str_message[0]):
-                logger.error(
-                        f'Drive addres (E{self.ADDRESS}) expected in drive answer, but was not found.')
-                return False
+        with self._lock:
+            try:
+                byte_message = self.tcp_read_parameter(f'BCD:{self.ADDRESS}')
+            except Exception:
+                logger.exception('Communication error in tcp_read_parameter.')
             else:
-                return True
+                str_message = byte_message.decode().split()
+                if not (f'E{self.ADDRESS}:>' in str_message[0]):
+                    logger.error(
+                            f'Drive addres (E{self.ADDRESS}) expected in drive answer, but was not found.')
+                    return False
+                else:
+                    return True
 
     def tcp_read_parameter(self, message, change_drive=True, answer_size=64) -> bytes:
         ''' change_drive parameter: change target rs485 drive.'''
@@ -88,13 +90,13 @@ class EcoDrive():
                 s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
                 byte_message = f'{message}\r\n'.encode()
                 s.sendall(byte_message)
-                time.sleep(.07) # .047
-                while True:
-                    data = s.recv(answer_size)
-                    if not data: break
-                    return data
+                time.sleep(.06) # .047
+                data = s.recv(answer_size)
+                # if not data: break
+                return data
 
     def tcp_write_parameter(self, value):
+        with self._lock:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(self._SOCKET_TIMEOUT)
                 s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
@@ -102,12 +104,12 @@ class EcoDrive():
                 s.sendall(byte_message)
                 time.sleep(.05) # magic number!!!!
                 while True:
-                    data = s.recv(64)
+                    data = s.recv(32)
                     if not data: break
                     return(data)
 
-    def get_resolver_position(self) -> float:
-        return float(self.read_parameter_data('S-0-0051'))
+    def get_resolver_position(self, change_drive = True) -> float:
+        return float(self.read_parameter_data('S-0-0051', change_drive=change_drive))
     
     def get_resolver_nominal_position(self):
         return float(self.read_parameter_data('S-0-0047'))
@@ -124,8 +126,8 @@ class EcoDrive():
     def get_act_torque(self) -> float:
         return float(self.read_parameter_data('S-0-0079'))
 
-    def get_encoder_position(self) -> float:
-        return float(self.read_parameter_data('S-0-0053'))
+    def get_encoder_position(self, change_drive=True) -> float:
+        return float(self.read_parameter_data('S-0-0053', change_drive=change_drive))
 
     def get_diagnostic_code(self) -> str:
         try:
@@ -261,9 +263,9 @@ class EcoDrive():
                 self.act_velocity = act_velocity
                 return act_velocity
 
-    def get_movement_status(self) -> bool:
+    def get_movement_status(self, change_drive=True) -> bool:
         try:
-            byte_message = self.tcp_read_parameter('P-0-0013,7,R')
+            byte_message = self.tcp_read_parameter('P-0-0013,7,R', change_drive=change_drive)
         except Exception as e:
             logger.exception('Communication error in tcp_read_parameter().')
             raise e
