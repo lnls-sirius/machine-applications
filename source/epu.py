@@ -67,13 +67,48 @@ class Epu():
         self.standstill_gap_monitoring_update_time = 0
         self.moving_gap_monitoring_update_time = 0
         self.moving_gap_monitoring_update_rate = 0
-
         time.sleep(.5)
-        #self.init_variables_scope()
+        self.init_variables_scope()
         #self.standstill_gap_monitoring_thread.start()
         #self.standstill_gap_monitoring()
         #self.standstill_gap_monitoring()
-    
+
+    def update(self):
+        # drive a variables
+        self.a_target_position = self.a_drive.get_target_position()
+        self.a_resolver_gap = self.a_drive.get_resolver_position()
+        self.a_encoder_gap = self.a_drive.get_encoder_position()
+        self.a_halt_released, self.a_enable = not self.a_drive.get_halten_status()[0], self.a_drive.get_halten_status()[1]
+        self.a_diag_code = self.a_drive.get_diagnostic_code()
+        self.a_is_moving = False
+        # drive b variables
+        self.b_target_position = self.b_drive.get_target_position()
+        self.b_resolver_gap = self.b_drive.get_resolver_position()
+        self.b_encoder_gap = self.b_drive.get_encoder_position()
+        self.b_halt_released, self.b_enable = not self.b_drive.get_halten_status()[0], self.b_drive.get_halten_status()[1]
+        self.b_diag_code = self.b_drive.get_diagnostic_code()
+        self.b_is_moving = False
+        # drive i variables
+        self.i_target_position = self.i_drive.get_target_position()
+        self.i_resolver_phase = self.i_drive.get_resolver_position()
+        self.i_encoder_phase = self.i_drive.get_encoder_position()
+        self.i_halt_released, self.i_enable = not self.i_drive.get_halten_status()[0], self.i_drive.get_halten_status()[1]
+        self.i_diag_code = self.i_drive.get_diagnostic_code()
+        self.i_is_moving = False
+        #drive s variables
+        self.s_resolver_gap = self.s_drive.get_resolver_position()
+        self.s_resolver_phase = self.s_drive.get_resolver_position()
+        self.s_encoder_gap = self.s_drive.get_encoder_position()
+        self.s_halt_released, self.s_enable = not self.s_drive.get_halten_status()[0], self.s_drive.get_halten_status()[1]
+        self.s_diag_code = self.s_drive.get_diagnostic_code()
+        self.is_moving = (self.a_is_moving or self.b_is_moving or self.i_is_moving or self.s_is_moving )
+        self.gap_is_moving = self.a_drive.get_movement_status()
+        self.phase_is_moving = self.i_drive.get_movement_status()
+        self.is_moving = self.gap_is_moving or self.phase_is_moving
+
+    @asynch
+    @schedule(5)
+    @timer
     def init_variables_scope(self):
 
         # drive a variables

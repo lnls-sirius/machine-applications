@@ -90,7 +90,7 @@ class EcoDrive():
                 s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
                 byte_message = f'{message}\r\n'.encode()
                 s.sendall(byte_message)
-                time.sleep(.06) # .047
+                time.sleep(.07) # .047
                 data = s.recv(answer_size)
                 # if not data: break
                 return data
@@ -315,18 +315,18 @@ class EpuConfig(BaseModel):
     ECODRIVE_LOG_FILE_PATH: str
     EPU_LOG_FILE_PATH: str
 
-with open('../config/config.toml') as f:
-    config = toml.load('../config/config.toml')
-epu_config = EpuConfig(**config['EPU2'])
+# with open('../config/config.toml') as f:
+#     config = toml.load('../config/config.toml')
+# epu_config = EpuConfig(**config['EPU2'])
 
-eco_test = EcoDrive(
-        address=21,
-        min_limit=epu_config.MINIMUM_GAP,
-        max_limit=epu_config.MAXIMUM_GAP,
-        drive_name='Teste')
-if __name__ == '__main__':
-    time.sleep(1)
-    while True:
-        m = input(str("Mensagem: "))
-        #time.sleep(1)
-        print(eco_test.tcp_read_parameter(m))
+# eco_test = EcoDrive(
+#         address=21,
+#         min_limit=epu_config.MINIMUM_GAP,
+#         max_limit=epu_config.MAXIMUM_GAP,
+#         drive_name='Teste')
+# if __name__ == '__main__':
+#     time.sleep(1)
+#     while True:
+#         m = input(str("Mensagem: "))
+#         #time.sleep(1)
+#         print(eco_test.tcp_read_parameter(m))
