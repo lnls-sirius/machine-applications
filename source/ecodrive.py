@@ -31,7 +31,7 @@ logging.basicConfig(
 class EcoDrive():
     
     _SOCKET_TIMEOUT = .1
-    _RS485_DELAY = 0.055
+    _RS485_DELAY = 0.07
     _lock = threading.RLock()
 
     def __init__(self, address, max_limit=+25, min_limit=-25, bbb_hostname = BBB_HOSTNAME, rs458_tcp_port=RS485_TCP_PORT, drive_name = 'EcoDrive'):
@@ -254,18 +254,27 @@ class EcoDrive():
     def set_velocity(self, target: float) -> bool:
         if 50 <= target <= 500:
             with self._lock:
-                answer = self.tcp_read_parameter('S-0-0040,7,W,>').decode()
+                answer = self.tcp_read_parameter('P-0-4007,7,W,>').decode()
                 if '?' in answer:
                     answer = self.tcp_read_parameter(
                         f'{target}', change_drive=False).decode()
                     if str(target) in answer:
                         answer = self.tcp_read_parameter("<", change_drive=False).decode()
                         if f'{self.ADDRESS}' in answer:
-                            logger.info(f'Drive {self.DRIVE_NAME} velocitu changed to {target}')
+                            logger.info(
+                                f'Drive {self.DRIVE_NAME} velocity changed to {target}')
                             return True
-                        else: return False
-                    else: return False
-                else: return False
+                        else:
+                            logger.info(
+                                f'Driver {self.DRIVE_NAME} address not found in last parameter write stage')
+                            return False
+                    else:
+                        logger.info(
+                                f'">" character not found in second parameter write stage')
+                        return False
+                else:
+                    logger.info(f'"?" character not found in first parameter write stage')
+                    return False
 
     def get_act_velocity(self, change_drive=True):
         try:
