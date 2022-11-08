@@ -496,9 +496,8 @@ pvdb = {
         'asg' : 'readonly',
     },
     pv_drive_a_diag_code_mon : {
-        'type' : 'int',
+        'type' : 'string',
         'count' : 1,
-        'unit' : constants.no_units,
         'mdel' : -1,
         'scan' : constants.scan_rate,
         'asyn' : False,
@@ -555,9 +554,8 @@ pvdb = {
         'asg' : 'readonly',
     },
     pv_drive_b_diag_code_mon : {
-        'type' : 'int',
+        'type' : 'string',
         'count' : 1,
-        'unit' : constants.no_units,
         'mdel' : -1,
         'scan' : constants.scan_rate,
         'asyn' : False,
@@ -614,9 +612,8 @@ pvdb = {
         'asg' : 'readonly',
     },
     pv_drive_s_diag_code_mon : {
-        'type' : 'int',
+        'type' : 'string',
         'count' : 1,
-        'unit' : constants.no_units,
         'mdel' : -1,
         'scan' : constants.scan_rate,
         'asyn' : False,
@@ -673,9 +670,8 @@ pvdb = {
         'asg' : 'readonly',
     },
     pv_drive_i_diag_code_mon : {
-        'type' : 'int',
+        'type' : 'string',
         'count' : 1,
-        'unit' : constants.no_units,
         'mdel' : -1,
         'scan' : constants.scan_rate,
         'asyn' : False,
