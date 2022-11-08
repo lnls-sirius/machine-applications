@@ -89,7 +89,7 @@ class EcoDrive():
                     s.settimeout(self._SOCKET_TIMEOUT)
                     s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
                     s.sendall(f'BCD:{self.ADDRESS}\r\n'.encode())
-                    time.sleep(.02) # .015
+                    time.sleep(.03) # .015
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(self._SOCKET_TIMEOUT)
                 s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
@@ -141,7 +141,7 @@ class EcoDrive():
             logger.exception('Communication error in tcp_read_parameter().')
         else:
             str_message = byte_message.decode()
-            if not (f'E{self.ADDRESS}:>' in str_message and 'S-0-0390,7,R' in str_message):
+            if not f'E{self.ADDRESS}:>' in str_message:
                 logger.error('Drive did not repond as expeted to "S-0-0390,7,R".', f'{str_message}')
                 raise Exception('Drive did not repond as expeted to "S-0-0390,7,R".', f'{str_message}')
             else:
@@ -354,12 +354,13 @@ with open('../config/config.toml') as f:
     config = toml.load('../config/config.toml')
 epu_config = EpuConfig(**config['EPU2'])
 
-eco_test = EcoDrive(
-        address=21,
-        min_limit=epu_config.MINIMUM_GAP,
-        max_limit=epu_config.MAXIMUM_GAP,
-        drive_name='Teste')
 if __name__ == '__main__':
+    eco_test = EcoDrive(
+            address=21,
+            min_limit=epu_config.MINIMUM_GAP,
+            max_limit=epu_config.MAXIMUM_GAP,
+            drive_name='Teste')
+
     time.sleep(1)
     while True:
         m = input(str("Mensagem: "))
