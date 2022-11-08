@@ -30,7 +30,8 @@ logging.basicConfig(
 
 class EcoDrive():
     
-    _SOCKET_TIMEOUT = .07
+    _SOCKET_TIMEOUT = .1
+    _RS485_DELAY = 0.055
     _lock = threading.RLock()
 
     def __init__(self, address, max_limit=+25, min_limit=-25, bbb_hostname = BBB_HOSTNAME, rs458_tcp_port=RS485_TCP_PORT, drive_name = 'EcoDrive'):
@@ -38,11 +39,11 @@ class EcoDrive():
         self.UPPER_LIMIT = max_limit
         self.LOWER_LIMIT = min_limit
         self.DRIVE_NAME = drive_name
-        self.MAX_RESOLVER_ENCODER_DIFF = .1 # Needs to be found.
         self.soft_drive_message = ''
         self.BBB_HOSTNAME = bbb_hostname
         self.RS458_TCP_PORT = rs458_tcp_port
         self.test_connection()
+        self.set_rs485_delay(1)
 
     def test_connection(self):
         found_bbb = False
@@ -56,8 +57,11 @@ class EcoDrive():
                         self.soft_drive_message = f'Drive {self.DRIVE_NAME} ConnectionRefusedError'
                         #print(self.soft_drive_message)
                         time.sleep(.1)
+                    except TimeoutError:
+                        logger.exception('Could not connect to beagle bone: socket timeout.')
+                        print('Could not connect to beagle bone: socket timeout.')
                     else:
-                        self.soft_drive_message = 'Connected'
+                        self.soft_drive_message = f'Drive {self.DRIVE_NAME} connected.'
                         print(f'Drive {self.DRIVE_NAME} connected.')
                         found_bbb = True
 
@@ -85,13 +89,13 @@ class EcoDrive():
                     s.settimeout(self._SOCKET_TIMEOUT)
                     s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
                     s.sendall(f'BCD:{self.ADDRESS}\r\n'.encode())
-                    time.sleep(.03) # .015
+                    time.sleep(.02) # .015
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(self._SOCKET_TIMEOUT)
                 s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
                 byte_message = f'{message}\r\n'.encode()
                 s.sendall(byte_message)
-                time.sleep(.055) # .047
+                time.sleep(self._RS485_DELAY) # .047
                 data = s.recv(64)
                 # if not data: break
                 return data
@@ -247,8 +251,21 @@ class EcoDrive():
     def get_max_velocity(self):
         return float(self.read_parameter_data(('P-0-4007,7,R')))
 
-    def set_velocity(self):
-        pass
+    def set_velocity(self, target: float) -> bool:
+        if 50 <= target <= 500:
+            with self._lock:
+                answer = self.tcp_read_parameter('S-0-0040,7,W,>').decode()
+                if '?' in answer:
+                    answer = self.tcp_read_parameter(
+                        f'{target}', change_drive=False).decode()
+                    if str(target) in answer:
+                        answer = self.tcp_read_parameter("<", change_drive=False).decode()
+                        if f'{self.ADDRESS}' in answer:
+                            logger.info(f'Drive {self.DRIVE_NAME} velocitu changed to {target}')
+                            return True
+                        else: return False
+                    else: return False
+                else: return False
 
     def get_act_velocity(self, change_drive=True):
         try:
@@ -284,6 +301,10 @@ class EcoDrive():
                 raise e
             else:
                 return is_moving
+
+    def get_rs485_delay(self):
+        answer = self.tcp_read_parameter('P-0-4050,7,R')
+        return(answer)
 
     def set_rs485_delay(self, value):
         answer = self.tcp_read_parameter(f'P-0-4050,7,W,{value}')

@@ -59,4 +59,7 @@ A IDEIA É CRIAR UMA LÓGICA ROBUSTA QUE GARANTA O VALOR DE CERTAS VARIÁVEIS CO
 # Documentação
 Se o freio está livre, então todas as outras condições para se iniciar o movimento foram satisfeitas, por isso a variável que define se pode ou não ter movimentação é atualizada com base nas leituras via bsmp, da beagle bone, apenas. Isso economisa banda do barramento RS485. As variáveis de status do enable e do halt também são baseadas nas leituras das GPIOs da bbb.
 Com qualquer sinal digital de saída em nível lógico alto, nada pode ser escrito no drive. Isso é uma premissa importante, já que a lógica de alguns métodos se baseia nela. Por isso é importante uma leitura periodia do status da saída digital da bbb.
-A função check_*movement() é chamada a cada vez que o sinal de start é enviado. Ela monitora o movimento até ele acabar ou até timeout. Ela está sem robustez, carece de melhorias.
+Para qualquer movimentação, os sinais de enable e halt do gap e da fase devem estar presentes, isso elimina a possibilidade do escorregamento do freio.
+
+Existem 3 classes de evento: [1] stop event e [2] start event.
+Quando a função start é chamada, ela limpa o evento de stop, o que faz com que a thread padrão pare (existe uma pausa de 100 ms após o clear da flag stop_event para esperar a última troca de mensagens tcp da thread padrão). Em seguida, o evento start_event é acionado, disparando o laço da thread de monitoramento de movimento.
