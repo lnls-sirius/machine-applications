@@ -84,6 +84,9 @@
      <property name="channel" stdset="0">
       <string>ca://${PREFIX}${Drive}DiagCode-Mon</string>
      </property>
+     <property name="displayFormat" stdset="0">
+      <enum>PyDMLabel::String</enum>
+     </property>
     </widget>
    </item>
    <item row="2" column="0" colspan="2">
