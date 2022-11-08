@@ -29,7 +29,6 @@ ENABLE_CH_AB = 0x30
 HALT_CH_SI =   0x11
 START_CH_SI =  0x21
 ENABLE_CH_SI = 0x31
-
 #################################################
 
 class Epu():
@@ -41,74 +40,70 @@ class Epu():
             address=epu_config.A_DRIVE_ADDRESS,
             min_limit=epu_config.MINIMUM_GAP,
             max_limit=epu_config.MAXIMUM_GAP, drive_name='A')
-        time.sleep(.5)
         self.b_drive = EcoDrive(
             address=epu_config.B_DRIVE_ADDRESS,
             min_limit=epu_config.MINIMUM_GAP,
             max_limit=epu_config.MAXIMUM_GAP, drive_name='B')
-        time.sleep(.5)    
         self.i_drive = EcoDrive(
             address=epu_config.I_DRIVE_ADDRESS,
             min_limit=epu_config.MINIMUM_PHASE,
             max_limit=epu_config.MAXIMUM_PHASE, drive_name='I')
-        time.sleep(.5)
         self.s_drive = EcoDrive(
             address=epu_config.S_DRIVE_ADDRESS,
             min_limit=epu_config.MINIMUM_PHASE,
             max_limit=epu_config.MAXIMUM_PHASE, drive_name='S')
 
+        self.movement_event = threading.Event()
+        self.start_event = threading.Event()
         self._epu_lock = threading.RLock()
-        self.MAX_POSITION_DIFF = .01
-        #self.monitor_gap_movement_thread = Thread(target=self.monitor_gap_movement)
         self.monitor_phase_movement_thread = Thread(target=self.monitor_phase_movement)
-        #self.standstill_gap_monitoring_thread = Thread(target=self.standstill_gap_monitoring)
+        self.standstill_phase_monitoring_thread = Thread(target=self.standstill_phase_monitoring)
+        self.standstill_phase_monitoring_thread.setDaemon(True)
         self.standstill_gap_monitoring_update_count = 0
         self.moving_gap_monitoring_update_count = 0
         self.standstill_gap_monitoring_update_time = 0
         self.moving_gap_monitoring_update_time = 0
         self.moving_gap_monitoring_update_rate = 0
-        time.sleep(.5)
         self.init_variables_scope()
-        #self.standstill_gap_monitoring_thread.start()
-        #self.standstill_gap_monitoring()
-        #self.standstill_gap_monitoring()
+        self.standstill_phase_monitoring_thread.start()
+        self.monitor_phase_movement_thread.start()
 
     def update(self):
-        # drive a variables
-        self.a_target_position = self.a_drive.get_target_position()
-        self.a_resolver_gap = self.a_drive.get_resolver_position()
-        self.a_encoder_gap = self.a_drive.get_encoder_position()
-        self.a_halt_released, self.a_enable = not self.a_drive.get_halten_status()[0], self.a_drive.get_halten_status()[1]
-        self.a_diag_code = self.a_drive.get_diagnostic_code()
-        self.a_is_moving = False
-        # drive b variables
-        self.b_target_position = self.b_drive.get_target_position()
-        self.b_resolver_gap = self.b_drive.get_resolver_position()
-        self.b_encoder_gap = self.b_drive.get_encoder_position()
-        self.b_halt_released, self.b_enable = not self.b_drive.get_halten_status()[0], self.b_drive.get_halten_status()[1]
-        self.b_diag_code = self.b_drive.get_diagnostic_code()
-        self.b_is_moving = False
-        # drive i variables
-        self.i_target_position = self.i_drive.get_target_position()
-        self.i_resolver_phase = self.i_drive.get_resolver_position()
-        self.i_encoder_phase = self.i_drive.get_encoder_position()
-        self.i_halt_released, self.i_enable = not self.i_drive.get_halten_status()[0], self.i_drive.get_halten_status()[1]
-        self.i_diag_code = self.i_drive.get_diagnostic_code()
-        self.i_is_moving = False
-        #drive s variables
-        self.s_resolver_gap = self.s_drive.get_resolver_position()
-        self.s_resolver_phase = self.s_drive.get_resolver_position()
-        self.s_encoder_gap = self.s_drive.get_encoder_position()
-        self.s_halt_released, self.s_enable = not self.s_drive.get_halten_status()[0], self.s_drive.get_halten_status()[1]
-        self.s_diag_code = self.s_drive.get_diagnostic_code()
-        self.is_moving = (self.a_is_moving or self.b_is_moving or self.i_is_moving or self.s_is_moving )
-        self.gap_is_moving = self.a_drive.get_movement_status()
-        self.phase_is_moving = self.i_drive.get_movement_status()
-        self.is_moving = self.gap_is_moving or self.phase_is_moving
+        try:
+            # drive a variables
+            self.a_target_position = self.a_drive.get_target_position()
+            self.a_resolver_gap = self.a_drive.get_resolver_position()
+            self.a_encoder_gap = self.a_drive.get_encoder_position()
+            self.a_halt_released, self.a_enable = not self.a_drive.get_halten_status()[0], self.a_drive.get_halten_status()[1]
+            self.a_diag_code = self.a_drive.get_diagnostic_code()
+            self.a_is_moving = False
+            # drive b variables
+            self.b_target_position = self.b_drive.get_target_position()
+            self.b_resolver_gap = self.b_drive.get_resolver_position()
+            self.b_encoder_gap = self.b_drive.get_encoder_position()
+            self.b_halt_released, self.b_enable = not self.b_drive.get_halten_status()[0], self.b_drive.get_halten_status()[1]
+            self.b_diag_code = self.b_drive.get_diagnostic_code()
+            self.b_is_moving = False
+            # drive i variables
+            self.i_target_position = self.i_drive.get_target_position()
+            self.i_resolver_phase = self.i_drive.get_resolver_position()
+            self.i_encoder_phase = self.i_drive.get_encoder_position()
+            self.i_halt_released, self.i_enable = not self.i_drive.get_halten_status()[0], self.i_drive.get_halten_status()[1]
+            self.i_diag_code = self.i_drive.get_diagnostic_code()
+            self.i_is_moving = False
+            #drive s variables
+            self.s_resolver_gap = self.s_drive.get_resolver_position()
+            self.s_resolver_phase = self.s_drive.get_resolver_position()
+            self.s_encoder_gap = self.s_drive.get_encoder_position()
+            self.s_halt_released, self.s_enable = not self.s_drive.get_halten_status()[0], self.s_drive.get_halten_status()[1]
+            self.s_diag_code = self.s_drive.get_diagnostic_code()
+            self.is_moving = (self.a_is_moving or self.b_is_moving or self.i_is_moving or self.s_is_moving )
+            self.gap_is_moving = self.a_drive.get_movement_status()
+            self.phase_is_moving = self.i_drive.get_movement_status()
+            self.is_moving = self.gap_is_moving or self.phase_is_moving
+        except Exception:
+            pass
 
-    @asynch
-    @schedule(5)
-    @timer
     def init_variables_scope(self):
 
         # drive a variables
@@ -180,7 +175,6 @@ class Epu():
                     timeout -= 1
                     self.moving_gap_monitoring_update_count +=1
                     end = time.time()
-                    self.callback_update()
                 self.moving_gap_monitoring_update_rate = self.moving_gap_monitoring_update_count/(end-start)
                 self.gap_is_moving = 0
                 return self.gap_is_moving
@@ -189,69 +183,69 @@ class Epu():
                 print(e)
     
     def monitor_phase_movement(self):
-        with self._epu_lock:
-            self.phase_is_moving = 1
-            timeout = 25 # faça a conta de quanto tempo leava o maior movimento.
-            self.phase = self.i_drive.get_encoder_position(True)
-            while self.phase_is_moving and timeout:
-                count = 1
-                while count <=10:
-                    # get movement status pode ser trocada por target position reached
-                    self.phase = self.i_drive.get_encoder_position(False)
-                    print(self.phase)
-                    count +=1
-                self.phase_is_moving = self.i_drive.get_act_velocity() < 2
-                count = 1    
-                timeout -= 1
-            self.phase_is_moving = 0
-            return self.phase_is_moving
+        while True:
+            try:
+                self.movement_event.wait()
+                self.i_drive.connect()
+                start = time.time()
+                count = 0
+                self.start_event.wait()
+                while self.movement_event.is_set():
+                    c = 0
+                    while c<15:
+                        self.phase = self.i_drive.get_encoder_position(False)
+                        velocity = self.i_drive.get_act_velocity(False)
+                        c+=1
+                        count +=1
+                    # print(f'Fase: {self.phase};\
+                    #     Velocidade da fase: {velocity}\
+                    #         count = {count}')
+                    if abs(velocity) < .5 and abs(time.time()-start)>1:
+                        end = time.time()
+                        self.phase_is_moving = 0
+                        self.movement_event.clear()
+                        print(count, end-start, count/(end-start))
+                self.start_event.clear()
+            except Exception as e:
+                logger.exception('Could not moving update')
+                print(e)
 
-    @asynch
-    @schedule(5)
-    @timer
-    def standstill_gap_monitoring(self):
+    def standstill_phase_monitoring(self):
         while True:
             try:
                 start = time.time()
-                self.a_resolver_gap = self.a_drive.get_resolver_position(True)
-                while self.gap_is_moving: time.sleep(2)
-                self.a_encoder_gap = self.a_drive.get_encoder_position()
-                while self.gap_is_moving: time.sleep(2)
-                # self.a_halt_released, self.a_enable = not self.a_drive.get_halten_status()[0], self.a_drive.get_halten_status()[1]
-                #while self.gap_is_moving: time.sleep(2)
-                self.a_diag_code = self.a_drive.get_diagnostic_code()
-                while self.gap_is_moving: time.sleep(2)
-                # drive b variables
-                self.b_resolver_gap = self.b_drive.get_resolver_position()
-                while self.gap_is_moving: time.sleep(2)
-                self.b_encoder_gap = self.b_drive.get_encoder_position()
-                while self.gap_is_moving: time.sleep(2)
-                #self.b_halt_released, self.b_enable = not self.b_drive.get_halten_status()[0], self.b_drive.get_halten_status()[1]
-                while self.gap_is_moving: time.sleep(2)
-                self.b_diag_code = self.b_drive.get_diagnostic_code()
-                while self.gap_is_moving: time.sleep(2)
-                # drive i variables
-                self.i_resolver_gap = self.i_drive.get_resolver_position()
-                while self.gap_is_moving: time.sleep(2)
-                self.i_encoder_gap = self.i_drive.get_encoder_position()
-                while self.gap_is_moving: time.sleep(2)
-                # self.i_halt_released, self.i_enable = not self.i_drive.get_halten_status()[0], self.i_drive.get_halten_status()[1]
-                while self.gap_is_moving: time.sleep(2)
-                self.i_diag_code = self.i_drive.get_diagnostic_code()
-                while self.gap_is_moving: time.sleep(2)
-                #drive s variables
-                self.s_resolver_gap = self.s_drive.get_resolver_position()
-                while self.gap_is_moving: time.sleep(2)
-                self.s_encoder_gap = self.s_drive.get_encoder_position()
-                while self.gap_is_moving: time.sleep(2)
-                # self.s_halt_released, self.s_enable = not self.s_drive.get_halten_status()[0], self.s_drive.get_halten_status()[1]
-                while self.gap_is_moving: time.sleep(2)
-                self.s_diag_code = self.s_drive.get_diagnostic_code()
-                while self.gap_is_moving: time.sleep(2)
-                end = time.time()
-                self.standstill_gap_monitoring_update_count += 1
-                self.standstill_gap_monitoring_update_time = end - start
-                self.standstill_gap_monitoring_rate = (1/(end-start))
+                if not self.movement_event.is_set():
+                    self.i_resolver_gap = self.i_drive.get_resolver_position()
+                if not self.movement_event.is_set():
+                    self.i_encoder_gap = self.i_drive.get_encoder_position()
+                if not self.movement_event.is_set():
+                    # self.i_halt_released, self.i_enable = not self.i_drive.get_halten_status()[0], self.i_drive.get_halten_status()[1]
+                    self.i_diag_code = self.i_drive.get_diagnostic_code()
+                if not self.movement_event.is_set():
+                    self.s_resolver_gap = self.s_drive.get_resolver_position()
+                if not self.movement_event.is_set():
+                    self.s_encoder_gap = self.s_drive.get_encoder_position()
+                if not self.movement_event.is_set():
+                    #self.s_halt_released, self.s_enable = not self.s_drive.get_halten_status()[0], self.s_drive.get_halten_status()[1]
+                    self.s_diag_code = self.s_drive.get_diagnostic_code()
+                if not self.movement_event.is_set():
+                    self.i_resolver_gap = self.i_drive.get_resolver_position()
+                if not self.movement_event.is_set():
+                    self.i_encoder_gap = self.i_drive.get_encoder_position()
+                if not self.movement_event.is_set():
+                    # self.i_halt_released, self.i_enable = not self.i_drive.get_halten_status()[0], self.i_drive.get_halten_status()[1]
+                    self.i_diag_code = self.i_drive.get_diagnostic_code()
+                if not self.movement_event.is_set():
+                    self.s_resolver_gap = self.s_drive.get_resolver_position()
+                if not self.movement_event.is_set():
+                    self.s_encoder_gap = self.s_drive.get_encoder_position()
+                if not self.movement_event.is_set():
+                    # self.s_halt_released, self.s_enable = not self.s_drive.get_halten_status()[0], self.s_drive.get_halten_status()[1]
+                    self.s_diag_code = self.s_drive.get_diagnostic_code()
+                    end = time.time()
+                    self.standstill_gap_monitoring_update_count += 1
+                    self.standstill_gap_monitoring_update_time = end - start
+                    self.standstill_gap_monitoring_rate = (1/(end-start))
 
             except Exception as e:
                 print(e)
@@ -515,19 +509,22 @@ class Epu():
     def phase_set(self, target_phase: float) -> float:
         previous_gap = self.i_drive.get_target_position()
         if epu_config.MINIMUM_PHASE <= target_phase <= epu_config.MAXIMUM_PHASE:
-            try:
-                self.i_drive.set_target_position(target_phase)
-            except:
-                logger.exception('Could not set drive I phase.')
-                print('Could not set drive I phase.')
-            else:
+            timeout = 5
+            while timeout > 0:
                 try:
+                    self.i_drive.set_target_position(target_phase)
                     self.s_drive.set_target_position(target_phase)
                 except Exception as e:
-                    logger.exception('Could not set drive S phase.')
-                    print('Could not set drive S phase.', e)
+                    logger.exception('Could not set drive I phase.')
+                    print(e)
                 else:
-                    return target_phase
+                    i = self.i_drive.get_target_position()
+                    s = self.s_drive.get_target_position()
+                    if i == s == target_phase:
+                        return True
+                    else:
+                        timeout -= 1
+
         else:
             logger.error(f'Gap valeu given, ({target_phase}), is out of range.')
             print(f'Gap value given, ({target_phase}), is out of range.')
@@ -690,9 +687,10 @@ class Epu():
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             s.settimeout(.1)
                             s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+                            self.movement_event.set()
+                            time.sleep(.1) # magic number
+                            self.start_event.set()
                             s.sendall(bsmp_enable_message)
-                            self.monitor_phase_movement_thread.start()
-                            time.sleep(.01) # magic number
                             while True:
                                 data = s.recv(8)
                                 if not data: break

@@ -16,7 +16,7 @@ ENABLE_CH_SI = 0x31
 
 ################ TCP/IP CONSTANTS #################
 GPIO_TCP_PORT = 5050
-RS485_TCP_PORT=9993
+RS485_TCP_PORT= 64993
 BBB_HOSTNAME='BBB-DRIVERS-EPU-2022'
 
 with open('../config/drive_messages.yaml', 'r') as f:
@@ -30,7 +30,7 @@ logging.basicConfig(
 
 class EcoDrive():
     
-    _SOCKET_TIMEOUT = .1
+    _SOCKET_TIMEOUT = .07
     _lock = threading.RLock()
 
     def __init__(self, address, max_limit=+25, min_limit=-25, bbb_hostname = BBB_HOSTNAME, rs458_tcp_port=RS485_TCP_PORT, drive_name = 'EcoDrive'):
@@ -76,7 +76,8 @@ class EcoDrive():
                 else:
                     return True
 
-    def tcp_read_parameter(self, message, change_drive=True, answer_size=64) -> bytes:
+    #@timer
+    def tcp_read_parameter(self, message, change_drive=True) -> bytes:
         ''' change_drive parameter: change target rs485 drive.'''
         with self._lock:
             if change_drive:
@@ -90,8 +91,8 @@ class EcoDrive():
                 s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
                 byte_message = f'{message}\r\n'.encode()
                 s.sendall(byte_message)
-                time.sleep(.07) # .047
-                data = s.recv(answer_size)
+                time.sleep(.055) # .047
+                data = s.recv(64)
                 # if not data: break
                 return data
 
@@ -170,6 +171,7 @@ class EcoDrive():
                         raise e
                     else:
                         self.halt_status, self.enable_status = (drive_halt_status, drive_enable_status)
+                        
                         return(drive_halt_status, drive_enable_status)
 
     def get_target_position_reached(self) -> bool:
@@ -245,9 +247,12 @@ class EcoDrive():
     def get_max_velocity(self):
         return float(self.read_parameter_data(('P-0-4007,7,R')))
 
-    def get_act_velocity(self):
+    def set_velocity(self):
+        pass
+
+    def get_act_velocity(self, change_drive=True):
         try:
-            byte_message = self.tcp_read_parameter('S-0-0040,7,R')
+            byte_message = self.tcp_read_parameter('S-0-0040,7,R', change_drive=change_drive)
         except Exception as e:
             logger.exception('Communication error in tcp_read_parameter.')
             raise e
@@ -265,7 +270,7 @@ class EcoDrive():
 
     def get_movement_status(self, change_drive=True) -> bool:
         try:
-            byte_message = self.tcp_read_parameter('P-0-0013,7,R', change_drive=change_drive)
+            byte_message = self.tcp_read_parameter('S-0-0013,7,R', change_drive=change_drive)
         except Exception as e:
             logger.exception('Communication error in tcp_read_parameter().')
             raise e
@@ -285,13 +290,13 @@ class EcoDrive():
         delay = answer.decode().split('\r\n')
         return delay
 
-    def read_parameter_data(self, parameter, change_drive=True, treat_answer=True, ans_size=64) -> str:
+    def read_parameter_data(self, parameter, change_drive=True, treat_answer=True) -> str:
         try:
-            drive_answer = self.tcp_read_parameter(f'{parameter},7,R', change_drive, answer_size=ans_size).decode()
+            drive_answer = self.tcp_read_parameter(f'{parameter},7,R', change_drive).decode()
         except Exception:
             logger.exception('Erro while tcp reading.')
         else:
-            if not (f'E{self.ADDRESS}:>' in drive_answer and f'{parameter},7,R' in drive_answer):
+            if not f'E{self.ADDRESS}:>' in drive_answer:
                 logger.error(
                     f'Corrupt drive answer', f'Drive {self.DRIVE_NAME} answer to "{parameter},7,R" {drive_answer}')
                 raise Exception(
@@ -315,18 +320,18 @@ class EpuConfig(BaseModel):
     ECODRIVE_LOG_FILE_PATH: str
     EPU_LOG_FILE_PATH: str
 
-# with open('../config/config.toml') as f:
-#     config = toml.load('../config/config.toml')
-# epu_config = EpuConfig(**config['EPU2'])
+with open('../config/config.toml') as f:
+    config = toml.load('../config/config.toml')
+epu_config = EpuConfig(**config['EPU2'])
 
-# eco_test = EcoDrive(
-#         address=21,
-#         min_limit=epu_config.MINIMUM_GAP,
-#         max_limit=epu_config.MAXIMUM_GAP,
-#         drive_name='Teste')
-# if __name__ == '__main__':
-#     time.sleep(1)
-#     while True:
-#         m = input(str("Mensagem: "))
-#         #time.sleep(1)
-#         print(eco_test.tcp_read_parameter(m))
+eco_test = EcoDrive(
+        address=21,
+        min_limit=epu_config.MINIMUM_GAP,
+        max_limit=epu_config.MAXIMUM_GAP,
+        drive_name='Teste')
+if __name__ == '__main__':
+    time.sleep(1)
+    while True:
+        m = input(str("Mensagem: "))
+        #time.sleep(1)
+        print(eco_test.tcp_read_parameter(m))
