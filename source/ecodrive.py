@@ -1,23 +1,7 @@
-import time, yaml, logging, threading, toml, socket
-from pydantic import BaseModel
+import time, yaml, logging, threading, socket
 from utils import *
+import constants as _cte
 
-############### GPIO COMMANDS ##################
-BSMP_WRITE = 0X20
-BSMP_READ = 0X10
-
-HALT_CH_AB =   0x10
-START_CH_AB =  0x20
-ENABLE_CH_AB = 0x30
-
-HALT_CH_SI =   0x11
-START_CH_SI =  0x21
-ENABLE_CH_SI = 0x31
-
-################ TCP/IP CONSTANTS #################
-GPIO_TCP_PORT = 5050
-RS485_TCP_PORT= 64993
-BBB_HOSTNAME='BBB-DRIVERS-EPU-2022'
 
 with open('../config/drive_messages.yaml', 'r') as f:
     diag_messages = yaml.safe_load(f)['diagnostic_messages']
@@ -34,7 +18,11 @@ class EcoDrive():
     _RS485_DELAY = 0.07
     _lock = threading.RLock()
 
-    def __init__(self, address, max_limit=+25, min_limit=-25, bbb_hostname = BBB_HOSTNAME, rs458_tcp_port=RS485_TCP_PORT, drive_name = 'EcoDrive'):
+    def __init__(
+        self, address, max_limit=+25, min_limit=-25,
+        bbb_hostname = _cte.beaglebone_addr, rs458_tcp_port=_cte.msg_port,
+        drive_name = 'EcoDrive'
+        ):
         self.ADDRESS = address
         self.UPPER_LIMIT = max_limit
         self.LOWER_LIMIT = min_limit
@@ -114,7 +102,9 @@ class EcoDrive():
                     return(data)
 
     def get_resolver_position(self, change_drive = True) -> float:
-        return float(self.read_parameter_data('S-0-0051', change_drive=change_drive))
+        return float(
+            self.read_parameter_data('S-0-0051', change_drive=change_drive)
+            )
     
     def get_resolver_nominal_position(self):
         return float(self.read_parameter_data('S-0-0047'))
@@ -132,7 +122,9 @@ class EcoDrive():
         return float(self.read_parameter_data('S-0-0079'))
 
     def get_encoder_position(self, change_drive=True) -> float:
-        return float(self.read_parameter_data('S-0-0053', change_drive=change_drive))
+        return float(
+            self.read_parameter_data('S-0-0053', change_drive=change_drive)
+            )
 
     def get_diagnostic_code(self) -> str:
         try:
@@ -142,11 +134,19 @@ class EcoDrive():
         else:
             str_message = byte_message.decode()
             if not (f'E{self.ADDRESS}:>' in str_message and 'S-0-0390,7,R' in str_message):
-                logger.error('Drive did not repond as expeted to "S-0-0390,7,R".', f'{str_message}')
-                raise Exception('Drive did not repond as expeted to "S-0-0390,7,R".', f'{str_message}')
+                logger.error(
+                    'Drive did not repond as expeted to "S-0-0390,7,R".',
+                    f'{str_message}'
+                    )
+                raise Exception(
+                    'Drive did not repond as expeted to "S-0-0390,7,R".',
+                    f'{str_message}'
+                    )
             else:
                 diagnostic_codes = list(diag_messages.keys())
-                # Crie uma lista com todos os códigos possíveis e então coloque um assert para verificar se o código lido está na lista.
+                # Crie uma lista com todos os códigos possíveis e então
+                # coloque um assert para verificar se o código lido está
+                # na lista.
                 _d_code = [code for code in diagnostic_codes if (code in str_message)]
                 assert len(_d_code) == 1
                 self.diagnostic_code = _d_code[0]
@@ -160,8 +160,14 @@ class EcoDrive():
         else:
             str_message = byte_message.decode()
             if not (f'E{self.ADDRESS}:>' in str_message and 'S-0-0134,7,R' in str_message):
-                logger.error('Drive did not repond as expeted to "S-0-0134,7,R".', f'{str_message}')
-                raise Exception('Drive did not repond as expeted to "S-0-0134,7,R".', f'{str_message}')
+                logger.error(
+                    'Drive did not repond as expeted to "S-0-0134,7,R".',
+                    f'{str_message}'
+                    )
+                raise Exception(
+                    'Drive did not repond as expeted to "S-0-0134,7,R".',
+                    f'{str_message}'
+                    )
             else:
                 try:
                     drive_halt_status = int(str_message.split('\r\n')[1][13])
@@ -192,9 +198,13 @@ class EcoDrive():
                 targ_pos_reached_bit = str_message.split('\r\n')[1][0]
                 if not (targ_pos_reached_bit == '0' or targ_pos_reached_bit == '1'):
                     logger.error(
-                        'Drive did not respond as axpected: targ_pos_reached bit is not 0 neither 1')
+                        "Drive did not respond as axpected: "
+                        "targ_pos_reached bit is not 0 neither 1"
+                        )
                     raise Exception(
-                        'Drive did not respond as axpected: targ_pos_reached bit is not 0 neither 1')
+                        "Drive did not respond as axpected: "
+                        "targ_pos_reached bit is not 0 neither 1"
+                        )
                 self.target_position_reached = targ_pos_reached_bit
                 return bool(targ_pos_reached_bit)
 
@@ -338,26 +348,10 @@ class EcoDrive():
 
 ################### MODULE TESTING ##################
 
-class EpuConfig(BaseModel):
-    MINIMUM_GAP: float
-    MAXIMUM_GAP: float
-    MINIMUM_PHASE: float
-    MAXIMUM_PHASE: float
-    A_DRIVE_ADDRESS: int
-    B_DRIVE_ADDRESS: int
-    I_DRIVE_ADDRESS: int
-    S_DRIVE_ADDRESS: int
-    ECODRIVE_LOG_FILE_PATH: str
-    EPU_LOG_FILE_PATH: str
-
-with open('../config/config.toml') as f:
-    config = toml.load('../config/config.toml')
-epu_config = EpuConfig(**config['EPU2'])
-
 eco_test = EcoDrive(
         address=21,
-        min_limit=epu_config.MINIMUM_GAP,
-        max_limit=epu_config.MAXIMUM_GAP,
+        min_limit=_cte.minimum_gap,
+        max_limit=_cte.maximum_gap,
         drive_name='Teste')
 if __name__ == '__main__':
     time.sleep(1)
