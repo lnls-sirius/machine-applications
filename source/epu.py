@@ -58,12 +58,12 @@ class Epu():
         self.stop_event.set()
         self._epu_lock = threading.RLock()
         self.monitor_phase_movement_thread = Thread(target=self.monitor_phase_movement)
-        self.standstill_phase_monitoring_thread = Thread(target=self.standstill_phase_monitoring)
+        self.standstill_monitoring_thread = Thread(target=self.standstill_monitoring)
         self.standstill_phase_monitoring_thread.setDaemon(True)
 
         # init functions
         self.init_variables_scope()
-        self.standstill_phase_monitoring_thread.start()
+        self.standstill_monitoring_thread.start()
         self.monitor_phase_movement_thread.start()
 
     def init_variables_scope(self):
@@ -172,7 +172,7 @@ class Epu():
                 logger.exception('Could not moving update')
                 print(e)
 
-    def standstill_phase_monitoring(self):
+    def standstill_monitoring(self):
         while True:
             try:
                 self.stop_event.wait()
