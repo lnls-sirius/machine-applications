@@ -3,23 +3,72 @@ import toml
 from pydantic import BaseModel
 from typing import Optional
 
-########## Global constants #############
-MINIMUM_GAP=+22
-MAXIMUM_GAP=+300
-MINIMUM_PHASE=-25
-MAXIMUM_PHASE=+25
-SERIAL_PORT='/dev/pts/12'
-A_DRIVE_ADDRESS=21
-B_DRIVE_ADDRESS=22
-I_DRIVE_ADDRESS=11
-S_DRIVE_ADDRESS=12
-BAUD_RATE=19200
-ECODRIVE_LOG_FILE_PATH='ecodrive_control.log'
-EPU_LOG_FILE_PATH='epu_control.log'
-GPIO_TCP_PORT=5050
-RS485_TCP_PORT=9993
-TCP_IP='10.0.28.100'
-###########################################
+################# ETHERNET #####################
+GPIO_TCP_DEFAULT_PORT = 5050
+RS485_TCP_DEFAULT_PORT = 64993
+BBB_DEFAULT_HOSTNAME = 'BBB-DRIVERS-EPU-2022'
+
+############### GPIO COMMANDS ##################
+BSMP_WRITE = 0X20
+BSMP_READ = 0X10
+
+HALT_CH_AB =   0x10
+START_CH_AB =  0x20
+ENABLE_CH_AB = 0x30
+
+HALT_CH_SI =   0x11
+START_CH_SI =  0x21
+ENABLE_CH_SI = 0x31
+
+############### EPU constants ################
+
+## pydantic data validation
+class EpuConfig(BaseModel):
+    A_DRIVE_ADDRESS: str
+    B_DRIVE_ADDRESS: Optional[int] = None
+    S_DRIVE_ADDRESS: Optional[int] = None
+    I_DRIVE_ADDRESS: Optional[int] = None
+    BAUD_RATE: int
+    MINIMUM_GAP: float
+    MAXIMUM_GAP: float
+    MINIMUM_PHASE: float
+    MAXIMUM_PHASE: float
+    MAXIMUM_VELOCITY: float
+    ECODRIVE_LOG_FILE_PATH: str
+    EPU_LOG_FILE_PATH: str
+
+## loads config data
+with open('../config/config.toml') as f:
+    config = toml.load('../config/config.toml')
+
+epu_config = EpuConfig(**config['EPU'])
+
+## config
+a_drive_address = epu_config.A_DRIVE_ADDRESS
+b_drive_address = epu_config.B_DRIVE_ADDRESS
+s_drive_address = epu_config.S_DRIVE_ADDRESS
+i_drive_address = epu_config.I_DRIVE_ADDRESS
+baud_rate = epu_config.BAUD_RATE
+minimum_gap = epu_config.MINIMUM_GAP
+maximum_gap = epu_config.MAXIMUM_GAP
+minimum_phase = epu_config.MINIMUM_PHASE
+maximum_phase = epu_config.MAXIMUM_PHASE
+max_velo_mm_per_min = epu_config.MAXIMUM_VELOCITY # mm/min
+maximum_velo = max_velo_mm_per_min/ 60 # mm/sec
+ecodrive_log_file_path = epu_config.ECODRIVE_LOG_FILE_PATH
+epu_log_file_path = epu_config.EPU_LOG_FILE_PATH
+
+
+#MINIMUM_GAP = +22
+#MAXIMUM_GAP = +300
+#MINIMUM_PHASE = -25
+#MAXIMUM_PHASE = +25
+#SERIAL_PORT = '/dev/pts/12'
+#BAUD_RATE = 19200
+#GPIO_TCP_PORT = 5050
+#RS485_TCP_PORT = 9993
+#TCP_IP = '10.0.28.100'
+#################################################
 
 # dummy function for debugging
 def dummy(val=0):
@@ -70,51 +119,28 @@ access_security_filename = 'epu.as'
 ### transaction update rate
 ca_process_rate = 0.1
 
-## pydantic data validation
-class EpuConfig(BaseModel):
-    A_drive_address: str
-    B_drive_address: Optional[int] = None
-    S_drive_address: Optional[int] = None
-    I_drive_address: Optional[int] = None
-    baud_rate: int
-    min_gap: float
-    max_gap: float
-    min_phase: float
-    max_phase: float
-    max_velo: float
-    ecodrive_log_file_path: str
-    epu_log_file_path: str
-
-## loads config data
-with open('../config/config.toml') as f:
-    config = toml.load('../config/config.toml')
-
-epu_config = EpuConfig(**config['EPU'])
-
-## EPU config
-A_drive_address = epu_config.A_drive_address
-B_drive_address = epu_config.B_drive_address
-S_drive_address = epu_config.S_drive_address
-I_drive_address = epu_config.I_drive_address
-baud_rate = epu_config.baud_rate
-min_gap = epu_config.min_gap
-max_gap = epu_config.max_gap
-min_phase = epu_config.min_phase
-max_phase = epu_config.max_phase
-max_velo_mm_per_min = epu_config.max_velo # mm/min
-max_velo = max_velo_mm_per_min / 60 # mm/sec
-ecodrive_log_file_path = epu_config.ecodrive_log_file_path
-epu_log_file_path = epu_config.epu_log_file_path
-
 #input arguments
 def getArgs():
     """ Return command line arguments
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--pv-prefix', dest='pv_prefix', type=str, required=True, help="$P EPICS IOC prefix")
-    parser.add_argument('--drive-msg-port', dest='msg_port', type=str, required=False, default='', help="TCP port for drive messages")
-    parser.add_argument('--drive-io-port', dest='io_port', type=str, required=False, default='', help="TCP port for virtual I/O commands")
-    parser.add_argument('--beaglebone-addr', dest='beaglebone_addr', type=str, required=False, default='', help="Beaglebone IP address")
+    parser.add_argument(
+        '--pv-prefix', dest='pv_prefix', type=str, required=True,
+        help="Prefix for EPICS IOC PVs"
+        )
+    parser.add_argument(
+        '--drive-msg-port', dest='msg_port', type=int, required=False,
+        default=RS485_TCP_DEFAULT_PORT, help="TCP port for drive messages"
+        )
+    parser.add_argument(
+        '--drive-io-port', dest='io_port', type=int, required=False,
+        default=GPIO_TCP_DEFAULT_PORT,
+        help="TCP port for virtual I/O commands"
+        )
+    parser.add_argument(
+        '--beaglebone-addr', dest='beaglebone_addr', type=str, required=False,
+        default=BBB_DEFAULT_HOSTNAME, help="Beaglebone IP address"
+        )
     args = parser.parse_args()
     return args
 

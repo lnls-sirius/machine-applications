@@ -1,8 +1,8 @@
-import toml, logging, threading, socket
+import logging, threading, socket
 from ecodrive import EcoDrive
-from pydantic import BaseModel
 from utils import *
 from datetime import datetime
+import constants as _cte
 
 ################## LOGGING #####################
 logger = logging.getLogger('__name__')
@@ -10,24 +10,6 @@ logging.basicConfig(filename='epu.log', filemode='W', level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', encoding='utf-8')
 
 logger.info(datetime.now().strftime('%m/%d/%Y, %H:%M:%S'))
-  
-################# ETHERNET #####################
-GPIO_TCP_PORT=5050
-RS485_TCP_PORT=9993
-BBB_HOSTNAME = 'BBB-DRIVERS-EPU-2022'
-
-############### GPIO COMMANDS ##################
-BSMP_WRITE = 0X20
-BSMP_READ = 0X10
-
-HALT_CH_AB =   0x10
-START_CH_AB =  0x20
-ENABLE_CH_AB = 0x30
-
-HALT_CH_SI =   0x11
-START_CH_SI =  0x21
-ENABLE_CH_SI = 0x31
-#################################################
 
 class Epu():
 
@@ -35,21 +17,21 @@ class Epu():
 
         #self.callback_update = callback_update
         self.a_drive = EcoDrive(
-            address=epu_config.A_DRIVE_ADDRESS,
-            min_limit=epu_config.MINIMUM_GAP,
-            max_limit=epu_config.MAXIMUM_GAP, drive_name='A')
+            address=_cte.a_drive_address,
+            min_limit=_cte.minimum_gap,
+            max_limit=_cte.maximum_gap, drive_name='A')
         self.b_drive = EcoDrive(
-            address=epu_config.B_DRIVE_ADDRESS,
-            min_limit=epu_config.MINIMUM_GAP,
-            max_limit=epu_config.MAXIMUM_GAP, drive_name='B')
+            address=_cte.b_drive_address,
+            min_limit=_cte.minimum_gap,
+            max_limit=_cte.maximum_gap, drive_name='B')
         self.i_drive = EcoDrive(
-            address=epu_config.I_DRIVE_ADDRESS,
-            min_limit=epu_config.MINIMUM_PHASE,
-            max_limit=epu_config.MAXIMUM_PHASE, drive_name='I')
+            address=_cte.i_drive_address,
+            min_limit=_cte.minimum_phase,
+            max_limit=_cte.maximum_phase, drive_name='I')
         self.s_drive = EcoDrive(
-            address=epu_config.S_DRIVE_ADDRESS,
-            min_limit=epu_config.MINIMUM_PHASE,
-            max_limit=epu_config.MAXIMUM_PHASE, drive_name='S')
+            address=_cte.s_drive_address,
+            min_limit=_cte.minimum_phase,
+            max_limit=_cte.maximum_phase, drive_name='S')
 
         # threads
         self.gap_start_event = threading.Event()
@@ -57,14 +39,73 @@ class Epu():
         self.stop_event = threading.Event()
         self.stop_event.set()
         self._epu_lock = threading.RLock()
-        self.monitor_phase_movement_thread = Thread(target=self.monitor_phase_movement)
-        self.standstill_monitoring_thread = Thread(target=self.standstill_monitoring)
+        self.monitor_phase_movement_thread = Thread(
+            target=self.monitor_phase_movement,
+            daemon=True
+            )
+        self.standstill_phase_monitoring_thread = Thread(
+            target=self.standstill_phase_monitoring,
+            daemon=True
+            )
         self.standstill_phase_monitoring_thread.setDaemon(True)
 
         # init functions
         self.init_variables_scope()
         self.standstill_monitoring_thread.start()
         self.monitor_phase_movement_thread.start()
+
+    def update(self):
+        try:
+            # drive a variables
+            self.a_target_position = self.a_drive.get_target_position()
+            self.a_resolver_gap = self.a_drive.get_resolver_position()
+            self.a_encoder_gap = self.a_drive.get_encoder_position()
+            self.a_halt_released, self.a_enable = (
+                not self.a_drive.get_halten_status()[0],
+                self.a_drive.get_halten_status()[1]
+                )
+            self.a_diag_code = self.a_drive.get_diagnostic_code()
+            self.a_is_moving = False
+            # drive b variables
+            self.b_target_position = self.b_drive.get_target_position()
+            self.b_resolver_gap = self.b_drive.get_resolver_position()
+            self.b_encoder_gap = self.b_drive.get_encoder_position()
+            self.b_halt_released, self.b_enable = (
+                not self.b_drive.get_halten_status()[0],
+                self.b_drive.get_halten_status()[1]
+                )
+            self.b_diag_code = self.b_drive.get_diagnostic_code()
+            self.b_is_moving = False
+            # drive i variables
+            self.i_target_position = self.i_drive.get_target_position()
+            self.i_resolver_phase = self.i_drive.get_resolver_position()
+            self.i_encoder_phase = self.i_drive.get_encoder_position()
+            self.i_halt_released, self.i_enable = (
+                not self.i_drive.get_halten_status()[0],
+                self.i_drive.get_halten_status()[1]
+                )
+            self.i_diag_code = self.i_drive.get_diagnostic_code()
+            self.i_is_moving = False
+            #drive s variables
+            self.s_resolver_gap = self.s_drive.get_resolver_position()
+            self.s_resolver_phase = self.s_drive.get_resolver_position()
+            self.s_encoder_gap = self.s_drive.get_encoder_position()
+            self.s_halt_released, self.s_enable = (
+                not self.s_drive.get_halten_status()[0],
+                self.s_drive.get_halten_status()[1]
+                )
+            self.s_diag_code = self.s_drive.get_diagnostic_code()
+            self.is_moving = (
+                self.a_is_moving
+                or self.b_is_moving
+                or self.i_is_moving
+                or self.s_is_moving
+                )
+            self.gap_is_moving = self.a_drive.get_movement_status()
+            self.phase_is_moving = self.i_drive.get_movement_status()
+            self.is_moving = self.gap_is_moving or self.phase_is_moving
+        except Exception:
+            pass
 
     def init_variables_scope(self):
         # drive a variables
@@ -93,7 +134,12 @@ class Epu():
         self.s_is_moving = False
 
         ## undulator status variables
-        self.is_moving = (self.a_is_moving or self.b_is_moving or self.i_is_moving or self.s_is_moving )
+        self.is_moving = (
+            self.a_is_moving
+            or self.b_is_moving
+            or self.i_is_moving
+            or self.s_is_moving
+            )
         self.soft_message = ''
         self.gap_enable = False
         self.phase_enable = False
@@ -108,11 +154,15 @@ class Epu():
         ## undulator gap control variables
         self.gap_target = self.a_target_position
         self.gap = self.a_encoder_gap
-        self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
+        self.gap_enable_and_halt_released = (
+            self.gap_enable and self.gap_halt_released
+            )
         ### undulator phase control variables
         self.phase_target = self.i_target_position
         self.phase = self.i_encoder_phase
-        self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
+        self.phase_enable_and_halt_released = (
+            self.phase_enable and self.phase_halt_released
+            )
     
     def monitor_gap_movement(self):
         while True:
@@ -237,7 +287,7 @@ class Epu():
     def gap_set(self, target_gap: float) -> float:
         ''' Set gap for drives A and B. If all runs ok, returns gap setted, if not, returns None.'''
         previous_gap = self.a_drive.get_target_position()
-        if epu_config.MINIMUM_GAP <= target_gap <= epu_config.MAXIMUM_GAP:
+        if _cte.minimum_gap <= target_gap <= _cte.maximum_gap:
             try:
                 self.a_drive.set_target_position(target_gap)
             except:
@@ -276,7 +326,8 @@ class Epu():
                 logger.warning('Movement not allowed. Drives A and B have different target positions.')
                 return False
         else:
-            logger.warning('Movement not allowed. Drives A and B have different target velocities.')   # Verificar a diferença entre setpoint de velocidade e velocidade máxima.
+            # Verificar a diferença entre setpoint de velocidade e velocidade máxima
+            logger.warning('Movement not allowed. Drives A and B have different target velocities.')
             return False
     
     def gap_set_enable(self, val: bool):
@@ -291,10 +342,12 @@ class Epu():
                     a_diagnostic_code = self.a_drive.get_diagnostic_code()
                     b_diagnostic_code = self.b_drive.get_diagnostic_code()
                     if a_diagnostic_code == b_diagnostic_code == 'A012':
-                        bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=ENABLE_CH_AB, value=val).encode()
+                        bsmp_enable_message = bsmp_send(
+                            _cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_AB,
+                                value=val).encode()
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             s.settimeout(.1)
-                            s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+                            s.connect((_cte.beaglebone_addr, _cte.io_port))
                             s.sendall(bsmp_enable_message)
                             time.sleep(.01) # magic number
                             while True:
@@ -315,7 +368,7 @@ class Epu():
                     bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=ENABLE_CH_AB, value=val).encode()
                     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         s.settimeout(.1)
-                        s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+                        s.connect((_cte.beaglebone_addr, _cte.io_port))
                         s.sendall(bsmp_enable_message)
                         time.sleep(.01) # magic number
                         while True:
@@ -335,10 +388,12 @@ class Epu():
                     a_diagnostic_code = self.a_drive.get_diagnostic_code()
                     b_diagnostic_code = self.b_drive.get_diagnostic_code()
                     if a_diagnostic_code == b_diagnostic_code == 'A010':
-                        bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=HALT_CH_AB, value=val).encode()
+                        bsmp_enable_message = bsmp_send(
+                            _cte.BSMP_WRITE, variableID=_cte.HALT_CH_AB,
+                            value=val).encode()
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             s.settimeout(.1)
-                            s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+                            s.connect((_cte.beaglebone_addr, _cte.io_port))
                             s.sendall(bsmp_enable_message)
                             time.sleep(.01) # magic number
                             while True:
@@ -353,12 +408,13 @@ class Epu():
                             f'Relese Halt signal not send due to diagnostic code Drive A code:\
                                 {self.a_drive.diagnostic_code}, Drive B code:{self.b_drive.diagnostic_code}'
                         return False
-
             else:
-                bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=HALT_CH_AB, value=val).encode()
+                bsmp_enable_message = bsmp_send(
+                    _cte.BSMP_WRITE, variableID=_cte.HALT_CH_AB,
+                    value=val).encode()
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     s.settimeout(.1)
-                    s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+                    s.connect((_cte.beaglebone_addr, _cte.io_port))
                     s.sendall(bsmp_enable_message)
                     time.sleep(.01) # magic number
                     while True:
@@ -410,10 +466,12 @@ class Epu():
                         return False
 
     def gap_enable_status(self) -> bool:
-        bsmp_enable_message = bsmp_send(BSMP_READ, variableID=ENABLE_CH_AB, size=0).encode()
+        bsmp_enable_message = bsmp_send(
+            _cte.BSMP_READ, variableID=_cte.ENABLE_CH_AB,
+            size=0).encode()
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(.1)
-            s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+            s.connect((_cte.beaglebone_addr, _cte.io_port))
             s.sendall(bsmp_enable_message)
             time.sleep(.01) # magic number
             while True:
@@ -425,10 +483,12 @@ class Epu():
                 return(bool(data[-2]))
     
     def gap_halt_release_status(self):
-        bsmp_enable_message = bsmp_send(BSMP_READ, variableID=HALT_CH_AB, size=0).encode()
+        bsmp_enable_message = bsmp_send(
+            _cte.BSMP_READ, variableID=_cte.HALT_CH_AB,
+            size=0).encode()
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(.1)
-            s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+            s.connect((_cte.beaglebone_addr, _cte.io_port))
             s.sendall(bsmp_enable_message)
             time.sleep(.01) # magic number!!!!
             while True:
@@ -468,7 +528,7 @@ class Epu():
 
     def phase_set(self, target_phase: float) -> float:
         previous_gap = self.i_drive.get_target_position()
-        if epu_config.MINIMUM_PHASE <= target_phase <= epu_config.MAXIMUM_PHASE:
+        if _cte.minimum_phase <= target_phase <= _cte.maximum_phase:
             timeout = 5
             while timeout > 0:
                 try:
@@ -503,10 +563,12 @@ class Epu():
                         i_diagnostic_code = self.i_drive.get_diagnostic_code()
                         s_diagnostic_code = self.s_drive.get_diagnostic_code()
                         if i_diagnostic_code == s_diagnostic_code == 'A012':
-                            bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=ENABLE_CH_SI, value=val).encode()
+                            bsmp_enable_message = bsmp_send(
+                                _cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_SI,
+                                value=val).encode()
                             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                 s.settimeout(.1)
-                                s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+                                s.connect((_cte.beaglebone_addr, _cte.io_port))
                                 s.sendall(bsmp_enable_message)
                                 time.sleep(.01) # magic number
                                 while True:
@@ -525,10 +587,12 @@ class Epu():
                         pass
             else:
                 if not self.phase_halt_release_status():
-                    bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=ENABLE_CH_SI, value=val).encode()
+                    bsmp_enable_message = bsmp_send(
+                        _cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_SI,
+                        value=val).encode()
                     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         s.settimeout(.1)
-                        s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+                        s.connect((_cte.beaglebone_addr, _cte.io_port))
                         s.sendall(bsmp_enable_message)
                         time.sleep(.01) # magic number
                         while True:
@@ -566,10 +630,12 @@ class Epu():
                             {self.i_drive.diagnostic_code}, Drive S code:{self.s_drive.diagnostic_code}'
                     return False
             else:
-                bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=HALT_CH_SI, value=val).encode()
+                bsmp_enable_message = bsmp_send(
+                    _cte.BSMP_WRITE, variableID=_cte.HALT_CH_SI,
+                    value=val).encode()
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     s.settimeout(.1)
-                    s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+                    s.connect((_cte.beaglebone_addr, _cte.io_port))
                     s.sendall(bsmp_enable_message)
                     time.sleep(.01) # magic number
                     while True:
@@ -582,10 +648,12 @@ class Epu():
         self.phase_release_halt(val)
 
     def phase_enable_status(self):
-        bsmp_enable_message = bsmp_send(BSMP_READ, variableID=ENABLE_CH_SI, size=0).encode()
+        bsmp_enable_message = bsmp_send(
+            _cte.BSMP_READ, variableID=_cte.ENABLE_CH_SI,
+            size=0).encode()
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(.1)
-            s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+            s.connect((_cte.beaglebone_addr, _cte.io_port))
             s.sendall(bsmp_enable_message)
             time.sleep(.01) # magic number!!!!
             while True:
@@ -596,10 +664,12 @@ class Epu():
                 return(bool(data[-2]))
     
     def phase_halt_release_status(self):
-        bsmp_enable_message = bsmp_send(BSMP_READ, variableID=HALT_CH_SI, size=0).encode()
+        bsmp_enable_message = bsmp_send(
+            _cte.BSMP_READ, variableID=_cte.HALT_CH_SI,
+            size=0).encode()
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(.1)
-            s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+            s.connect((_cte.beaglebone_addr, _cte.io_port))
             s.sendall(bsmp_enable_message)
             time.sleep(.01) # magic number!!!!
             while True:
@@ -626,7 +696,8 @@ class Epu():
                 print('Movement not allowed. Drives I and S have different target positions.')
                 return False
         else:
-            print('Movement not allowed. Drives I and S have different target velocities.')   # Verificar a diferença entre setpoint de velocidade e velocidade máxima.
+            # Verificar a diferença entre setpoint de velocidade e velocidade máxima
+            print('Movement not allowed. Drives I and S have different target velocities.')
             return False
 
     def phase_start(self, val: bool) -> bool:
@@ -642,10 +713,12 @@ class Epu():
                     i_diagnostic_code = self.i_drive.get_diagnostic_code()
                     s_diagnostic_code = self.s_drive.get_diagnostic_code()
                     if i_diagnostic_code == s_diagnostic_code == 'A211':
-                        bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=START_CH_SI, value=val).encode()
+                        bsmp_enable_message = bsmp_send(
+                            _cte.BSMP_WRITE, variableID=_cte.START_CH_SI,
+                            value=val).encode()
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             s.settimeout(.1)
-                            s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+                            s.connect((_cte.beaglebone_addr, _cte.io_port))
                             self.stop_event.clear()
                             time.sleep(.1) # waits for the tcp reading in default thread
                             self.phase_start_event.set()
@@ -662,7 +735,11 @@ class Epu():
                             f'Start signal not send due to diagnostic code Drive S code:\
                                 {self.i_drive.diagnostic_code}, Drive S code:{self.s_drive.diagnostic_code}'
                 else:
-                    logger.error('Phase movement not started because one or more conditions have not been met. Check log for more information.')
+                    logger.error(
+                        "Phase movement not started because one or "
+                        "more conditions have not been met. "
+                        "Check log for more information."
+                        )
                     return False
 
     def allowed_to_change_phase(self) -> bool:
@@ -676,23 +753,5 @@ class Epu():
     
     def phase_stop(self):
         self.phase_release_halt(0)
-
-
-
-###------------main------------###
-class EpuConfig(BaseModel):
-    MINIMUM_GAP: float
-    MAXIMUM_GAP: float
-    MINIMUM_PHASE: float
-    MAXIMUM_PHASE: float
-    A_DRIVE_ADDRESS: int
-    B_DRIVE_ADDRESS: int
-    I_DRIVE_ADDRESS: int
-    S_DRIVE_ADDRESS: int
-    EPU_LOG_FILE_PATH: str
-
-with open('../config/config.toml') as f:
-    config = toml.load('../config/config.toml')
-epu_config = EpuConfig(**config['EPU2'])
 
 epu = Epu()
