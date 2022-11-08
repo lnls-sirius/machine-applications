@@ -342,27 +342,11 @@ class EcoDrive():
 
 ################### MODULE TESTING ##################
 
-class EpuConfig(BaseModel):
-    MINIMUM_GAP: float
-    MAXIMUM_GAP: float
-    MINIMUM_PHASE: float
-    MAXIMUM_PHASE: float
-    A_DRIVE_ADDRESS: int
-    B_DRIVE_ADDRESS: int
-    I_DRIVE_ADDRESS: int
-    S_DRIVE_ADDRESS: int
-    ECODRIVE_LOG_FILE_PATH: str
-    EPU_LOG_FILE_PATH: str
-
-with open('../config/config.toml') as f:
-    config = toml.load('../config/config.toml')
-epu_config = EpuConfig(**config['EPU2'])
-
 if __name__ == '__main__':
     eco_test = EcoDrive(
             address=21,
-            min_limit=epu_config.MINIMUM_GAP,
-            max_limit=epu_config.MAXIMUM_GAP,
+            min_limit=_cte.minimum_gap,
+            max_limit=_cte.maximum_gap,
             drive_name='Teste')
 
     time.sleep(1)

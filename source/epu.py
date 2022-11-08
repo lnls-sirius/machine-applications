@@ -43,11 +43,11 @@ class Epu():
             target=self.monitor_phase_movement,
             daemon=True
             )
-        self.standstill_phase_monitoring_thread = Thread(
-            target=self.standstill_phase_monitoring,
+        self.standstill_monitoring_thread = Thread(
+            target=self.standstill_monitoring,
             daemon=True
             )
-        self.standstill_phase_monitoring_thread.setDaemon(True)
+        self.standstill_monitoring_thread.setDaemon(True)
 
         # init functions
         self.init_variables_scope()
@@ -365,7 +365,7 @@ class Epu():
 
             else:
                 with self.stop_event.clear():
-                    bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=ENABLE_CH_AB, value=val).encode()
+                    bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_AB, value=val).encode()
                     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         s.settimeout(.1)
                         s.connect((_cte.beaglebone_addr, _cte.io_port))
@@ -440,10 +440,10 @@ class Epu():
                         a_diagnostic_code = self.a_drive.get_diagnostic_code()
                         b_diagnostic_code = self.b_drive.get_diagnostic_code()
                         if a_diagnostic_code == b_diagnostic_code == 'A211':
-                            bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=START_CH_AB, value=val).encode()
+                            bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.START_CH_AB, value=val).encode()
                             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                 s.settimeout(.1)
-                                s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+                                s.connect((_cte.beaglebone_addr, _cte.io_port))
                                 self.stop_event.clear()
                                 time.sleep(.1) # waits for the tcp reading in default thread
                                 self.gap_start_event.set()
@@ -611,10 +611,10 @@ class Epu():
                 i_diagnostic_code = self.i_drive.get_diagnostic_code()
                 s_diagnostic_code = self.s_drive.get_diagnostic_code()
                 if i_diagnostic_code == s_diagnostic_code == 'A010':
-                    bsmp_enable_message = bsmp_send(BSMP_WRITE, variableID=HALT_CH_SI, value=val).encode()
+                    bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.HALT_CH_SI, value=val).encode()
                     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         s.settimeout(.1)
-                        s.connect((BBB_HOSTNAME, GPIO_TCP_PORT))
+                        s.connect((_cte.beaglebone_addr, _cte.io_port))
                         s.sendall(bsmp_enable_message)
                         time.sleep(.01) # magic number
                         while True:
