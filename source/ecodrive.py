@@ -24,7 +24,7 @@ with open('../config/drive_messages.yaml', 'r') as f:
 
 logger = logging.getLogger('__name__')
 logging.basicConfig(
-    filename='/tmp/EcoDrive.log', filemode='w', level=logging.DEBUG,
+    filename='./EcoDrive.log', filemode='w', level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%d-%b-%y %H:%M:%S')
 

@@ -3,7 +3,7 @@ import threading
 import traceback
 import constants
 import epu_db as _db
-import Epu
+import epu
 
 def isPvName(reason, pvname):
     """ This function is a wrapper to allow
@@ -32,7 +32,7 @@ class EPUSupport(pcaspy.Driver):
         # EPU driver will manage and control
         # main features of device operation
         try:
-            self.epu_driver = Epu.Epu(callback_update=self.priority_call)
+            self.epu_driver = epu.Epu(callback_update=self.priority_call)
             print('Epu driver initialized')
         except Exception:
             print('Could not init epu driver')
