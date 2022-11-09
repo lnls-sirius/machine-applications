@@ -232,7 +232,7 @@ class Epu():
                 self.b_drive.set_target_position(a_target)
 
     def gap_set(self, target_gap: float) -> float:
-        epu.stop_event.clear()
+        self.stop_event.clear()
         if _cte.minimum_gap <= target_gap <= _cte.maximum_gap:
             try:
                 self.a_drive.set_target_position(target_gap)
@@ -338,16 +338,21 @@ class Epu():
                             return False
 
             else:
-                bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_AB, value=val).encode()
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                    s.settimeout(.1)
-                    s.connect((_cte.beaglebone_addr, _cte.io_port))
-                    s.sendall(bsmp_enable_message)
-                    time.sleep(.01) # magic number
-                    while True:
-                        data = s.recv(16)
-                        if not data: break
-                        return data
+                if not self.gap_halt_release_status():
+                    bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_AB, value=val).encode()
+                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                        s.settimeout(.1)
+                        s.connect((_cte.beaglebone_addr, _cte.io_port))
+                        s.sendall(bsmp_enable_message)
+                        time.sleep(.01) # magic number
+                        while True:
+                            data = s.recv(16)
+                            if not data: break
+                            return data
+                else:
+                    logger.info('Set drive halt before set enable to zero')
+                    print('Set drive halt before set enable to zero')
+                    return False
             
     def gap_release_halt(self, val: bool):
         try:
@@ -403,7 +408,7 @@ class Epu():
                         if not data: break
                         return data
 
-    def gap_enable_and_release_halt(self, val: bool=False) -> bool: # alterar nome da função
+    def gap_enable_and_release_halt(self, val: bool=True) -> bool: # alterar nome da função
         if val == True:
             a = self.gap_set_enable(val)
             b = self.gap_release_halt(val)
@@ -494,8 +499,7 @@ class Epu():
                 return(bool(data[-2]))
 
     def gap_stop(self):
-        self.gap_release_halt(0)
-        self.gap_set_enable(0)
+        self.gap_enable_and_halt_released(False)
     
     # Phase stuff
 
@@ -568,13 +572,23 @@ class Epu():
             return False
 
     def allowed_to_change_phase(self) -> bool:
-            if not self.phase_enable_status():
-                return False
-            elif not self.phase_halt_release_status():
-                return False
-            elif not self.phase_check_for_move():
-                    return False
-            else: return True
+        try:
+            if self.phase_enable_status():
+                if self.phase_halt_release_status():
+                    self.stop_event.clear()
+                    if self.phase_check_for_move():
+                        self.stop_event.set()
+                        return True
+                    else:
+                        self.stop_event.set()
+                        return False
+                else: return False
+            else: return False
+        except:
+            if self.stop_event.is_set(): self.stop_event.set()
+            logger.exception('Could not complete check')
+            print(f'Could not complete check. Check {__name__} log file')
+            
 
     def phase_set_enable(self, val: bool):
         try:
@@ -585,9 +599,15 @@ class Epu():
         else:
             if val:
                 with self._epu_lock:
+                    epu.stop_event.clear()
                     try:
                         i_diagnostic_code = self.i_drive.get_diagnostic_code()
                         s_diagnostic_code = self.s_drive.get_diagnostic_code()
+                        epu.stop_event.set()
+                    except Exception:
+                        epu.stop_event.set()
+                        logger.exception('Could not set phase enable.')
+                    else:
                         if i_diagnostic_code == s_diagnostic_code == 'A012':
                             bsmp_enable_message = bsmp_send(
                                 _cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_SI,
@@ -604,13 +624,11 @@ class Epu():
                         else:
                             logger.error(
                                 f'Enable signal not send due to diagnostic code Drive I code:\
-                                    {self.i_drive.diagnostic_code},\Drive S code:{self.s_drive.diagnostic_code}')
+                                    {i_diagnostic_code},\Drive S code:{s_diagnostic_code}')
                             self.soft_drive_message = \
                                 f'Enable signal not send due to diagnostic code Drive I code:\
-                                    {self.i_drive.diagnostic_code}, Drive S code:{self.s_drive.diagnostic_code}'
+                                    {i_diagnostic_code}, Drive S code:{s_diagnostic_code}'
                             return False
-                    except Exception:
-                        pass
             else:
                 if not self.phase_halt_release_status():
                     bsmp_enable_message = bsmp_send(
@@ -625,6 +643,10 @@ class Epu():
                             data = s.recv(16)
                             if not data: break
                             return data
+                else:
+                    logger.info('Enable drive halt before set enable signal to zero')
+                    print('Set drive halt before set enable to zero')
+                    return False
     
     def phase_release_halt(self, val: bool):
         try:
