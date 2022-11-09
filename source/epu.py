@@ -358,29 +358,37 @@ class Epu():
         else:
             if val:
                 with self._epu_lock:
-                    a_diagnostic_code = self.a_drive.get_diagnostic_code()
-                    b_diagnostic_code = self.b_drive.get_diagnostic_code()
-                    if a_diagnostic_code == b_diagnostic_code == 'A010':
-                        bsmp_enable_message = bsmp_send(
-                            _cte.BSMP_WRITE, variableID=_cte.HALT_CH_AB,
-                            value=val).encode()
-                        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                            s.settimeout(.1)
-                            s.connect((_cte.beaglebone_addr, _cte.io_port))
-                            s.sendall(bsmp_enable_message)
-                            time.sleep(.01) # magic number
-                            while True:
-                                data = s.recv(16)
-                                if not data: break
-                                return data
+                    epu.stop_event.clear()
+                    try:
+                        a_diagnostic_code = self.a_drive.get_diagnostic_code()
+                        b_diagnostic_code = self.b_drive.get_diagnostic_code()
+                        epu.stop_event.set()
+                    except Exception:
+                        epu.stop_event.set()
+                        logger.exception('Could not relase halt')
+                        print('Could not relase halt')
                     else:
-                        logger.error(
-                            f'Relese Halt signal not send due to diagnostic code Drive A code:\
-                                {self.a_drive.diagnostic_code},\Drive B code:{self.b_drive.diagnostic_code}')
-                        self.soft_drive_message = \
-                            f'Relese Halt signal not send due to diagnostic code Drive A code:\
-                                {self.a_drive.diagnostic_code}, Drive B code:{self.b_drive.diagnostic_code}'
-                        return False
+                        if a_diagnostic_code == b_diagnostic_code == 'A010':
+                            bsmp_enable_message = bsmp_send(
+                                _cte.BSMP_WRITE, variableID=_cte.HALT_CH_AB,
+                                value=val).encode()
+                            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                                s.settimeout(.1)
+                                s.connect((_cte.beaglebone_addr, _cte.io_port))
+                                s.sendall(bsmp_enable_message)
+                                time.sleep(.01) # magic number
+                                while True:
+                                    data = s.recv(16)
+                                    if not data: break
+                                    return data
+                        else:
+                            logger.error(
+                                f'Relese Halt signal not send due to diagnostic code Drive A code:\
+                                    {self.a_drive.diagnostic_code},\Drive B code:{self.b_drive.diagnostic_code}')
+                            self.soft_drive_message = \
+                                f'Relese Halt signal not send due to diagnostic code Drive A code:\
+                                    {self.a_drive.diagnostic_code}, Drive B code:{self.b_drive.diagnostic_code}'
+                            return False
             else:
                 bsmp_enable_message = bsmp_send(
                     _cte.BSMP_WRITE, variableID=_cte.HALT_CH_AB,
@@ -395,9 +403,21 @@ class Epu():
                         if not data: break
                         return data
 
-    def gap_enable_and_release_halt(self, val: bool):
-        self.gap_set_enable(val)
-        self.gap_release_halt(val)
+    def gap_enable_and_release_halt(self, val: bool=False) -> bool: # alterar nome da função
+        if val == True:
+            a = self.gap_set_enable(val)
+            b = self.gap_release_halt(val)
+            if a == b: return True
+            else: return False
+        elif val == False:
+            a = self.gap_release_halt(val)
+            b = self.gap_set_enable(val)
+            if a == b: return True
+            else: return False
+        else:
+            logger.error('gap_enable_and_release_halt() argument must be boolean')
+            print('gap_enable_and_release_halt() argument must be boolean')
+            return False
 
     def gap_start(self, val: bool):
         try:
