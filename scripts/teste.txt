@@ -1,0 +1,6 @@
+08-Nov-22 16:02:33 - root - INFO - Testando
+08-Nov-22 16:03:34 - root - INFO - Testando
+08-Nov-22 16:03:34 - root - ERROR - Teste
+NoneType: None
+08-Nov-22 16:07:12 - root - INFO - Testando
+08-Nov-22 16:07:12 - root - ERROR - Teste

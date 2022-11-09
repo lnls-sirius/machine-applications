@@ -2,10 +2,6 @@ import time, yaml, logging, threading, socket
 from utils import *
 import constants as _cte
 
-
-with open('../config/drive_messages.yaml', 'r') as f:
-    diag_messages = yaml.safe_load(f)['diagnostic_messages']
-
 logger = logging.getLogger('__name__')
 logging.basicConfig(
     filename='./EcoDrive.log', filemode='w', level=logging.DEBUG,
@@ -81,7 +77,7 @@ class EcoDrive():
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(self._SOCKET_TIMEOUT)
                 s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
-                byte_message = f'{message}\r\n'.encode()
+                byte_message = f'{message}\r'.encode()
                 s.sendall(byte_message)
                 time.sleep(self._RS485_DELAY) # .047
                 data = s.recv(64)
@@ -137,14 +133,8 @@ class EcoDrive():
                 logger.error('Drive did not repond as expeted to "S-0-0390,7,R".', f'{str_message}')
                 raise Exception('Drive did not repond as expeted to "S-0-0390,7,R".', f'{str_message}')
             else:
-                diagnostic_codes = list(diag_messages.keys())
-                # Crie uma lista com todos os códigos possíveis e então
-                # coloque um assert para verificar se o código lido está
-                # na lista.
-                _d_code = [code for code in diagnostic_codes if (code in str_message)]
-                assert len(_d_code) == 1
-                self.diagnostic_code = _d_code[0]
-                return _d_code[0]
+                _d_code = str_message.split('\r\n')[1][:-1]
+                return _d_code
 
     def get_halten_status(self) -> tuple:
         try:
@@ -153,7 +143,7 @@ class EcoDrive():
             logger.exception('Communication error in tcp_read_parameter().')
         else:
             str_message = byte_message.decode()
-            if not (f'E{self.ADDRESS}:>' in str_message and 'S-0-0134,7,R' in str_message):
+            if not f'E{self.ADDRESS}:>' in str_message:
                 logger.error(
                     'Drive did not repond as expeted to "S-0-0134,7,R".',
                     f'{str_message}'
@@ -340,33 +330,39 @@ class EcoDrive():
                 return parameter_data
             else: return drive_answer    
 
+    def clear_error(self):
+        with self._lock:
+            self.tcp_read_parameter('S-0-0099,3,r')
+            self.tcp_read_parameter('S-0-0099,3,r', False) 
+            self.tcp_read_parameter('S-0-0099,7,W,11b', False)
+
 ################### MODULE TESTING ##################
 
-class EpuConfig(BaseModel):
-    MINIMUM_GAP: float
-    MAXIMUM_GAP: float
-    MINIMUM_PHASE: float
-    MAXIMUM_PHASE: float
-    A_DRIVE_ADDRESS: int
-    B_DRIVE_ADDRESS: int
-    I_DRIVE_ADDRESS: int
-    S_DRIVE_ADDRESS: int
-    ECODRIVE_LOG_FILE_PATH: str
-    EPU_LOG_FILE_PATH: str
+# class EpuConfig(BaseModel):
+#     MINIMUM_GAP: float
+#     MAXIMUM_GAP: float
+#     MINIMUM_PHASE: float
+#     MAXIMUM_PHASE: float
+#     A_DRIVE_ADDRESS: int
+#     B_DRIVE_ADDRESS: int
+#     I_DRIVE_ADDRESS: int
+#     S_DRIVE_ADDRESS: int
+#     ECODRIVE_LOG_FILE_PATH: str
+#     EPU_LOG_FILE_PATH: str
 
-with open('../config/config.toml') as f:
-    config = toml.load('../config/config.toml')
-epu_config = EpuConfig(**config['EPU2'])
+# with open('../config/config.toml') as f:
+#     config = toml.load('../config/config.toml')
+# epu_config = EpuConfig(**config['EPU2'])
 
-if __name__ == '__main__':
-    eco_test = EcoDrive(
-            address=21,
-            min_limit=epu_config.MINIMUM_GAP,
-            max_limit=epu_config.MAXIMUM_GAP,
-            drive_name='Teste')
+# if __name__ == '__main__':
+#     eco_test = EcoDrive(
+#             address=21,
+#             min_limit=epu_config.MINIMUM_GAP,
+#             max_limit=epu_config.MAXIMUM_GAP,
+#             drive_name='Teste')
 
-    time.sleep(1)
-    while True:
-        m = input(str("Mensagem: "))
-        #time.sleep(1)
-        print(eco_test.tcp_read_parameter(m))
+#     time.sleep(1)
+#     while True:
+#         m = input(str("Mensagem: "))
+#         #time.sleep(1)
+#         print(eco_test.tcp_read_parameter(m))
