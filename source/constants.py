@@ -125,8 +125,8 @@ def getArgs():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--pv-prefix', dest='pv_prefix', type=str, required=True,
-        help="Prefix for EPICS IOC PVs"
+        '--pv-prefix', dest='pv_prefix', type=str, required=False,
+        default='', help="Prefix for EPICS IOC PVs"
         )
     parser.add_argument(
         '--drive-msg-port', dest='msg_port', type=int, required=False,
