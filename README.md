@@ -63,3 +63,8 @@ Para qualquer movimentação, os sinais de enable e halt do gap e da fase devem 
 
 Existem 3 classes de evento: [1] stop event e [2] start event.
 Quando a função start é chamada, ela limpa o evento de stop, o que faz com que a thread padrão pare (existe uma pausa de 100 ms após o clear da flag stop_event para esperar a última troca de mensagens tcp da thread padrão). Em seguida, o evento start_event é acionado, disparando o laço da thread de monitoramento de movimento. stop_event é acionado ao final do laço de monitoramento de movimentação.
+
+O SISTEMA DE WARNINGS ESTÁ EM IMPLEMENTAÇÃO E NÃO COMPROMETE O FUNCIONAMENTO DO DRIVER.
+
+EPU warnings:
+GC01: Drivers A e B possuem setpoints diferentes.

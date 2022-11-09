@@ -233,7 +233,6 @@ class Epu():
 
     def gap_set(self, target_gap: float) -> float:
         epu.stop_event.clear()
-        previous_gap = self.a_drive.get_target_position()
         if _cte.minimum_gap <= target_gap <= _cte.maximum_gap:
             try:
                 self.a_drive.set_target_position(target_gap)
@@ -250,13 +249,21 @@ class Epu():
                     print('GC01 warning: correct cause before moving')
                     raise e
             else:
-                self.stop_event.set()
-                return target_gap
+                if self.a_target_position == self.b_target_position:
+                    self.stop_event.set()
+                    self.gap_target = target_gap
+                    return target_gap
+                else:
+                    logger.warning('GC01 warning: correct cause before moving')
+                    self.warnings.append('GC01')
+                    print('GC01 warning: correct cause before moving')
+                    self.gap_target = None
+                    raise e
         else:
             self.stop_event.set()
-            logger.error(f'Gap valeu given, ({target_gap}), is out of range.')
+            logger.error(f'Gap value given, ({target_gap}), is out of range.')
             print(f'Gap value given, ({target_gap}), is out of range.')
-            return previous_gap
+            return self.gap_target
 
     def gap_check_for_move(self) -> bool:
         drive_a_max_velocity = self.a_drive.get_max_velocity()
@@ -299,29 +306,36 @@ class Epu():
         else:
             if val:
                 with self._epu_lock:
-                    a_diagnostic_code = self.a_drive.get_diagnostic_code()
-                    b_diagnostic_code = self.b_drive.get_diagnostic_code()
-                    if a_diagnostic_code == b_diagnostic_code == 'A012':
-                        bsmp_enable_message = bsmp_send(
-                            _cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_AB,
-                                value=val).encode()
-                        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                            s.settimeout(.1)
-                            s.connect((_cte.beaglebone_addr, _cte.io_port))
-                            s.sendall(bsmp_enable_message)
-                            time.sleep(.01) # magic number
-                            while True:
-                                data = s.recv(16)
-                                if not data: break
-                                return data
+                    epu.stop_event.clear()
+                    try:
+                        a_diagnostic_code = self.a_drive.get_diagnostic_code()
+                        b_diagnostic_code = self.b_drive.get_diagnostic_code()
+                        epu.stop_event.set()
+                    except Exception:
+                        epu.stop_event.set()
+                        logger.exception('Could not set enable')
                     else:
-                        logger.error(
-                            f'Enable signal not send due to diagnostic code Drive A code:\
-                                {a_diagnostic_code},\Drive B code:{b_diagnostic_code}')
-                        self.soft_drive_message = \
-                            f'Enable signal not send due to diagnostic code Drive A code:\
-                                {a_diagnostic_code}, Drive B code:{b_diagnostic_code}'
-                        return False
+                        if a_diagnostic_code == b_diagnostic_code == 'A012':
+                            bsmp_enable_message = bsmp_send(
+                                _cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_AB,
+                                    value=val).encode()
+                            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                                s.settimeout(.1)
+                                s.connect((_cte.beaglebone_addr, _cte.io_port))
+                                s.sendall(bsmp_enable_message)
+                                time.sleep(.01) # magic number
+                                while True:
+                                    data = s.recv(16)
+                                    if not data: break
+                                    return data
+                        else:
+                            logger.error(
+                                f'Enable signal not send due to diagnostic code Drive A code:\
+                                    {a_diagnostic_code},\Drive B code:{b_diagnostic_code}')
+                            self.soft_drive_message = \
+                                f'Enable signal not send due to diagnostic code Drive A code:\
+                                    {a_diagnostic_code}, Drive B code:{b_diagnostic_code}'
+                            return False
 
             else:
                 bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_AB, value=val).encode()
@@ -478,28 +492,38 @@ class Epu():
                 self.s_drive.set_target_position(a_target)
 
     def phase_set(self, target_phase: float) -> float:
-        previous_gap = self.i_drive.get_target_position()
+        epu.stop_event.clear()
         if _cte.minimum_phase <= target_phase <= _cte.maximum_phase:
-            timeout = 5
-            while timeout > 0:
-                try:
-                    self.i_drive.set_target_position(target_phase)
-                    self.s_drive.set_target_position(target_phase)
-                except Exception as e:
-                    logger.exception('Could not set drive I phase.')
-                    print(e)
+            try:
+                self.i_drive.set_target_position(target_phase)
+                self.s_drive.set_target_position(target_phase)
+                self.i_target_position = self.i_drive.get_target_position()
+                self.s_target_position = self.s_drive.get_target_position()
+            except Exception as e:
+                self.stop_event.set()
+                logger.exception('Could not change target phase')
+                print('Could not change target phase')
+                if self.i_target_position != self.s_target_position:
+                    logger.warning('PC01 warning: correct cause before moving')
+                    self.warnings.append('GC01')
+                    print('PC01 warning: correct cause before moving')
+                    raise e
+            else:
+                if self.i_target_position == self.s_target_position:
+                    self.stop_event.set()
+                    self.phase_target = target_phase
+                    return target_phase
                 else:
-                    i = self.i_drive.get_target_position()
-                    s = self.s_drive.get_target_position()
-                    if i == s == target_phase:
-                        return True
-                    else:
-                        timeout -= 1
-
+                    logger.warning('PC01 warning: correct cause before moving')
+                    self.warnings.append('GC01')
+                    print('PC01 warning: correct cause before moving')
+                    self.phase_target = None
+                    raise e
         else:
-            logger.error(f'Gap valeu given, ({target_phase}), is out of range.')
-            print(f'Gap value given, ({target_phase}), is out of range.')
-            return previous_gap
+            self.stop_event.set()
+            logger.error(f'phase value given, ({target_phase}), is out of range.')
+            print(f'phase value given, ({target_phase}), is out of range.')
+            return self.phase_target
 
     def phase_check_for_move(self) -> bool:
         drive_i_max_velocity = self.i_drive.get_max_velocity()
