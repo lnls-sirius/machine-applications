@@ -119,30 +119,30 @@ epu_log_file_path = epu_config.EPU_LOG_FILE_PATH
 # ### transaction update rate
 # ca_process_rate = 0.1
 
-# #input arguments
-# def getArgs():
-#     """ Return command line arguments
-#     """
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument(
-#         '--pv-prefix', dest='pv_prefix', type=str, required=True,
-#         help="Prefix for EPICS IOC PVs"
-#         )
-#     parser.add_argument(
-#         '--drive-msg-port', dest='msg_port', type=int, required=False,
-#         default=RS485_TCP_DEFAULT_PORT, help="TCP port for drive messages"
-#         )
-#     parser.add_argument(
-#         '--drive-io-port', dest='io_port', type=int, required=False,
-#         default=GPIO_TCP_DEFAULT_PORT,
-#         help="TCP port for virtual I/O commands"
-#         )
-#     parser.add_argument(
-#         '--beaglebone-addr', dest='beaglebone_addr', type=str, required=False,
-#         default=BBB_DEFAULT_HOSTNAME, help="Beaglebone IP address"
-#         )
-#     args = parser.parse_args()
-#     return args
+#input arguments
+def getArgs():
+    """ Return command line arguments
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--pv-prefix', dest='pv_prefix', type=str, required=False,
+        default='', help="Prefix for EPICS IOC PVs"
+        )
+    parser.add_argument(
+        '--drive-msg-port', dest='msg_port', type=int, required=False,
+        default=RS485_TCP_DEFAULT_PORT, help="TCP port for drive messages"
+        )
+    parser.add_argument(
+        '--drive-io-port', dest='io_port', type=int, required=False,
+        default=GPIO_TCP_DEFAULT_PORT,
+        help="TCP port for virtual I/O commands"
+        )
+    parser.add_argument(
+        '--beaglebone-addr', dest='beaglebone_addr', type=str, required=False,
+        default=BBB_DEFAULT_HOSTNAME, help="Beaglebone IP address"
+        )
+    args = parser.parse_args()
+    return args
 
 # args = getArgs()
 

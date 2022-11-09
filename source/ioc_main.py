@@ -7,6 +7,8 @@ import iocDriver
 import epu_db
 
 if __name__ == '__main__':
+    if epu_db.pv_prefix == '':
+        raise ValueError('PV prefix is missing')
     # create CA server
     server = pcaspy.SimpleServer()
     # config access security

@@ -38,8 +38,20 @@ class Epu():
         self.stop_event = threading.Event()
         self.stop_event.set()
         self._epu_lock = threading.RLock()
+<<<<<<< HEAD
         self.monitor_phase_movement_thread = Thread(target=self.monitor_phase_movement, daemon=True)
         self.standstill_monitoring_thread = Thread(target=self.standstill_monitoring, daemon=True)
+=======
+        self.monitor_phase_movement_thread = Thread(
+            target=self.monitor_phase_movement,
+            daemon=True
+            )
+        self.standstill_monitoring_thread = Thread(
+            target=self.standstill_monitoring,
+            daemon=True
+            )
+        self.standstill_monitoring_thread.setDaemon(True)
+>>>>>>> 079d68a65df6ec5ae2078017a68169bb81b9a2f6
 
         # init functions
         self.init_variables_scope()
@@ -303,6 +315,7 @@ class Epu():
                         return False
 
             else:
+<<<<<<< HEAD
                 bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_AB, value=val).encode()
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     s.settimeout(.1)
@@ -313,6 +326,19 @@ class Epu():
                         data = s.recv(16)
                         if not data: break
                         return data
+=======
+                with self.stop_event.clear():
+                    bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_AB, value=val).encode()
+                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                        s.settimeout(.1)
+                        s.connect((_cte.beaglebone_addr, _cte.io_port))
+                        s.sendall(bsmp_enable_message)
+                        time.sleep(.01) # magic number
+                        while True:
+                            data = s.recv(16)
+                            if not data: break
+                            return data
+>>>>>>> 079d68a65df6ec5ae2078017a68169bb81b9a2f6
             
     def gap_release_halt(self, val: bool):
         try:
@@ -373,6 +399,7 @@ class Epu():
             return False
         else:
             with self._epu_lock:
+<<<<<<< HEAD
                 self.stop_event.clear()
                 if self.gap_check_for_move():
                     a_diagnostic_code = self.a_drive.get_diagnostic_code()
@@ -390,6 +417,33 @@ class Epu():
                                 data = s.recv(16)
                                 if not data: break
                                 return data
+=======
+                with self.stop_event.clear():
+                    if self.gap_check_for_move():
+                        a_diagnostic_code = self.a_drive.get_diagnostic_code()
+                        b_diagnostic_code = self.b_drive.get_diagnostic_code()
+                        if a_diagnostic_code == b_diagnostic_code == 'A211':
+                            bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.START_CH_AB, value=val).encode()
+                            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                                s.settimeout(.1)
+                                s.connect((_cte.beaglebone_addr, _cte.io_port))
+                                self.stop_event.clear()
+                                time.sleep(.1) # waits for the tcp reading in default thread
+                                self.gap_start_event.set()
+                                s.sendall(bsmp_enable_message)
+                                while True:
+                                    data = s.recv(16)
+                                    if not data: break
+                                    return data
+                        else:
+                            logger.error(
+                                f'Start signal not send due to diagnostic code Drive A code:\
+                                    {self.a_drive.diagnostic_code},\Drive B code:{self.b_drive.diagnostic_code}')
+                            self.soft_drive_message = \
+                                f'Start signal not send due to diagnostic code Drive A code:\
+                                    {self.a_drive.diagnostic_code}, Drive B code:{self.b_drive.diagnostic_code}'
+                            return False
+>>>>>>> 079d68a65df6ec5ae2078017a68169bb81b9a2f6
                     else:
                         epu.stop_event.set()
                         logger.error(
