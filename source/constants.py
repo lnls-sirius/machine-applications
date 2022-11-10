@@ -119,7 +119,8 @@ access_security_filename = 'epu.as'
 ### transaction update rate
 ca_process_rate = 0.1
 
-#input arguments
+# input arguments
+
 def getArgs():
     """ Return command line arguments
     """
