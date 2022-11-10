@@ -74,9 +74,9 @@ class Epu():
         self.i_diag_code = self.i_drive.get_diagnostic_code()
         self.i_is_moving = False
         #drive s variables
-        self.s_resolver_gap = self.s_drive.get_resolver_position()
+        self.s_target_position = self.s_drive.get_target_position()
         self.s_resolver_phase = self.s_drive.get_resolver_position()
-        self.s_encoder_gap = self.s_drive.get_encoder_position()
+        self.s_encoder_phase = self.s_drive.get_encoder_position()
         self.s_diag_code = self.s_drive.get_diagnostic_code()
         self.s_is_moving = False
 
