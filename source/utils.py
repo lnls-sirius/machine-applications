@@ -57,7 +57,6 @@ def include_checksum(list_values):
     return(list_values + [counter])
 def  bsmp_send(command_type, variableID = 0x00, value = 0x00, size = 1):
     send_message = [0x00, command_type] + [c for c in struct.pack("!h", size + 1)] + [variableID]
-    print(send_message)
     if size == 1:
         send_message = send_message + [value]
     elif size == 2:

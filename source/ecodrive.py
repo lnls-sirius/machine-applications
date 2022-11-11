@@ -11,14 +11,11 @@ logging.basicConfig(
 class EcoDrive():
     
     _SOCKET_TIMEOUT = .1
-    _RS485_DELAY = 0.07
+    _RS485_DELAY = 0.058
     _lock = threading.RLock()
 
     def __init__(
-        self, address, max_limit=+25, min_limit=-25,
-        bbb_hostname = _cte.beaglebone_addr, rs458_tcp_port=_cte.msg_port,
-        drive_name = 'EcoDrive'
-        ):
+        self, address, max_limit=+25, min_limit=-25, bbb_hostname = _cte.beaglebone_addr, rs458_tcp_port=_cte.msg_port, drive_name = 'EcoDrive'):
         self.ADDRESS = address
         self.UPPER_LIMIT = max_limit
         self.LOWER_LIMIT = min_limit
@@ -170,16 +167,16 @@ class EcoDrive():
 
     def get_target_position_reached(self) -> bool:
         try:
-            byte_message = self.tcp_read_parameter('S-0-0342,7,R')
+            byte_message = self.tcp_read_parameter('S-0-0013,7,R')
         except Exception as e:
             logger.exception('Communication error in tcp_read_parameter.')
         else:
             str_message = byte_message.decode()
             if not ('S-0-0342,7,R' in str_message):
-                logger.error('Drive did not respond as axpected to "S-0-0342,7,R".')
-                raise Exception('Drive did not respond as axpected to "S-0-0342,7,R".')
+                logger.error('Drive did not respond as axpected to "S-0-0013,7,R".')
+                raise Exception('Drive did not respond as axpected to "S-0-0013,7,R".')
             else:
-                targ_pos_reached_bit = str_message.split('\r\n')[1][0]
+                targ_pos_reached_bit = str_message.split('\r\n')[1][1]
                 if not (targ_pos_reached_bit == '0' or targ_pos_reached_bit == '1'):
                     logger.error(
                         "Drive did not respond as axpected: "
@@ -242,10 +239,10 @@ class EcoDrive():
     def get_target_position(self):
         return float(self.read_parameter_data('P-0-4006,7,R'))
 
-    def get_max_velocity(self):
-        return float(self.read_parameter_data(('P-0-4007,7,R')))
+    def get_max_velocity(self, chande_drive: bool =True):
+        return float(self.read_parameter_data('P-0-4007,7,R', change_drive=chande_drive))
 
-    def set_velocity(self, target: float) -> bool:
+    def set_target_velocity(self, target: float) -> bool:
         if 50 <= target <= 500:
             with self._lock:
                 answer = self.tcp_read_parameter('P-0-4007,7,W,>').decode()
@@ -318,11 +315,11 @@ class EcoDrive():
         try:
             drive_answer = self.tcp_read_parameter(f'{parameter},7,R', change_drive).decode()
         except Exception:
-            logger.exception('Erro while tcp reading.')
+            logger.exception('Tcp reading error')
         else:
             if not f'E{self.ADDRESS}:>' in drive_answer:
                 logger.error(
-                    f'Corrupt drive answer', f'Drive {self.DRIVE_NAME} answer to "{parameter},7,R" {drive_answer}')
+                    'Corrupt drive answer', f'Drive {self.DRIVE_NAME} answer to "{parameter},7,R" {drive_answer}')
                 raise Exception(
                     'Corrupt drive answer', f'Drive {self.DRIVE_NAME} answer to "{parameter},7,R": {drive_answer}')
             if treat_answer:
@@ -333,17 +330,17 @@ class EcoDrive():
     def clear_error(self):
         with self._lock:
             self.tcp_read_parameter('S-0-0099,3,r')
-            self.tcp_read_parameter('S-0-0099,3,r', False) 
-            self.tcp_read_parameter('S-0-0099,7,W,11b', False)
+            self.tcp_read_parameter('S-0-0099,7,w,11b', False)
+            self.tcp_read_parameter('S-0-0099,1,w,0', False)
+            self.tcp_read_parameter('S-0-0099,7,w,0b', False)
+            self.tcp_read_parameter('S-0-0099,7,w,0b', False)
+            self.tcp_read_parameter('S-0-0099,7,w,0b', False)
+
 
 ################### MODULE TESTING ##################
 
 if __name__ == '__main__':
-    eco_test = EcoDrive(
-            address=21,
-            min_limit=_cte.minimum_gap,
-            max_limit=_cte.maximum_gap,
-            drive_name='Teste')
+    eco_test = EcoDrive(address=21, min_limit=_cte.minimum_gap, max_limit=_cte.maximum_gap, drive_name='Teste')
 
 #     time.sleep(1)
 #     while True:
