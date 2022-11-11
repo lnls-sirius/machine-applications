@@ -489,7 +489,7 @@ class Epu():
                                     if not data: break
                                     return data
                         else:
-                            epu.stop_event.set()
+                            self.stop_event.set()
                             logger.error(
                                 f'Start signal not send due to diagnostic code Drive A code:\
                                     {a_diagnostic_code},\Drive B code:{b_diagnostic_code}')
@@ -838,7 +838,7 @@ class Epu():
                                 f'Start signal not send due to diagnostic code Drive S code:\
                                     {i_diagnostic_code}, Drive S code:{s_diagnostic_code}'
                 else:
-                    epu.stop_event.set()
+                    self.stop_event.set()
                     logger.error(
                         "Phase movement not started because one or "
                         "more conditions have not been met. "
