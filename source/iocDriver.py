@@ -1,6 +1,7 @@
 import pcaspy
 import threading
 import traceback
+import time
 import constants as _cte
 import epu_db as _db
 import epu
@@ -38,8 +39,15 @@ class EPUSupport(pcaspy.Driver):
             print('Could not init epu driver')
         # start periodic polling function
         self.eid = threading.Event()
+        self.init_vars()
         self.tid_periodic = threading.Thread(target=self.periodic, daemon=True)
         self.tid_periodic.start()
+    # variable initialization
+    def init_vars(self):
+        self.old_gap = self.epu_driver.gap
+        self.old_gap_sample_timestamp = time.time()
+        self.old_phase = self.epu_driver.phase
+        self.old_phase_sample_timestamp = time.time()
     # priority callback
     def priority_call(self):
         # update encoder readings
@@ -88,9 +96,28 @@ class EPUSupport(pcaspy.Driver):
             self.setParam(
                 _db.pv_phase_rb,
                 self.epu_driver.phase_target)
+            self.old_phase = self.getParam(_db.pv_phase_mon)
+            self.phase_delta_t = time.time()
             self.setParam(
                 _db.pv_phase_mon,
                 self.epu_driver.phase)
+            # update speed pvs
+            ## gap speed
+            time_now = time.time()
+            gap_now = self.epu_driver.gap
+            self.setParam(
+                _db.pv_gap_velo_mon,
+                (gap_now - self.old_gap) / (time_now - self.old_gap_sample_timestamp))
+            self.old_gap = gap_now
+            self.old_gap_sample_timestamp = time_now
+            ## phase speed
+            time_now = time.time()
+            phase_now = self.epu_driver.phase
+            self.setParam(
+                _db.pv_phase_velo_mon,
+                (phase_now - self.old_phase) / (time_now - self.old_phase_sample_timestamp))
+            self.old_phase = phase_now
+            self.old_phase_sample_timestamp = time_now
             # update resolver readings
             self.setParam(
                 _db.pv_drive_a_resolver_pos_mon,
@@ -123,25 +150,6 @@ class EPUSupport(pcaspy.Driver):
             self.setParam(
                 _db.pv_enbl_and_release_si_sts,
                 self.epu_driver.phase_enable_and_halt_released)
-            # update speed pvs
-            self.setParam(
-                _db.pv_gap_velo_mon,
-                self.epu_driver.gap_velocity)
-            self.setParam(
-                _db.pv_phase_velo_mon,
-                self.epu_driver.phase_velocity)
-            self.setParam(
-                _db.pv_drive_a_velo_mon,
-                self.epu_driver.a_act_velocity)
-            self.setParam(
-                _db.pv_drive_b_velo_mon,
-                self.epu_driver.b_act_velocity)
-            self.setParam(
-                _db.pv_drive_s_velo_mon,
-                self.epu_driver.s_act_velocity)
-            self.setParam(
-                _db.pv_drive_i_velo_mon,
-                self.epu_driver.i_act_velocity)
             # update diagnostic codes
             self.setParam(
                 _db.pv_drive_a_diag_code_mon,

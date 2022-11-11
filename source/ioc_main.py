@@ -2,7 +2,7 @@ import pcaspy
 import sys
 import os
 import traceback
-import constants
+import constants as _cte
 import iocDriver
 import epu_db
 
@@ -13,7 +13,7 @@ if __name__ == '__main__':
     server = pcaspy.SimpleServer()
     # config access security
     server.initAccessSecurityFile(
-        constants.access_security_filename, PREFIX=epu_db.pv_prefix
+        _cte.access_security_filename, PREFIX=epu_db.pv_prefix
         )
     # instantiate PV database
     server.createPV(epu_db.pv_prefix, epu_db.pvdb)
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     while True:
         try:
             # process CA transactions
-            server.process(constants.ca_process_rate)
+            server.process(_cte.ca_process_rate)
         except Exception:
             traceback.print_exc(file=sys.stdout)
             os._exit(0)

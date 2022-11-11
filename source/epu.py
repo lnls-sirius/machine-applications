@@ -76,7 +76,7 @@ class Epu():
         self.s_resolver_gap = self.s_drive.get_resolver_position()
         self.s_target_velocity = self.s_drive.get_max_velocity()
         self.s_resolver_phase = self.s_drive.get_resolver_position()
-        self.s_encoder_gap = self.s_drive.get_encoder_position()
+        self.s_encoder_phase = self.s_drive.get_encoder_position()
         self.s_diag_code = self.s_drive.get_diagnostic_code()
         self.s_is_moving = False
 
@@ -339,13 +339,13 @@ class Epu():
         else:
             if val:
                 with self._epu_lock:
-                    epu.stop_event.clear()
+                    self.stop_event.clear()
                     try:
                         a_diagnostic_code = self.a_drive.get_diagnostic_code()
                         b_diagnostic_code = self.b_drive.get_diagnostic_code()
-                        epu.stop_event.set()
+                        self.stop_event.set()
                     except Exception:
-                        epu.stop_event.set()
+                        self.stop_event.set()
                         logger.exception('Could not set enable')
                     else:
                         if a_diagnostic_code == b_diagnostic_code == 'A012':
@@ -396,13 +396,13 @@ class Epu():
         else:
             if val:
                 with self._epu_lock:
-                    epu.stop_event.clear()
+                    self.stop_event.clear()
                     try:
                         a_diagnostic_code = self.a_drive.get_diagnostic_code()
                         b_diagnostic_code = self.b_drive.get_diagnostic_code()
-                        epu.stop_event.set()
+                        self.stop_event.set()
                     except Exception:
-                        epu.stop_event.set()
+                        self.stop_event.set()
                         logger.exception('Could not relase halt')
                         print('Could not relase halt')
                     else:
@@ -498,7 +498,7 @@ class Epu():
                                     {a_diagnostic_code}, Drive B code:{b_diagnostic_code}'
                             return False
                 else:
-                    epu.stop_event.set()
+                    self.stop_event.set()
                     logger.error('Gap movement not started because one or more conditions have not been met.\
                                 Check log for more information.')
                     return False
@@ -555,7 +555,7 @@ class Epu():
                 self.s_drive.set_target_position(a_target)
 
     def phase_set(self, target_phase: float) -> float:
-        epu.stop_event.clear()
+        self.stop_event.clear()
         if _cte.minimum_phase <= target_phase <= _cte.maximum_phase:
             try:
                 self.i_drive.set_target_position(target_phase)
@@ -668,13 +668,13 @@ class Epu():
         else:
             if val:
                 with self._epu_lock:
-                    epu.stop_event.clear()
+                    self.stop_event.clear()
                     try:
                         i_diagnostic_code = self.i_drive.get_diagnostic_code()
                         s_diagnostic_code = self.s_drive.get_diagnostic_code()
-                        epu.stop_event.set()
+                        self.stop_event.set()
                     except Exception:
-                        epu.stop_event.set()
+                        self.stop_event.set()
                         logger.exception('Could not set phase enable.')
                     else:
                         if i_diagnostic_code == s_diagnostic_code == 'A012':
@@ -850,4 +850,3 @@ class Epu():
         self.phase_release_halt(0)
         self.phase_set_enable(0)
 
-epu = Epu()
