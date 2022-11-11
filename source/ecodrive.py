@@ -15,7 +15,10 @@ class EcoDrive():
     _lock = threading.RLock()
 
     def __init__(
-        self, address, max_limit=+25, min_limit=-25, bbb_hostname = _cte.beaglebone_addr, rs458_tcp_port=_cte.msg_port, drive_name = 'EcoDrive'):
+        self, address, max_limit=+25, min_limit=-25,
+        bbb_hostname = _cte.beaglebone_addr, rs458_tcp_port=_cte.msg_port,
+        drive_name = 'EcoDrive'
+        ):
         self.ADDRESS = address
         self.UPPER_LIMIT = max_limit
         self.LOWER_LIMIT = min_limit
@@ -340,7 +343,11 @@ class EcoDrive():
 ################### MODULE TESTING ##################
 
 if __name__ == '__main__':
-    eco_test = EcoDrive(address=21, min_limit=_cte.minimum_gap, max_limit=_cte.maximum_gap, drive_name='Teste')
+    eco_test = EcoDrive(
+            address=21,
+            min_limit=_cte.minimum_gap,
+            max_limit=_cte.maximum_gap,
+            drive_name='Teste')
 
 #     time.sleep(1)
 #     while True:

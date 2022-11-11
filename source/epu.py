@@ -120,7 +120,7 @@ class Epu():
                     c = 0
                     while c<20:
                         self.gap = self.a_drive.get_encoder_position(False)
-                        #self.callback_update()
+                        self.callback_update()
                         print(self.gap, self.gap_is_moving)
                         c+=1
                         count +=1
@@ -147,7 +147,7 @@ class Epu():
                     c = 0
                     while c<20:
                         self.phase = self.i_drive.get_encoder_position(False)
-                        #self.callback_update()
+                        self.callback_update()
                         c+=1
                         count +=1
                     # print(f'Fase: {self.phase}')
