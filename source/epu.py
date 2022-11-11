@@ -266,7 +266,11 @@ class Epu():
 
     def gap_set_velocity(self, target_velocity: float):
         self.stop_event.clear()
-        if 50 <= target_velocity <= 500:
+        if (
+            _cte.minimum_velo_mm_per_min
+            <= target_velocity
+            <= _cte.maximum_velo_mm_per_min
+            ):
             try:
                 self.a_drive.set_target_velocity(target_velocity)
                 self.b_drive.set_target_velocity(target_velocity)
@@ -590,7 +594,11 @@ class Epu():
 
     def phase_set_velocity(self, target_velocity: float):
         self.stop_event.clear()
-        if 50 <= target_velocity <= 500:
+        if (
+            _cte.minimum_velo_mm_per_min
+            <= target_velocity
+            <= _cte.maximum_velo_mm_per_min
+            ):
             try:
                 self.i_drive.set_target_velocity(target_velocity)
                 self.s_drive.set_target_velocity(target_velocity)
@@ -617,7 +625,11 @@ class Epu():
                     self.phase_target = None
                     raise e
         else:
-            logger.info('Veloxity must be between 50 mm/s and 500 mm/s')
+            logger.info(
+                'Veloxity must be between {} mm/s and {} mm/s'.format(
+                    _cte.minimum_velo_mm_per_min,
+                    _cte.maximum_velo_mm_per_min)
+                    )
 
     def phase_check_for_move(self) -> bool:
         drive_i_max_velocity = self.i_drive.get_max_velocity()

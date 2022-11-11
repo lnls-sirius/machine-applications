@@ -33,6 +33,7 @@ class EpuConfig(BaseModel):
     MAXIMUM_GAP: float
     MINIMUM_PHASE: float
     MAXIMUM_PHASE: float
+    MINIMUM_VELOCITY: float
     MAXIMUM_VELOCITY: float
     ECODRIVE_LOG_FILE_PATH: str
     EPU_LOG_FILE_PATH: str
@@ -53,21 +54,12 @@ minimum_gap = epu_config.MINIMUM_GAP
 maximum_gap = epu_config.MAXIMUM_GAP
 minimum_phase = epu_config.MINIMUM_PHASE
 maximum_phase = epu_config.MAXIMUM_PHASE
-max_velo_mm_per_min = epu_config.MAXIMUM_VELOCITY # mm/min
-maximum_velo = max_velo_mm_per_min/ 60 # mm/sec
+minimum_velo_mm_per_min = epu_config.MINIMUM_VELOCITY # mm/min
+minimum_velo_mm_per_sec = minimum_velo_mm_per_min/ 60 # mm/sec
+maximum_velo_mm_per_min = epu_config.MAXIMUM_VELOCITY # mm/min
+maximum_velo_mm_per_sec = maximum_velo_mm_per_min/ 60 # mm/sec
 ecodrive_log_file_path = epu_config.ECODRIVE_LOG_FILE_PATH
 epu_log_file_path = epu_config.EPU_LOG_FILE_PATH
-
-
-#MINIMUM_GAP = +22
-#MAXIMUM_GAP = +300
-#MINIMUM_PHASE = -25
-#MAXIMUM_PHASE = +25
-#SERIAL_PORT = '/dev/pts/12'
-#BAUD_RATE = 19200
-#GPIO_TCP_PORT = 5050
-#RS485_TCP_PORT = 9993
-#TCP_IP = '10.0.28.100'
 #################################################
 
 # dummy function for debugging
