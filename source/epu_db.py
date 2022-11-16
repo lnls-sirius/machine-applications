@@ -50,6 +50,9 @@ pv_is_moving_mon = 'Moving-Mon'
 pv_stop_cmd = 'Stop-Cmd'
 pv_stop_ab_cmd = 'StopGap-Cmd'
 pv_stop_si_cmd = 'StopPhase-Cmd'
+pv_enbl_pwr_all_cmd = 'EnblPwrAll-Cmd'
+pv_enbl_pwr_ab_cmd = 'EnblPwrGap-Cmd'
+pv_enbl_pwr_si_cmd = 'EnblPwrPhase-Cmd'
 ## drive A
 pv_drive_a_resolver_pos_mon = 'DriveAResolverPos-Mon'
 pv_drive_a_encoder_pos_mon = 'DriveAEncoderPos-Mon'
@@ -456,6 +459,30 @@ pvdb = {
         'value' : 0,
     },
     pv_stop_si_cmd : {
+        'type' : 'int',
+        'count' : 1,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+        'value' : 0,
+    },
+    pv_enbl_pwr_all_cmd : {
+        'type' : 'int',
+        'count' : 1,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+        'value' : 0,
+    },
+    pv_enbl_pwr_ab_cmd : {
+        'type' : 'int',
+        'count' : 1,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+        'value' : 0,
+    },
+    pv_enbl_pwr_si_cmd : {
         'type' : 'int',
         'count' : 1,
         'mdel' : -1,

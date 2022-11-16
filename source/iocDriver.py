@@ -54,6 +54,10 @@ class EPUSupport(pcaspy.Driver):
         self._old_gap_sample_timestamp = time.time()
         self._old_phase = self.epu_driver.phase
         self._old_phase_sample_timestamp = time.time()
+    # increment pv value
+    def incParam(self, pv_name, inc=1):
+        _old_value = self.getParam(pv_name)
+        self.setParam(pv_name, _old_value+inc)
     # priority callback
     def priority_call(self):
         # update encoder readings
@@ -286,8 +290,7 @@ class EPUSupport(pcaspy.Driver):
             # clear ioc msg
             self.setParam(_db.pv_ioc_msg_mon, _cte.msg_clear)
             # increment cmd pv
-            old_value = self.getParam(_db.pv_clear_log_cmd)
-            self.setParam(_db.pv_clear_log_cmd, old_value+1)
+            self.incParam(_db.pv_clear_log_cmd)
             self.updatePVs()
         ## change gap set point
         if isPvName(reason, _db.pv_gap_sp):
@@ -370,8 +373,7 @@ class EPUSupport(pcaspy.Driver):
             if _db.pv_allowed_change_gap_mon == _cte.bool_yes:
                 status = self.asynExec(reason, self.epu_driver.gap_start)
                 # increment cmd pv
-                old_value = self.getParam(_db.pv_change_gap_cmd)
-                self.setParam(_db.pv_change_gap_cmd, old_value+1)
+                self.incParam(_db.pv_change_gap_cmd)
                 self.updatePVs()
             else:
                 status = False
@@ -380,8 +382,7 @@ class EPUSupport(pcaspy.Driver):
             if _db.pv_allowed_change_phase_mon == _cte.bool_yes:
                 status = self.asynExec(reason, self.epu_driver.phase_start)
                 # increment cmd pv
-                old_value = self.getParam(_db.pv_change_phase_cmd)
-                self.setParam(_db.pv_change_phase_cmd, old_value+1)
+                self.incParam(_db.pv_change_phase_cmd)
                 self.updatePVs()
             else:
                 status = False
@@ -458,8 +459,7 @@ class EPUSupport(pcaspy.Driver):
         elif isPvName(reason, _db.pv_stop_cmd):
             status = self.asynExec(reason, self.epu_driver.stop_all)
             # increment cmd pv
-            old_value = self.getParam(_db.pv_stop_cmd)
-            self.setParam(_db.pv_stop_cmd, old_value+1)
+            self.incParam(_db.pv_stop_cmd)
             # halt motor drives
             self.setParam(_db.pv_release_ab_sel, _cte.bool_no)
             self.setParam(_db.pv_release_si_sel, _cte.bool_no)
@@ -468,8 +468,7 @@ class EPUSupport(pcaspy.Driver):
         elif isPvName(reason, _db.pv_stop_ab_cmd):
             status = self.asynExec(reason, self.epu_driver.gap_stop)
             # increment cmd pv
-            old_value = self.getParam(_db.pv_stop_ab_cmd)
-            self.setParam(_db.pv_stop_ab_cmd, old_value+1)
+            self.incParam(_db.pv_stop_ab_cmd)
             # halt motor drives
             self.setParam(_db.pv_release_ab_sel, _cte.bool_no)
             # update pvs
@@ -477,10 +476,30 @@ class EPUSupport(pcaspy.Driver):
         elif isPvName(reason, _db.pv_stop_si_cmd):
             status = self.asynExec(reason, self.epu_driver.phase_stop)
             # increment cmd pv
-            old_value = self.getParam(_db.pv_stop_si_cmd)
-            self.setParam(_db.pv_stop_si_cmd, old_value+1)
+            self.incParam(_db.pv_stop_si_cmd)
             # halt motor drives
             self.setParam(_db.pv_release_si_sel, _cte.bool_no)
+            # update pvs
+            self.updatePVs()
+        ## cmd to turn on power of A and B drives
+        elif isPvName(reason, _db.pv_enbl_pwr_ab_cmd):
+            status = self.asynExec(reason, _cte.dummy)
+            # increment cmd pv
+            self.incParam(_db.pv_enbl_pwr_ab_cmd)
+            # update pvs
+            self.updatePVs()
+        ## cmd to turn on power of S and I drives
+        elif isPvName(reason, _db.pv_enbl_pwr_si_cmd):
+            status = self.asynExec(reason, _cte.dummy)
+            # increment cmd pv
+            self.incParam(_db.pv_enbl_pwr_si_cmd)
+            # update pvs
+            self.updatePVs()
+        ## cmd to turn on power of all drives
+        elif isPvName(reason, _db.pv_enbl_pwr_all_cmd):
+            status = self.asynExec(reason, _cte.dummy)
+            # increment cmd pv
+            self.incParam(_db.pv_enbl_pwr_all_cmd)
             # update pvs
             self.updatePVs()
         ## no match to pv names
