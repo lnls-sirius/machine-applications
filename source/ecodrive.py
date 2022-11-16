@@ -1,4 +1,4 @@
-import time, yaml, logging, threading, socket
+import time, logging, threading, socket
 from utils import *
 import constants as _cte
 
