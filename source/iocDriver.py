@@ -340,8 +340,10 @@ class EPUSupport(pcaspy.Driver):
                     and value <= _cte.maximum_velo_mm_per_sec
                     and value <= soft_max_velo
                     ):
+                # convert velocity to mm/min
+                _val_per_min = value * 60
                 status = self.asynExec(
-                    reason, self.epu_driver.gap_set_velocity, value)
+                    reason, self.epu_driver.gap_set_velocity, _val_per_min)
                 if status:
                     self.setParam(_db.pv_gap_velo_sp, value)
                     self.updatePVs()
@@ -354,8 +356,10 @@ class EPUSupport(pcaspy.Driver):
                     and value <= _cte.maximum_velo_mm_per_sec
                     and value <= soft_max_velo
                     ):
+                # convert velocity to mm/min
+                _val_per_min = value * 60
                 status = self.asynExec(
-                    reason, _cte.dummy, value)
+                    reason, self.epu_driver.phase_set_velocity, _val_per_min)
                 if status:
                     self.setParam(_db.pv_phase_velo_sp, value)
                     self.updatePVs()
