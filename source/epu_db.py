@@ -50,31 +50,36 @@ pv_is_moving_mon = 'Moving-Mon'
 pv_stop_cmd = 'Stop-Cmd'
 pv_stop_ab_cmd = 'StopGap-Cmd'
 pv_stop_si_cmd = 'StopPhase-Cmd'
+pv_enbl_pwr_all_cmd = 'EnblPwrAll-Cmd'
+pv_enbl_pwr_ab_cmd = 'EnblPwrGap-Cmd'
+pv_enbl_pwr_si_cmd = 'EnblPwrPhase-Cmd'
+pv_pwr_ab_mon = 'PwrGap-Mon'
+pv_pwr_si_mon = 'PwrPhase-Mon'
 ## drive A
 pv_drive_a_resolver_pos_mon = 'DriveAResolverPos-Mon'
 pv_drive_a_encoder_pos_mon = 'DriveAEncoderPos-Mon'
-#pv_drive_a_velo_mon = 'DriveASpeed-Mon'
+pv_a_target_velo_mon = 'DriveATargetSpeed-Mon'
 pv_drive_a_diag_code_mon = 'DriveADiagCode-Mon'
 pv_drive_a_diag_msg_mon = 'DriveADiagMsg-Mon'
 pv_drive_a_is_moving_mon = 'DriveAMoving-Mon'
 ## drive B
 pv_drive_b_resolver_pos_mon = 'DriveBResolverPos-Mon'
 pv_drive_b_encoder_pos_mon = 'DriveBEncoderPos-Mon'
-#pv_drive_b_velo_mon = 'DriveBSpeed-Mon'
+pv_b_target_velo_mon = 'DriveBTargetSpeed-Mon'
 pv_drive_b_diag_code_mon = 'DriveBDiagCode-Mon'
 pv_drive_b_diag_msg_mon = 'DriveBDiagMsg-Mon'
 pv_drive_b_is_moving_mon = 'DriveBMoving-Mon'
 ## drive S
 pv_drive_s_resolver_pos_mon = 'DriveSResolverPos-Mon'
 pv_drive_s_encoder_pos_mon = 'DriveSEncoderPos-Mon'
-#pv_drive_s_velo_mon = 'DriveSSpeed-Mon'
+pv_s_target_velo_mon = 'DriveSTargetSpeed-Mon'
 pv_drive_s_diag_code_mon = 'DriveSDiagCode-Mon'
 pv_drive_s_diag_msg_mon = 'DriveSDiagMsg-Mon'
 pv_drive_s_is_moving_mon = 'DriveSMoving-Mon'
 ## drive I
 pv_drive_i_resolver_pos_mon = 'DriveIResolverPos-Mon'
 pv_drive_i_encoder_pos_mon = 'DriveIEncoderPos-Mon'
-#pv_drive_i_velo_mon = 'DriveISpeed-Mon'
+pv_i_target_velo_mon = 'DriveITargetSpeed-Mon'
 pv_drive_i_diag_code_mon = 'DriveIDiagCode-Mon'
 pv_drive_i_diag_msg_mon = 'DriveIDiagMsg-Mon'
 pv_drive_i_is_moving_mon = 'DriveIMoving-Mon'
@@ -463,6 +468,50 @@ pvdb = {
         'asg' : 'default',
         'value' : 0,
     },
+    pv_enbl_pwr_all_cmd : {
+        'type' : 'int',
+        'count' : 1,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+        'value' : 0,
+    },
+    pv_enbl_pwr_ab_cmd : {
+        'type' : 'int',
+        'count' : 1,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+        'value' : 0,
+    },
+    pv_enbl_pwr_si_cmd : {
+        'type' : 'int',
+        'count' : 1,
+        'mdel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+        'value' : 0,
+    },
+    pv_pwr_ab_mon : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : _cte.bool_dsbl_enbl,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'scan' : _cte.scan_rate,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_pwr_si_mon : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : _cte.bool_dsbl_enbl,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'scan' : _cte.scan_rate,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
     #############################################
     # Drive A
     pv_drive_a_resolver_pos_mon : {
@@ -485,16 +534,16 @@ pvdb = {
         'asyn' : False,
         'asg' : 'readonly',
     },
-    #pv_drive_a_velo_mon : {
-    #    'type' : 'float',
-    #    'prec' : _cte.position_precision,
-    #    'count' : 1,
-    #    'unit' : _cte.velo_units,
-    #    'mdel' : -1,
-    #    'scan' : _cte.scan_rate,
-    #    'asyn' : False,
-    #    'asg' : 'readonly',
-    #},
+    pv_a_target_velo_mon : {
+        'type' : 'float',
+        'prec' : _cte.position_precision,
+        'count' : 1,
+        'unit' : _cte.velo_units,
+        'mdel' : -1,
+        'scan' : _cte.scan_rate,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
     pv_drive_a_diag_code_mon : {
         'type' : 'string',
         'count' : 1,
@@ -543,16 +592,16 @@ pvdb = {
         'asyn' : False,
         'asg' : 'readonly',
     },
-    #pv_drive_b_velo_mon : {
-    #    'type' : 'float',
-    #    'prec' : _cte.position_precision,
-    #    'count' : 1,
-    #    'unit' : _cte.velo_units,
-    #    'mdel' : -1,
-    #    'scan' : _cte.scan_rate,
-    #    'asyn' : False,
-    #    'asg' : 'readonly',
-    #},
+    pv_b_target_velo_mon : {
+        'type' : 'float',
+        'prec' : _cte.position_precision,
+        'count' : 1,
+        'unit' : _cte.velo_units,
+        'mdel' : -1,
+        'scan' : _cte.scan_rate,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
     pv_drive_b_diag_code_mon : {
         'type' : 'string',
         'count' : 1,
@@ -601,16 +650,16 @@ pvdb = {
         'asyn' : False,
         'asg' : 'readonly',
     },
-    #pv_drive_s_velo_mon : {
-    #    'type' : 'float',
-    #    'prec' : _cte.position_precision,
-    #    'count' : 1,
-    #    'unit' : _cte.velo_units,
-    #    'mdel' : -1,
-    #    'scan' : _cte.scan_rate,
-    #    'asyn' : False,
-    #    'asg' : 'readonly',
-    #},
+    pv_s_target_velo_mon : {
+        'type' : 'float',
+        'prec' : _cte.position_precision,
+        'count' : 1,
+        'unit' : _cte.velo_units,
+        'mdel' : -1,
+        'scan' : _cte.scan_rate,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
     pv_drive_s_diag_code_mon : {
         'type' : 'string',
         'count' : 1,
@@ -659,16 +708,16 @@ pvdb = {
         'asyn' : False,
         'asg' : 'readonly',
     },
-    #pv_drive_i_velo_mon : {
-    #    'type' : 'float',
-    #    'prec' : _cte.position_precision,
-    #    'count' : 1,
-    #    'unit' : _cte.velo_units,
-    #    'mdel' : -1,
-    #    'scan' : _cte.scan_rate,
-    #    'asyn' : False,
-    #    'asg' : 'readonly',
-    #},
+    pv_i_target_velo_mon : {
+        'type' : 'float',
+        'prec' : _cte.position_precision,
+        'count' : 1,
+        'unit' : _cte.velo_units,
+        'mdel' : -1,
+        'scan' : _cte.scan_rate,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
     pv_drive_i_diag_code_mon : {
         'type' : 'string',
         'count' : 1,

@@ -320,7 +320,11 @@ class Epu():
 
     def gap_set_velocity(self, target_velocity: float):
         self.stop_event.clear()
-        if 50 <= target_velocity <= 500:
+        if (
+            _cte.minimum_velo_mm_per_min
+            <= target_velocity
+            <= _cte.maximum_velo_mm_per_min
+            ):
             try:
                 self.a_drive.set_target_velocity(target_velocity)
                 self.b_drive.set_target_velocity(target_velocity)

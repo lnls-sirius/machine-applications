@@ -1,8 +1,13 @@
+<<<<<<< HEAD
 import logging
 import socket
 import threading
 import time
 
+=======
+import time, logging, threading, socket
+from utils import *
+>>>>>>> 298eec4771760a69980ac074a7bbea05d37d6cfc
 import constants as _cte
 from utils import *
 
@@ -20,6 +25,14 @@ class EcoDrive():
     def __init__(self, address, max_limit=+25, min_limit=-25,
                     bbb_hostname = _cte.beaglebone_addr, rs458_tcp_port=_cte.msg_port, drive_name = 'EcoDrive') -> None:
 
+<<<<<<< HEAD
+=======
+    def __init__(
+        self, address, max_limit=+25, min_limit=-25,
+        bbb_hostname = _cte.beaglebone_addr, rs458_tcp_port=_cte.msg_port,
+        drive_name = 'EcoDrive'
+        ):
+>>>>>>> 298eec4771760a69980ac074a7bbea05d37d6cfc
         self.ADDRESS = address
         self.UPPER_LIMIT = max_limit
         self.LOWER_LIMIT = min_limit
@@ -351,7 +364,23 @@ class EcoDrive():
 
 
 ################### MODULE TESTING ##################
+<<<<<<< HEAD
 tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 eco_test = EcoDrive(address=21, min_limit=_cte.minimum_gap, max_limit=_cte.maximum_gap, drive_name='Teste')
 for i in range(1):
     print(eco_test.get_diagnostic_code())
+=======
+
+if __name__ == '__main__':
+    eco_test = EcoDrive(
+            address=21,
+            min_limit=_cte.minimum_gap,
+            max_limit=_cte.maximum_gap,
+            drive_name='Teste')
+
+#     time.sleep(1)
+#     while True:
+#         m = input(str("Mensagem: "))
+#         #time.sleep(1)
+#         print(eco_test.tcp_read_parameter(m))
+>>>>>>> 298eec4771760a69980ac074a7bbea05d37d6cfc
