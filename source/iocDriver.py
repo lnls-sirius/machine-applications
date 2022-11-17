@@ -301,6 +301,53 @@ class EPUSupport(pcaspy.Driver):
                 _db.pv_status_mon,
                 not_ok
                 )
+            # check if drives are powered on
+            if (
+                isValid(self.epu_driver.a_diag_code)
+                and isValid(self.epu_driver.b_diag_code)
+                and (
+                    self.epu_driver.a_diag_code == 'A012'
+                    or self.epu_driver.a_diag_code == 'A010'
+                    or self.epu_driver.a_diag_code == 'A211'
+                    )
+                and (
+                    self.epu_driver.b_diag_code == 'A012'
+                    or self.epu_driver.b_diag_code == 'A010'
+                    or self.epu_driver.b_diag_code == 'A211'
+                    )
+                ):
+                self.setParam(
+                    _db.pv_pwr_ab_mon,
+                    _cte.bool_yes
+                    )
+            else:
+                self.setParam(
+                    _db.pv_pwr_ab_mon,
+                    _cte.bool_no
+                    )
+            if (
+                isValid(self.epu_driver.s_diag_code)
+                and isValid(self.epu_driver.i_diag_code)
+                and (
+                    self.epu_driver.s_diag_code == 'A012'
+                    or self.epu_driver.s_diag_code == 'A010'
+                    or self.epu_driver.s_diag_code == 'A211'
+                    )
+                and (
+                    self.epu_driver.i_diag_code == 'A012'
+                    or self.epu_driver.i_diag_code == 'A010'
+                    or self.epu_driver.i_diag_code == 'A211'
+                    )
+                ):
+                self.setParam(
+                    _db.pv_pwr_si_mon,
+                    _cte.bool_yes
+                    )
+            else:
+                self.setParam(
+                    _db.pv_pwr_si_mon,
+                    _cte.bool_no
+                    )
             # update moving status
             if isValid(self.epu_driver.a_is_moving):
                 self.setParam(

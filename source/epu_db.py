@@ -53,6 +53,8 @@ pv_stop_si_cmd = 'StopPhase-Cmd'
 pv_enbl_pwr_all_cmd = 'EnblPwrAll-Cmd'
 pv_enbl_pwr_ab_cmd = 'EnblPwrGap-Cmd'
 pv_enbl_pwr_si_cmd = 'EnblPwrPhase-Cmd'
+pv_pwr_ab_mon = 'PwrGap-Mon'
+pv_pwr_si_mon = 'PwrPhase-Mon'
 ## drive A
 pv_drive_a_resolver_pos_mon = 'DriveAResolverPos-Mon'
 pv_drive_a_encoder_pos_mon = 'DriveAEncoderPos-Mon'
@@ -489,6 +491,26 @@ pvdb = {
         'asyn' : True,
         'asg' : 'default',
         'value' : 0,
+    },
+    pv_pwr_ab_mon : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : _cte.bool_dsbl_enbl,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'scan' : _cte.scan_rate,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_pwr_si_mon : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : _cte.bool_dsbl_enbl,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'mdel' : -1,
+        'scan' : _cte.scan_rate,
+        'asyn' : False,
+        'asg' : 'readonly',
     },
     #############################################
     # Drive A
