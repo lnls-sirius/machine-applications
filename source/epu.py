@@ -5,8 +5,9 @@ from datetime import datetime
 import constants as _cte
 
 ################## LOGGING #####################
-logging.basicConfig(filename='epu.txt', filemode='w', level=logging.INFO,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', encoding='utf-8')
+logging.basicConfig(filename='epu.log', filemode='w', level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    datefmt='%d-%b-%y %H:%M:%S', encoding='utf-8', force=True)
 logger = logging.getLogger(__name__)
 logger.info(datetime.now().strftime('%m/%d/%Y, %H:%M:%S'))
 ################################################
@@ -1029,4 +1030,4 @@ class Epu():
         self.phase_turn_on()
 
 #if __name__ == '__main__':
-#epu = Epu()
+epu = Epu()

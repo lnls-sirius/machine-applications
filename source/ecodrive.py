@@ -6,6 +6,8 @@ import time
 import constants as _cte
 from utils import *
 
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
 logger = logging.getLogger('__name__')
 logging.basicConfig(
     filename='./EcoDrive.log', filemode='w', level=logging.DEBUG,
