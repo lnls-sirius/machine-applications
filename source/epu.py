@@ -750,7 +750,6 @@ class Epu():
         self.gap_set_enable(False)
         self.gap_release_halt(False)
 
-
     def phase_set_enable(self, val: bool):
         
         if type(val) != bool: return
@@ -1030,4 +1029,4 @@ class Epu():
         self.phase_turn_on()
 
 #if __name__ == '__main__':
-epu = Epu()
+#epu = Epu()

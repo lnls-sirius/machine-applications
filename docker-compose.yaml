@@ -1,0 +1,9 @@
+version: "3.7"
+
+services:
+  epu-ioc:
+    image: "dockerregistry.lnls-sirius.com.br/gas/epu-ioc"
+    build:
+      context: "."
+    # ports:
+    #   - 22222:22222
