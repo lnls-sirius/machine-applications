@@ -20,6 +20,8 @@ HALT_CH_SI =   0x11
 START_CH_SI =  0x21
 ENABLE_CH_SI = 0x31
 
+RESET_CH_AB=  0x40
+RESET_CH_SI=  0x41
 ############### EPU constants ################
 
 ## pydantic data validation
