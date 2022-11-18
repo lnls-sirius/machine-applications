@@ -4,9 +4,13 @@ from pydantic import BaseModel
 from typing import Optional
 import traceback
 
+############## IOC Structure ###################
+
+TOP = '..'
+
 ################# ETHERNET #####################
 GPIO_TCP_DEFAULT_PORT = 5050
-RS485_TCP_DEFAULT_PORT = 64993
+RS485_TCP_DEFAULT_PORT = 5051
 BBB_DEFAULT_HOSTNAME = 'BBB-DRIVERS-EPU-2022'
 
 ############### GPIO COMMANDS ##################
@@ -42,8 +46,8 @@ class EpuConfig(BaseModel):
     EPU_LOG_FILE_PATH: str
 
 ## loads config data
-with open('../config/config.toml') as f:
-    config = toml.load('../config/config.toml')
+with open(TOP+'/config/config.toml') as f:
+    config = toml.load(TOP+'/config/config.toml')
 
 epu_config = EpuConfig(**config['EPU'])
 
@@ -63,16 +67,20 @@ maximum_velo_mm_per_min = epu_config.MAXIMUM_VELOCITY # mm/min
 maximum_velo_mm_per_sec = maximum_velo_mm_per_min/ 60 # mm/sec
 ecodrive_log_file_path = epu_config.ECODRIVE_LOG_FILE_PATH
 epu_log_file_path = epu_config.EPU_LOG_FILE_PATH
-#################################################
 
 ######## Drive error codes and messages #########
-with open("../config/drive_messages.yaml", "r") as f:
+with open(TOP+"/config/drive_messages.yaml", "r") as f:
     try:
         drive_code_dict = yaml.safe_load(f)
         drive_diag_msgs = drive_code_dict['diagnostic_messages']
     except Exception:
         print(traceback.format_exc())
-#################################################
+
+################## Autosave #####################
+AUTOSAVE_DEFAULT_REQUEST_FILE = TOP+'/autosave/autosave_epu.req'
+AUTOSAVE_DEFAULT_SAVE_LOCATION = TOP+'/autosave'
+autosave_update_rate = 10.0
+autosave_num_backup_files = 10
 
 # dummy function for debugging
 def dummy(val=0):
@@ -146,6 +154,14 @@ def getArgs():
         '--beaglebone-addr', dest='beaglebone_addr', type=str, required=False,
         default=BBB_DEFAULT_HOSTNAME, help="Beaglebone IP address"
         )
+    parser.add_argument(
+        '--autosave-dir', dest='autosave_dir', type=str, required=False,
+        default=AUTOSAVE_DEFAULT_SAVE_LOCATION, help="Autosave save directory"
+        )
+    parser.add_argument(
+        '--request-file', dest='request_file', type=str, required=False,
+        default=AUTOSAVE_DEFAULT_REQUEST_FILE, help="Autosave request file name"
+        )
     args = parser.parse_args()
     return args
 
@@ -153,6 +169,8 @@ args = getArgs()
 
 # IOC parameters
 pv_prefix = args.pv_prefix
-msg_port = 5051
-io_port = 5050
-beaglebone_addr = '10.128.110.160'
+msg_port = args.msg_port
+io_port = args.io_port
+beaglebone_addr = args.beaglebone_addr
+autosave_save_location = args.autosave_dir
+autosave_request_file = args.request_file
