@@ -153,6 +153,6 @@ args = getArgs()
 
 # IOC parameters
 pv_prefix = args.pv_prefix
-msg_port = 64993
+msg_port = 5051
 io_port = 5050
-beaglebone_addr = '10.0.28.78'
+beaglebone_addr = '10.128.110.160'
