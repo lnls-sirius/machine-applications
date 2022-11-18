@@ -1,9 +1,39 @@
-version: "3.7"
+version: "3.4"
 
 services:
   epu-ioc:
     image: "dockerregistry.lnls-sirius.com.br/gas/epu-ioc"
     build:
       context: "."
-    # ports:
-    #   - 22222:22222
+    environment:
+      - PYTHON_EXEC="conda/envs/pcaspy/bin/python"
+      - IOC_MAIN="/opt/source/ioc_main.py"
+      - PV_PREFIX="SI-10SB:ID-EPU50:"
+      - BBB_IP_ADDR="10.128.110.160"
+      - MSG_PORT="5051"
+      - IO_PORT="5050"
+    networks:
+      - hostnet
+    volumes:
+      - type: bind
+        source: /storage/common/autosave/EPU
+        target: /opt/autosave
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname != CA-RaCtrl-CO-Srv-1
+          - node.hostname != LA-RaCtrl-CO-Srv-1
+          - node.hostname != TA-TiRack-CO-FWSrv-1
+      restart_policy:
+        condition: any
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+networks:
+  hostnet:
+    external:
+      name: "host"

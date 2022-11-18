@@ -12,6 +12,7 @@ WORKDIR /opt
 
 COPY ./source ./source
 COPY ./config ./config
+COPY ./autosave ./autosave
 COPY ./requirements.txt .
 
 ENV CONDA_DIR /opt/conda
