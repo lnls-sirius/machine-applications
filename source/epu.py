@@ -631,18 +631,36 @@ class Epu():
     def gap_enable_and_release_halt(self, val: bool=True) -> bool: # alterar nome da função
 
         try:
-            if val:
-                with self._epu_lock:
-                    self.gap_set_enable(1)
-                    self.gap_release_halt(1)
-                    return True # Vefify from drive before return
+            with self._epu_lock:
+                if val:
+                    timeout_count = 10
+                    while not self.gap_enable_status():
+                        self.gap_set_enable(1)
+                        time.sleep(.1)
+                        timeout_count -= 1
+                        if not timeout_count: break
 
+                    timeout_count = 10
+                    while not self.gap_halt_release_status():
+                        self.gap_release_halt(1)
+                        time.sleep(.1)
+                        timeout_count -= 1
+                        if not timeout_count: break
+                
+                else:
+                    timeout_count = 10
+                    while self.gap_halt_release_status():
+                        self.gap_release_halt(0)
+                        time.sleep(.1)
+                        timeout_count -= 1
+                        if not timeout_count: break
 
-            else:
-                with self._epu_lock:
-                    self.gap_release_halt(0)
-                    self.gap_set_enable(0)
-                    return True
+                    timeout_count = 10
+                    while self.gap_enable_status():
+                        self.gap_set_enable(0)
+                        time.sleep(.1)
+                        timeout_count -= 1
+                        if not timeout_count: break
 
         except Exception as e:
             logger.exception('GPIO comunication error.')
@@ -864,18 +882,37 @@ class Epu():
     def phase_enable_and_release_halt(self, val):
 
         try:
-            if val:
-                with self._epu_lock:
-                    self.phase_set_enable(1)
-                    self.phase_release_halt(1)
-                    return True # Vefify from drive before return
+            with self._epu_lock:
+                if val:
+                    timeout_count = 10
+                    while not self.phase_enable_status():
+                        self.phase_set_enable(1)
+                        time.sleep(.1)
+                        timeout_count -= 1
+                        if not timeout_count: break
 
+                    timeout_count = 10
+                    while not self.phase_halt_release_status():
+                        self.phase_release_halt(1)
+                        time.sleep(.1)
+                        timeout_count -= 1
+                        if not timeout_count: break
+                
+                else:
+                    timeout_count = 10
+                    while self.phase_halt_release_status():
+                        self.phase_release_halt(0)
+                        time.sleep(.1)
+                        timeout_count -= 1
+                        if not timeout_count: break
 
-            else:
-                with self._epu_lock:
-                    self.phase_release_halt(0)
-                    self.phase_set_enable(0)
-                    return True
+                    timeout_count = 10
+                    while self.phase_enable_status():
+                        self.phase_set_enable(0)
+                        time.sleep(.1)
+                        timeout_count -= 1
+                        if not timeout_count: break
+
 
         except Exception as e:
             logger.exception('GPIO comunication error.')
