@@ -222,7 +222,7 @@ class Epu():
                 self.stop_event.wait()
                 e, h = self.i_drive.get_halten_status()
                 self.phase_enable, self.phase_halt_released = e, h
-                self.enable_and_halt_released = self.phase_enable and self.phase_halt_released
+                self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
 
                 self.stop_event.wait()
                 self.s_resolver_phase = self.s_drive.get_resolver_position()
