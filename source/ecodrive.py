@@ -35,7 +35,7 @@ class EcoDrive():
         self.drive_connect()
 
         # sets ecodrive answer delay (in ms, minimum is 1)
-        #self.set_rs485_delay(1)
+        self.set_rs485_delay(1)
 
     def tcp_wait_connection(self) -> bool:
         '''
@@ -87,7 +87,7 @@ class EcoDrive():
                         print(f'Soft driver {self.DRIVE_NAME} connected do ecodrive number {self.ADDRESS}')
                         return True
 
-   # @timer
+    #@timer
     def tcp_read_parameter(self, message: str, change_drive: bool = True) -> bytes:
 
         with self._lock:

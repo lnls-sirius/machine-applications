@@ -595,21 +595,21 @@ class EPUSupport(pcaspy.Driver):
             self.updatePVs()
         ## cmd to turn on power of A and B drives
         elif isPvName(reason, _db.pv_enbl_pwr_ab_cmd):
-            status = self.asynExec(reason, _cte.dummy)
+            status = self.asynExec(reason, self.epu_driver.gap_turn_on)
             # increment cmd pv
             self.incParam(_db.pv_enbl_pwr_ab_cmd)
             # update pvs
             self.updatePVs()
         ## cmd to turn on power of S and I drives
         elif isPvName(reason, _db.pv_enbl_pwr_si_cmd):
-            status = self.asynExec(reason, _cte.dummy)
+            status = self.asynExec(reason, self.epu_driver.phase_turn_on)
             # increment cmd pv
             self.incParam(_db.pv_enbl_pwr_si_cmd)
             # update pvs
             self.updatePVs()
         ## cmd to turn on power of all drives
         elif isPvName(reason, _db.pv_enbl_pwr_all_cmd):
-            status = self.asynExec(reason, _cte.dummy)
+            status = self.asynExec(reason, self.epu_driver.turn_on_all)
             # increment cmd pv
             self.incParam(_db.pv_enbl_pwr_all_cmd)
             # update pvs

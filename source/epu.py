@@ -14,7 +14,7 @@ logger.info(datetime.now().strftime('%m/%d/%Y, %H:%M:%S'))
 
 class Epu():
 
-    def __init__(self, callback_update=lambda x:1):
+    def __init__(self, callback_update=lambda: 1):
 
         print('Class EPU started.')
         self.tcp_wait_connection()
@@ -154,7 +154,7 @@ class Epu():
 
                     if type(self.a_drive.get_encoder_position(False)) == float:
                         self.gap = self.a_drive.get_encoder_position(False)
-                    # self.callback_update()
+                    self.callback_update()
                     update_count += 1
                     print(self.gap, self.gap_is_moving)
 
@@ -199,7 +199,7 @@ class Epu():
 
                     if type(self.i_drive.get_encoder_position(False)) != float:
                         self.phase = self.i_drive.get_encoder_position(False)
-                    # self.callback_update()
+                    self.callback_update()
                     update_count += 1
                     print(self.phase, self.phase_is_moving) # debugging
 
@@ -1028,5 +1028,5 @@ class Epu():
         time.sleep(1)
         self.phase_turn_on()
 
-#if __name__ == '__main__':
-epu = Epu()
+if __name__ == '__main__':
+    epu = Epu()
