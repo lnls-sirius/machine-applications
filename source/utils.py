@@ -1,6 +1,8 @@
 import sched, time, struct
 from functools import wraps
 from threading import Thread
+import socket
+import constants as _cte
 
 def schedule(interval):
     def decorator(func):
@@ -66,3 +68,95 @@ def  bsmp_send(command_type, variableID = 0x00, value = 0x00, size = 1):
     return("".join(map(chr, include_checksum(send_message))))
 ######################################################################################################
 
+
+################################## Functions to control BBB GPIOs ####################################
+ 
+def set_gap_en(val):
+
+    bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_AB, value=val).encode()
+                        
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(.1)
+        s.connect(('10.128.110.160', 5050))
+        s.sendall(bsmp_enable_message)
+        time.sleep(.01) # magic number
+
+        while True:
+            data = s.recv(16)
+            if not data: break
+            return data
+
+def set_phase_en(val):
+    
+    bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_SI, value=val).encode()
+                        
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(.1)
+        s.connect(('10.128.110.160', 5050))
+        s.sendall(bsmp_enable_message)
+        time.sleep(.01) # magic number
+
+        while True:
+            data = s.recv(16)
+            if not data: break
+            return data
+
+def set_gap_start(val):
+    
+    bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.START_CH_AB, value=val).encode()
+                        
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(.1)
+        s.connect(('10.128.110.160', 5050))
+        s.sendall(bsmp_enable_message)
+        time.sleep(.01) # magic number
+
+        while True:
+            data = s.recv(16)
+            if not data: break
+            return data
+
+def set_gap_hal(val):
+    
+    bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.HALT_CH_AB, value=val).encode()
+                        
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(.1)
+        s.connect(('10.128.110.160', 5050))
+        s.sendall(bsmp_enable_message)
+        time.sleep(.01) # magic number
+
+        while True:
+            data = s.recv(16)
+            if not data: break
+            return data
+
+def set_phase_hal(val):
+    
+    bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.HALT_CH_SI, value=val).encode()
+                        
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(.1)
+        s.connect(('10.128.110.160', 5050))
+        s.sendall(bsmp_enable_message)
+        time.sleep(.01) # magic number
+
+        while True:
+            data = s.recv(16)
+            if not data: break
+            return data
+
+def set_phase_start(val):
+    
+    bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.START_CH_SI, value=val).encode()
+                        
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(.1)
+        s.connect(('10.128.110.160', 5050))
+        s.sendall(bsmp_enable_message)
+        time.sleep(.01) # magic number
+
+        while True:
+            data = s.recv(16)
+            if not data: break
+            return data

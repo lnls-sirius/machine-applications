@@ -61,30 +61,31 @@ class EcoDrive():
                     logger.exception('Trying to connect')
 
                 else:
-                    print(f'Connect to {self.BBB_HOSTNAME} on port {self.RS458_TCP_PORT}')
+                    print(f'Drive {self.DRIVE_NAME} connection test to {self.BBB_HOSTNAME} on port {self.RS458_TCP_PORT} ok')
                     logger.info(f'Connect to {self.BBB_HOSTNAME} on port {self.RS458_TCP_PORT}')
                     s.shutdown(socket.SHUT_RDWR)
                     s.close()
                     return True
 
     def drive_connect(self) -> bool:
-        while True:
-            try:
-                byte_message = self.tcp_read_parameter(f'BCD:{self.ADDRESS}', change_drive=False)
+        with self._lock
+            while True:
+                try:
+                    byte_message = self.tcp_read_parameter(f'BCD:{self.ADDRESS}', change_drive=False)
 
-            except Exception:
-                logger.exception('Communication error.')
-                return False
-
-            else:
-                if not (f'E{self.ADDRESS}' in byte_message.decode()):
-                    logger.error(f'Trying connection to Drive {self.DRIVE_NAME}, address ({self.ADDRESS}).\
-                                    Drive address expected in drive answer, but was not found.')
+                except Exception:
+                    logger.exception('Communication error.')
+                    return False
 
                 else:
-                    logger.info(f'Soft driver {self.DRIVE_NAME} connected do ecodrive number {self.ADDRESS}')
-                    print(f'Soft driver {self.DRIVE_NAME} connected do ecodrive number {self.ADDRESS}')
-                    return True
+                    if not (f'E{self.ADDRESS}' in byte_message.decode()):
+                        logger.error(f'Trying connection to Drive {self.DRIVE_NAME}, address ({self.ADDRESS}).\
+                                        Drive address expected in drive answer, but was not found.')
+
+                    else:
+                        logger.info(f'Soft driver {self.DRIVE_NAME} connected do ecodrive number {self.ADDRESS}')
+                        print(f'Soft driver {self.DRIVE_NAME} connected do ecodrive number {self.ADDRESS}')
+                        return True
 
    # @timer
     def tcp_read_parameter(self, message: str, change_drive: bool = True) -> bytes:
@@ -150,7 +151,7 @@ class EcoDrive():
                     except Exception as e:
                         if data: return data.encode()
                         else: return
-                time.sleep(.1) # makes significant difference
+                time.sleep(.2) # makes significant difference
                 return data.encode()
 
     def get_resolver_position(self, change_drive = True) -> float:
@@ -376,13 +377,12 @@ class EcoDrive():
         return delay
 
     def read_parameter_data(self, parameter, change_drive=True, treat_answer=True) -> str:
-        time.sleep(.1)
         try:
             drive_answer = self.tcp_read_parameter(f'{parameter},7,R', change_drive).decode()
         except Exception:
             logger.exception('Tcp reading error')
         else:
-            if not f'E{self.ADDRESS}:>' in drive_answer:
+            if not f'E{self.ADDRESS}' in drive_answer:
                 logger.error(f'Drive {self.DRIVE_NAME} answer to "{parameter},7,R" {drive_answer}')
                 return None
             if treat_answer:
@@ -396,44 +396,28 @@ class EcoDrive():
             time.sleep(.1)
             self.tcp_read_parameter("S-0-0099,3,r", False)
             time.sleep(.1)
-            self.tcp_read_parameter("S-0-0099,7,w,11b", False)
-            self.tcp_read_parameter("S-0-0014,7,r", False)
-            self.tcp_read_parameter("S-0-0142,3,r", False) 
-            self.tcp_read_parameter("S-0-0142,7,r", False) 
+            self.tcp_read_parameter("S-0-0099,7,w,11", False)
             self.tcp_read_parameter("S-0-0099,1,w,0", False) 
             self.tcp_read_parameter("S-0-0099,2,r", False) 
             self.tcp_read_parameter("S-0-0099,3,r", False) 
-            self.tcp_read_parameter("S-0-0099,7,w,0b", False)
+            self.tcp_read_parameter("S-0-0099,7,w,0", False)
             self.tcp_read_parameter("S-0-0095,3,r", False)
             self.tcp_read_parameter("S-0-0095,7,r", False)
             self.tcp_read_parameter("S-0-0099,1,w,0", False) 
             self.tcp_read_parameter("S-0-0099,2,r", False)
             self.tcp_read_parameter("S-0-0099,3,r", False)
-            self.tcp_read_parameter("S-0-0099,7,w,0b", False)
+            self.tcp_read_parameter("S-0-0099,7,w,0", False)
             self.tcp_read_parameter("S-0-0014,7,r", False)
-            self.tcp_read_parameter("S-0-0142,3,r", False)
-            self.tcp_read_parameter("S-0-0142,7,r", False)
-            self.tcp_read_parameter("S-0-0095,3,r", False)
-            self.tcp_read_parameter("S-0-0095,7,r", False)
             self.tcp_read_parameter('S-0-0099,3,r', False)
-            self.tcp_read_parameter('S-0-0099,7,w,11b', False)
-            # time.sleep(.1)
-            # self.tcp_read_parameter('S-0-0099,1,w,0', False)
-            # time.sleep(.1)
-            # self.tcp_read_parameter('S-0-0099,7,w,0b', False)
-            # time.sleep(.1)
-            # self.tcp_read_parameter('S-0-0099,7,w,0b', False)
-            # time.sleep(.1)
-            # self.tcp_read_parameter('S-0-0099,7,w,0b', False)
-            # time.sleep(.1)
-            # self.tcp_read_parameter('P-0-4023,7,W,11', False)
-            # self.tcp_read_parameter('S-0-0099,7,W,11', False)
-            # self.tcp_read_parameter('P-0-4023,7,W,10', False)
-            # self.tcp_read_parameter('S-0-0099,7,W,00', False)
-            # self.tcp_read_parameter('S-0-0127,7,W,11', False)
-            # self.tcp_read_parameter('S-0-0127,7,W,00', False)
-            # self.tcp_read_parameter('S-0-0128,7,W,11', False)
-            # self.tcp_read_parameter('S-0-0128,7,W,00', False)
+            self.tcp_read_parameter('S-0-0099,7,w,11', False)
+            self.tcp_read_parameter('P-0-4023,7,W,11', False)
+            self.tcp_read_parameter('S-0-0099,7,W,11', False)
+            self.tcp_read_parameter('P-0-4023,7,W,10', False)
+            #self.tcp_read_parameter('S-0-0099,7,W,00', False)
+            self.tcp_read_parameter('S-0-0127,7,W,11', False)
+            self.tcp_read_parameter('S-0-0127,7,W,00', False)
+            self.tcp_read_parameter('S-0-0128,7,W,11', False)
+            self.tcp_read_parameter('S-0-0128,7,W,00', False)
 
 
 
