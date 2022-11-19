@@ -37,7 +37,7 @@
         <x>0</x>
         <y>0</y>
         <width>948</width>
-        <height>888</height>
+        <height>944</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_3">
@@ -715,32 +715,23 @@
             <string>Gap Control</string>
            </property>
            <layout class="QGridLayout" name="gridLayout_10">
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_23">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>24</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Gap</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="1">
-             <widget class="PyDMPushButton" name="PyDMPushButton_2">
+            <item row="1" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_22">
               <property name="toolTip">
                <string/>
               </property>
-              <property name="text">
-               <string>Start</string>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}Gap-RB</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_30">
+              <property name="toolTip">
+               <string/>
               </property>
               <property name="channel" stdset="0">
-               <string>ca://${PREFIX}ChangeGap-Cmd</string>
-              </property>
-              <property name="pressValue" stdset="0">
-               <string>1</string>
+               <string>ca://${PREFIX}GapSpeed-RB</string>
               </property>
              </widget>
             </item>
@@ -757,8 +748,24 @@
               </property>
              </widget>
             </item>
+            <item row="6" column="1">
+             <widget class="PyDMPushButton" name="PyDMPushButton_2">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>Start</string>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}ChangeGap-Cmd</string>
+              </property>
+              <property name="pressValue" stdset="0">
+               <string>1</string>
+              </property>
+             </widget>
+            </item>
             <item row="4" column="0">
-             <widget class="QLabel" name="label_31">
+             <widget class="QLabel" name="label_25">
               <property name="minimumSize">
                <size>
                 <width>0</width>
@@ -766,7 +773,7 @@
                </size>
               </property>
               <property name="text">
-               <string>Change Gap</string>
+               <string>Gap Monitoring</string>
               </property>
              </widget>
             </item>
@@ -786,23 +793,42 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="2">
-             <widget class="PyDMLabel" name="PyDMLabel_22">
-              <property name="toolTip">
-               <string/>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_33">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
               </property>
-              <property name="channel" stdset="0">
-               <string>ca://${PREFIX}Gap-RB</string>
+              <property name="text">
+               <string>Gap Target Speed</string>
               </property>
              </widget>
             </item>
-            <item row="3" column="1" colspan="2">
-             <widget class="PyDMLabel" name="PyDMLabel_26">
-              <property name="toolTip">
-               <string/>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_23">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
               </property>
-              <property name="channel" stdset="0">
-               <string>ca://${PREFIX}GapSpeed-Mon</string>
+              <property name="text">
+               <string>Gap</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="label_31">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Change Gap</string>
               </property>
              </widget>
             </item>
@@ -841,20 +867,27 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_25">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>24</height>
-               </size>
+            <item row="4" column="1" colspan="2">
+             <widget class="PyDMLabel" name="PyDMLabel_24">
+              <property name="toolTip">
+               <string/>
               </property>
-              <property name="text">
-               <string>Gap Monitoring</string>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}Gap-Mon</string>
               </property>
              </widget>
             </item>
-            <item row="4" column="2">
+            <item row="5" column="1" colspan="2">
+             <widget class="PyDMLabel" name="PyDMLabel_26">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}GapSpeed-Mon</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="2">
              <widget class="PyDMLabel" name="PyDMLabel_28">
               <property name="toolTip">
                <string/>
@@ -864,7 +897,7 @@
               </property>
              </widget>
             </item>
-            <item row="3" column="0">
+            <item row="5" column="0">
              <widget class="QLabel" name="label_27">
               <property name="minimumSize">
                <size>
@@ -877,13 +910,58 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="1" colspan="2">
-             <widget class="PyDMLabel" name="PyDMLabel_24">
+            <item row="2" column="1">
+             <widget class="PyDMLineEdit" name="PyDMLineEdit_3">
+              <property name="maximumSize">
+               <size>
+                <width>150</width>
+                <height>16777215</height>
+               </size>
+              </property>
               <property name="toolTip">
                <string/>
               </property>
               <property name="channel" stdset="0">
-               <string>ca://${PREFIX}Gap-Mon</string>
+               <string>ca://${PREFIX}GapSpeed-SP</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_35">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Gap Max Speed</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="PyDMLineEdit" name="PyDMLineEdit_5">
+              <property name="maximumSize">
+               <size>
+                <width>150</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}MaxGapSpeed-SP</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_32">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}MaxGapSpeed-RB</string>
               </property>
              </widget>
             </item>
@@ -902,39 +980,33 @@
             <string>Phase Control</string>
            </property>
            <layout class="QGridLayout" name="gridLayout_11">
-            <item row="2" column="1" colspan="2">
-             <widget class="PyDMLabel" name="PyDMLabel_25">
+            <item row="5" column="1" colspan="2">
+             <widget class="PyDMLabel" name="PyDMLabel_27">
               <property name="toolTip">
                <string/>
               </property>
               <property name="channel" stdset="0">
-               <string>ca://${PREFIX}Phase-Mon</string>
+               <string>ca://${PREFIX}PhaseSpeed-Mon</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="1">
-             <widget class="PyDMLineEdit" name="PyDMLineEdit_2">
-              <property name="maximumSize">
+            <item row="6" column="0">
+             <widget class="QLabel" name="label_32">
+              <property name="minimumSize">
                <size>
-                <width>150</width>
-                <height>16777215</height>
+                <width>0</width>
+                <height>24</height>
                </size>
               </property>
-              <property name="toolTip">
-               <string/>
-              </property>
-              <property name="channel" stdset="0">
-               <string>ca://${PREFIX}Phase-SP</string>
+              <property name="text">
+               <string>Change Phase</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="2">
-             <widget class="PyDMLabel" name="PyDMLabel_23">
-              <property name="toolTip">
-               <string/>
-              </property>
-              <property name="channel" stdset="0">
-               <string>ca://${PREFIX}Phase-RB</string>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_26">
+              <property name="text">
+               <string>Phase Monitoring</string>
               </property>
              </widget>
             </item>
@@ -973,23 +1045,35 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_26">
-              <property name="text">
-               <string>Phase Monitoring</string>
+            <item row="2" column="1">
+             <widget class="PyDMLineEdit" name="PyDMLineEdit_4">
+              <property name="maximumSize">
+               <size>
+                <width>150</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}PhaseSpeed-SP</string>
               </property>
              </widget>
             </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="label_28">
-              <property name="minimumSize">
+            <item row="1" column="1">
+             <widget class="PyDMLineEdit" name="PyDMLineEdit_2">
+              <property name="maximumSize">
                <size>
-                <width>0</width>
-                <height>24</height>
+                <width>150</width>
+                <height>16777215</height>
                </size>
               </property>
-              <property name="text">
-               <string>Phase Speed</string>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}Phase-SP</string>
               </property>
              </widget>
             </item>
@@ -1006,13 +1090,42 @@
               </property>
              </widget>
             </item>
-            <item row="3" column="1" colspan="2">
-             <widget class="PyDMLabel" name="PyDMLabel_27">
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_34">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Phase Target Speed</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="PyDMPushButton" name="PyDMPushButton_3">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>Start</string>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}ChangePhase-Cmd</string>
+              </property>
+              <property name="pressValue" stdset="0">
+               <string>1</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_29">
               <property name="toolTip">
                <string/>
               </property>
               <property name="channel" stdset="0">
-               <string>ca://${PREFIX}PhaseSpeed-Mon</string>
+               <string>ca://${PREFIX}ChangePhase-Cmd</string>
               </property>
              </widget>
             </item>
@@ -1029,8 +1142,18 @@
               </property>
              </widget>
             </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="label_32">
+            <item row="4" column="1" colspan="2">
+             <widget class="PyDMLabel" name="PyDMLabel_25">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}Phase-Mon</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_28">
               <property name="minimumSize">
                <size>
                 <width>0</width>
@@ -1038,33 +1161,66 @@
                </size>
               </property>
               <property name="text">
-               <string>Change Phase</string>
+               <string>Phase Speed</string>
               </property>
              </widget>
             </item>
-            <item row="4" column="1">
-             <widget class="PyDMPushButton" name="PyDMPushButton_3">
+            <item row="1" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_23">
               <property name="toolTip">
                <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}Phase-RB</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_31">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}PhaseSpeed-RB</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_36">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
               </property>
               <property name="text">
-               <string>Start</string>
-              </property>
-              <property name="channel" stdset="0">
-               <string>ca://${PREFIX}ChangePhase-Cmd</string>
-              </property>
-              <property name="pressValue" stdset="0">
-               <string>1</string>
+               <string>Phase Max Speed</string>
               </property>
              </widget>
             </item>
-            <item row="4" column="2">
-             <widget class="PyDMLabel" name="PyDMLabel_29">
+            <item row="3" column="1">
+             <widget class="PyDMLineEdit" name="PyDMLineEdit_6">
+              <property name="maximumSize">
+               <size>
+                <width>150</width>
+                <height>16777215</height>
+               </size>
+              </property>
               <property name="toolTip">
                <string/>
               </property>
               <property name="channel" stdset="0">
-               <string>ca://${PREFIX}ChangePhase-Cmd</string>
+               <string>ca://${PREFIX}MaxPhaseSpeed-SP</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_33">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}MaxPhaseSpeed-RB</string>
               </property>
              </widget>
             </item>
