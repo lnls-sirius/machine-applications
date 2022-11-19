@@ -35,9 +35,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-205</y>
-        <width>930</width>
-        <height>977</height>
+        <y>0</y>
+        <width>948</width>
+        <height>888</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_3">
@@ -52,22 +52,25 @@
             <string>General</string>
            </property>
            <layout class="QGridLayout" name="gridLayout_9">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_21">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
+            <item row="2" column="0">
+             <widget class="PyDMPushButton" name="PyDMPushButton_6">
               <property name="minimumSize">
                <size>
                 <width>40</width>
                 <height>24</height>
                </size>
               </property>
+              <property name="toolTip">
+               <string/>
+              </property>
               <property name="text">
-               <string>Is Busy</string>
+               <string>Clear Log</string>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}ClearLog-Cmd</string>
+              </property>
+              <property name="pressValue" stdset="0">
+               <string>1</string>
               </property>
              </widget>
             </item>
@@ -118,25 +121,35 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="0">
-             <widget class="PyDMPushButton" name="PyDMPushButton_6">
+            <item row="0" column="2">
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_21">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="minimumSize">
                <size>
                 <width>40</width>
                 <height>24</height>
                </size>
               </property>
-              <property name="toolTip">
-               <string/>
-              </property>
               <property name="text">
-               <string>Clear Log</string>
-              </property>
-              <property name="channel" stdset="0">
-               <string>ca://${PREFIX}ClearLog-Cmd</string>
-              </property>
-              <property name="pressValue" stdset="0">
-               <string>1</string>
+               <string>Is Busy</string>
               </property>
              </widget>
             </item>
@@ -168,8 +181,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>759</width>
-                 <height>122</height>
+                 <width>844</width>
+                 <height>112</height>
                 </rect>
                </property>
                <layout class="QGridLayout" name="gridLayout_5">
@@ -256,18 +269,28 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="2">
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>Force Power On</string>
               </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="PyDMPushButton" name="PyDMPushButton_9">
+              <property name="toolTip">
+               <string/>
               </property>
-             </spacer>
+              <property name="text">
+               <string>Force All ON</string>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}EnblPwrAll-Cmd</string>
+              </property>
+              <property name="pressValue" stdset="0">
+               <string>1</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>
@@ -318,23 +341,46 @@
             <string>SI Control</string>
            </property>
            <layout class="QGridLayout" name="gridLayout_8">
-            <item row="2" column="2">
-             <widget class="PyDMLabel" name="PyDMLabel_17">
+            <item row="4" column="1">
+             <widget class="PyDMPushButton" name="PyDMPushButton_8">
               <property name="toolTip">
                <string/>
               </property>
+              <property name="text">
+               <string>Force SI ON</string>
+              </property>
               <property name="channel" stdset="0">
-               <string>ca://${PREFIX}ReleasePhase-Sts</string>
+               <string>ca://${PREFIX}EnblPwrPhase-Cmd</string>
+              </property>
+              <property name="pressValue" stdset="0">
+               <string>1</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="1">
-             <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_13">
+            <item row="3" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_19">
               <property name="toolTip">
                <string/>
               </property>
               <property name="channel" stdset="0">
-               <string>ca://${PREFIX}EnblPhase-Sel</string>
+               <string>ca://${PREFIX}EnblAndReleasePhase-Sts</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_18">
+              <property name="text">
+               <string>Release</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_15">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}EnblAndReleasePhase-Sel</string>
               </property>
              </widget>
             </item>
@@ -358,13 +404,13 @@
               </property>
              </widget>
             </item>
-            <item row="3" column="2">
-             <widget class="PyDMLabel" name="PyDMLabel_19">
+            <item row="1" column="1">
+             <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_13">
               <property name="toolTip">
                <string/>
               </property>
               <property name="channel" stdset="0">
-               <string>ca://${PREFIX}EnblAndReleasePhase-Sts</string>
+               <string>ca://${PREFIX}EnblPhase-Sel</string>
               </property>
              </widget>
             </item>
@@ -372,6 +418,40 @@
              <widget class="QLabel" name="label_17">
               <property name="text">
                <string>Stop</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_19">
+              <property name="text">
+               <string>Enable</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_17">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}ReleasePhase-Sts</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_6">
+              <property name="text">
+               <string>Force Power On</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_20">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}StopPhase-Cmd</string>
               </property>
              </widget>
             </item>
@@ -391,30 +471,6 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_18">
-              <property name="text">
-               <string>Release</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
-             <widget class="PyDMLabel" name="PyDMLabel_20">
-              <property name="toolTip">
-               <string/>
-              </property>
-              <property name="channel" stdset="0">
-               <string>ca://${PREFIX}StopPhase-Cmd</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_19">
-              <property name="text">
-               <string>Enable</string>
-              </property>
-             </widget>
-            </item>
             <item row="3" column="0">
              <widget class="QLabel" name="label_20">
               <property name="text">
@@ -422,13 +478,38 @@
               </property>
              </widget>
             </item>
-            <item row="3" column="1">
-             <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_15">
+            <item row="4" column="2">
+             <widget class="PyDMByteIndicator" name="PyDMByteIndicator_5">
+              <property name="minimumSize">
+               <size>
+                <width>18</width>
+                <height>18</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>24</height>
+               </size>
+              </property>
               <property name="toolTip">
                <string/>
               </property>
               <property name="channel" stdset="0">
-               <string>ca://${PREFIX}EnblAndReleasePhase-Sel</string>
+               <string>ca://${PREFIX}PwrPhase-Mon</string>
+              </property>
+              <property name="offColor" stdset="0">
+               <color>
+                <red>255</red>
+                <green>0</green>
+                <blue>0</blue>
+               </color>
+              </property>
+              <property name="showLabels" stdset="0">
+               <bool>false</bool>
+              </property>
+              <property name="circles" stdset="0">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -447,6 +528,13 @@
             <string>AB Control</string>
            </property>
            <layout class="QGridLayout" name="gridLayout_4">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>Stop</string>
+              </property>
+             </widget>
+            </item>
             <item row="2" column="2">
              <widget class="PyDMLabel" name="PyDMLabel_2">
               <property name="toolTip">
@@ -457,33 +545,17 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="1">
-             <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox">
-              <property name="toolTip">
-               <string/>
-              </property>
-              <property name="channel" stdset="0">
-               <string>ca://${PREFIX}EnblGap-Sel</string>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>Release</string>
               </property>
              </widget>
             </item>
-            <item row="2" column="1">
-             <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_2">
-              <property name="toolTip">
-               <string/>
-              </property>
-              <property name="channel" stdset="0">
-               <string>ca://${PREFIX}ReleaseGap-Sel</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="2">
-             <widget class="PyDMLabel" name="PyDMLabel">
-              <property name="toolTip">
-               <string/>
-              </property>
-              <property name="channel" stdset="0">
-               <string>ca://${PREFIX}EnblGap-Sts</string>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>Enable and Release</string>
               </property>
              </widget>
             </item>
@@ -497,10 +569,40 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_4">
+            <item row="0" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_4">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}StopGap-Cmd</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_3">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}EnblAndReleaseGap-Sel</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_5">
               <property name="text">
-               <string>Stop</string>
+               <string>Force Power On</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}EnblGap-Sel</string>
               </property>
              </widget>
             </item>
@@ -520,20 +622,13 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_2">
-              <property name="text">
-               <string>Release</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
-             <widget class="PyDMLabel" name="PyDMLabel_4">
+            <item row="1" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel">
               <property name="toolTip">
                <string/>
               </property>
               <property name="channel" stdset="0">
-               <string>ca://${PREFIX}StopGap-Cmd</string>
+               <string>ca://${PREFIX}EnblGap-Sts</string>
               </property>
              </widget>
             </item>
@@ -544,20 +639,64 @@
               </property>
              </widget>
             </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="label_3">
-              <property name="text">
-               <string>Enable and Release</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_3">
+            <item row="2" column="1">
+             <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_2">
               <property name="toolTip">
                <string/>
               </property>
               <property name="channel" stdset="0">
-               <string>ca://${PREFIX}EnblAndReleaseGap-Sel</string>
+               <string>ca://${PREFIX}ReleaseGap-Sel</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="PyDMPushButton" name="PyDMPushButton_7">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>Force AB ON</string>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}EnblPwrGap-Cmd</string>
+              </property>
+              <property name="pressValue" stdset="0">
+               <string>1</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="2">
+             <widget class="PyDMByteIndicator" name="PyDMByteIndicator_4">
+              <property name="minimumSize">
+               <size>
+                <width>18</width>
+                <height>18</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}PwrGap-Mon</string>
+              </property>
+              <property name="offColor" stdset="0">
+               <color>
+                <red>255</red>
+                <green>0</green>
+                <blue>0</blue>
+               </color>
+              </property>
+              <property name="showLabels" stdset="0">
+               <bool>false</bool>
+              </property>
+              <property name="circles" stdset="0">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
