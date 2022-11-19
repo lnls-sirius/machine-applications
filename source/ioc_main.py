@@ -5,7 +5,7 @@ import traceback
 import constants as _cte
 import iocDriver
 import epu_db
-from multiprocessing import Process as _Process
+from threading import Thread as _Thread
 import save_restore
 
 if __name__ == '__main__':
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     # create pcaspy driver
     driver = iocDriver.EPUSupport()
     # restore saved PV values
-    restore = _Process(
+    restore = _Thread(
         target=save_restore.restore_after_delay,
         args=(
             _cte.autosave_request_file, # request file name
@@ -34,7 +34,7 @@ if __name__ == '__main__':
         )
     restore.start()
     # start autosave
-    autosave = _Process(
+    autosave = _Thread(
         target=save_restore.save_monitor_with_delay,
         args=(
             _cte.autosave_request_file, # request file name
@@ -44,7 +44,7 @@ if __name__ == '__main__':
             _cte.autosave_num_backup_files, # max number of backup files
             10.0 # delay before monitoring start
             ),
-        daemon=True
+        daemon=True,
         )
     autosave.start()
 
