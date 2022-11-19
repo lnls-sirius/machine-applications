@@ -480,7 +480,8 @@ class EPUSupport(pcaspy.Driver):
                 status = False
         ## cmd to move and change gap
         elif isPvName(reason, _db.pv_change_gap_cmd):
-            if _db.pv_allowed_change_gap_mon == _cte.bool_yes:
+            if self.getParam(
+                _db.pv_allowed_change_gap_mon) == _cte.bool_yes:
                 status = self.asynExec(reason, self.epu_driver.gap_start)
                 # increment cmd pv
                 self.incParam(_db.pv_change_gap_cmd)
@@ -489,7 +490,8 @@ class EPUSupport(pcaspy.Driver):
                 status = False
         ## cmd to move and change phase
         elif isPvName(reason, _db.pv_change_phase_cmd):
-            if _db.pv_allowed_change_phase_mon == _cte.bool_yes:
+            if self.getParam(
+                _db.pv_allowed_change_phase_mon) == _cte.bool_yes:
                 status = self.asynExec(reason, self.epu_driver.phase_start)
                 # increment cmd pv
                 self.incParam(_db.pv_change_phase_cmd)
@@ -518,8 +520,7 @@ class EPUSupport(pcaspy.Driver):
                 status = False
         ## select to release/halt A and B drives
         elif isPvName(reason, _db.pv_release_ab_sel):
-            if (isBoolNum(value)
-            and _db.pv_enbl_ab_sel == _cte.bool_yes):
+            if isBoolNum(value):
                 status = self.asynExec(
                     reason, self.epu_driver.gap_release_halt, bool(value))
                 if status:
@@ -529,8 +530,7 @@ class EPUSupport(pcaspy.Driver):
                 status = False
         ## select to release/halt S and I drives
         elif isPvName(reason, _db.pv_release_si_sel):
-            if (isBoolNum(value)
-            and _db.pv_enbl_si_sel == _cte.bool_yes):
+            if isBoolNum(value):
                 status = self.asynExec(
                     reason, self.epu_driver.phase_release_halt, bool(value))
                 if status:
