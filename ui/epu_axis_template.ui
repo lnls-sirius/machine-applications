@@ -20,49 +20,10 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="0">
-    <widget class="QLabel" name="label_5">
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>24</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>Diagnostic Message</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0">
-    <widget class="QLabel" name="label_4">
-     <property name="text">
-      <string>Diagnostic Code</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0">
+   <item row="4" column="0">
     <widget class="QLabel" name="label">
      <property name="text">
       <string>Resolver [mm]</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="1">
-    <widget class="PyDMLabel" name="PyDMLabel_4">
-     <property name="maximumSize">
-      <size>
-       <width>100</width>
-       <height>24</height>
-      </size>
-     </property>
-     <property name="toolTip">
-      <string/>
-     </property>
-     <property name="channel" stdset="0">
-      <string>ca://${PREFIX}${Drive}DiagCode-Mon</string>
-     </property>
-     <property name="displayFormat" stdset="0">
-      <enum>PyDMLabel::String</enum>
      </property>
     </widget>
    </item>
@@ -91,7 +52,68 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
+   <item row="6" column="1">
+    <widget class="PyDMLabel" name="PyDMLabel_6">
+     <property name="maximumSize">
+      <size>
+       <width>100</width>
+       <height>24</height>
+      </size>
+     </property>
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="channel" stdset="0">
+      <string>ca://${PREFIX}${Drive}TargetSpeed-Mon</string>
+     </property>
+     <property name="displayFormat" stdset="0">
+      <enum>PyDMLabel::String</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1">
+    <widget class="PyDMLabel" name="PyDMLabel_4">
+     <property name="maximumSize">
+      <size>
+       <width>100</width>
+       <height>24</height>
+      </size>
+     </property>
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="channel" stdset="0">
+      <string>ca://${PREFIX}${Drive}DiagCode-Mon</string>
+     </property>
+     <property name="displayFormat" stdset="0">
+      <enum>PyDMLabel::String</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Diagnostic Code</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="PyDMLabel" name="PyDMLabel_2">
+     <property name="maximumSize">
+      <size>
+       <width>100</width>
+       <height>24</height>
+      </size>
+     </property>
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="channel" stdset="0">
+      <string>ca://${PREFIX}${Drive}EncoderPos-Mon</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
     <widget class="PyDMLabel" name="PyDMLabel">
      <property name="maximumSize">
       <size>
@@ -107,26 +129,30 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="0">
-    <widget class="QLabel" name="label_2">
+   <item row="6" column="0">
+    <widget class="QLabel" name="label_7">
      <property name="text">
-      <string>Encoder [mm]</string>
+      <string>Target speed [mm/s]</string>
      </property>
     </widget>
    </item>
-   <item row="4" column="1">
-    <widget class="PyDMLabel" name="PyDMLabel_2">
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_5">
      <property name="maximumSize">
       <size>
-       <width>100</width>
+       <width>16777215</width>
        <height>24</height>
       </size>
      </property>
-     <property name="toolTip">
-      <string/>
+     <property name="text">
+      <string>Diagnostic Message</string>
      </property>
-     <property name="channel" stdset="0">
-      <string>ca://${PREFIX}${Drive}EncoderPos-Mon</string>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Encoder [mm]</string>
      </property>
     </widget>
    </item>
@@ -146,29 +172,52 @@
      </property>
     </widget>
    </item>
-   <item row="5" column="0">
-    <widget class="QLabel" name="label_7">
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_8">
      <property name="text">
-      <string>Target speed [mm/s]</string>
+      <string>Is Moving</string>
      </property>
     </widget>
    </item>
-   <item row="5" column="1">
-    <widget class="PyDMLabel" name="PyDMLabel_6">
+   <item row="3" column="1">
+    <widget class="PyDMByteIndicator" name="PyDMByteIndicator">
+     <property name="minimumSize">
+      <size>
+       <width>18</width>
+       <height>16</height>
+      </size>
+     </property>
      <property name="maximumSize">
       <size>
        <width>100</width>
-       <height>24</height>
+       <height>16</height>
       </size>
      </property>
      <property name="toolTip">
       <string/>
      </property>
      <property name="channel" stdset="0">
-      <string>ca://${PREFIX}${Drive}TargetSpeed-Mon</string>
+      <string>ca://${PREFIX}${Drive}Moving-Mon</string>
      </property>
-     <property name="displayFormat" stdset="0">
-      <enum>PyDMLabel::String</enum>
+     <property name="onColor" stdset="0">
+      <color>
+       <red>0</red>
+       <green>255</green>
+       <blue>0</blue>
+      </color>
+     </property>
+     <property name="offColor" stdset="0">
+      <color>
+       <red>205</red>
+       <green>205</green>
+       <blue>205</blue>
+      </color>
+     </property>
+     <property name="showLabels" stdset="0">
+      <bool>false</bool>
+     </property>
+     <property name="circles" stdset="0">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
@@ -179,6 +228,11 @@
    <class>PyDMLabel</class>
    <extends>QLabel</extends>
    <header>pydm.widgets.label</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMByteIndicator</class>
+   <extends>QWidget</extends>
+   <header>pydm.widgets.byte</header>
   </customwidget>
  </customwidgets>
  <resources/>
