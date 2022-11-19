@@ -191,7 +191,7 @@ class Epu():
                     update_count += 1
                     print(self.phase, self.phase_is_moving) # debugging
 
-                    if abs(self.phase - self.phase_target) < .005: # this number was choosen arbitrarily
+                    if abs(self.phase - self.phase_target) < .001: # this number was choosen arbitrarily
 
                         end = time.time()
                         self.phase_is_moving = 0
@@ -408,10 +408,12 @@ class Epu():
                     self.stop_event.set()
                     logger.exception('Could not change target phase')
                     print('Could not change target phase')
-                    if i_target_position != s_target_position:
-                        logger.warning('PC01 warning: correct cause before moving')
-                        self.warnings.append('GC01')
-                        print('PC01 warning: correct cause before moving')
+                    try:
+                        if i_target_position != s_target_position:
+                            logger.warning('PC01 warning: correct cause before moving')
+                            self.warnings.append('GC01')
+                            print('PC01 warning: correct cause before moving')
+                    except: pass
                 else:
                     if i_target_position == s_target_position:
                         self.stop_event.set()
