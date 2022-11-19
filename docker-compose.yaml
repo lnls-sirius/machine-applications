@@ -5,6 +5,7 @@ services:
     image: "dockerregistry.lnls-sirius.com.br/gas/epu-ioc"
     build:
       context: "."
+    network_mode: "host"
     environment:
       - PYTHON_EXEC="/opt/conda/envs/pcaspy/bin/python"
       - IOC_MAIN="/opt/source/ioc_main.py"
@@ -30,8 +31,3 @@ services:
       options:
         max-size: "10m"
         max-file: "10"
-
-networks:
-  hostnet:
-    external:
-      name: "host"
