@@ -9,8 +9,8 @@ services:
     command: [
       '/opt/conda/envs/pcaspy/bin/python', '/opt/source/ioc_main.py',
       '--pv-prefix', 'SI-10SB:ID-EPU50:',
-      '--io-port', '5050',
-      '--msg-port', '5052',
+      '--drive-io-port', '5050',
+      '--drive-msg-port', '5052',
       '--beaglebone-addr', '10.128.110.160',
       '--autosave-dir', '/opt/autosave',
       '--request-file', '/opt/autosave/autosave_epu.req'
