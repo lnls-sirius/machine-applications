@@ -6,13 +6,13 @@ import time
 import constants as _cte
 from utils import *
 
-for handler in logging.root.handlers[:]:
-    logging.root.removeHandler(handler)
+# for handler in logging.root.handlers[:]:
+#     logging.root.removeHandler(handler)
 logger = logging.getLogger('__name__')
 logging.basicConfig(
     filename='./EcoDrive.log', filemode='w', level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%d-%b-%y %H:%M:%S')
+    datefmt='%d-%b-%y %H:%M:%S', force=True)
 
 class EcoDrive():
 
@@ -20,7 +20,7 @@ class EcoDrive():
     _SOCKET_TIMEOUT = .2 # tcp socket timeout
 
     def __init__(self, address, max_limit=+25, min_limit=-25,
-                    bbb_hostname = _cte.beaglebone_addr, rs458_tcp_port=5052, drive_name = 'EcoDrive') -> None:
+                    bbb_hostname = _cte.beaglebone_addr, rs458_tcp_port=_cte.msg_port, drive_name = 'EcoDrive') -> None:
 
         self.ADDRESS = address
         self.UPPER_LIMIT = max_limit
@@ -86,7 +86,7 @@ class EcoDrive():
                         print(f'Soft driver {self.DRIVE_NAME} connected do ecodrive number {self.ADDRESS}')
                         return True
 
-    @timer
+    #@timer
     def tcp_read_parameter(self, message: str, change_drive: bool = True) -> bytes:
 
         with self._lock:
@@ -152,7 +152,7 @@ class EcoDrive():
                         if data: return data.encode()
                         else: return
 
-            if change_drive: time.sleep(.01) # makes significant difference
+            if change_drive: time.sleep(.03) # makes significant difference
             return data.encode()
 
     def get_resolver_position(self, change_drive = True) -> float:
@@ -224,7 +224,7 @@ class EcoDrive():
 
     def get_halten_status(self, change_drive = True) -> tuple:
         try:
-            return tuple([int(x) for x in self.read_parameter_data('S-0-0134', change_drive=change_drive)[13:15]])
+            return tuple([int(x) for x in self.read_parameter_data('S-0-0134', change_drive=change_drive)[1:3]])
         except:
             logger.exception('Reading parameter error')
             return
