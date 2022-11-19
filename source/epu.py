@@ -277,32 +277,31 @@ class Epu():
                 self.b_drive.set_target_position(a_target)
 
     def gap_set(self, target_gap: float) -> float:
-        self.stop_event.clear()
         if _cte.minimum_gap <= target_gap <= _cte.maximum_gap:
-            try:
-                self.a_drive.set_target_position(target_gap)
-                self.b_drive.set_target_position(target_gap)
-                self.a_target_position = self.a_drive.get_target_position()
-                self.b_target_position = self.b_drive.get_target_position()
-            except Exception as e:
-                self.stop_event.set()
-                logger.exception('Could not change target gap')
-                print('Could not change target gap')
-                if self.a_target_position != self.b_target_position:
-                    logger.warning('GC01 warning: correct cause before moving')
-                    self.warnings.append('GC01')
-                    print('GC01 warning: correct cause before moving')
-                    raise e
-            else:
-                if self.a_target_position == self.b_target_position:
+            while 1:
+                self.stop_event.clear()
+                try:
+                    self.a_drive.set_target_position(target_gap)
+                    self.b_drive.set_target_position(target_gap)
+                    self.a_target_position = self.a_drive.get_target_position()
+                    self.b_target_position = self.b_drive.get_target_position()
+                except Exception as e:
                     self.stop_event.set()
-                    self.gap_target = target_gap
-                    return target_gap
+                    logger.exception('Could not change target gap')
+                    print('Could not change target gap')
+                    if self.a_target_position != self.b_target_position:
+                        logger.warning('GC01 warning: correct cause before moving')
+                        self.warnings.append('GC01')
                 else:
-                    logger.warning('GC01 warning: correct cause before moving')
-                    self.warnings.append('GC01')
-                    print('GC01 warning: correct cause before moving')
-                    self.gap_target = None
+                    if self.a_target_position == self.b_target_position:
+                        self.stop_event.set()
+                        self.gap_target = target_gap
+                        return target_gap
+                    else:
+                        logger.warning('GC01 warning: correct cause before moving')
+                        self.warnings.append('GC01')
+                        print('GC01 warning: correct cause before moving')
+                        self.gap_target = None
         else:
             self.stop_event.set()
             logger.error(f'Gap value given, ({target_gap}), is out of range.')
@@ -396,33 +395,33 @@ class Epu():
                 self.s_drive.set_target_position(a_target)
 
     def phase_set(self, target_phase: float) -> float:
-        self.stop_event.clear()
+        
         if _cte.minimum_phase <= target_phase <= _cte.maximum_phase:
-            try:
-                self.i_drive.set_target_position(target_phase)
-                self.s_drive.set_target_position(target_phase)
-                self.i_target_position = self.i_drive.get_target_position()
-                self.s_target_position = self.s_drive.get_target_position()
-            except Exception as e:
-                self.stop_event.set()
-                logger.exception('Could not change target phase')
-                print('Could not change target phase')
-                if self.i_target_position != self.s_target_position:
-                    logger.warning('PC01 warning: correct cause before moving')
-                    self.warnings.append('GC01')
-                    print('PC01 warning: correct cause before moving')
-                    raise e
-            else:
-                if self.i_target_position == self.s_target_position:
+            while 1:
+                self.stop_event.clear()
+                try:
+                    self.i_drive.set_target_position(target_phase)
+                    self.s_drive.set_target_position(target_phase)
+                    i_target_position = self.i_drive.get_target_position()
+                    s_target_position = self.s_drive.get_target_position()
+                except Exception:
                     self.stop_event.set()
-                    self.phase_target = target_phase
-                    return target_phase
+                    logger.exception('Could not change target phase')
+                    print('Could not change target phase')
+                    if i_target_position != s_target_position:
+                        logger.warning('PC01 warning: correct cause before moving')
+                        self.warnings.append('GC01')
+                        print('PC01 warning: correct cause before moving')
                 else:
-                    logger.warning('PC01 warning: correct cause before moving')
-                    self.warnings.append('GC01')
-                    print('PC01 warning: correct cause before moving')
-                    self.phase_target = None
-                    raise e
+                    if i_target_position == s_target_position:
+                        self.stop_event.set()
+                        self.phase_target = target_phase
+                        return target_phase
+                    else:
+                        logger.warning('PC01 warning: correct cause before moving')
+                        self.warnings.append('GC01')
+                        print('PC01 warning: correct cause before moving')
+                        self.phase_target = None
         else:
             self.stop_event.set()
             logger.error(f'phase value given, ({target_phase}), is out of range.')
@@ -481,11 +480,11 @@ class Epu():
                     return True
                 else: return False
             else:
-                print('Movement not allowed. Drives I and S have different target positions.')
+                logger.info('Movement not allowed. Drives I and S have different target positions.')
                 return False
         else:
             # Verificar a diferença entre setpoint de velocidade e velocidade máxima
-            print('Movement not allowed. Drives I and S have different target velocities.')
+            logger.info('Movement not allowed. Drives I and S have different target velocities.')
             return False
 
     def allowed_to_change_phase(self) -> bool:
@@ -804,7 +803,7 @@ class Epu():
                 return False
 
     def phase_release_halt(self, val: bool):
-        
+
         if val:
             with self._epu_lock:
 
