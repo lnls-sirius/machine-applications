@@ -26,5 +26,5 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86
 ENV EPICS_CA_ADDR_LIST 127.0.0.1
 ENV EPICS_CA_AUTO_ADDR_LIST NO
 
-#CMD ["conda/envs/pcaspy/bin/python", "/opt/source/epu.py"]
-CMD ["/bin/bash", "-c", "sleep 5000"]
+WORKDIR /opt/source
+CMD ["/opt/conda/envs/pcaspy/bin/python", "/opt/source/ioc_main.py"]
