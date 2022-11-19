@@ -73,8 +73,8 @@ class Epu():
                 print(f'Trying to connect: {e}')
 
             else:
-                print(f'Connected to BPIO server.')
-                logger.info(f'Connected to BPIO server.')
+                print(f'Connected to GPIO server.')
+                logger.info(f'Connected to GPIO server.')
                 s.shutdown(socket.SHUT_RDWR)
                 s.close()
                 return True
