@@ -661,9 +661,8 @@ class Epu():
             while True:
                 data = s.recv(16)
                 if not data: break
-                if bool(data[-2]): self.gap_enable = True
-                else: self.gap_enable = False
-                if not data: break
+                # if bool(data[-2]): self.gap_enable = True
+                # else: self.gap_enable = False
                 return(bool(data[-2]))
 
     def gap_halt_release_status(self):
@@ -681,10 +680,8 @@ class Epu():
                 data = s.recv(16)
                 if not data: break
                 if bool(data[-2]):
-                    self.gap_halt_released = 1
                     self.gap_is_moving = 0
                     self.gap_start_event.clear()
-                else: self.gap_halt_released = False
                 return(bool(data[-2]))
 
     def gap_start(self, val: bool):
@@ -737,9 +734,18 @@ class Epu():
                 return False
 
     def gap_stop(self):
-
-        self.gap_release_halt(False)
-        self.gap_set_enable(False)
+        timeout_count = 10
+        while self.gap_halt_release_status():
+            self.gap_release_halt(0)
+            time.sleep(.1)
+            timeout_count -= 1
+            if not timeout_count: break
+        timeout_count = 10
+        while self.gap_enable_status():
+            self.gap_set_enable(0)
+            time.sleep(.1)
+            timeout_count -= 1
+            if not timeout_count: break
 
     def phase_set_enable(self, val: bool):
 
@@ -888,12 +894,10 @@ class Epu():
             time.sleep(.01) # magic number
 
             while True:
-                data = s.recv(8)
-                if bool(data[-2]): self.phase_enable = True
-                else: self.phase_enable = False
+                data = s.recv(16)
                 if not data: break
-                if bool(data[-2]): self.gap_enable = True
-                else: self.gap_enable = False
+                # if bool(data[-2]): self.phase_enable = True
+                # else: self.phase_enable = False
                 return(bool(data[-2]))
 
     def phase_halt_release_status(self):
@@ -908,12 +912,12 @@ class Epu():
             time.sleep(.01) # magic number
 
             while True:
-                data = s.recv(8)
+                data = s.recv(16)
+                if not data: break
                 if bool(data[-2]):
-                    self.phase_halt_released = 1
                     self.phase_is_moving = 0
                     self.phase_start_event.clear()
-                else: self.phase_halt_released = False
+                #else: self.phase_halt_released = False
                 return(bool(data[-2]))
 
     def phase_start(self, val: bool) -> bool:
