@@ -6,14 +6,12 @@ services:
     build:
       context: "."
     environment:
-      - PYTHON_EXEC="conda/envs/pcaspy/bin/python"
+      - PYTHON_EXEC="/opt/conda/envs/pcaspy/bin/python"
       - IOC_MAIN="/opt/source/ioc_main.py"
       - PV_PREFIX="SI-10SB:ID-EPU50:"
       - BBB_IP_ADDR="10.128.110.160"
       - MSG_PORT="5051"
       - IO_PORT="5050"
-    networks:
-      - hostnet
     volumes:
       - type: bind
         source: /storage/common/autosave/EPU
