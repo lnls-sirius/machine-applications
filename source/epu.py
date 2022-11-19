@@ -223,7 +223,7 @@ class Epu():
                 e, h = self.i_drive.get_halten_status()
                 self.phase_enable, self.phase_halt_released = e, h
                 self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
-
+                self.i_diag_code = self.i_drive.get_diagnostic_code()
                 self.stop_event.wait()
                 self.s_resolver_phase = self.s_drive.get_resolver_position()
                 self.stop_event.wait()
@@ -753,6 +753,8 @@ class Epu():
                     return
 
                 else:
+                    self.i_diag_code = i_diagnostic_code
+                    self.s_diag_code = s_diagnostic_code
                     if i_diagnostic_code == s_diagnostic_code == 'A012':
 
                         bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_SI, value=val).encode()
