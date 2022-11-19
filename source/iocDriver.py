@@ -482,7 +482,9 @@ class EPUSupport(pcaspy.Driver):
         elif isPvName(reason, _db.pv_change_gap_cmd):
             if self.getParam(
                 _db.pv_allowed_change_gap_mon) == _cte.bool_yes:
-                status = self.asynExec(reason, self.epu_driver.gap_start)
+                status = self.asynExec(
+                    reason, self.epu_driver.gap_start, _cte.bool_yes
+                    )
                 # increment cmd pv
                 self.incParam(_db.pv_change_gap_cmd)
                 self.updatePVs()
@@ -492,7 +494,9 @@ class EPUSupport(pcaspy.Driver):
         elif isPvName(reason, _db.pv_change_phase_cmd):
             if self.getParam(
                 _db.pv_allowed_change_phase_mon) == _cte.bool_yes:
-                status = self.asynExec(reason, self.epu_driver.phase_start)
+                status = self.asynExec(
+                    reason, self.epu_driver.phase_start, _cte.bool_yes
+                    )
                 # increment cmd pv
                 self.incParam(_db.pv_change_phase_cmd)
                 self.updatePVs()
