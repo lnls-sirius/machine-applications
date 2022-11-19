@@ -1,4 +1,6 @@
-import logging, threading, socket
+import logging
+logger = logging.getLogger(__name__)
+import threading, socket
 from ecodrive import EcoDrive
 from utils import *
 from datetime import datetime
@@ -8,7 +10,6 @@ import constants as _cte
 logging.basicConfig(filename='epu.log', filemode='w', level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     datefmt='%d-%b-%y %H:%M:%S', encoding='utf-8', force=True)
-logger = logging.getLogger(__name__)
 logger.info(datetime.now().strftime('%m/%d/%Y, %H:%M:%S'))
 ################################################
 
