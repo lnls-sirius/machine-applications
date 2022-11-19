@@ -969,9 +969,18 @@ class Epu():
                 return False
 
     def phase_stop(self):
-
-        self.phase_release_halt(0)
-        self.phase_set_enable(0)
+        timeout_count = 10
+        while self.phase_halt_release_status():
+            self.phase_release_halt(0)
+            time.sleep(.1)
+            timeout_count -= 1
+            if not timeout_count: break
+        timeout_count = 10
+        while self.phase_enable_status():
+            self.phase_set_enable(0)
+            time.sleep(.1)
+            timeout_count -= 1
+            if not timeout_count: break
 
     def gap_turn_on(self) -> bool:
 
