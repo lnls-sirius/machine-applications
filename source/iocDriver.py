@@ -66,20 +66,12 @@ class EPUSupport(pcaspy.Driver):
     def priority_call(self):
         # update encoder readings
         self.setParam(
-            _db.pv_drive_a_encoder_pos_mon,
-            self.epu_driver.a_encoder_gap
+            _db.pv_gap_mon,
+            self.epu_driver.gap
             )
         self.setParam(
-            _db.pv_drive_b_encoder_pos_mon,
-            self.epu_driver.b_encoder_gap
-            )
-        self.setParam(
-            _db.pv_drive_s_encoder_pos_mon,
-            self.epu_driver.s_encoder_phase
-            )
-        self.setParam(
-            _db.pv_drive_i_encoder_pos_mon,
-            self.epu_driver.i_encoder_phase
+            _db.pv_phase_mon,
+            self.epu_driver.phase
             )
         # update PVs
         self.updatePVs()
@@ -213,6 +205,27 @@ class EPUSupport(pcaspy.Driver):
                 self.setParam(
                     _db.pv_drive_i_resolver_pos_mon,
                     self.epu_driver.i_resolver_phase
+                    )
+            # update encoder readings
+            if isValid(self.epu_driver.a_encoder_gap):
+                self.setParam(
+                    _db.pv_drive_a_encoder_pos_mon,
+                    self.epu_driver.a_encoder_gap
+                    )
+            if isValid(self.epu_driver.b_encoder_gap):
+                self.setParam(
+                    _db.pv_drive_b_encoder_pos_mon,
+                    self.epu_driver.b_encoder_gap
+                    )
+            if isValid(self.epu_driver.s_encoder_phase):
+                self.setParam(
+                    _db.pv_drive_s_encoder_pos_mon,
+                    self.epu_driver.s_encoder_phase
+                    )
+            if isValid(self.epu_driver.i_encoder_phase):
+                self.setParam(
+                    _db.pv_drive_i_encoder_pos_mon,
+                    self.epu_driver.i_encoder_phase
                     )
             # update enable and halt status
             if isValid(self.epu_driver.gap_enable):
