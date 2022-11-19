@@ -274,7 +274,10 @@ class EPUSupport(pcaspy.Driver):
                     )
                 self.setParam(
                     _db.pv_drive_a_diag_msg_mon,
-                    _cte.drive_diag_msgs[self.epu_driver.a_diag_code]
+                    _cte.drive_diag_msgs.get(
+                        self.epu_driver.a_diag_code,
+                        _cte.default_unknown_diag_msg
+                        )
                     )
             if isValid(self.epu_driver.b_diag_code):
                 self.setParam(
@@ -283,7 +286,10 @@ class EPUSupport(pcaspy.Driver):
                     )
                 self.setParam(
                     _db.pv_drive_b_diag_msg_mon,
-                    _cte.drive_diag_msgs[self.epu_driver.b_diag_code]
+                    _cte.drive_diag_msgs.get(
+                        self.epu_driver.b_diag_code,
+                        _cte.default_unknown_diag_msg
+                        )
                     )
             if isValid(self.epu_driver.s_diag_code):
                 self.setParam(
@@ -292,7 +298,10 @@ class EPUSupport(pcaspy.Driver):
                     )
                 self.setParam(
                     _db.pv_drive_s_diag_msg_mon,
-                    _cte.drive_diag_msgs[self.epu_driver.s_diag_code]
+                    _cte.drive_diag_msgs.get(
+                        self.epu_driver.s_diag_code,
+                        _cte.default_unknown_diag_msg
+                        )
                     )
             if isValid(self.epu_driver.i_diag_code):
                 self.setParam(
@@ -301,7 +310,10 @@ class EPUSupport(pcaspy.Driver):
                     )
                 self.setParam(
                     _db.pv_drive_i_diag_msg_mon,
-                    _cte.drive_diag_msgs[self.epu_driver.i_diag_code]
+                    _cte.drive_diag_msgs.get(
+                        self.epu_driver.i_diag_code,
+                        _cte.default_unknown_diag_msg
+                        )
                     )
             # check overall fault state
             if (

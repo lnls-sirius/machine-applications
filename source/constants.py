@@ -76,6 +76,7 @@ with open(TOP+"/config/drive_messages.yaml", "r") as f:
     except Exception:
         print(traceback.format_exc())
 
+default_unknown_diag_msg = "? Unknown diagnostic code"
 ################## Autosave #####################
 AUTOSAVE_DEFAULT_REQUEST_FILE = TOP+'/autosave/autosave_epu.req'
 AUTOSAVE_DEFAULT_SAVE_LOCATION = TOP+'/autosave'
