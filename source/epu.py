@@ -215,6 +215,9 @@ class Epu():
                 # self.phase_halt_release_status()
                 # self.stop_event.wait()
 
+                self.allowed_to_change_gap()
+                self.allowed_to_change_phase()
+
                 self.i_resolver_phase = self.i_drive.get_resolver_position()
                 self.stop_event.wait()
                 self.i_encoder_phase = self.i_drive.get_encoder_position()
@@ -249,10 +252,6 @@ class Epu():
                 self.b_encoder_gap = self.b_drive.get_encoder_position()
                 self.stop_event.wait()
                 self.b_diag_code = self.b_drive.get_diagnostic_code()
-                print(f'Gap enable: {self.gap_enable}')
-                print(f'Gap halt released: {self.gap_halt_released}')
-                print(f'Phase enable: {self.phase_enable}')
-                print(f'Phase halt released: {self.phase_halt_released}')
             except Exception as e:
                 logger.exception('Default monitor thread exception')
                 print(e)
@@ -369,11 +368,14 @@ class Epu():
 
     def allowed_to_change_gap(self) -> bool:
             if not self.gap_enable_status():
+                self.gap_change_allowed = True
                 return False
             elif not self.gap_halt_release_status():
+                self.gap_change_allowed = True
                 return False
             elif not self.gap_check_for_move():
-                    return False
+                self.gap_change_allowed = True
+                return False
             else:
                 self.gap_change_allowed = True
                 return True
@@ -493,9 +495,11 @@ class Epu():
                     self.stop_event.clear()
                     if self.phase_check_for_move():
                         self.stop_event.set()
+                        self.phase_change_allowed = True
                         return True
                     else:
                         self.stop_event.set()
+                        self.phase_change_allowed = False
                         return False
                 else: return False
             else: return False
@@ -509,7 +513,7 @@ class Epu():
 
 
     def gap_set_enable(self, val: bool):
-        print(f'Changing gap enable to {val}')
+
         if val:
             with self._epu_lock:
 
@@ -571,7 +575,7 @@ class Epu():
                 return False
 
     def gap_release_halt(self, val: bool):
-        print(f'Changing gap release halt to {val}')
+
         if val:
             with self._epu_lock:
 
@@ -737,7 +741,7 @@ class Epu():
         self.gap_set_enable(False)
 
     def phase_set_enable(self, val: bool):
-        print(f'Changing phase enable to {val}')
+
         if val:
             with self._epu_lock:
 
@@ -800,7 +804,7 @@ class Epu():
                 return False
 
     def phase_release_halt(self, val: bool):
-        print(f'Changing phase release halt to {val}')
+        
         if val:
             with self._epu_lock:
 
