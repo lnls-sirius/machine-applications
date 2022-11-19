@@ -65,7 +65,44 @@ class EPUSupport(pcaspy.Driver):
             _db.pv_gap_sp,
             self.epu_driver.gap_target
             )
-        
+        self.setParam(
+            _db.pv_phase_sp,
+            self.epu_driver.phase_target
+            )
+        self.setParam(
+            _db.pv_gap_velo_sp,
+            self.epu_driver.gap_target_velocity/60
+            )
+        self.setParam(
+            _db.pv_phase_velo_sp,
+            self.epu_driver.phase_target_velocity/60
+            )
+        self.setParam(
+            _db.pv_enbl_ab_sel,
+            self.epu_driver.gap_enable
+            )
+        self.setParam(
+            _db.pv_enbl_si_sel,
+            self.epu_driver.phase_enable
+            )
+        self.setParam(
+            _db.pv_release_ab_sel,
+            self.epu_driver.gap_halt_released
+            )
+        self.setParam(
+            _db.pv_release_si_sel,
+            self.epu_driver.phase_halt_released
+            )
+        self.setParam(
+            _db.pv_enbl_and_release_ab_sel,
+            self.epu_driver.gap_enable_and_halt_released
+            )
+        self.setParam(
+            _db.pv_enbl_and_release_si_sel,
+            self.epu_driver.phase_enable_and_halt_released
+            )
+        # update PVs
+        self.updatePVs()
     # increment pv value
     def incParam(self, pv_name, inc=1):
         _old_value = self.getParam(pv_name)
