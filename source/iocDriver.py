@@ -54,10 +54,18 @@ class EPUSupport(pcaspy.Driver):
         self.tid_periodic.start()
     # variable initialization
     def init_vars(self):
+        # auxiliary variables
         self._old_gap = self.epu_driver.gap
         self._old_gap_sample_timestamp = time.time()
         self._old_phase = self.epu_driver.phase
         self._old_phase_sample_timestamp = time.time()
+
+        # init set point pv values
+        self.setParam(
+            _db.pv_gap_sp,
+            self.epu_driver.gap_target
+            )
+        
     # increment pv value
     def incParam(self, pv_name, inc=1):
         _old_value = self.getParam(pv_name)
@@ -362,28 +370,32 @@ class EPUSupport(pcaspy.Driver):
                     _cte.bool_no
                     )
             # update moving status
-            if isValid(self.epu_driver.a_is_moving):
+            if isValid(self.epu_driver.gap_is_moving):
                 self.setParam(
                     _db.pv_drive_a_is_moving_mon,
-                    self.epu_driver.a_is_moving
+                    self.epu_driver.gap_is_moving
                     )
-            if isValid(self.epu_driver.b_is_moving):
                 self.setParam(
                     _db.pv_drive_b_is_moving_mon,
-                    self.epu_driver.b_is_moving
+                    self.epu_driver.gap_is_moving
                     )
-            if isValid(self.epu_driver.s_is_moving):
+            if isValid(self.epu_driver.phase_is_moving):
                 self.setParam(
                     _db.pv_drive_s_is_moving_mon,
-                    self.epu_driver.s_is_moving
+                    self.epu_driver.phase_is_moving
                     )
-            if isValid(self.epu_driver.i_is_moving):
                 self.setParam(
                     _db.pv_drive_i_is_moving_mon,
-                    self.epu_driver.i_is_moving
+                    self.epu_driver.phase_is_moving
                     )
-            if isValid(self.epu_driver.is_moving):
-                if self.epu_driver.is_moving:
+            if (
+                isValid(self.epu_driver.gap_is_moving)
+                and isValid(self.epu_driver.phase_is_moving)
+                ):
+                if (
+                    self.epu_driver.gap_is_moving
+                    or self.epu_driver.phase_is_moving
+                    ):
                     self.setParam(
                         _db.pv_is_moving_mon,
                         _cte.bool_yes
