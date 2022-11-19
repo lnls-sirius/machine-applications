@@ -142,34 +142,34 @@ class EPUSupport(pcaspy.Driver):
             if isValid(self.epu_driver.gap_target_velocity):
                 self.setParam(
                     _db.pv_gap_velo_rb,
-                    self.epu_driver.gap_target_velocity
+                    self.epu_driver.gap_target_velocity/60
                     )
             ## phase target speed
             if isValid(self.epu_driver.phase_target_velocity):
                 self.setParam(
                     _db.pv_phase_velo_rb,
-                    self.epu_driver.phase_target_velocity
+                    self.epu_driver.phase_target_velocity/60
                     )
             ## individual axes target speed
             if isValid(self.epu_driver.a_target_velocity):
                 self.setParam(
                     _db.pv_a_target_velo_mon,
-                    self.epu_driver.a_target_velocity
+                    self.epu_driver.a_target_velocity/60
                     )
             if isValid(self.epu_driver.b_target_velocity):
                 self.setParam(
                     _db.pv_b_target_velo_mon,
-                    self.epu_driver.b_target_velocity
+                    self.epu_driver.b_target_velocity/60
                     )
             if isValid(self.epu_driver.s_target_velocity):
                 self.setParam(
                     _db.pv_s_target_velo_mon,
-                    self.epu_driver.s_target_velocity
+                    self.epu_driver.s_target_velocity/60
                     )
             if isValid(self.epu_driver.i_target_velocity):
                 self.setParam(
                     _db.pv_i_target_velo_mon,
-                    self.epu_driver.i_target_velocity
+                    self.epu_driver.i_target_velocity/60
                     )
             ## gap speed
             if isValid(self.epu_driver.gap):
