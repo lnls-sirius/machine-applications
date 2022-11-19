@@ -20,7 +20,7 @@ class EcoDrive():
     _SOCKET_TIMEOUT = .2 # tcp socket timeout
 
     def __init__(self, address, max_limit=+25, min_limit=-25,
-                    bbb_hostname = _cte.beaglebone_addr, rs458_tcp_port=_cte.msg_port, drive_name = 'EcoDrive') -> None:
+                    bbb_hostname = _cte.beaglebone_addr, rs458_tcp_port=5052, drive_name = 'EcoDrive') -> None:
 
         self.ADDRESS = address
         self.UPPER_LIMIT = max_limit
@@ -35,7 +35,7 @@ class EcoDrive():
         self.drive_connect()
 
         # sets ecodrive answer delay (in ms, minimum is 1)
-        self.set_rs485_delay(1)
+        #self.set_rs485_delay(1)
 
     def tcp_wait_connection(self) -> bool:
         '''
@@ -68,14 +68,13 @@ class EcoDrive():
                     return True
 
     def drive_connect(self) -> bool:
-        with self._lock
+        with self._lock:
             while True:
                 try:
                     byte_message = self.tcp_read_parameter(f'BCD:{self.ADDRESS}', change_drive=False)
 
                 except Exception:
                     logger.exception('Communication error.')
-                    return False
 
                 else:
                     if not (f'E{self.ADDRESS}' in byte_message.decode()):
@@ -87,19 +86,21 @@ class EcoDrive():
                         print(f'Soft driver {self.DRIVE_NAME} connected do ecodrive number {self.ADDRESS}')
                         return True
 
-    #@timer
+    @timer
     def tcp_read_parameter(self, message: str, change_drive: bool = True) -> bytes:
 
         with self._lock:
 
-            if change_drive:
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                    data = ''
-                    s.settimeout(EcoDrive._SOCKET_TIMEOUT)
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                data = ''
+                s.settimeout(EcoDrive._SOCKET_TIMEOUT)
+                con = 0
 
+                if change_drive:
                     while True:
                         try:
                             s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
+                            con = 1
                             break
 
                         except Exception as e:
@@ -109,7 +110,7 @@ class EcoDrive():
                             self.drive_connect()
 
                     s.sendall(f'BCD:{self.ADDRESS}\r'.encode())
-                    
+                
                     while True:
                         try:
 
@@ -124,18 +125,17 @@ class EcoDrive():
                             print(e)
                             if not data: return
 
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(self._SOCKET_TIMEOUT)
-                while True:
-                    try:
-                        s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
-                        break
+                if not con:
+                    while True:
+                        try:
+                            s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
+                            break
 
-                    except Exception as e:
-                        logger.exception('Communication error.')
-                        print('Communication error', e)
-                        self.tcp_wait_connection()
-                        self.drive_connect()
+                        except Exception as e:
+                            logger.exception('Communication error.')
+                            print('Communication error', e)
+                            self.tcp_wait_connection()
+                            self.drive_connect()
 
                 s.sendall(f'{message}\r'.encode())
                 data = ''
@@ -151,8 +151,9 @@ class EcoDrive():
                     except Exception as e:
                         if data: return data.encode()
                         else: return
-                time.sleep(.2) # makes significant difference
-                return data.encode()
+
+            if change_drive: time.sleep(.01) # makes significant difference
+            return data.encode()
 
     def get_resolver_position(self, change_drive = True) -> float:
         try:

@@ -44,7 +44,6 @@ class Epu():
             except Exception as e:
                 print('Trying to initialize variables')
                 logger.error('Init error')
-                raise(e)
             else: break
 
         self.standstill_monitoring_thread.start()
@@ -139,8 +138,6 @@ class Epu():
     
     def monitor_gap_movement(self):
 
-        timeout = (abs( (self.gap - self.gap_target) / self.gap_target_velocity)) * 1.5
-
         while True:
 
             try:
@@ -152,27 +149,19 @@ class Epu():
 
                 while self.gap_start_event.is_set():
 
-                    if type(self.a_drive.get_encoder_position(False)) == float:
-                        self.gap = self.a_drive.get_encoder_position(False)
+                    g = self.a_drive.get_encoder_position(False)
+                    if type(g) == float:
+                        self.gap = g
                     self.callback_update()
                     update_count += 1
                     print(self.gap, self.gap_is_moving)
 
-                    if abs(self.gap - self.gap_target) < .005: # this number was choosen arbitrarily
+                    if abs(self.gap - self.gap_target) < .001: # this number was choosen arbitrarily
 
                         end = time.time()
                         self.gap_is_moving = 0
                         self.gap_start_event.clear()
                         print(f'Encoder update rate: {update_count/(end-start)}')
-                    
-                    if time.time() - start > timeout:
-
-                        logger.error(f'Timeout while monitoring gap. Time elapsed: {time.time() - start} s.')
-                        print(f'Timeout while monitoring gap. Time elapsed: {time.time() - start} s.')
-                        self.gap_is_moving = 0
-                        self.gap_start_event.clear()
-                        self.stop_event.set()
-                        break
 
                 self.gap_start_event.clear()
                 self.stop_event.set()
@@ -186,8 +175,6 @@ class Epu():
 
         while True:
             
-            timeout = (abs( (self.phase - self.phase_target) / self.phase_target_velocity)) * 1.5
-            
             try:
 
                 self.phase_start_event.wait()
@@ -197,8 +184,9 @@ class Epu():
 
                 while self.phase_start_event.is_set():
 
-                    if type(self.i_drive.get_encoder_position(False)) != float:
-                        self.phase = self.i_drive.get_encoder_position(False)
+                    p = self.i_drive.get_encoder_position(False)
+                    if type(p) == float:
+                        self.phase = p
                     self.callback_update()
                     update_count += 1
                     print(self.phase, self.phase_is_moving) # debugging
@@ -209,15 +197,6 @@ class Epu():
                         self.phase_is_moving = 0
                         self.phase_start_event.clear()
                         print(f'Encoder update rate: {update_count/(end-start)}')
-                    
-                    if time.time() - start > timeout:
-
-                        logger.error(f'Timeout while monitoring phase movement. Time elapsed: {time.time() - start} s.')
-                        print(f'Timeout while monitoring phase. Time elapsed: {time.time() - start} s.')
-                        self.phase_is_moving = 0
-                        self.phase_start_event.clear()
-                        self.stop_event.set()
-                        break
 
                 self.phase_start_event.clear()
                 self.stop_event.set()
@@ -240,11 +219,6 @@ class Epu():
                 self.i_encoder_phase = self.i_drive.get_encoder_position()
                 self.phase = self.i_encoder_phase
                 self.stop_event.wait()
-                # try:
-                #     a, b = self.i_drive.get_halten_status()
-                # except: pass
-                # else:
-                #     self.i_halt_released, self.i_enable = a, b
 
                 self.stop_event.wait()
                 self.i_diag_code = self.i_drive.get_diagnostic_code()
@@ -253,8 +227,6 @@ class Epu():
                 self.stop_event.wait()
                 self.s_encoder_phase = self.s_drive.get_encoder_position()
                 self.stop_event.wait()
-                # a, b = self.s_drive.get_halten_status()
-                # self.s_halt_released, self.s_enable = a, b
 
                 self.stop_event.wait()
                 self.s_diag_code = self.s_drive.get_diagnostic_code()
@@ -264,8 +236,6 @@ class Epu():
                 self.a_encoder_gap = self.a_drive.get_encoder_position()
                 self.gap = self.a_encoder_gap
                 self.stop_event.wait()
-                # a, b = self.a_drive.get_halten_status()
-                # self.a_halt_released, self.a_enable = a, b
 
                 self.stop_event.wait()
                 self.a_diag_code = self.a_drive.get_diagnostic_code()
@@ -274,8 +244,6 @@ class Epu():
                 self.stop_event.wait()
                 self.b_encoder_gap = self.b_drive.get_encoder_position()
                 self.stop_event.wait()
-                # a, b = self.b_drive.get_halten_status()
-                # self.b_halt_released, self.b_enable =  a, b
                 self.b_diag_code = self.b_drive.get_diagnostic_code()
             except Exception as e:
                 logger.exception('Default monitor thread exception')
@@ -328,7 +296,6 @@ class Epu():
                     self.warnings.append('GC01')
                     print('GC01 warning: correct cause before moving')
                     self.gap_target = None
-                    raise e
         else:
             self.stop_event.set()
             logger.error(f'Gap value given, ({target_gap}), is out of range.')
@@ -486,7 +453,7 @@ class Epu():
                     raise e
         else:
             logger.info(
-                'Veloxity must be between {} mm/s and {} mm/s'.format(
+                'Velocity must be between {} mm/s and {} mm/s'.format(
                     _cte.minimum_velo_mm_per_min,
                     _cte.maximum_velo_mm_per_min)
                     )
@@ -758,8 +725,8 @@ class Epu():
 
     def gap_stop(self):
 
-        self.gap_set_enable(False)
         self.gap_release_halt(False)
+        self.gap_set_enable(False)
 
     def phase_set_enable(self, val: bool):
         
@@ -1028,5 +995,4 @@ class Epu():
         time.sleep(1)
         self.phase_turn_on()
 
-if __name__ == '__main__':
-    epu = Epu()
+epu = Epu()
