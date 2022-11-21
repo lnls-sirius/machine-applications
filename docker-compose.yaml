@@ -6,13 +6,15 @@ services:
     build:
       context: "."
     network_mode: "host"
-    environment:
-      - PYTHON_EXEC="/opt/conda/envs/pcaspy/bin/python"
-      - IOC_MAIN="/opt/source/ioc_main.py"
-      - PV_PREFIX="SI-10SB:ID-EPU50:"
-      - BBB_IP_ADDR="10.128.110.160"
-      - MSG_PORT="5051"
-      - IO_PORT="5050"
+    command: [
+      '/opt/conda/envs/pcaspy/bin/python', '/opt/source/ioc_main.py',
+      '--pv-prefix', 'SI-10SB:ID-EPU50:',
+      '--drive-io-port', '5050',
+      '--drive-msg-port', '5052',
+      '--beaglebone-addr', '10.128.110.160',
+      '--autosave-dir', '/opt/autosave',
+      '--request-file', '/opt/autosave/autosave_epu.req'
+    ]
     volumes:
       - type: bind
         source: /storage/common/autosave/EPU

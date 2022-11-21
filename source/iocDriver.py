@@ -65,7 +65,44 @@ class EPUSupport(pcaspy.Driver):
             _db.pv_gap_sp,
             self.epu_driver.gap_target
             )
-        
+        self.setParam(
+            _db.pv_phase_sp,
+            self.epu_driver.phase_target
+            )
+        self.setParam(
+            _db.pv_gap_velo_sp,
+            self.epu_driver.gap_target_velocity/60
+            )
+        self.setParam(
+            _db.pv_phase_velo_sp,
+            self.epu_driver.phase_target_velocity/60
+            )
+        self.setParam(
+            _db.pv_enbl_ab_sel,
+            self.epu_driver.gap_enable
+            )
+        self.setParam(
+            _db.pv_enbl_si_sel,
+            self.epu_driver.phase_enable
+            )
+        self.setParam(
+            _db.pv_release_ab_sel,
+            self.epu_driver.gap_halt_released
+            )
+        self.setParam(
+            _db.pv_release_si_sel,
+            self.epu_driver.phase_halt_released
+            )
+        self.setParam(
+            _db.pv_enbl_and_release_ab_sel,
+            self.epu_driver.gap_enable_and_halt_released
+            )
+        self.setParam(
+            _db.pv_enbl_and_release_si_sel,
+            self.epu_driver.phase_enable_and_halt_released
+            )
+        # update PVs
+        self.updatePVs()
     # increment pv value
     def incParam(self, pv_name, inc=1):
         _old_value = self.getParam(pv_name)
@@ -274,7 +311,10 @@ class EPUSupport(pcaspy.Driver):
                     )
                 self.setParam(
                     _db.pv_drive_a_diag_msg_mon,
-                    _cte.drive_diag_msgs[self.epu_driver.a_diag_code]
+                    _cte.drive_diag_msgs.get(
+                        self.epu_driver.a_diag_code,
+                        _cte.default_unknown_diag_msg
+                        )
                     )
             if isValid(self.epu_driver.b_diag_code):
                 self.setParam(
@@ -283,7 +323,10 @@ class EPUSupport(pcaspy.Driver):
                     )
                 self.setParam(
                     _db.pv_drive_b_diag_msg_mon,
-                    _cte.drive_diag_msgs[self.epu_driver.b_diag_code]
+                    _cte.drive_diag_msgs.get(
+                        self.epu_driver.b_diag_code,
+                        _cte.default_unknown_diag_msg
+                        )
                     )
             if isValid(self.epu_driver.s_diag_code):
                 self.setParam(
@@ -292,7 +335,10 @@ class EPUSupport(pcaspy.Driver):
                     )
                 self.setParam(
                     _db.pv_drive_s_diag_msg_mon,
-                    _cte.drive_diag_msgs[self.epu_driver.s_diag_code]
+                    _cte.drive_diag_msgs.get(
+                        self.epu_driver.s_diag_code,
+                        _cte.default_unknown_diag_msg
+                        )
                     )
             if isValid(self.epu_driver.i_diag_code):
                 self.setParam(
@@ -301,7 +347,10 @@ class EPUSupport(pcaspy.Driver):
                     )
                 self.setParam(
                     _db.pv_drive_i_diag_msg_mon,
-                    _cte.drive_diag_msgs[self.epu_driver.i_diag_code]
+                    _cte.drive_diag_msgs.get(
+                        self.epu_driver.i_diag_code,
+                        _cte.default_unknown_diag_msg
+                        )
                     )
             # check overall fault state
             if (
@@ -311,10 +360,10 @@ class EPUSupport(pcaspy.Driver):
                 and isValid(self.epu_driver.i_diag_code)
                 ):
                 not_ok = not (
-                    self.epu_driver.a_diag_code == ' A211'
-                    and self.epu_driver.b_diag_code == ' A211'
-                    and self.epu_driver.b_diag_code == ' A211'
-                    and self.epu_driver.b_diag_code == ' A211'
+                    self.epu_driver.a_diag_code == 'A211'
+                    and self.epu_driver.b_diag_code == 'A211'
+                    and self.epu_driver.b_diag_code == 'A211'
+                    and self.epu_driver.b_diag_code == 'A211'
                     )
             else:
                 not_ok = True
@@ -458,6 +507,12 @@ class EPUSupport(pcaspy.Driver):
                     ):
                 self.setParam(_db.pv_gap_max_velo_sp, value)
                 self.setParam(_db.pv_gap_max_velo_rb, value)
+                if value < self.getParam(_db.pv_gap_velo_sp):
+                    _val_per_min = value * 60
+                    status = self.asynExec(
+                        reason, self.epu_driver.gap_set_velocity, _val_per_min)
+                    if status:
+                        self.setParam(_db.pv_gap_velo_sp, value)
                 self.updatePVs()
             else:
                 status = False
@@ -468,6 +523,12 @@ class EPUSupport(pcaspy.Driver):
                     ):
                 self.setParam(_db.pv_phase_max_velo_sp, value)
                 self.setParam(_db.pv_phase_max_velo_rb, value)
+                if value < self.getParam(_db.pv_phase_velo_sp):
+                    _val_per_min = value * 60
+                    status = self.asynExec(
+                        reason, self.epu_driver.phase_set_velocity, _val_per_min)
+                    if status:
+                        self.setParam(_db.pv_phase_velo_sp, value)
                 self.updatePVs()
             else:
                 status = False
