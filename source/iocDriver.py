@@ -158,22 +158,26 @@ class EPUSupport(pcaspy.Driver):
                     _db.pv_gap_rb,
                     self.epu_driver.gap_target
                     )
-            if isValid(self.epu_driver.gap):
-                self.setParam(
-                    _db.pv_gap_mon,
-                    self.epu_driver.gap
-                    )
+            ### gap updates only by callback during motion
+            if not self.epu_driver.gap_is_moving:
+                if isValid(self.epu_driver.gap):
+                    self.setParam(
+                        _db.pv_gap_mon,
+                        self.epu_driver.gap
+                        )
             ## phase pos
             if isValid(self.epu_driver.phase_target):
                 self.setParam(
                     _db.pv_phase_rb,
                     self.epu_driver.phase_target
                     )
-            if isValid(self.epu_driver.phase):
-                self.setParam(
-                    _db.pv_phase_mon,
-                    self.epu_driver.phase
-                    )
+            ### phase updates only by callback during motion
+            if not self.epu_driver.phase_is_moving:
+                if isValid(self.epu_driver.phase):
+                    self.setParam(
+                        _db.pv_phase_mon,
+                        self.epu_driver.phase
+                        )
             # update speed pvs
             ## gap target speed
             if isValid(self.epu_driver.gap_target_velocity):
@@ -566,8 +570,10 @@ class EPUSupport(pcaspy.Driver):
                 status = False
         ## cmd to move and change gap
         elif isPvName(reason, _db.pv_change_gap_cmd):
-            if self.getParam(
-                _db.pv_allowed_change_gap_mon) == _cte.bool_yes:
+            if (not self.epu_driver.gap_is_moving
+                and self.getParam(
+                    _db.pv_allowed_change_gap_mon) == _cte.bool_yes
+                ):
                 status = self.asynExec(
                     reason, self.epu_driver.gap_start, _cte.bool_yes
                     )
@@ -578,8 +584,9 @@ class EPUSupport(pcaspy.Driver):
                 status = False
         ## cmd to move and change phase
         elif isPvName(reason, _db.pv_change_phase_cmd):
-            if self.getParam(
-                _db.pv_allowed_change_phase_mon) == _cte.bool_yes:
+            if (not self.epu_driver.phase_is_moving
+                and self.getParam(
+                    _db.pv_allowed_change_phase_mon) == _cte.bool_yes):
                 status = self.asynExec(
                     reason, self.epu_driver.phase_start, _cte.bool_yes
                     )
