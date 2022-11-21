@@ -507,6 +507,12 @@ class EPUSupport(pcaspy.Driver):
                     ):
                 self.setParam(_db.pv_gap_max_velo_sp, value)
                 self.setParam(_db.pv_gap_max_velo_rb, value)
+                if value < self.getParam(_db.pv_gap_velo_sp):
+                    _val_per_min = value * 60
+                    status = self.asynExec(
+                        reason, self.epu_driver.gap_set_velocity, _val_per_min)
+                    if status:
+                        self.setParam(_db.pv_gap_velo_sp, value)
                 self.updatePVs()
             else:
                 status = False
@@ -517,6 +523,12 @@ class EPUSupport(pcaspy.Driver):
                     ):
                 self.setParam(_db.pv_phase_max_velo_sp, value)
                 self.setParam(_db.pv_phase_max_velo_rb, value)
+                if value < self.getParam(_db.pv_phase_velo_sp):
+                    _val_per_min = value * 60
+                    status = self.asynExec(
+                        reason, self.epu_driver.phase_set_velocity, _val_per_min)
+                    if status:
+                        self.setParam(_db.pv_phase_velo_sp, value)
                 self.updatePVs()
             else:
                 status = False
