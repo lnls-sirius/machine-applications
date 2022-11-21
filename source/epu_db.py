@@ -157,6 +157,8 @@ pvdb = {
         'mdel' : -1,
         'asyn' : True,
         'asg' : 'default',
+        'lolim': _cte.minimum_gap,
+        'hilim': _cte.maximum_gap,
     },
     pv_gap_rb : {
         'type' : 'float',
@@ -184,6 +186,8 @@ pvdb = {
         'mdel' : -1,
         'asyn' : True,
         'asg' : 'default',
+        'lolim': _cte.minimum_phase,
+        'hilim': _cte.maximum_phase,
     },
     pv_phase_rb : {
         'type' : 'float',
@@ -211,6 +215,8 @@ pvdb = {
         'mdel' : -1,
         'asyn' : True,
         'asg' : 'default',
+        'lolim': _cte.minimum_velo_mm_per_sec,
+        'hilim': _cte.maximum_velo_mm_per_sec,
     },
     pv_gap_max_velo_rb : {
         'type' : 'float',
@@ -229,6 +235,8 @@ pvdb = {
         'mdel' : -1,
         'asyn' : True,
         'asg' : 'default',
+        'lolim': _cte.minimum_velo_mm_per_sec,
+        'hilim': _cte.maximum_velo_mm_per_sec,
     },
     pv_gap_velo_rb : {
         'type' : 'float',
@@ -256,6 +264,8 @@ pvdb = {
         'mdel' : -1,
         'asyn' : True,
         'asg' : 'default',
+        'lolim': _cte.minimum_velo_mm_per_sec,
+        'hilim': _cte.maximum_velo_mm_per_sec,
     },
     pv_phase_max_velo_rb : {
         'type' : 'float',
@@ -274,6 +284,8 @@ pvdb = {
         'mdel' : -1,
         'asyn' : True,
         'asg' : 'default',
+        'lolim': _cte.minimum_velo_mm_per_sec,
+        'hilim': _cte.maximum_velo_mm_per_sec,
     },
     pv_phase_velo_rb : {
         'type' : 'float',
