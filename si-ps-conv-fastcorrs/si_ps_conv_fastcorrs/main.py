@@ -160,7 +160,11 @@ class App:
         curr4 = limits[3]
         curr5 = limits[4]
         values = (curr0, curr1, curr2, curr3, curr4, curr5)
-        strengths = streconv.conv_current_2_strength(values)
+        try:
+            strengths = streconv.conv_current_2_strength(values)
+        except TypeError:
+            # this exception occurs when low level IOC crashes
+            strengths = None
         if strengths is None or None in strengths:
             slims = None
         else:
