@@ -18,6 +18,7 @@ class Epu():
     def __init__(self, callback_update=lambda: 1):
 
         print('Class EPU started.')
+        self.gpio_connected = False
         self.tcp_wait_connection()
 
         self.a_drive = EcoDrive(address=_cte.a_drive_address, min_limit=_cte.minimum_gap,   max_limit=_cte.maximum_gap,   drive_name='A')
@@ -56,29 +57,51 @@ class Epu():
     def tcp_wait_connection(self):
         while True:
             try:
-                s =socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.connect((_cte.beaglebone_addr, _cte.io_port))
-                print('GPIO Connected.')
 
             except socket.timeout as e:
+                self.gpio_connected = False
                 logger.info(f'Trying to connect to GPIO server.', e)
                 print(f'Trying to connect to GPIO server: {e}')
                 time.sleep(2)
 
             except socket.error as e:
+                self.gpio_connected = False
                 logger.exception(f'Trying to connect to GPIO server.')
                 print(f'Trying to connect: {e}')
 
             except Exception as e:
+                self.gpio_connected = False
                 logger.info('Trying to connect.', e)
                 print(f'Trying to connect: {e}')
 
             else:
-                print(f'Connected to GPIO server.')
                 logger.info(f'Connected to GPIO server.')
+                self.gpio_connected = True
                 s.shutdown(socket.SHUT_RDWR)
                 s.close()
                 return True
+
+    # not been used yet
+    def check_tcp_connection(self):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            con = s.connect_ex((_cte.beaglebone_addr, _cte.io_port))
+            time.sleep(.001)
+
+        except Exception as e:
+            self.gpio_connected = False
+            logger.exception('Disconnected from GPIO server.')
+            try: s.close()
+            except: return False
+            else: return False
+
+        else:
+            self.gpio_connected = True
+            s.shutdown(socket.SHUT_RDWR)
+            s.close()
+            return True
 
     # motion monitoring
 
@@ -518,7 +541,7 @@ class Epu():
                 else:
                     self.phase_change_allowed = False
                     return False
-                    
+
             else:
                 self.phase_change_allowed = False
                 return False

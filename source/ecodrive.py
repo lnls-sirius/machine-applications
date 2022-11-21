@@ -6,8 +6,6 @@ import time
 import constants as _cte
 from utils import *
 
-# for handler in logging.root.handlers[:]:
-#     logging.root.removeHandler(handler)
 logger = logging.getLogger('__name__')
 logging.basicConfig(
     filename='./EcoDrive.log', filemode='w', level=logging.DEBUG,
@@ -31,11 +29,13 @@ class EcoDrive():
         # connections
         self.BBB_HOSTNAME = bbb_hostname
         self.RS458_TCP_PORT = rs458_tcp_port
+        self.tcp_connected = False
+        self.rs485_connected = False
         self.tcp_wait_connection()
         self.drive_connect()
 
         # sets ecodrive answer delay (in ms, minimum is 1)
-        #self.set_rs485_delay(1)
+        # self.set_rs485_delay(1)
 
     def tcp_wait_connection(self) -> bool:
         '''
@@ -49,20 +49,26 @@ class EcoDrive():
                     s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
 
                 except socket.timeout as e:
+                    self.tcp_connected = False
+                    self.rs485_connected = False
                     logger.info(f'Trying to connect.', e)
                     print(f'Trying to connect.', e)
                     time.sleep(2)
 
                 except socket.error as e:
+                    self.tcp_connected = False
+                    self.rs485_connected = False
                     logger.exception(f'Trying to connect.')
                     print(e)
 
                 except Exception:
+                    self.tcp_connected = False
+                    self.rs485_connected = False
                     logger.exception('Trying to connect')
 
                 else:
-                    print(f'Drive {self.DRIVE_NAME} connection test to {self.BBB_HOSTNAME} on port {self.RS458_TCP_PORT} ok')
-                    logger.info(f'Connect to {self.BBB_HOSTNAME} on port {self.RS458_TCP_PORT}')
+                    self.tcp_connected = True
+                    logger.info(f'Drive {self.DRIVE_NAME} connect to {self.BBB_HOSTNAME} on port {self.RS458_TCP_PORT}')
                     s.shutdown(socket.SHUT_RDWR)
                     s.close()
                     return True
@@ -75,15 +81,17 @@ class EcoDrive():
 
                 except Exception:
                     logger.exception('Communication error.')
+                    self.rs485_connected = False
 
                 else:
                     if not (f'E{self.ADDRESS}' in byte_message.decode()):
                         logger.error(f'Trying connection to Drive {self.DRIVE_NAME}, address ({self.ADDRESS}).\
                                         Drive address expected in drive answer, but was not found.')
+                        self.rs485_connected = False
 
                     else:
+                        self.rs485_connected = True
                         logger.info(f'Soft driver {self.DRIVE_NAME} connected do ecodrive number {self.ADDRESS}')
-                        print(f'Soft driver {self.DRIVE_NAME} connected do ecodrive number {self.ADDRESS}')
                         return True
 
     #@timer
