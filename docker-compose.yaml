@@ -13,7 +13,7 @@ services:
       '--drive-msg-port', '5052',
       '--beaglebone-addr', '10.128.110.160',
       '--autosave-dir', '/opt/autosave',
-      '--request-file', '/opt/autosave/autosave_epu.req'
+      '--request-file', '/opt/source/autosave_epu.req'
     ]
     volumes:
       - type: bind

@@ -73,13 +73,14 @@ def save_monitor(req_file, pv_prefix='', save_location='', period=10.0, num_back
     if save_location != '':
         save_location = save_location.rstrip('/')
         save_location = save_location.rstrip('\\')
+        save_location = save_location + '/'
     # remove oldest file if backup count exceeded
-    save_list = sorted(glob.glob(save_location+'/'+filename+'*'+'.sav*'))
+    save_list = sorted(glob.glob(save_location+filename+'*'+'.sav*'))
     if len(save_list) >= num_backup_files:
         _remove(save_list[0])
     # define new save file name
     save_file = (
-        req_file.rstrip('.req') + '__' + _now + '__.sav'
+        save_location + filename.rstrip('.req') + '__' + _now + '__.sav'
         )
     backup_file = save_file.rstrip('.sav')+'_Backup.sav'
     eid = threading.Event()
