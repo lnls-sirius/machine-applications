@@ -130,7 +130,7 @@ def set_gap_hal(val):
             data = s.recv(16)
             if not data: break
             return data
-
+@timer
 def set_phase_hal(val):
     
     bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.HALT_CH_SI, value=val).encode()
@@ -139,7 +139,7 @@ def set_phase_hal(val):
         s.settimeout(.1)
         s.connect(('10.128.110.160', 5050))
         s.sendall(bsmp_enable_message)
-        time.sleep(.01) # magic number
+        time.sleep(.001) # magic number
 
         while True:
             data = s.recv(16)

@@ -1,4 +1,5 @@
 import logging
+logger = logging.getLogger(__name__)
 import socket
 import threading
 import time
@@ -6,11 +7,10 @@ import time
 import constants as _cte
 from utils import *
 
-# for handler in logging.root.handlers[:]:
-#     logging.root.removeHandler(handler)
-logger = logging.getLogger('__name__')
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
 logging.basicConfig(
-    filename='./EcoDrive.log', filemode='w', level=logging.DEBUG,
+    filename='ecodrive.log', filemode='w', level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%d-%b-%y %H:%M:%S', force=True)
 
@@ -152,7 +152,8 @@ class EcoDrive():
                         if data: return data.encode()
                         else: return
 
-            if change_drive: time.sleep(.03) # makes significant difference
+            if change_drive: time.sleep(.03)
+            else: time.sleep(.0005)
             return data.encode()
 
     def get_resolver_position(self, change_drive = True) -> float:
