@@ -210,6 +210,7 @@ class Epu():
     def standstill_monitoring(self):
         while True:
             try:
+                ### THIS FUNCTIONS COULD ALSO BE USED TO
                 # self.gap_enable_status()
                 # self.gap_halt_release_status()
                 # self.phase_enable_status()
@@ -367,18 +368,29 @@ class Epu():
             return False
 
     def allowed_to_change_gap(self) -> bool:
-            if not self.gap_enable_status():
-                self.gap_change_allowed = True
-                return False
-            elif not self.gap_halt_release_status():
-                self.gap_change_allowed = True
-                return False
-            elif not self.gap_check_for_move():
-                self.gap_change_allowed = True
-                return False
+        try:
+            if self.gap_enable_status():
+                if self.gap_halt_release_status():
+                    self.stop_event.clear()
+                    if self.gap_check_for_move():
+                        self.stop_event.set()
+                        self.gap_change_allowed = True
+                        return True
+                    else:
+                        self.stop_event.set()
+                        self.gap_change_allowed = False
+                        return False
+                else:
+                    self.gap_change_allowed = False
+                    return False
             else:
-                self.gap_change_allowed = True
-                return True
+                self.gap_change_allowed = False
+                return False
+
+        except Exception:
+            # Just reinforce the need of stop_event ben set in this point, after validation, it could be removed.
+            if not self.stop_event_is_set(): self.stop_event.set()
+            logger.exception('Could not complete gap check for move.')
 
 
     # Phase stuff
@@ -396,7 +408,7 @@ class Epu():
                 self.s_drive.set_target_position(a_target)
 
     def phase_set(self, target_phase: float) -> float:
-        
+
         if _cte.minimum_phase <= target_phase <= _cte.maximum_phase:
             while 1:
                 self.stop_event.clear()
@@ -503,12 +515,17 @@ class Epu():
                         self.stop_event.set()
                         self.phase_change_allowed = False
                         return False
-                else: return False
-            else: return False
-        except:
-            if self.stop_event.is_set(): self.stop_event.set()
-            logger.exception('Could not complete check')
-            print(f'Could not complete check. Check {__name__} log file')
+                else:
+                    self.phase_change_allowed = False
+                    return False
+                    
+            else:
+                self.phase_change_allowed = False
+                return False
+        except Exception:
+            # Just reinforce the need of stop_event ben set in this point, after validation, it could be removed.
+            if not self.stop_event.is_set(): self.stop_event.set()
+            logger.exception('Could not complete phase check for move')
 
 
     # GPIOs functions
@@ -647,7 +664,7 @@ class Epu():
                         time.sleep(.1)
                         timeout_count -= 1
                         if not timeout_count: break
-                
+
                 else:
                     timeout_count = 10
                     while self.gap_halt_release_status():
@@ -698,9 +715,8 @@ class Epu():
             while True:
                 data = s.recv(16)
                 if not data: break
-                if bool(data[-2]):
-                    self.gap_is_moving = 0
-                    self.gap_start_event.clear()
+                # self.gap_is_moving = 0
+                # self.gap_start_event.clear()
                 return(bool(data[-2]))
 
     def gap_start(self, val: bool):
@@ -898,7 +914,7 @@ class Epu():
                         time.sleep(.1)
                         timeout_count -= 1
                         if not timeout_count: break
-                
+
                 else:
                     timeout_count = 10
                     while self.phase_halt_release_status():

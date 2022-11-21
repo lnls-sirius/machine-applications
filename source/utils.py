@@ -131,9 +131,9 @@ def set_gap_hal(val):
             if not data: break
             return data
 
-def set_phase_hal(val):
+def get_phase_hal(val):
     
-    bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.HALT_CH_SI, value=val).encode()
+    bsmp_enable_message = bsmp_send(_cte.BSMP_READ, variableID=_cte.HALT_CH_SI, value=val).encode()
                         
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(.1)
