@@ -360,10 +360,10 @@ class EPUSupport(pcaspy.Driver):
                 and isValid(self.epu_driver.i_diag_code)
                 ):
                 not_ok = not (
-                    self.epu_driver.a_diag_code == ' A211'
-                    and self.epu_driver.b_diag_code == ' A211'
-                    and self.epu_driver.b_diag_code == ' A211'
-                    and self.epu_driver.b_diag_code == ' A211'
+                    self.epu_driver.a_diag_code == 'A211'
+                    and self.epu_driver.b_diag_code == 'A211'
+                    and self.epu_driver.b_diag_code == 'A211'
+                    and self.epu_driver.b_diag_code == 'A211'
                     )
             else:
                 not_ok = True
