@@ -78,7 +78,7 @@ with open(TOP+"/config/drive_messages.yaml", "r") as f:
 
 default_unknown_diag_msg = "? Unknown diagnostic code"
 ################## Autosave #####################
-AUTOSAVE_DEFAULT_REQUEST_FILE = TOP+'/autosave/autosave_epu.req'
+AUTOSAVE_DEFAULT_REQUEST_FILE = TOP+'/source/autosave_epu.req'
 AUTOSAVE_DEFAULT_SAVE_LOCATION = TOP+'/autosave'
 autosave_update_rate = 10.0
 autosave_num_backup_files = 10
