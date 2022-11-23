@@ -59,6 +59,7 @@ class EPUSupport(pcaspy.Driver):
         self._old_gap_sample_timestamp = time.time()
         self._old_phase = self.epu_driver.phase
         self._old_phase_sample_timestamp = time.time()
+        self._busy_counter = 0
 
         # init set point pv values
         self.setParam(
@@ -124,7 +125,68 @@ class EPUSupport(pcaspy.Driver):
     def periodic(self):
         while True:
             self.eid.wait(_cte.poll_interval)
-            # read allowed to move status
+            # update connection status
+            if isValid(self.epu_driver.tcp_connected):
+                self.setParam(
+                    _db.pv_tcp_connected_mon,
+                    self.epu_driver.tcp_connected
+                    )
+            if isValid(self.epu_driver.gpio_connected):
+                self.setParam(
+                    _db.pv_gpio_connected_mon,
+                    self.epu_driver.gpio_connected
+                    )
+            if isValid(self.epu_driver.a_drive.rs485_connected):
+                self.setParam(
+                    _db.pv_drive_a_connected_mon,
+                    self.epu_driver.a_drive.rs485_connected
+                    )
+            if isValid(self.epu_driver.b_drive.rs485_connected):
+                self.setParam(
+                    _db.pv_drive_b_connected_mon,
+                    self.epu_driver.b_drive.rs485_connected
+                    )
+            if isValid(self.epu_driver.s_drive.rs485_connected):
+                self.setParam(
+                    _db.pv_drive_s_connected_mon,
+                    self.epu_driver.s_drive.rs485_connected
+                    )
+            if isValid(self.epu_driver.i_drive.rs485_connected):
+                self.setParam(
+                    _db.pv_drive_i_connected_mon,
+                    self.epu_driver.i_drive.rs485_connected
+                    )
+            if (
+                isValid(self.epu_driver.tcp_connected)
+                and isValid(self.epu_driver.gpio_connected)
+                and isValid(self.epu_driver.a_drive.rs485_connected)
+                and isValid(self.epu_driver.b_drive.rs485_connected)
+                and isValid(self.epu_driver.s_drive.rs485_connected)
+                and isValid(self.epu_driver.i_drive.rs485_connected)
+                ):
+                if (
+                    self.epu_driver.tcp_connected
+                    and self.epu_driver.gpio_connected
+                    and self.epu_driver.a_drive.rs485_connected
+                    and self.epu_driver.b_drive.rs485_connected
+                    and self.epu_driver.s_drive.rs485_connected
+                    and self.epu_driver.i_drive.rs485_connected
+                    ):
+                    self.setParam(
+                        _db.pv_epu_connected_mon,
+                        _cte.bool_yes
+                    )
+                else:
+                    self.setParam(
+                        _db.pv_epu_connected_mon,
+                        _cte.bool_no
+                    )
+            else:
+                self.setParam(
+                    _db.pv_epu_connected_mon,
+                    _cte.bool_no
+                )
+            # update allowed to move status
             if (
                 isValid(self.epu_driver.gap_change_allowed)
                 and self.epu_driver.gap_change_allowed
@@ -725,6 +787,7 @@ class EPUSupport(pcaspy.Driver):
             """ Call function and then callback after completion
             """
             # set busy status
+            self._busy_counter += 1
             self.setParam(_db.pv_is_busy_mon, _cte.bool_yes)
             self.updatePVs()
             # call function
@@ -736,13 +799,50 @@ class EPUSupport(pcaspy.Driver):
                     )
             self.callbackPV(reason)
             # clear busy status
-            self.setParam(_db.pv_is_busy_mon, _cte.bool_no)
+            self._busy_counter -= 1
+            if self._busy_counter == 0:
+                self.setParam(_db.pv_is_busy_mon, _cte.bool_no)
+            self.updatePVs()
+        tid = (
+            threading.Thread(
+                target=execAndNotify,
+                args=(reason, func, *args),
+                kwargs=kwargs,
+                daemon=True
+            )
+        )
+        tid.start()
+        return True
+
+    def asynExecWithLock(self, reason, func, *args, **kwargs):
+        """ Call function in new thread, using lock, and send
+            callback for pv specified by reason
+        """
+        def execNotifyAndUnlock(reason, func, *args, **kwargs):
+            """ Call function and then callback after completion
+            """
+            # set busy status
+            self._busy_counter += 1
+            self.setParam(_db.pv_is_busy_mon, _cte.bool_yes)
+            self.updatePVs()
+            # call function
+            try:
+                func(*args, **kwargs)
+            except Exception:
+                self.setParam(
+                    _db.pv_ioc_msg_mon, str(traceback.format_exc())
+                    )
+            self.callbackPV(reason)
+            # clear busy status
+            self._busy_counter -= 1
+            if self._busy_counter == 0:
+                self.setParam(_db.pv_is_busy_mon, _cte.bool_no)
             self.updatePVs()
             self.lock.release()
         if self.lock.acquire(blocking=False):
             tid = (
                 threading.Thread(
-                    target=execAndNotify,
+                    target=execNotifyAndUnlock,
                     args=(reason, func, *args),
                     kwargs=kwargs,
                     daemon=True

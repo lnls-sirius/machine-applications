@@ -1,5 +1,6 @@
 import logging
 logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 import socket
 import threading
 import time
@@ -8,7 +9,7 @@ import constants as _cte
 from utils import *
 
 logging.basicConfig(
-    filename='./EcoDrive.log', filemode='w', level=logging.DEBUG,
+    filename='ecodrive.log', filemode='w', level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%d-%b-%y %H:%M:%S', force=True)
 
