@@ -6,18 +6,19 @@ from utils import *
 from datetime import datetime
 import constants as _cte
 
-################## LOGGING #####################
+################################### LOGGING #######################################
 logging.basicConfig(filename='epu.log', filemode='w', level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     datefmt='%d-%b-%y %H:%M:%S', encoding='utf-8', force=True)
 logger.info(datetime.now().strftime('%m/%d/%Y, %H:%M:%S'))
-################################################
+###################################################################################
 
 class Epu():
 
     def __init__(self, callback_update=lambda: 1):
 
-        print('Class EPU started.')
+        logger.info('Class EPU started\n\n')
+        
         self.gpio_connected = False
         self.tcp_wait_connection()
 
@@ -39,41 +40,42 @@ class Epu():
         self.monitor_gap_movement_thread = Thread(target=self.monitor_gap_movement, daemon=True)
         self.standstill_monitoring_thread = Thread(target=self.standstill_monitoring, daemon=True)
 
-        # init functions
+        # initialize variables
         while True:
-            try:
-                self.init_variables_scope()
-            except Exception as e:
-                print('Trying to initialize variables')
-                logger.error('Init error')
+            try: self.init_variables_scope()
+            except Exception: logger.error('Trying to initialize variables...')
             else: break
 
+        # starts threads
         self.standstill_monitoring_thread.start()
         self.monitor_phase_movement_thread.start()
         self.monitor_gap_movement_thread.start()
 
 
-    # tests connection to GPIO server
+    # tests connection with GPIO server (BBB)
     def tcp_wait_connection(self):
+        
         while True:
+            
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.connect((_cte.beaglebone_addr, _cte.io_port))
 
             except socket.timeout as e:
+                
                 self.gpio_connected = False
-                logger.info(f'Trying to connect to GPIO server.', e)
+                logger.exception('Trying to connect to GPIO server.')
                 print(f'Trying to connect to GPIO server: {e}')
                 time.sleep(2)
 
             except socket.error as e:
                 self.gpio_connected = False
-                logger.exception(f'Trying to connect to GPIO server.')
+                logger.exception('Trying to connect to GPIO server.')
                 print(f'Trying to connect: {e}')
 
             except Exception as e:
                 self.gpio_connected = False
-                logger.info('Trying to connect.', e)
+                logger.exception('Trying to connect to GPIO server.')
                 print(f'Trying to connect: {e}')
 
             else:
@@ -160,6 +162,7 @@ class Epu():
         self.phase = self.i_encoder_phase
         self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
 
+   
     def monitor_gap_movement(self):
 
         while True:
@@ -168,33 +171,26 @@ class Epu():
 
                 self.gap_start_event.wait()
                 self.a_drive.drive_connect() # sends BCD:{address}
-                start = time.time()
-                update_count = 0
 
                 while self.gap_start_event.is_set():
 
                     g = self.a_drive.get_encoder_position(False)
+                    
                     if type(g) == float:
+                        
                         self.gap = g
-                    self.callback_update()
-                    update_count += 1
-                    print(self.gap, self.gap_is_moving)
+                        self.callback_update()
 
-                    if abs(self.gap - self.gap_target) < .001: # this number was choosen arbitrarily
-
-                        end = time.time()
+                    if abs(self.gap - self.gap_target) < .001:
+                        
                         self.gap_is_moving = 0
                         self.gap_start_event.clear()
-                        print(f'Encoder update rate: {update_count/(end-start)}')
 
-                self.gap_start_event.clear()
                 self.stop_event.set()
 
-            except Exception as e:
+            except Exception: logger.exception('Gap fast update error.')
 
-                logger.exception('Could not moving update')
-                print(e)
-
+   
     def monitor_phase_movement(self):
 
         while True:
@@ -203,35 +199,31 @@ class Epu():
 
                 self.phase_start_event.wait()
                 self.i_drive.drive_connect() # sends BCD:{address}
-                start = time.time()
-                update_count = 0
 
                 while self.phase_start_event.is_set():
 
                     p = self.i_drive.get_encoder_position(False)
+                    
                     if type(p) == float:
+                        
                         self.phase = p
-                    self.callback_update()
-                    update_count += 1
-                    print(self.phase, self.phase_is_moving) # debugging
+                        self.callback_update()
+                        
 
-                    if abs(self.phase - self.phase_target) < .001: # this number was choosen arbitrarily
+                    if abs(self.phase - self.phase_target) < .001:
 
-                        end = time.time()
                         self.phase_is_moving = 0
                         self.phase_start_event.clear()
-                        print(f'Encoder update rate: {update_count/(end-start)}')
 
-                self.phase_start_event.clear()
                 self.stop_event.set()
 
-            except Exception as e:
-
-                logger.exception('Phase monitoring error.')
-                print(e)
+            except Exception:  logger.exception('Phase fast update error.')
+            
 
     def standstill_monitoring(self):
+        
         while True:
+            
             try:
                 ### THIS FUNCTIONS COULD ALSO BE USED TO
                 # self.gap_enable_status()
@@ -244,42 +236,53 @@ class Epu():
                 self.allowed_to_change_phase()
 
                 self.i_resolver_phase = self.i_drive.get_resolver_position()
+                
                 self.stop_event.wait()
                 self.i_encoder_phase = self.i_drive.get_encoder_position()
                 self.phase = self.i_encoder_phase
+                
                 self.stop_event.wait()
                 e, h = self.i_drive.get_halten_status()
                 self.phase_enable, self.phase_halt_released = e, h
                 self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
+                
+                self.stop_event.wait()
                 self.i_diag_code = self.i_drive.get_diagnostic_code()
+                
                 self.stop_event.wait()
                 self.s_resolver_phase = self.s_drive.get_resolver_position()
+                
                 self.stop_event.wait()
                 self.s_encoder_phase = self.s_drive.get_encoder_position()
-                self.stop_event.wait()
-
+                
                 self.stop_event.wait()
                 self.s_diag_code = self.s_drive.get_diagnostic_code()
+                
                 self.stop_event.wait()
                 self.a_resolver_gap = self.a_drive.get_resolver_position()
+                
                 self.stop_event.wait()
                 self.a_encoder_gap = self.a_drive.get_encoder_position()
                 self.gap = self.a_encoder_gap
-                self.stop_event.wait()
+                
                 self.stop_event.wait()
                 self.a_diag_code = self.a_drive.get_diagnostic_code()
+                
                 self.stop_event.wait()
                 e, h = self.a_drive.get_halten_status()
                 self.gap_enable, self.gap_halt_released = e, h
                 self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
+                
+                self.stop_event.wait()
                 self.b_resolver_gap = self.b_drive.get_resolver_position()
+                
                 self.stop_event.wait()
                 self.b_encoder_gap = self.b_drive.get_encoder_position()
+                
                 self.stop_event.wait()
                 self.b_diag_code = self.b_drive.get_diagnostic_code()
-            except Exception as e:
-                logger.exception('Default monitor thread exception')
-                print(e)
+
+            except Exception: logger.exception('Standstill monitoring error.')
 
     # General
 
@@ -557,16 +560,19 @@ class Epu():
     def gap_set_enable(self, val: bool):
 
         if val:
+            
             with self._epu_lock:
 
                 try:
+                    
                     a_diagnostic_code = self.a_drive.get_diagnostic_code()
                     b_diagnostic_code = self.b_drive.get_diagnostic_code()
                     self.stop_event.set()
 
                 except Exception:
+                    
                     self.stop_event.set()
-                    logger.exception('Enable signal not set')
+                    logger.exception('Gap enable setting error.')
                     return
 
                 else:
@@ -584,15 +590,12 @@ class Epu():
                             while True:
                                 data = s.recv(16)
                                 if not data: break
+                                logger.info('Gapo enabled')
                                 return data
 
                     else:
-                        logger.error(
-                            f'Enable signal not send due to diagnostic code Drive A code:\
-                                {a_diagnostic_code},\Drive B code:{b_diagnostic_code}')
-                        self.soft_drive_message = \
-                            f'Enable signal not send due to diagnostic code Drive A code:\
-                                {a_diagnostic_code}, Drive B code:{b_diagnostic_code}'
+                        logger.error(f'Drive A code:  {a_diagnostic_code}, Drive B code:{b_diagnostic_code}')
+                        self.soft_drive_message = f'Drive A code: {a_diagnostic_code}, Drive B code:{b_diagnostic_code}'
                         return False
 
         else:
@@ -613,8 +616,8 @@ class Epu():
                         return data
             else:
                 logger.info('Release halt to disable drive.')
-                print('Release halt to disable drive.')
                 return False
+
 
     def gap_release_halt(self, val: bool):
 
@@ -628,8 +631,7 @@ class Epu():
 
                 except Exception:
                     self.stop_event.set()
-                    logger.exception('Error while getting diagnostic code.')
-                    print('Error while getting diagnostic code.')
+                    logger.exception('Gap release halt error.')
 
                 else:
                     if a_diagnostic_code == b_diagnostic_code == 'A010':
@@ -669,12 +671,16 @@ class Epu():
                     if not data: break
                     return data
 
-    def gap_enable_and_release_halt(self, val: bool=True) -> bool: # alterar nome da função
+
+    def gap_enable_and_release_halt(self, val: bool = True) -> bool:
 
         try:
             with self._epu_lock:
+                
                 if val:
+                    
                     timeout_count = 10
+                    
                     while not self.gap_enable_status():
                         self.gap_set_enable(1)
                         time.sleep(.1)
@@ -682,6 +688,7 @@ class Epu():
                         if not timeout_count: break
 
                     timeout_count = 10
+                    
                     while not self.gap_halt_release_status():
                         self.gap_release_halt(1)
                         time.sleep(.1)
@@ -689,7 +696,9 @@ class Epu():
                         if not timeout_count: break
 
                 else:
+                    
                     timeout_count = 10
+                    
                     while self.gap_halt_release_status():
                         self.gap_release_halt(0)
                         time.sleep(.1)
@@ -697,32 +706,33 @@ class Epu():
                         if not timeout_count: break
 
                     timeout_count = 10
+                    
                     while self.gap_enable_status():
                         self.gap_set_enable(0)
                         time.sleep(.1)
                         timeout_count -= 1
                         if not timeout_count: break
 
-        except Exception as e:
+        except Exception:
             logger.exception('GPIO comunication error.')
-            print('GPIO comunication error.', e)
             return False
 
     def gap_enable_status(self) -> bool:
-        bsmp_enable_message = bsmp_send(
-            _cte.BSMP_READ, variableID=_cte.ENABLE_CH_AB,
-            size=0).encode()
+        
+        bsmp_enable_message = bsmp_send( _cte.BSMP_READ, variableID=_cte.ENABLE_CH_AB, size=0).encode()
+        
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            
             s.settimeout(.1)
             s.connect((_cte.beaglebone_addr, _cte.io_port))
             s.sendall(bsmp_enable_message)
             time.sleep(.01) # magic number
+            
             while True:
                 data = s.recv(16)
                 if not data: break
-                # if bool(data[-2]): self.gap_enable = True
-                # else: self.gap_enable = False
                 return(bool(data[-2]))
+
 
     def gap_halt_release_status(self):
 
@@ -738,9 +748,8 @@ class Epu():
             while True:
                 data = s.recv(16)
                 if not data: break
-                # self.gap_is_moving = 0
-                # self.gap_start_event.clear()
                 return(bool(data[-2]))
+
 
     def gap_start(self, val: bool):
 
@@ -805,25 +814,26 @@ class Epu():
             timeout_count -= 1
             if not timeout_count: break
 
+
     def phase_set_enable(self, val: bool):
 
         if val:
+            
             with self._epu_lock:
 
                 try:
+                    
                     i_diagnostic_code = self.i_drive.get_diagnostic_code()
                     s_diagnostic_code = self.s_drive.get_diagnostic_code()
                     self.stop_event.set()
 
-                except Exception as e:
+                except Exception:
+                    
                     self.stop_event.set()
-                    logger.exception('Enable signal not set')
-                    print(e)
+                    logger.exception('Phase enable setting error.')
                     return
 
                 else:
-                    self.i_diag_code = i_diagnostic_code
-                    self.s_diag_code = s_diagnostic_code
                     if i_diagnostic_code == s_diagnostic_code == 'A012':
 
                         bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_SI, value=val).encode()
@@ -838,13 +848,12 @@ class Epu():
                             while True:
                                 data = s.recv(16)
                                 if not data: break
-                                print(data)
+                                logger.info('Phase enabled')
                                 return data
 
                     else:
-                        logger.error(f'Drive I  diagnostic code: {i_diagnostic_code}, Drive S diagnostic code:{s_diagnostic_code}')
-                        self.soft_drive_message = f'Drive I diagnostic code: {i_diagnostic_code}, Drive S diagnostic code:{s_diagnostic_code}'
-                        print(self.soft_drive_message)
+                        logger.error(f'Drive I  code: {i_diagnostic_code}, Drive S code:{s_diagnostic_code}')
+                        self.soft_drive_message = f'Drive I code: {i_diagnostic_code}, Drive S code:{s_diagnostic_code}'
                         return False
 
         else:
@@ -865,8 +874,8 @@ class Epu():
                         return data
             else:
                 logger.info('Release halt to disable drive.')
-                print('Release halt to disable drive.')
                 return False
+
 
     def phase_release_halt(self, val: bool):
 
@@ -880,8 +889,7 @@ class Epu():
 
                 except Exception:
                     self.stop_event.set()
-                    logger.exception('Error while getting diagnostic code.')
-                    print('Error while getting diagnostic code.')
+                    logger.exception('Phase release halt error.')
 
                 else:
                     if i_diagnostic_code == s_diagnostic_code == 'A010':
@@ -919,12 +927,16 @@ class Epu():
                     if not data: break
                     return data
 
-    def phase_enable_and_release_halt(self, val):
+
+    def phase_enable_and_release_halt(self, val) -> bool:
 
         try:
             with self._epu_lock:
+                
                 if val:
+                    
                     timeout_count = 10
+                    
                     while not self.phase_enable_status():
                         self.phase_set_enable(1)
                         time.sleep(.1)
@@ -932,6 +944,7 @@ class Epu():
                         if not timeout_count: break
 
                     timeout_count = 10
+                    
                     while not self.phase_halt_release_status():
                         self.phase_release_halt(1)
                         time.sleep(.1)
@@ -939,7 +952,9 @@ class Epu():
                         if not timeout_count: break
 
                 else:
+                    
                     timeout_count = 10
+                    
                     while self.phase_halt_release_status():
                         self.phase_release_halt(0)
                         time.sleep(.1)
@@ -947,6 +962,7 @@ class Epu():
                         if not timeout_count: break
 
                     timeout_count = 10
+                    
                     while self.phase_enable_status():
                         self.phase_set_enable(0)
                         time.sleep(.1)
@@ -954,9 +970,8 @@ class Epu():
                         if not timeout_count: break
 
 
-        except Exception as e:
+        except Exception:
             logger.exception('GPIO comunication error.')
-            print('GPIO comunication error.', e)
             return False
 
     def phase_enable_status(self):
@@ -973,9 +988,8 @@ class Epu():
             while True:
                 data = s.recv(16)
                 if not data: break
-                # if bool(data[-2]): self.phase_enable = True
-                # else: self.phase_enable = False
                 return(bool(data[-2]))
+
 
     def phase_halt_release_status(self):
 
@@ -991,11 +1005,8 @@ class Epu():
             while True:
                 data = s.recv(16)
                 if not data: break
-                if bool(data[-2]):
-                    self.phase_is_moving = 0
-                    self.phase_start_event.clear()
-                #else: self.phase_halt_released = False
                 return(bool(data[-2]))
+
 
     def phase_start(self, val: bool) -> bool:
 
