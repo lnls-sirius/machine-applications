@@ -124,7 +124,68 @@ class EPUSupport(pcaspy.Driver):
     def periodic(self):
         while True:
             self.eid.wait(_cte.poll_interval)
-            # read allowed to move status
+            # update connection status
+            if isValid(self.epu_driver.tcp_connected):
+                self.setParam(
+                    _db.pv_tcp_connected_mon,
+                    self.epu_driver.tcp_connected
+                    )
+            if isValid(self.epu_driver.gpio_connected):
+                self.setParam(
+                    _db.pv_gpio_connected_mon,
+                    self.epu_driver.gpio_connected
+                    )
+            if isValid(self.epu_driver.a_drive.rs485_connected):
+                self.setParam(
+                    _db.pv_drive_a_connected_mon,
+                    self.epu_driver.a_drive.rs485_connected
+                    )
+            if isValid(self.epu_driver.b_drive.rs485_connected):
+                self.setParam(
+                    _db.pv_drive_b_connected_mon,
+                    self.epu_driver.b_drive.rs485_connected
+                    )
+            if isValid(self.epu_driver.s_drive.rs485_connected):
+                self.setParam(
+                    _db.pv_drive_s_connected_mon,
+                    self.epu_driver.s_drive.rs485_connected
+                    )
+            if isValid(self.epu_driver.i_drive.rs485_connected):
+                self.setParam(
+                    _db.pv_drive_i_connected_mon,
+                    self.epu_driver.i_drive.rs485_connected
+                    )
+            if (
+                isValid(self.epu_driver.tcp_connected)
+                and isValid(self.epu_driver.gpio_connected)
+                and isValid(self.epu_driver.a_drive.rs485_connected)
+                and isValid(self.epu_driver.b_drive.rs485_connected)
+                and isValid(self.epu_driver.s_drive.rs485_connected)
+                and isValid(self.epu_driver.i_drive.rs485_connected)
+                ):
+                if (
+                    self.epu_driver.tcp_connected
+                    and self.epu_driver.gpio_connected
+                    and self.epu_driver.a_drive.rs485_connected
+                    and self.epu_driver.b_drive.rs485_connected
+                    and self.epu_driver.s_drive.rs485_connected
+                    and self.epu_driver.i_drive.rs485_connected
+                    ):
+                    self.setParam(
+                        _db.pv_epu_connected_mon,
+                        _cte.bool_yes
+                    )
+                else:
+                    self.setParam(
+                        _db.pv_epu_connected_mon,
+                        _cte.bool_no
+                    )
+            else:
+                self.setParam(
+                    _db.pv_epu_connected_mon,
+                    _cte.bool_no
+                )
+            # update allowed to move status
             if (
                 isValid(self.epu_driver.gap_change_allowed)
                 and self.epu_driver.gap_change_allowed

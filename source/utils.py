@@ -130,13 +130,8 @@ def set_gap_hal(val):
             data = s.recv(16)
             if not data: break
             return data
-<<<<<<< HEAD
-@timer
-def set_phase_hal(val):
-=======
 
 def get_phase_hal(val):
->>>>>>> c3e50ac1e7334b3424960e8cee7f4e40bc95ed53
     
     bsmp_enable_message = bsmp_send(_cte.BSMP_READ, variableID=_cte.HALT_CH_SI, value=val).encode()
                         
