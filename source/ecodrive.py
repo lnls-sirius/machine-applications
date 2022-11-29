@@ -1,6 +1,6 @@
 import logging
 logger = logging.getLogger(__name__)
-logger = logging.getLogger(__name__)
+import logging.handlers as handlers
 import socket
 import threading
 import time
@@ -8,10 +8,11 @@ import time
 import constants as _cte
 from utils import *
 
-logging.basicConfig(
-    filename='ecodrive.log', filemode='w', level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%d-%b-%y %H:%M:%S', force=True)
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logHandler = handlers.RotatingFileHandler(filename='ecodrive.log', maxBytes=10*1024*1024)
+logHandler.setFormatter(formatter)
+logger.addHandler(logHandler)
 
 class EcoDrive():
 

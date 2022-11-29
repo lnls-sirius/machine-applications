@@ -1,5 +1,6 @@
 import logging
 logger = logging.getLogger(__name__)
+import logging.handlers as handlers
 import threading, socket
 from ecodrive import EcoDrive
 from utils import *
@@ -7,9 +8,11 @@ from datetime import datetime
 import constants as _cte
 
 ################################### LOGGING #######################################
-logging.basicConfig(filename='epu.log', filemode='w', level=logging.INFO,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    datefmt='%d-%b-%y %H:%M:%S', encoding='utf-8', force=True)
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logHandler = handlers.RotatingFileHandler(filename='epu.log', maxBytes=10*1024*1024)
+logHandler.setFormatter(formatter)
+logger.addHandler(logHandler)
 logger.info(datetime.now().strftime('%m/%d/%Y, %H:%M:%S'))
 ###################################################################################
 
@@ -62,16 +65,14 @@ class Epu():
                 s.connect((_cte.beaglebone_addr, _cte.io_port))
 
             except socket.timeout as e:
-                
                 self.gpio_connected = False
                 logger.exception('Trying to connect to GPIO server.')
                 print(f'Trying to connect to GPIO server: {e}')
-                time.sleep(2)
 
             except socket.error as e:
                 self.gpio_connected = False
-                logger.exception('Trying to connect to GPIO server.')
                 print(f'Trying to connect: {e}')
+                logger.exception('Trying to connect to GPIO server.')
 
             except Exception as e:
                 self.gpio_connected = False
@@ -84,6 +85,9 @@ class Epu():
                 s.shutdown(socket.SHUT_RDWR)
                 s.close()
                 return True
+            
+            time.sleep(5)
+
 
     # not been used yet
     def check_tcp_connection(self):
