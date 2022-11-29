@@ -2,7 +2,7 @@ version: "3.4"
 
 services:
   epu-ioc:
-    image: "dockerregistry.lnls-sirius.com.br/gas/epu-ioc"
+    image: "dockerregistry.lnls-sirius.com.br/gas/epu-ioc:v0.2"
     build:
       context: "."
     network_mode: "host"

@@ -17,13 +17,9 @@ class Epu():
 
     def __init__(self, callback_update=lambda: 1):
 
-<<<<<<< HEAD
         logger.info('Class EPU started\n\n')
         
         self.gpio_connected = False
-=======
-        logger.info('EPU driver started.')
->>>>>>> aeeaa95a02a90169594f628f1e508c85f387d9a5
         self.tcp_wait_connection()
 
         self.a_drive = EcoDrive(address=_cte.a_drive_address, min_limit=_cte.minimum_gap,   max_limit=_cte.maximum_gap,   drive_name='A')
@@ -56,11 +52,7 @@ class Epu():
         self.monitor_gap_movement_thread.start()
 
 
-<<<<<<< HEAD
     # tests connection with GPIO server (BBB)
-=======
-    # tests connection with GPIO server (beagle bone black)
->>>>>>> aeeaa95a02a90169594f628f1e508c85f387d9a5
     def tcp_wait_connection(self):
         
         while True:
