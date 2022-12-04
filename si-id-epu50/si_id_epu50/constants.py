@@ -1,3 +1,4 @@
+import os as _os
 import argparse
 import toml, yaml
 from pydantic import BaseModel
@@ -48,7 +49,9 @@ class EpuConfig(BaseModel):
 ## loads config data
 # with open(TOP+'/config/config.toml') as f:
 #     config = toml.load(TOP+'/config/config.toml')
-config = toml.load('./config.toml')
+fname = _os.path.join(
+        _os.path.dirname(__file__), 'config', 'config.toml')
+config = toml.load(fname)
 
 
 epu_config = EpuConfig(**config['EPU'])
@@ -71,7 +74,9 @@ ecodrive_log_file_path = epu_config.ECODRIVE_LOG_FILE_PATH
 epu_log_file_path = epu_config.EPU_LOG_FILE_PATH
 
 ######## Drive error codes and messages #########
-with open("./drive_messages.yaml", "r") as f:
+fname = _os.path.join(
+        _os.path.dirname(__file__), 'config', 'drive_messages.yaml')
+with open(fname, "r") as f:
     try:
         drive_code_dict = yaml.safe_load(f)
         drive_diag_msgs = drive_code_dict['diagnostic_messages']

@@ -25,7 +25,7 @@ setup(
     ],
     packages=['si_id_epu50'],
     package_data={'si_id_epu50':
-        ['VERSION', 'config.toml', 'drive_messages.yaml']},
+        ['VERSION', 'config/config.toml', 'config/drive_messages.yaml']},
     install_requires=_requirements,
     include_package_data=True,
     scripts=['scripts/sirius-ioc-si-id-epu50.py'],
