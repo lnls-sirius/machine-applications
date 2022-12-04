@@ -1,3 +1,5 @@
+#!/usr/bin/env python-sirius
+
 import os as _os
 from urllib.request import install_opener
 import serial, time, threading, yaml
@@ -148,6 +150,7 @@ with open(fname, 'r') as f:
             return float(tmp[1])
         else: return False
 
+
 class EcoDrive(Driver):
     '''Indramat ecodrive 3 class for RS232 communication using ASCII protocol,
         based on functional description SMT-02VRS'''
@@ -288,8 +291,6 @@ class EcoDrive(Driver):
         return value
 
 # --------------
-
-# NOTE: Is this code used for testing? commented out
 
 if __name__ == '__main__':
     server = SimpleServer()

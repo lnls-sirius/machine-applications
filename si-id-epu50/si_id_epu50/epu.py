@@ -8,6 +8,7 @@ from . import constants as _cte
 from .utils import *
 from .ecodrive import EcoDrive
 
+
 ################################### LOGGING #######################################
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -16,6 +17,7 @@ logHandler.setFormatter(formatter)
 logger.addHandler(logHandler)
 logger.info(datetime.now().strftime('%m/%d/%Y, %H:%M:%S'))
 ###################################################################################
+
 
 class Epu():
 
@@ -68,7 +70,6 @@ class Epu():
         self.monitor_phase_movement_thread.start()
         self.monitor_gap_movement_thread.start()
 
-
     # tests connection with GPIO server (BBB)
     def tcp_wait_connection(self):
         
@@ -101,7 +102,6 @@ class Epu():
                 return True
             
             time.sleep(5)
-
 
     # not been used yet
     def check_tcp_connection(self):
@@ -180,7 +180,6 @@ class Epu():
         self.phase = self.i_encoder_phase
         self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
 
-   
     def monitor_gap_movement(self):
 
         while True:
@@ -207,7 +206,6 @@ class Epu():
                 self.stop_event.set()
 
             except Exception: logger.exception('Gap fast update error.')
-
    
     def monitor_phase_movement(self):
 
@@ -237,7 +235,6 @@ class Epu():
 
             except Exception:  logger.exception('Phase fast update error.')
             
-
     def standstill_monitoring(self):
         
         while True:
@@ -436,7 +433,6 @@ class Epu():
             if not self.stop_event_is_set(): self.stop_event.set()
             logger.exception('Could not complete gap check for move.')
 
-
     # Phase stuff
 
     def phase_get_setpoint(self) -> float:
@@ -571,9 +567,7 @@ class Epu():
             if not self.stop_event.is_set(): self.stop_event.set()
             logger.exception('Could not complete phase check for move')
 
-
     # GPIOs functions
-
 
     def gap_set_enable(self, val: bool):
 
@@ -636,7 +630,6 @@ class Epu():
                 logger.info('Release halt to disable drive.')
                 return False
 
-
     def gap_release_halt(self, val: bool):
 
         if val:
@@ -688,7 +681,6 @@ class Epu():
                     data = s.recv(16)
                     if not data: break
                     return data
-
 
     def gap_enable_and_release_halt(self, val: bool = True) -> bool:
 
@@ -751,7 +743,6 @@ class Epu():
                 if not data: break
                 return(bool(data[-2]))
 
-
     def gap_halt_release_status(self):
 
         bsmp_enable_message = bsmp_send(_cte.BSMP_READ, variableID=_cte.HALT_CH_AB, size=0).encode()
@@ -767,7 +758,6 @@ class Epu():
                 data = s.recv(16)
                 if not data: break
                 return(bool(data[-2]))
-
 
     def gap_start(self, val: bool):
 
@@ -832,7 +822,6 @@ class Epu():
             timeout_count -= 1
             if not timeout_count: break
 
-
     def phase_set_enable(self, val: bool):
 
         if val:
@@ -894,7 +883,6 @@ class Epu():
                 logger.info('Release halt to disable drive.')
                 return False
 
-
     def phase_release_halt(self, val: bool):
 
         if val:
@@ -944,7 +932,6 @@ class Epu():
                     data = s.recv(16)
                     if not data: break
                     return data
-
 
     def phase_enable_and_release_halt(self, val) -> bool:
 
@@ -1008,7 +995,6 @@ class Epu():
                 if not data: break
                 return(bool(data[-2]))
 
-
     def phase_halt_release_status(self):
 
         bsmp_enable_message = bsmp_send(_cte.BSMP_READ, variableID=_cte.HALT_CH_SI, size=0).encode()
@@ -1024,7 +1010,6 @@ class Epu():
                 data = s.recv(16)
                 if not data: break
                 return(bool(data[-2]))
-
 
     def phase_start(self, val: bool) -> bool:
 

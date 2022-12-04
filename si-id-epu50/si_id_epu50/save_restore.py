@@ -18,9 +18,11 @@ from time import sleep as _sleep
 
 _TIMESTAMP_FORMAT = "%Y-%m-%d_%H-%M-%S"
 
+
 def restore_after_delay(req_file, pv_prefix='', save_location='', delay=10.0):
     _sleep(delay)
     restore_pvs(req_file, pv_prefix, save_location)
+
 
 def restore_pvs(req_file, pv_prefix='', save_location=''):
     if not str(req_file).endswith('.req'):
@@ -60,9 +62,11 @@ def restore_pvs(req_file, pv_prefix='', save_location=''):
     else:
         print('Save-restore: No file found for restoration')
 
+
 def save_monitor_with_delay(req_file, pv_prefix='', save_location='', period=10.0, num_backup_files=10, delay=10.0):
     _sleep(delay)
     save_monitor(req_file, pv_prefix, save_location, period, num_backup_files)
+
 
 def save_monitor(req_file, pv_prefix='', save_location='', period=10.0, num_backup_files=10):
     if not str(req_file).endswith('.req'):

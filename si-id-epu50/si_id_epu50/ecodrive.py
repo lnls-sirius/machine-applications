@@ -1,3 +1,5 @@
+#!/usr/bin/env python-sirius
+
 import logging
 logger = logging.getLogger(__name__)
 import logging.handlers as handlers
@@ -14,6 +16,7 @@ logHandler = handlers.RotatingFileHandler(filename='ecodrive.log', maxBytes=10*1
 logHandler.setFormatter(formatter)
 logger.addHandler(logHandler)
 
+
 class EcoDrive():
 
     _lock = threading.RLock()
@@ -21,7 +24,7 @@ class EcoDrive():
 
     def __init__(self, address, max_limit=+25, min_limit=-25,
                     bbb_hostname = None, rs458_tcp_port=None, drive_name = 'EcoDrive') -> None:
-
+        """."""
         self.ADDRESS = address
         self.UPPER_LIMIT = max_limit
         self.LOWER_LIMIT = min_limit
@@ -40,12 +43,12 @@ class EcoDrive():
         # self.set_rs485_delay(1)
 
     def tcp_wait_connection(self) -> bool:
+        """TCP wait connection.
         
-        '''
-        Any time this function is called, it keeps on a loop trying to reach the other side of a tcp connection,
-        when it succeed, it returnts True.
-        '''
-        
+        Any time this function is called, it keeps on a loop trying to reach
+        the other side of a tcp connection, when it succeed,
+        it returnts True.
+        """
         with self._lock:
             
             while True:
@@ -85,11 +88,10 @@ class EcoDrive():
 
 
     def drive_connect(self) -> True:
-        
-        '''
-        Keeps trying to connect to drive (rs485 level with provided drive address) untill it succeed, then returns True.
-        '''
-        
+        """Drive connect.
+        Keeps trying to connect to drive (rs485 level with provided
+        drive address) untill it succeed, then returns True.
+        """
         with self._lock:
             
             while True:
@@ -210,7 +212,6 @@ class EcoDrive():
         else:
             return fanswer
 
-
     def get_lower_limit_position(self, change_drive: bool = True) -> float:
         try:
             answer = self.read_parameter_data('S-0-0050', change_drive = change_drive)
@@ -219,7 +220,6 @@ class EcoDrive():
         else:
             return fanswer
 
-
     def get_act_torque(self, change_drive: bool = True) -> float:
         try:
             answer = self.read_parameter_data('S-0-0079', change_drive = change_drive)
@@ -227,7 +227,6 @@ class EcoDrive():
         except: return
         else:
             return fanswer
-
 
     def get_encoder_position(self, change_drive: bool = True) -> float:
         
@@ -244,7 +243,6 @@ class EcoDrive():
         
         else: return fanswer
 
-
     def get_diagnostic_code(self, change_drive: bool = True) -> str:
         
         try:
@@ -257,7 +255,6 @@ class EcoDrive():
             
             logger.exception('Parameter reading error')
             return
-
    
     def get_halten_status(self, change_drive = True) -> tuple:
         
@@ -268,7 +265,6 @@ class EcoDrive():
             logger.exception('Parameter reading error')
             return
         
-
     def get_target_position_reached(self) -> bool:
         
         try: byte_message = self.tcp_read_parameter('S-0-0013,7,R')
@@ -295,7 +291,6 @@ class EcoDrive():
                 
                 return bool(targ_pos_reached_bit)
 
-   
     def set_target_position(self, target_position: float) -> float:
         
         if not (self.LOWER_LIMIT <= target_position <= self.UPPER_LIMIT):
@@ -341,7 +336,6 @@ class EcoDrive():
                                         target_position = float(str_target_position_readback.split('\r')[0])
                                         return target_position
                                 
-
     def get_target_position(self, change_drive = True):
         
         try:
@@ -465,7 +459,6 @@ class EcoDrive():
                 return parameter_data
             
             else: return drive_answer
-
 
     def clear_error(self):
         with self._lock:
