@@ -46,8 +46,10 @@ class EpuConfig(BaseModel):
     EPU_LOG_FILE_PATH: str
 
 ## loads config data
-with open(TOP+'/config/config.toml') as f:
-    config = toml.load(TOP+'/config/config.toml')
+# with open(TOP+'/config/config.toml') as f:
+#     config = toml.load(TOP+'/config/config.toml')
+config = toml.load('./config.toml')
+
 
 epu_config = EpuConfig(**config['EPU'])
 
@@ -69,7 +71,7 @@ ecodrive_log_file_path = epu_config.ECODRIVE_LOG_FILE_PATH
 epu_log_file_path = epu_config.EPU_LOG_FILE_PATH
 
 ######## Drive error codes and messages #########
-with open(TOP+"/config/drive_messages.yaml", "r") as f:
+with open("./drive_messages.yaml", "r") as f:
     try:
         drive_code_dict = yaml.safe_load(f)
         drive_diag_msgs = drive_code_dict['diagnostic_messages']
