@@ -13,7 +13,6 @@ os.environ['EPICS_CA_MAX_ARRAY_BYTES'] = '100000'
 
 AUTOSAVE_DEFAULT_REQUEST_FILE = os.path.join(
     os.path.dirname(__file__), 'config', 'autosave_epu.req')
-
 AUTOSAVE_DEFAULT_SAVE_LOCATION = os.path.join(
     os.path.dirname(__file__), 'config')
 

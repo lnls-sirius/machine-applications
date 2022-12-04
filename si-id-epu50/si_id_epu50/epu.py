@@ -29,22 +29,37 @@ class Epu():
         self.gpio_connected = False
         self.tcp_wait_connection()
 
-        self.a_drive = EcoDrive(address=_cte.a_drive_address,
-            min_limit=_cte.minimum_gap,   max_limit=_cte.maximum_gap,
+        self.a_drive = EcoDrive(
+            address=_cte.a_drive_address,
+            min_limit=_cte.minimum_gap,
+            max_limit=_cte.maximum_gap,
             bbb_hostname=self.args.bbb_hostname,
-            rs458_tcp_port=self.args.msg_port, drive_name='A')
-        self.b_drive = EcoDrive(address=_cte.b_drive_address,
-            min_limit=_cte.minimum_gap,   max_limit=_cte.maximum_gap,
+            rs458_tcp_port=self.args.msg_port,
+            drive_name='A')
+
+        self.b_drive = EcoDrive(
+            address=_cte.b_drive_address,
+            min_limit=_cte.minimum_gap,
+            max_limit=_cte.maximum_gap,
             bbb_hostname=self.args.bbb_hostname,
-            rs458_tcp_port=self.args.msg_port, drive_name='B')
-        self.i_drive = EcoDrive(address=_cte.i_drive_address,
-            min_limit=_cte.minimum_phase, max_limit=_cte.maximum_phase,
+            rs458_tcp_port=self.args.msg_port,
+            drive_name='B')
+
+        self.i_drive = EcoDrive(
+            address=_cte.i_drive_address,
+            min_limit=_cte.minimum_phase,
+            max_limit=_cte.maximum_phase,
             bbb_hostname=self.args.bbb_hostname,
-            rs458_tcp_port=self.args.msg_port, drive_name='I')
-        self.s_drive = EcoDrive(address=_cte.s_drive_address,
-            min_limit=_cte.minimum_phase, max_limit=_cte.maximum_phase,
+            rs458_tcp_port=self.args.msg_port,
+            drive_name='I')
+
+        self.s_drive = EcoDrive(
+            address=_cte.s_drive_address,
+            min_limit=_cte.minimum_phase,
+            max_limit=_cte.maximum_phase,
             bbb_hostname=self.args.bbb_hostname,
-            rs458_tcp_port=self.args.msg_port, drive_name='S')
+            rs458_tcp_port=self.args.msg_port,
+            drive_name='S')
 
         self.callback_update = callback_update
         self.warnings = [] # not used yet

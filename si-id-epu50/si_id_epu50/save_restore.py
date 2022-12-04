@@ -19,18 +19,23 @@ from time import sleep as _sleep
 _TIMESTAMP_FORMAT = "%Y-%m-%d_%H-%M-%S"
 
 
-def restore_after_delay(req_file, pv_prefix='', save_location='', delay=10.0):
+def restore_after_delay(
+        req_file, pv_prefix='', save_location='', delay=10.0):
+    """."""
     _sleep(delay)
     restore_pvs(req_file, pv_prefix, save_location)
 
 
-def restore_pvs(req_file, pv_prefix='', save_location=''):
+def restore_pvs(
+        req_file, pv_prefix='', save_location=''):
+    """."""
     if not str(req_file).endswith('.req'):
         raise RuntimeError('Save-restore: Error. File must end with .req')
     filename = _basename(req_file.rstrip('.req'))
     if save_location != '':
         save_location = save_location.rstrip('/')
         save_location = save_location.rstrip('\\')
+
     # find most recent save file
     max_timestamp = _date.min
     save_file = ''
@@ -58,17 +63,25 @@ def restore_pvs(req_file, pv_prefix='', save_location=''):
                     if bool(re.fullmatch(r'[a-zA-Z0-9:_-]*', pv_name)):
                         _caput(pv_prefix+pv_name, pv_val)
                 except Exception:
-                    print('Save-restore: Failed to restore PV {}'.format(pv_prefix+pv_name))
+                    strf = 'Save-restore: Failed to restore PV {}'
+                    print(strf.format(pv_prefix + pv_name))
     else:
         print('Save-restore: No file found for restoration')
 
 
-def save_monitor_with_delay(req_file, pv_prefix='', save_location='', period=10.0, num_backup_files=10, delay=10.0):
+def save_monitor_with_delay(
+        req_file, pv_prefix='', save_location='',
+        period=10.0, num_backup_files=10, delay=10.0):
+    """."""
     _sleep(delay)
-    save_monitor(req_file, pv_prefix, save_location, period, num_backup_files)
+    save_monitor(
+        req_file, pv_prefix, save_location, period, num_backup_files)
 
 
-def save_monitor(req_file, pv_prefix='', save_location='', period=10.0, num_backup_files=10):
+def save_monitor(
+        req_file, pv_prefix='', save_location='',
+        period=10.0, num_backup_files=10):
+    """."""
     if not str(req_file).endswith('.req'):
         print('Save-restore: Error. File must end with .req')
         sys.exit()
@@ -78,17 +91,20 @@ def save_monitor(req_file, pv_prefix='', save_location='', period=10.0, num_back
         save_location = save_location.rstrip('/')
         save_location = save_location.rstrip('\\')
         save_location = save_location + '/'
+
     # remove oldest file if backup count exceeded
-    save_list = sorted(glob.glob(save_location+filename+'*'+'.sav*'))
+    save_list = sorted(glob.glob(save_location + filename + '*' + '.sav*'))
     if len(save_list) >= num_backup_files:
         _remove(save_list[0])
+
     # define new save file name
     save_file = (
         save_location + filename.rstrip('.req') + '__' + _now + '__.sav'
         )
-    backup_file = save_file.rstrip('.sav')+'_Backup.sav'
+    backup_file = save_file.rstrip('.sav') + '_Backup.sav'
     eid = threading.Event()
     pv_list = []
+
     # read request file
     try:
         with open(req_file, 'r') as f:
@@ -102,20 +118,24 @@ def save_monitor(req_file, pv_prefix='', save_location='', period=10.0, num_back
                 if bool(re.fullmatch(r'[a-zA-Z0-9:_-]*', pvname)):
                     pv_list.append(pvname)
                 else:
-                    print('Save-restore: Invalid name for PV {}'.format(pvname))
+                    strf = 'Save-restore: Invalid name for PV {}'
+                    print(strf.format(pvname))
     except Exception:
         raise RuntimeError('Save-restore: Failed to read save request file')
+
     # create save file
     try:
         with open(save_file, 'w+') as f:
             for pvname in pv_list:
                 try:
-                    pv_val = _caget(pv_prefix+pvname, as_string=True)
-                    f.write(pvname+' '+pv_val+'\n')
+                    pv_val = _caget(pv_prefix + pvname, as_string=True)
+                    f.write(pvname + ' ' + pv_val + '\n')
                 except Exception:
-                    print('Save-restore: Failed to save PV {}'.format(pv_prefix+pvname))
+                    strf = 'Save-restore: Failed to save PV {}'
+                    print(strf.format(pv_prefix + pvname))
     except Exception:
         raise RuntimeError('Save-restore: Failed to create save file')
+
     # update save file periodically
     while True:
         eid.wait(period)
@@ -129,14 +149,16 @@ def save_monitor(req_file, pv_prefix='', save_location='', period=10.0, num_back
             with open(save_file, 'w+') as f:
                 for pvname in pv_list:
                     try:
-                        pv_val = _caget(pv_prefix+pvname, as_string=True, use_monitor=False)
+                        pv_val = _caget(
+                            pv_prefix + pvname, as_string=True,
+                            use_monitor=False)
                     except Exception:
                         all_pvs_updated = False
-                        print(
-                            'Save-restore: Failed to caget PV {}'.format(pv_prefix+pvname))
+                        strf = 'Save-restore: Failed to caget PV {}'
+                        print(strf.format(pv_prefix+pvname))
                     else:
                         # write pv value to file
-                        f.write(pvname+' '+pv_val+'\n')
+                        f.write(pvname + ' ' + pv_val + '\n')
             # erase backup file if save file
             # is fully up-to-date
             if _exists(backup_file) and all_pvs_updated:
