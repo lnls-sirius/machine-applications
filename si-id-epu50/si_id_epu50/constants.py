@@ -128,7 +128,7 @@ position_precision = 3
 scan_rate = 0.1
 
 ## EPICS access security
-access_security_filename = 'epu.as'
+access_security_filename = 'access_rules.as'
 
 ## CA server
 ### transaction update rate
