@@ -12,19 +12,20 @@ from . import save_restore
 
 def run(args):
     """."""
-
-    if args.pv_prefix == '':
-        raise ValueError('PV prefix is missing')
     # create CA server
     server = pcaspy.SimpleServer()
+
     # config access security
     server.initAccessSecurityFile(
         _cte.access_security_filename, PREFIX=args.pv_prefix
         )
+
     # instantiate PV database
     server.createPV(args.pv_prefix, epu_db.pvdb)
+
     # create pcaspy driver
     driver = iocDriver.EPUSupport(args)
+
     # restore saved PV values
     restore = _Thread(
         target=save_restore.restore_after_delay,
@@ -37,6 +38,7 @@ def run(args):
         daemon=True
         )
     restore.start()
+    
     # start autosave
     autosave = _Thread(
         target=save_restore.save_monitor_with_delay,

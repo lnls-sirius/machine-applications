@@ -291,20 +291,20 @@ class EcoDrive(Driver):
 
 # NOTE: Is this code used for testing? commented out
 
-# prefix = 'Ecodrive:'
-# pvdb = {
-#     'Resolver-Mon' : {
-#         'prec' : 3,
-#     },
-# }
+if __name__ == '__main__':
+    server = SimpleServer()
 
-# if __name__ == '__main__':
-#     server = SimpleServer()
+    prefix = 'Ecodrive:'
+    pvdb = {
+        'Resolver-Mon' : {
+            'prec' : 3,
+        },
+    }
 
-# server.createPV(prefix, pvdb)
-# driver = EcoDrive(serial_port=port, address=constants.drive_A_address, baud_rate=constants.baud_rate)
+    server.createPV(prefix, pvdb)
+    driver = EcoDrive(serial_port=port, address=constants.drive_A_address, baud_rate=constants.baud_rate)
 
-# while True:
-#     # process CA transactions
-#     server.process(0.1)
+    while True:
+        # process CA transactions
+        server.process(0.1)
 
