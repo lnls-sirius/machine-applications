@@ -5,8 +5,8 @@ import socket
 import threading
 import time
 
-import constants as _cte
-from utils import *
+from . import constants as _cte
+from .utils import *
 
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -20,7 +20,7 @@ class EcoDrive():
     _SOCKET_TIMEOUT = 1 # tcp socket timeout
 
     def __init__(self, address, max_limit=+25, min_limit=-25,
-                    bbb_hostname = _cte.beaglebone_addr, rs458_tcp_port=_cte.msg_port, drive_name = 'EcoDrive') -> None:
+                    bbb_hostname = None, rs458_tcp_port=None, drive_name = 'EcoDrive') -> None:
 
         self.ADDRESS = address
         self.UPPER_LIMIT = max_limit

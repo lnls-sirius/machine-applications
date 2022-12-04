@@ -2,9 +2,10 @@ import pcaspy
 import threading
 import traceback
 import time
-import constants as _cte
-import epu_db as _db
-import epu
+
+from . import constants as _cte
+from . import epu_db as _db
+from . import epu
 
 def isPvName(reason, pvname):
     """ This function is a wrapper to allow
@@ -32,7 +33,8 @@ def inTolerance(value1, value2, tol):
 class EPUSupport(pcaspy.Driver):
     """ EPU device support for the pcaspy server
     """
-    def __init__(self):
+    def __init__(self, args):
+        self.args = args
         super(EPUSupport, self).__init__()
         # lock for critical operations
         self.lock = threading.Lock()
@@ -40,6 +42,7 @@ class EPUSupport(pcaspy.Driver):
         # main features of device operation
         try:
             self.epu_driver = epu.Epu(
+                args=args,
                 callback_update=self.priority_call
                 )
             print('Epu driver initialized')

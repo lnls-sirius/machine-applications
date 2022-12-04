@@ -2,7 +2,8 @@ import sched, time, struct
 from functools import wraps
 from threading import Thread
 import socket
-import constants as _cte
+
+from . import constants as _cte
 
 def schedule(interval):
     def decorator(func):

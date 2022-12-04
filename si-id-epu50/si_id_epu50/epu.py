@@ -2,10 +2,11 @@ import logging
 logger = logging.getLogger(__name__)
 import logging.handlers as handlers
 import threading, socket
-from ecodrive import EcoDrive
-from utils import *
 from datetime import datetime
-import constants as _cte
+
+from . import constants as _cte
+from .utils import *
+from .ecodrive import EcoDrive
 
 ################################### LOGGING #######################################
 logger.setLevel(logging.INFO)
@@ -18,10 +19,11 @@ logger.info(datetime.now().strftime('%m/%d/%Y, %H:%M:%S'))
 
 class Epu():
 
-    def __init__(self, callback_update=lambda: 1):
+    def __init__(self, args, callback_update=lambda: 1):
 
         logger.info('Class EPU started\n\n')
         
+        self.args = args
         self.gpio_connected = False
         self.tcp_wait_connection()
 
@@ -29,6 +31,23 @@ class Epu():
         self.b_drive = EcoDrive(address=_cte.b_drive_address, min_limit=_cte.minimum_gap,   max_limit=_cte.maximum_gap,   drive_name='B')
         self.i_drive = EcoDrive(address=_cte.i_drive_address, min_limit=_cte.minimum_phase, max_limit=_cte.maximum_phase, drive_name='I')
         self.s_drive = EcoDrive(address=_cte.s_drive_address, min_limit=_cte.minimum_phase, max_limit=_cte.maximum_phase, drive_name='S')
+
+        self.a_drive = EcoDrive(address=_cte.a_drive_address,
+            min_limit=_cte.minimum_gap,   max_limit=_cte.maximum_gap,
+            bbb_hostname=self.args.bbb_hostname,
+            rs458_tcp_port=self.args.msg_port, drive_name='A')
+        self.b_drive = EcoDrive(address=_cte.b_drive_address,
+            min_limit=_cte.minimum_gap,   max_limit=_cte.maximum_gap,
+            bbb_hostname=self.args.bbb_hostname,
+            rs458_tcp_port=self.args.msg_port, drive_name='B')
+        self.i_drive = EcoDrive(address=_cte.i_drive_address,
+            min_limit=_cte.minimum_phase, max_limit=_cte.maximum_phase,
+            bbb_hostname=self.args.bbb_hostname,
+            rs458_tcp_port=self.args.msg_port, drive_name='I')
+        self.s_drive = EcoDrive(address=_cte.s_drive_address,
+            min_limit=_cte.minimum_phase, max_limit=_cte.maximum_phase,
+            bbb_hostname=self.args.bbb_hostname,
+            rs458_tcp_port=self.args.msg_port, drive_name='S')
 
         self.callback_update = callback_update
         self.warnings = [] # not used yet
@@ -62,7 +81,7 @@ class Epu():
             
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.connect((_cte.beaglebone_addr, _cte.io_port))
+                s.connect((self.args.beaglebone_addr, self.args.io_port))
 
             except socket.timeout as e:
                 self.gpio_connected = False
@@ -93,7 +112,7 @@ class Epu():
     def check_tcp_connection(self):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            con = s.connect_ex((_cte.beaglebone_addr, _cte.io_port))
+            con = s.connect_ex((self.args.beaglebone_addr, self.args.io_port))
             time.sleep(.001)
 
         except Exception as e:
@@ -587,7 +606,7 @@ class Epu():
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                             s.settimeout(1)
-                            s.connect((_cte.beaglebone_addr, _cte.io_port))
+                            s.connect((self.args.beaglebone_addr, self.args.io_port))
                             s.sendall(bsmp_enable_message)
                             time.sleep(.01) # magic number
 
@@ -610,7 +629,7 @@ class Epu():
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                     s.settimeout(1)
-                    s.connect((_cte.beaglebone_addr, _cte.io_port))
+                    s.connect((self.args.beaglebone_addr, self.args.io_port))
                     s.sendall(bsmp_enable_message)
                     time.sleep(.01) # magic number
 
@@ -644,7 +663,7 @@ class Epu():
 
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             s.settimeout(.1)
-                            s.connect((_cte.beaglebone_addr, _cte.io_port))
+                            s.connect((self.args.beaglebone_addr, self.args.io_port))
                             s.sendall(bsmp_enable_message)
                             time.sleep(.01) # magic number
 
@@ -666,7 +685,7 @@ class Epu():
 
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(.1)
-                s.connect((_cte.beaglebone_addr, _cte.io_port))
+                s.connect((self.args.beaglebone_addr, self.args.io_port))
                 s.sendall(bsmp_enable_message)
                 time.sleep(.01) # magic number
 
@@ -728,7 +747,7 @@ class Epu():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             
             s.settimeout(.1)
-            s.connect((_cte.beaglebone_addr, _cte.io_port))
+            s.connect((self.args.beaglebone_addr, self.args.io_port))
             s.sendall(bsmp_enable_message)
             time.sleep(.01) # magic number
             
@@ -745,7 +764,7 @@ class Epu():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
             s.settimeout(.1)
-            s.connect((_cte.beaglebone_addr, _cte.io_port))
+            s.connect((self.args.beaglebone_addr, self.args.io_port))
             s.sendall(bsmp_enable_message)
             time.sleep(.01) # magic number
 
@@ -779,7 +798,7 @@ class Epu():
 
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             s.settimeout(1)
-                            s.connect((_cte.beaglebone_addr, _cte.io_port))
+                            s.connect((self.args.beaglebone_addr, self.args.io_port))
                             self.gap_start_event.set()
                             self.gap_is_moving = True
                             time.sleep(.1) # waits for the tcp reading in default thread
@@ -845,7 +864,7 @@ class Epu():
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                             s.settimeout(1)
-                            s.connect((_cte.beaglebone_addr, _cte.io_port))
+                            s.connect((self.args.beaglebone_addr, self.args.io_port))
                             s.sendall(bsmp_enable_message)
                             time.sleep(.01) # magic number
 
@@ -868,7 +887,7 @@ class Epu():
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                     s.settimeout(1)
-                    s.connect((_cte.beaglebone_addr, _cte.io_port))
+                    s.connect((self.args.beaglebone_addr, self.args.io_port))
                     s.sendall(bsmp_enable_message)
                     time.sleep(.01) # magic number
 
@@ -902,7 +921,7 @@ class Epu():
 
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             s.settimeout(.1)
-                            s.connect((_cte.beaglebone_addr, _cte.io_port))
+                            s.connect((self.args.beaglebone_addr, self.args.io_port))
                             s.sendall(bsmp_enable_message)
                             time.sleep(.01) # magic number
 
@@ -922,7 +941,7 @@ class Epu():
 
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(.1)
-                s.connect((_cte.beaglebone_addr, _cte.io_port))
+                s.connect((self.args.beaglebone_addr, self.args.io_port))
                 s.sendall(bsmp_enable_message)
                 time.sleep(.01) # magic number
 
@@ -985,7 +1004,7 @@ class Epu():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
             s.settimeout(.1)
-            s.connect((_cte.beaglebone_addr, _cte.io_port))
+            s.connect((self.args.beaglebone_addr, self.args.io_port))
             s.sendall(bsmp_enable_message)
             time.sleep(.01) # magic number
 
@@ -1002,7 +1021,7 @@ class Epu():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
             s.settimeout(.1)
-            s.connect((_cte.beaglebone_addr, _cte.io_port))
+            s.connect((self.args.beaglebone_addr, self.args.io_port))
             s.sendall(bsmp_enable_message)
             time.sleep(.01) # magic number
 
@@ -1035,7 +1054,7 @@ class Epu():
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                             s.settimeout(1)
-                            s.connect((_cte.beaglebone_addr, _cte.io_port))
+                            s.connect((self.args.beaglebone_addr, self.args.io_port))
                             self.phase_start_event.set()
                             self.phase_is_moving = True
                             time.sleep(.1) # waits for the tcp reading in default thread
@@ -1083,7 +1102,7 @@ class Epu():
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                 s.settimeout(1)
-                s.connect((_cte.beaglebone_addr, _cte.io_port))
+                s.connect((self.args.beaglebone_addr, self.args.io_port))
                 time.sleep(.1) # waits for the tcp reading in default thread
                 s.sendall(bsmp_enable_message)
                 time.sleep(.1)
@@ -1101,7 +1120,7 @@ class Epu():
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                 s.settimeout(1)
-                s.connect((_cte.beaglebone_addr, _cte.io_port))
+                s.connect((self.args.beaglebone_addr, self.args.io_port))
                 time.sleep(.1) # waits for the tcp reading in default thread
                 s.sendall(bsmp_enable_message)
                 time.sleep(.1)

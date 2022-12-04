@@ -1,18 +1,13 @@
 import os as _os
-import argparse
 import toml, yaml
 from pydantic import BaseModel
 from typing import Optional
 import traceback
 
-############## IOC Structure ###################
-
-TOP = '..'
-
 ################# ETHERNET #####################
 GPIO_TCP_DEFAULT_PORT = 5050
-RS485_TCP_DEFAULT_PORT = 5051
-BBB_DEFAULT_HOSTNAME = 'BBB-DRIVERS-EPU-2022'
+# RS485_TCP_DEFAULT_PORT = 5051 # original
+RS485_TCP_DEFAULT_PORT = 5052
 
 ############### GPIO COMMANDS ##################
 BSMP_WRITE = 0X20
@@ -47,12 +42,9 @@ class EpuConfig(BaseModel):
     EPU_LOG_FILE_PATH: str
 
 ## loads config data
-# with open(TOP+'/config/config.toml') as f:
-#     config = toml.load(TOP+'/config/config.toml')
 fname = _os.path.join(
         _os.path.dirname(__file__), 'config', 'config.toml')
 config = toml.load(fname)
-
 
 epu_config = EpuConfig(**config['EPU'])
 
@@ -85,8 +77,6 @@ with open(fname, "r") as f:
 
 default_unknown_diag_msg = "? Unknown diagnostic code"
 ################## Autosave #####################
-AUTOSAVE_DEFAULT_REQUEST_FILE = TOP+'/source/autosave_epu.req'
-AUTOSAVE_DEFAULT_SAVE_LOCATION = TOP+'/autosave'
 autosave_update_rate = 10.0
 autosave_num_backup_files = 10
 
@@ -138,47 +128,3 @@ access_security_filename = 'access_rules.as'
 ## CA server
 ### transaction update rate
 ca_process_rate = 0.1
-
-# input arguments
-
-def getArgs():
-    """ Return command line arguments
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--pv-prefix', dest='pv_prefix', type=str, required=False,
-        default='', help="Prefix for EPICS IOC PVs"
-        )
-    parser.add_argument(
-        '--drive-msg-port', dest='msg_port', type=int, required=False,
-        default=RS485_TCP_DEFAULT_PORT, help="TCP port for drive messages"
-        )
-    parser.add_argument(
-        '--drive-io-port', dest='io_port', type=int, required=False,
-        default=GPIO_TCP_DEFAULT_PORT,
-        help="TCP port for virtual I/O commands"
-        )
-    parser.add_argument(
-        '--beaglebone-addr', dest='beaglebone_addr', type=str, required=False,
-        default=BBB_DEFAULT_HOSTNAME, help="Beaglebone IP address"
-        )
-    parser.add_argument(
-        '--autosave-dir', dest='autosave_dir', type=str, required=False,
-        default=AUTOSAVE_DEFAULT_SAVE_LOCATION, help="Autosave save directory"
-        )
-    parser.add_argument(
-        '--request-file', dest='request_file', type=str, required=False,
-        default=AUTOSAVE_DEFAULT_REQUEST_FILE, help="Autosave request file name"
-        )
-    args = parser.parse_args()
-    return args
-
-args = getArgs()
-
-# IOC parameters
-pv_prefix = args.pv_prefix
-msg_port = args.msg_port
-io_port = args.io_port
-beaglebone_addr = args.beaglebone_addr
-autosave_save_location = args.autosave_dir
-autosave_request_file = args.request_file

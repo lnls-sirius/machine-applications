@@ -1,8 +1,7 @@
-import constants as _cte
 from pcaspy import Severity as _Severity
 
-# prefix
-pv_prefix = _cte.pv_prefix
+from . import constants as _cte
+
 
 #############################################
 # Map variable -> pv name
