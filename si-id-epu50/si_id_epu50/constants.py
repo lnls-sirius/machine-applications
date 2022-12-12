@@ -6,7 +6,6 @@ import traceback
 
 ################# ETHERNET #####################
 GPIO_TCP_DEFAULT_PORT = 5050
-# RS485_TCP_DEFAULT_PORT = 5051 # original
 RS485_TCP_DEFAULT_PORT = 5052
 
 ############### GPIO COMMANDS ##################

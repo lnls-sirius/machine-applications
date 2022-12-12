@@ -512,8 +512,11 @@ class EPUSupport(pcaspy.Driver):
     def write(self, reason, value):
         """EPICS write."""
         status = True
-        # take action according to PV name
-        ## enable control from beamlines
+        driver = self.epu_driver
+
+        # ---take action according to PV name
+
+        # enable control from beamlines
         if EPUSupport.isPvName(reason, _db.pv_beamline_enbl_sel):
             if EPUSupport.isBoolNum(value):
                 self.setParam(_db.pv_beamline_enbl_sel, value)
@@ -522,14 +525,16 @@ class EPUSupport(pcaspy.Driver):
                 self.updatePVs()
             else:
                 status = False
-        ## clear IOC log
+
+        # clear IOC log
         elif EPUSupport.isPvName(reason, _db.pv_clear_log_cmd):
             # clear ioc msg
             self.setParam(_db.pv_ioc_msg_mon, _cte.msg_clear)
             # increment cmd pv
             self.incParam(_db.pv_clear_log_cmd)
             self.updatePVs()
-        ## change gap set point
+
+        # change gap set point
         if EPUSupport.isPvName(reason, _db.pv_gap_sp):
             if (value >= _cte.minimum_gap
                     and value <= _cte.maximum_gap
@@ -541,7 +546,8 @@ class EPUSupport(pcaspy.Driver):
                     self.updatePVs()
             else:
                 status = False
-        ## change phase set point
+
+        # change phase set point
         elif EPUSupport.isPvName(reason, _db.pv_phase_sp):
             if (value >= _cte.minimum_phase
                     and value <= _cte.maximum_phase
@@ -553,7 +559,8 @@ class EPUSupport(pcaspy.Driver):
                     self.updatePVs()
             else:
                 status = False
-        ## change gap maximum velocity set point
+
+        # change gap maximum velocity set point
         elif EPUSupport.isPvName(reason, _db.pv_gap_max_velo_sp):
             if (value > _cte.minimum_velo_mm_per_sec
                     and value <= _cte.maximum_velo_mm_per_sec
@@ -569,7 +576,8 @@ class EPUSupport(pcaspy.Driver):
                 self.updatePVs()
             else:
                 status = False
-        ## change phase maximum velocity set point
+
+        # change phase maximum velocity set point
         elif EPUSupport.isPvName(reason, _db.pv_phase_max_velo_sp):
             if (value > _cte.minimum_velo_mm_per_sec
                     and value <= _cte.maximum_velo_mm_per_sec
@@ -585,7 +593,8 @@ class EPUSupport(pcaspy.Driver):
                 self.updatePVs()
             else:
                 status = False
-        ## change gap velocity set point
+
+        # change gap velocity set point
         elif EPUSupport.isPvName(reason, _db.pv_gap_velo_sp):
             soft_max_velo = self.getParam(_db.pv_gap_max_velo_sp)
             if (value > _cte.minimum_velo_mm_per_sec
@@ -601,7 +610,8 @@ class EPUSupport(pcaspy.Driver):
                     self.updatePVs()
             else:
                 status = False
-        ## change phase velocity set point
+
+        # change phase velocity set point
         elif EPUSupport.isPvName(reason, _db.pv_phase_velo_sp):
             soft_max_velo = self.getParam(_db.pv_phase_max_velo_sp)
             if (value > _cte.minimum_velo_mm_per_sec
@@ -617,7 +627,8 @@ class EPUSupport(pcaspy.Driver):
                     self.updatePVs()
             else:
                 status = False
-        ## cmd to move and change gap
+
+        # cmd to move and change gap
         elif EPUSupport.isPvName(reason, _db.pv_change_gap_cmd):
             if (not driver.gap_is_moving
                 and self.getParam(
@@ -631,7 +642,8 @@ class EPUSupport(pcaspy.Driver):
                 self.updatePVs()
             else:
                 status = False
-        ## cmd to move and change phase
+
+        # cmd to move and change phase
         elif EPUSupport.isPvName(reason, _db.pv_change_phase_cmd):
             if (not driver.phase_is_moving
                 and self.getParam(
@@ -644,7 +656,8 @@ class EPUSupport(pcaspy.Driver):
                 self.updatePVs()
             else:
                 status = False
-        ## select to enable/disable A and B drives
+
+        # select to enable/disable A and B drives
         elif EPUSupport.isPvName(reason, _db.pv_enbl_ab_sel):
             if EPUSupport.isBoolNum(value):
                 status = self.asynExec(
@@ -654,7 +667,8 @@ class EPUSupport(pcaspy.Driver):
                     self.updatePVs()
             else:
                 status = False
-        ## select to enable/disable S and I drives
+
+        # select to enable/disable S and I drives
         elif EPUSupport.isPvName(reason, _db.pv_enbl_si_sel):
             if EPUSupport.isBoolNum(value):
                 status = self.asynExec(
@@ -664,7 +678,8 @@ class EPUSupport(pcaspy.Driver):
                     self.updatePVs()
             else:
                 status = False
-        ## select to release/halt A and B drives
+
+        # select to release/halt A and B drives
         elif EPUSupport.isPvName(reason, _db.pv_release_ab_sel):
             if EPUSupport.isBoolNum(value):
                 status = self.asynExec(
@@ -674,7 +689,8 @@ class EPUSupport(pcaspy.Driver):
                     self.updatePVs()
             else:
                 status = False
-        ## select to release/halt S and I drives
+
+        # select to release/halt S and I drives
         elif EPUSupport.isPvName(reason, _db.pv_release_si_sel):
             if EPUSupport.isBoolNum(value):
                 status = self.asynExec(
@@ -684,7 +700,8 @@ class EPUSupport(pcaspy.Driver):
                     self.updatePVs()
             else:
                 status = False
-        ## cmd to enable and release A and B drives
+
+        # cmd to enable and release A and B drives
         elif EPUSupport.isPvName(reason, _db.pv_enbl_and_release_ab_sel):
             if EPUSupport.isBoolNum(value):
                 status = self.asynExec(
@@ -698,7 +715,8 @@ class EPUSupport(pcaspy.Driver):
                     self.updatePVs()
             else:
                 status = False
-        ## cmd to enable and release S and I drives
+
+        # cmd to enable and release S and I drives
         elif EPUSupport.isPvName(reason, _db.pv_enbl_and_release_si_sel):
             if EPUSupport.isBoolNum(value):
                 status = self.asynExec(
@@ -739,28 +757,32 @@ class EPUSupport(pcaspy.Driver):
             self.setParam(_db.pv_release_si_sel, _cte.bool_no)
             # update pvs
             self.updatePVs()
-        ## cmd to turn on power of A and B drives
+
+        # cmd to turn on power of A and B drives
         elif EPUSupport.isPvName(reason, _db.pv_enbl_pwr_ab_cmd):
             status = self.asynExec(reason, driver.gap_turn_on)
             # increment cmd pv
             self.incParam(_db.pv_enbl_pwr_ab_cmd)
             # update pvs
             self.updatePVs()
-        ## cmd to turn on power of S and I drives
+
+        # cmd to turn on power of S and I drives
         elif EPUSupport.isPvName(reason, _db.pv_enbl_pwr_si_cmd):
             status = self.asynExec(reason, driver.phase_turn_on)
             # increment cmd pv
             self.incParam(_db.pv_enbl_pwr_si_cmd)
             # update pvs
             self.updatePVs()
-        ## cmd to turn on power of all drives
+
+        # cmd to turn on power of all drives
         elif EPUSupport.isPvName(reason, _db.pv_enbl_pwr_all_cmd):
             status = self.asynExec(reason, driver.turn_on_all)
             # increment cmd pv
             self.incParam(_db.pv_enbl_pwr_all_cmd)
             # update pvs
             self.updatePVs()
-        ## no match to pv names
+
+        # no match to pv names
         else:
             status = False
         # end of write
