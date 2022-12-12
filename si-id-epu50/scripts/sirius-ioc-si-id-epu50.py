@@ -11,10 +11,6 @@ from si_id_epu50 import si_id_epu50 as ioc_module
 # NOTE: maximum epics array size
 os.environ['EPICS_CA_MAX_ARRAY_BYTES'] = '100000'
 
-AUTOSAVE_DEFAULT_REQUEST_FILE = os.path.join(
-    os.path.dirname(__file__), 'config', 'autosave_epu.req')
-AUTOSAVE_DEFAULT_SAVE_LOCATION = os.path.join(
-    os.path.dirname(__file__), 'config')
 
 DEFAULT_PV_PREFIX = 'SI-10SB:ID-EPU50:'
 BBB_DEFAULT_ADDR = '10.128.110.160'
@@ -46,8 +42,10 @@ def getArgs():
         default=cte.AUTOSAVE_DEFAULT_SAVE_LOCATION, help="Autosave save directory"
         )
     parser.add_argument(
-        '--request-file', dest='request_file', type=str, required=False,
-        default=cte.AUTOSAVE_DEFAULT_REQUEST_FILE, help="Autosave request file name"
+        '--autosave-request-file', dest='autosave_request_file',
+        type=str, required=False,
+        default=cte.AUTOSAVE_DEFAULT_REQUEST_FILE,
+        help="Autosave request file name"
         )
     args = parser.parse_args()
     return args

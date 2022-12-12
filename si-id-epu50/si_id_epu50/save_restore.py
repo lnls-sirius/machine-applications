@@ -1,20 +1,20 @@
-from epics import caget as _caget
-from epics import caput as _caput
+"""."""
+
 import re
-import threading
-import sys
+import os as _os
 from os.path import exists as _exists
 from os.path import basename as _basename
 from os import remove as _remove
-from os import rename as _rename
-import os
+import sys
+import threading
 import glob
 import shutil
 from datetime import datetime as _date
 from time import sleep as _sleep
 
-#os.environ['EPICS_CA_ADDR_LIST'] = '127.0.0.1'
-#os.environ['EPICS_CA_AUTO_ADDR_LIST'] = 'NO'
+from epics import caget as _caget
+from epics import caput as _caput
+
 
 _TIMESTAMP_FORMAT = "%Y-%m-%d_%H-%M-%S"
 
@@ -125,6 +125,7 @@ def save_monitor(
 
     # create save file
     try:
+        _os.makedirs(save_location, exist_ok=True)
         with open(save_file, 'w+') as f:
             for pvname in pv_list:
                 try:

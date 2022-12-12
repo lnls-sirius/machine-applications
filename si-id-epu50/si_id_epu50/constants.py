@@ -10,20 +10,28 @@ GPIO_TCP_DEFAULT_PORT = 5050
 RS485_TCP_DEFAULT_PORT = 5052
 
 ############### GPIO COMMANDS ##################
-BSMP_WRITE = 0X20
-BSMP_READ = 0X10
 
-HALT_CH_AB =   0x10
-START_CH_AB =  0x20
+BSMP_WRITE = 0x20
+BSMP_READ = 0x10
+
+HALT_CH_AB = 0x10
+START_CH_AB = 0x20
 ENABLE_CH_AB = 0x30
 
-HALT_CH_SI =   0x11
-START_CH_SI =  0x21
+HALT_CH_SI = 0x11
+START_CH_SI = 0x21
 ENABLE_CH_SI = 0x31
 
-RESET_CH_AB=  0x40
-RESET_CH_SI=  0x41
+RESET_CH_AB = 0x40
+RESET_CH_SI = 0x41
+
 ############### EPU constants ################
+
+DEFAULT_PATH = '/home/sirius/iocs-log/si-id-epu50/'
+AUTOSAVE_DEFAULT_SAVE_LOCATION = DEFAULT_PATH
+AUTOSAVE_DEFAULT_REQUEST_FILE = _os.path.join(
+    _os.path.dirname(__file__), 'config', 'autosave_epu.req')
+
 
 ## pydantic data validation
 class EpuConfig(BaseModel):
@@ -123,7 +131,8 @@ position_precision = 3
 scan_rate = 0.1
 
 ## EPICS access security
-access_security_filename = 'access_rules.as'
+access_security_filename = _os.path.join(
+        _os.path.dirname(__file__), 'access_rules.as')
 
 ## CA server
 ### transaction update rate
