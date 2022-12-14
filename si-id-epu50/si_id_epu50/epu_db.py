@@ -13,6 +13,7 @@ pv_status_mon = 'Status-Mon'
 pv_is_busy_mon = 'IsBusy-Mon'
 pv_ioc_msg_mon = 'Log-Mon'
 pv_clear_log_cmd = 'ClearLog-Cmd'
+pv_clear_error_cmd = 'ClearErr-Cmd'
 pv_gap_sp = 'Gap-SP'
 pv_gap_rb = 'Gap-RB'
 pv_gap_mon = 'Gap-Mon'
@@ -145,6 +146,15 @@ pvdb = {
         'asg' : 'readonly',
     },
     pv_clear_log_cmd : {
+        'type' : 'int',
+        'count' : 1,
+        'mdel' : -1,
+        'adel' : -1,
+        'asyn' : True,
+        'asg' : 'default',
+        'value' : 0,
+    },
+    pv_clear_error_cmd : {
         'type' : 'int',
         'count' : 1,
         'mdel' : -1,

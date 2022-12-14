@@ -534,6 +534,17 @@ class EPUSupport(pcaspy.Driver):
             self.incParam(_db.pv_clear_log_cmd)
             self.updatePVs()
 
+        # clear drive errors
+        elif EPUSupport.isPvName(reason, _db.pv_clear_error_cmd):
+            # clear driver errors
+            status = self.asynExec(reason, driver.a_drive.clear_error)
+            status = self.asynExec(reason, driver.b_drive.clear_error)
+            status = self.asynExec(reason, driver.s_drive.clear_error)
+            status = self.asynExec(reason, driver.i_drive.clear_error)
+            # increment cmd pv
+            self.incParam(_db.pv_clear_error_cmd)
+            self.updatePVs()
+
         # change gap set point
         if EPUSupport.isPvName(reason, _db.pv_gap_sp):
             if (value >= _cte.minimum_gap
