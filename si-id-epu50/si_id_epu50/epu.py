@@ -205,29 +205,34 @@ class Epu():
     def monitor_gap_movement(self):
 
         while True:
-
             try:
-
                 self.gap_start_event.wait()
+                logger.info('\nGap movement started\n')
                 self.a_drive.drive_connect() # sends BCD:{address}
+                start = time.time()
+                update_count = 0
 
                 while self.gap_start_event.is_set():
 
                     g = self.a_drive.get_encoder_position(False)
 
                     if type(g) == float:
-
                         self.gap = g
                         self.callback_update()
+                        update_count += 1
+                        logger.info(f'Gap: {self.gap}') # helps to diagnose updating problems
 
                     if abs(self.gap - self.gap_target) < .001:
-
                         self.gap_is_moving = 0
                         self.gap_start_event.clear()
+                        end = time.time()
+                        logger.info(f'\nGap movement finished. \
+                            Update rate: {update_count/(end-start)}an')
 
                 self.stop_event.set()
 
-            except Exception: logger.exception('Gap fast update error.')
+            except Exception:
+                logger.exception('Gap fast update error.')
 
     def monitor_phase_movement(self):
 
@@ -262,38 +267,11 @@ class Epu():
         while True:
 
             try:
-                ### THIS FUNCTIONS COULD ALSO BE USED TO
-                # self.gap_enable_status()
-                # self.gap_halt_release_status()
-                # self.phase_enable_status()
-                # self.phase_halt_release_status()
-                # self.stop_event.wait()
 
                 self.allowed_to_change_gap()
                 self.allowed_to_change_phase()
 
-                self.i_resolver_phase = self.i_drive.get_resolver_position()
-
-                self.stop_event.wait()
-                self.i_encoder_phase = self.i_drive.get_encoder_position()
-                self.phase = self.i_encoder_phase
-
-                self.stop_event.wait()
-                e, h = self.i_drive.get_halten_status()
-                self.phase_enable, self.phase_halt_released = e, h
-                self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
-
-                self.stop_event.wait()
-                self.i_diag_code = self.i_drive.get_diagnostic_code()
-
-                self.stop_event.wait()
-                self.s_resolver_phase = self.s_drive.get_resolver_position()
-
-                self.stop_event.wait()
-                self.s_encoder_phase = self.s_drive.get_encoder_position()
-
-                self.stop_event.wait()
-                self.s_diag_code = self.s_drive.get_diagnostic_code()
+                # Drive A
 
                 self.stop_event.wait()
                 self.a_resolver_gap = self.a_drive.get_resolver_position()
@@ -310,6 +288,8 @@ class Epu():
                 self.gap_enable, self.gap_halt_released = e, h
                 self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
 
+                # Drive B
+
                 self.stop_event.wait()
                 self.b_resolver_gap = self.b_drive.get_resolver_position()
 
@@ -319,7 +299,36 @@ class Epu():
                 self.stop_event.wait()
                 self.b_diag_code = self.b_drive.get_diagnostic_code()
 
-            except Exception: logger.exception('Standstill monitoring error.')
+                # Drive I
+
+                self.stop_event.wait()
+                self.i_encoder_phase = self.i_drive.get_encoder_position()
+                
+                self.stop_event.wait()
+                self.i_resolver_phase = self.i_drive.get_resolver_position()
+                self.phase = self.i_encoder_phase
+
+                self.stop_event.wait()
+                e, h = self.i_drive.get_halten_status()
+                self.phase_enable, self.phase_halt_released = e, h
+                self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
+
+                self.stop_event.wait()
+                self.i_diag_code = self.i_drive.get_diagnostic_code()
+
+                # Drive S
+
+                self.stop_event.wait()
+                self.s_resolver_phase = self.s_drive.get_resolver_position()
+
+                self.stop_event.wait()
+                self.s_encoder_phase = self.s_drive.get_encoder_position()
+
+                self.stop_event.wait()
+                self.s_diag_code = self.s_drive.get_diagnostic_code()
+
+            except Exception:
+                logger.error('Standstill monitoring error.')
 
     # General
 
@@ -789,18 +798,16 @@ class Epu():
             self.stop_event.clear()
 
             if self.gap_check_for_move():
-
                 try:
                     a_diagnostic_code = self.a_drive.get_diagnostic_code()
                     b_diagnostic_code = self.b_drive.get_diagnostic_code()
 
                 except:
-                    logger.exception('Error while getting diagnostic codes')
+                    logger.exception('Error while getting diagnostic codes.')
                     self.stop_event.set()
 
                 else:
                     if a_diagnostic_code == b_diagnostic_code == 'A211':
-
                         bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.START_CH_AB, value=val).encode()
 
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
