@@ -227,7 +227,7 @@ class Epu():
                         self.gap_start_event.clear()
                         end = time.time()
                         logger.info(f'\nGap movement finished. \
-                            Update rate: {update_count/(end-start)}an')
+                            Update rate: {update_count/(end-start)}')
 
                 self.stop_event.set()
 
