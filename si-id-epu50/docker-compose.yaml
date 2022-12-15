@@ -1,0 +1,35 @@
+version: "3.4"
+
+services:
+  epu-ioc:
+    image: "dockerregistry.lnls-sirius.com.br/gas/epu-ioc:v0.2"
+    build:
+      context: "."
+    network_mode: "host"
+    command: [
+      '/opt/conda/envs/pcaspy/bin/python', '/opt/source/ioc_main.py',
+      '--pv-prefix', 'SI-10SB:ID-EPU50:',
+      '--drive-io-port', '5050',
+      '--drive-msg-port', '5052',
+      '--beaglebone-addr', '10.128.110.160',
+      '--autosave-dir', '/opt/autosave',
+      '--request-file', '/opt/source/autosave_epu.req'
+    ]
+    volumes:
+      - type: bind
+        source: /storage/common/autosave/EPU
+        target: /opt/autosave
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname != CA-RaCtrl-CO-Srv-1
+          - node.hostname != LA-RaCtrl-CO-Srv-1
+          - node.hostname != TA-TiRack-CO-FWSrv-1
+      restart_policy:
+        condition: any
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"

@@ -1,0 +1,1502 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>975</width>
+    <height>817</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="0" column="0">
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="verticalScrollBarPolicy">
+      <enum>Qt::ScrollBarAlwaysOn</enum>
+     </property>
+     <property name="horizontalScrollBarPolicy">
+      <enum>Qt::ScrollBarAlwaysOn</enum>
+     </property>
+     <property name="sizeAdjustPolicy">
+      <enum>QAbstractScrollArea::AdjustIgnored</enum>
+     </property>
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>944</width>
+        <height>976</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
+        <layout class="QGridLayout" name="gridLayout">
+         <property name="sizeConstraint">
+          <enum>QLayout::SetDefaultConstraint</enum>
+         </property>
+         <item row="0" column="0" colspan="2">
+          <widget class="QGroupBox" name="groupBox_3">
+           <property name="title">
+            <string>General</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_9">
+            <item row="0" column="1">
+             <widget class="PyDMByteIndicator" name="PyDMByteIndicator_6">
+              <property name="minimumSize">
+               <size>
+                <width>24</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}Moving-Mon</string>
+              </property>
+              <property name="offColor" stdset="0">
+               <color>
+                <red>228</red>
+                <green>228</green>
+                <blue>228</blue>
+               </color>
+              </property>
+              <property name="showLabels" stdset="0">
+               <bool>false</bool>
+              </property>
+              <property name="circles" stdset="0">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1" rowspan="2" colspan="7">
+             <widget class="QScrollArea" name="scrollArea_2">
+              <property name="minimumSize">
+               <size>
+                <width>700</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="layoutDirection">
+               <enum>Qt::LeftToRight</enum>
+              </property>
+              <property name="verticalScrollBarPolicy">
+               <enum>Qt::ScrollBarAlwaysOn</enum>
+              </property>
+              <property name="horizontalScrollBarPolicy">
+               <enum>Qt::ScrollBarAlwaysOn</enum>
+              </property>
+              <property name="widgetResizable">
+               <bool>true</bool>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+              <widget class="QWidget" name="scrollAreaWidgetContents_4">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>836</width>
+                 <height>112</height>
+                </rect>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_5">
+                <item row="0" column="0">
+                 <widget class="PyDMLabel" name="PyDMLabel_21">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>100</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>900</height>
+                   </size>
+                  </property>
+                  <property name="toolTip">
+                   <string/>
+                  </property>
+                  <property name="layoutDirection">
+                   <enum>Qt::LeftToRight</enum>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">background-color: rgb(255, 255, 255);</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                  <property name="channel" stdset="0">
+                   <string>ca://${PREFIX}Log-Mon</string>
+                  </property>
+                  <property name="displayFormat" stdset="0">
+                   <enum>PyDMLabel::String</enum>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QLabel" name="label_38">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>40</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>RS485 Connected</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_22">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>40</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Log</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_37">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>40</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Is Moving</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="PyDMByteIndicator" name="PyDMByteIndicator_7">
+              <property name="minimumSize">
+               <size>
+                <width>16</width>
+                <height>16</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}TCPConnected-Mon</string>
+              </property>
+              <property name="onColor" stdset="0">
+               <color>
+                <red>0</red>
+                <green>255</green>
+                <blue>0</blue>
+               </color>
+              </property>
+              <property name="offColor" stdset="0">
+               <color>
+                <red>255</red>
+                <green>0</green>
+                <blue>0</blue>
+               </color>
+              </property>
+              <property name="showLabels" stdset="0">
+               <bool>false</bool>
+              </property>
+              <property name="circles" stdset="0">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_21">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>40</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Is Busy</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="PyDMPushButton" name="PyDMPushButton_9">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>Force All ON</string>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}EnblPwrAll-Cmd</string>
+              </property>
+              <property name="pressValue" stdset="0">
+               <string>1</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="4">
+             <widget class="QLabel" name="label_39">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>40</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>GPIO Connected</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="7">
+             <widget class="PyDMPushButton" name="PyDMPushButton_4">
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>35</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>Abort!</string>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}Stop-Cmd</string>
+              </property>
+              <property name="pressValue" stdset="0">
+               <string>1</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="PyDMPushButton" name="PyDMPushButton_6">
+              <property name="minimumSize">
+               <size>
+                <width>40</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>Clear Log</string>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}ClearLog-Cmd</string>
+              </property>
+              <property name="pressValue" stdset="0">
+               <string>1</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="6">
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>Force Power On</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="PyDMByteIndicator" name="PyDMByteIndicator">
+              <property name="minimumSize">
+               <size>
+                <width>16</width>
+                <height>16</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}IsBusy-Mon</string>
+              </property>
+              <property name="onColor" stdset="0">
+               <color>
+                <red>255</red>
+                <green>255</green>
+                <blue>0</blue>
+               </color>
+              </property>
+              <property name="offColor" stdset="0">
+               <color>
+                <red>228</red>
+                <green>228</green>
+                <blue>228</blue>
+               </color>
+              </property>
+              <property name="showLabels" stdset="0">
+               <bool>false</bool>
+              </property>
+              <property name="circles" stdset="0">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="5">
+             <widget class="PyDMByteIndicator" name="PyDMByteIndicator_8">
+              <property name="minimumSize">
+               <size>
+                <width>16</width>
+                <height>16</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}GPIOConnected-Mon</string>
+              </property>
+              <property name="onColor" stdset="0">
+               <color>
+                <red>0</red>
+                <green>255</green>
+                <blue>0</blue>
+               </color>
+              </property>
+              <property name="offColor" stdset="0">
+               <color>
+                <red>255</red>
+                <green>0</green>
+                <blue>0</blue>
+               </color>
+              </property>
+              <property name="showLabels" stdset="0">
+               <bool>false</bool>
+              </property>
+              <property name="circles" stdset="0">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="4">
+             <widget class="QLabel" name="label_41">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>40</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Communication</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="5">
+             <widget class="PyDMByteIndicator" name="PyDMByteIndicator_9">
+              <property name="minimumSize">
+               <size>
+                <width>24</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}Connected-Mon</string>
+              </property>
+              <property name="offColor" stdset="0">
+               <color>
+                <red>228</red>
+                <green>228</green>
+                <blue>228</blue>
+               </color>
+              </property>
+              <property name="showLabels" stdset="0">
+               <bool>false</bool>
+              </property>
+              <property name="circles" stdset="0">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="3" column="0" colspan="2">
+          <widget class="PyDMTemplateRepeater" name="PyDMTemplateRepeater_2">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>800</width>
+             <height>350</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string/>
+           </property>
+           <property name="layoutType" stdset="0">
+            <enum>PyDMTemplateRepeater::Horizontal</enum>
+           </property>
+           <property name="layoutSpacing" stdset="0">
+            <number>1</number>
+           </property>
+           <property name="countShownInDesigner" stdset="0">
+            <number>4</number>
+           </property>
+           <property name="templateFilename" stdset="0">
+            <string>epu_axis_template.ui</string>
+           </property>
+           <property name="dataSource" stdset="0">
+            <string>[{&quot;Drive&quot;:&quot;DriveA&quot;}, {&quot;Drive&quot;:&quot;DriveB&quot;}, {&quot;Drive&quot;:&quot;DriveS&quot;}, {&quot;Drive&quot;:&quot;DriveI&quot;}]</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QGroupBox" name="groupBox_2">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="title">
+            <string>SI Control</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_8">
+            <item row="4" column="1">
+             <widget class="PyDMPushButton" name="PyDMPushButton_8">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>Force SI ON</string>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}EnblPwrPhase-Cmd</string>
+              </property>
+              <property name="pressValue" stdset="0">
+               <string>1</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_19">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}EnblAndReleasePhase-Sts</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_18">
+              <property name="text">
+               <string>Release</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_15">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}EnblAndReleasePhase-Sel</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_14">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}ReleasePhase-Sel</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_18">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}EnblPhase-Sts</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_13">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}EnblPhase-Sel</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_17">
+              <property name="text">
+               <string>Stop</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_19">
+              <property name="text">
+               <string>Enable</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_17">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}ReleasePhase-Sts</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_6">
+              <property name="text">
+               <string>Force Power On</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_20">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}StopPhase-Cmd</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="PyDMPushButton" name="PyDMPushButton_5">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>Stop SI</string>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}StopPhase-Cmd</string>
+              </property>
+              <property name="pressValue" stdset="0">
+               <string>1</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_20">
+              <property name="text">
+               <string>Enable and Release</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="2">
+             <widget class="PyDMByteIndicator" name="PyDMByteIndicator_5">
+              <property name="minimumSize">
+               <size>
+                <width>18</width>
+                <height>18</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}PwrPhase-Mon</string>
+              </property>
+              <property name="offColor" stdset="0">
+               <color>
+                <red>255</red>
+                <green>0</green>
+                <blue>0</blue>
+               </color>
+              </property>
+              <property name="showLabels" stdset="0">
+               <bool>false</bool>
+              </property>
+              <property name="circles" stdset="0">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QGroupBox" name="groupBox">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="title">
+            <string>AB Control</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_4">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>Stop</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_2">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}ReleaseGap-Sts</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>Release</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>Enable and Release</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_3">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}EnblAndReleaseGap-Sts</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_4">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}StopGap-Cmd</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_3">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}EnblAndReleaseGap-Sel</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>Force Power On</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}EnblGap-Sel</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="PyDMPushButton" name="PyDMPushButton">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>Stop AB</string>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}StopGap-Cmd</string>
+              </property>
+              <property name="pressValue" stdset="0">
+               <string>1</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}EnblGap-Sts</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>Enable</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_2">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}ReleaseGap-Sel</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="PyDMPushButton" name="PyDMPushButton_7">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>Force AB ON</string>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}EnblPwrGap-Cmd</string>
+              </property>
+              <property name="pressValue" stdset="0">
+               <string>1</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="2">
+             <widget class="PyDMByteIndicator" name="PyDMByteIndicator_4">
+              <property name="minimumSize">
+               <size>
+                <width>18</width>
+                <height>18</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}PwrGap-Mon</string>
+              </property>
+              <property name="offColor" stdset="0">
+               <color>
+                <red>255</red>
+                <green>0</green>
+                <blue>0</blue>
+               </color>
+              </property>
+              <property name="showLabels" stdset="0">
+               <bool>false</bool>
+              </property>
+              <property name="circles" stdset="0">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QGroupBox" name="groupBox_4">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="title">
+            <string>Gap Control</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_10">
+            <item row="1" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_22">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}Gap-RB</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_30">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}GapSpeed-RB</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_29">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Free to Change Gap</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="PyDMPushButton" name="PyDMPushButton_2">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>Start</string>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}ChangeGap-Cmd</string>
+              </property>
+              <property name="pressValue" stdset="0">
+               <string>1</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_25">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Gap Monitoring</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="PyDMLineEdit" name="PyDMLineEdit">
+              <property name="maximumSize">
+               <size>
+                <width>150</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}Gap-SP</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_33">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Gap Target Speed</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_23">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Gap</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="label_31">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Change Gap</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="PyDMByteIndicator" name="PyDMByteIndicator_2">
+              <property name="minimumSize">
+               <size>
+                <width>24</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>24</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}AllowedToChangeGap-Mon</string>
+              </property>
+              <property name="offColor" stdset="0">
+               <color>
+                <red>255</red>
+                <green>170</green>
+                <blue>0</blue>
+               </color>
+              </property>
+              <property name="showLabels" stdset="0">
+               <bool>false</bool>
+              </property>
+              <property name="circles" stdset="0">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1" colspan="2">
+             <widget class="PyDMLabel" name="PyDMLabel_24">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}Gap-Mon</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1" colspan="2">
+             <widget class="PyDMLabel" name="PyDMLabel_26">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}GapSpeed-Mon</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_28">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}ChangeGap-Cmd</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_27">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Gap Speed</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="PyDMLineEdit" name="PyDMLineEdit_3">
+              <property name="maximumSize">
+               <size>
+                <width>150</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}GapSpeed-SP</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_35">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Gap Max Speed</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="PyDMLineEdit" name="PyDMLineEdit_5">
+              <property name="maximumSize">
+               <size>
+                <width>150</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}MaxGapSpeed-SP</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_32">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}MaxGapSpeed-RB</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QGroupBox" name="groupBox_5">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>50</height>
+            </size>
+           </property>
+           <property name="title">
+            <string>Phase Control</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_11">
+            <item row="5" column="1" colspan="2">
+             <widget class="PyDMLabel" name="PyDMLabel_27">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}PhaseSpeed-Mon</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="label_32">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Change Phase</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_26">
+              <property name="text">
+               <string>Phase Monitoring</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="PyDMByteIndicator" name="PyDMByteIndicator_3">
+              <property name="minimumSize">
+               <size>
+                <width>24</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>24</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}AllowedToChangePhase-Mon</string>
+              </property>
+              <property name="offColor" stdset="0">
+               <color>
+                <red>255</red>
+                <green>170</green>
+                <blue>0</blue>
+               </color>
+              </property>
+              <property name="showLabels" stdset="0">
+               <bool>false</bool>
+              </property>
+              <property name="circles" stdset="0">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="PyDMLineEdit" name="PyDMLineEdit_4">
+              <property name="maximumSize">
+               <size>
+                <width>150</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}PhaseSpeed-SP</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="PyDMLineEdit" name="PyDMLineEdit_2">
+              <property name="maximumSize">
+               <size>
+                <width>150</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}Phase-SP</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_30">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Free to Change Phase</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_34">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Phase Target Speed</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="PyDMPushButton" name="PyDMPushButton_3">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>Start</string>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}ChangePhase-Cmd</string>
+              </property>
+              <property name="pressValue" stdset="0">
+               <string>1</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_29">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}ChangePhase-Cmd</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_24">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Phase</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1" colspan="2">
+             <widget class="PyDMLabel" name="PyDMLabel_25">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}Phase-Mon</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_28">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Phase Speed</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_23">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}Phase-RB</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_31">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}PhaseSpeed-RB</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_36">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Phase Max Speed</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="PyDMLineEdit" name="PyDMLineEdit_6">
+              <property name="maximumSize">
+               <size>
+                <width>150</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}MaxPhaseSpeed-SP</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="PyDMLabel" name="PyDMLabel_33">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="channel" stdset="0">
+               <string>ca://${PREFIX}MaxPhaseSpeed-RB</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PyDMLabel</class>
+   <extends>QLabel</extends>
+   <header>pydm.widgets.label</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMByteIndicator</class>
+   <extends>QWidget</extends>
+   <header>pydm.widgets.byte</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMEnumComboBox</class>
+   <extends>QComboBox</extends>
+   <header>pydm.widgets.enum_combo_box</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>pydm.widgets.line_edit</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMPushButton</class>
+   <extends>QPushButton</extends>
+   <header>pydm.widgets.pushbutton</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMTemplateRepeater</class>
+   <extends>QFrame</extends>
+   <header>pydm.widgets.template_repeater</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
