@@ -414,8 +414,8 @@ class EPUSupport(pcaspy.Driver):
                 not_ok = not (
                     driver.a_diag_code == 'A211'
                     and driver.b_diag_code == 'A211'
-                    and driver.b_diag_code == 'A211'
-                    and driver.b_diag_code == 'A211'
+                    and driver.s_diag_code == 'A211'
+                    and driver.i_diag_code == 'A211'
                     )
             else:
                 not_ok = True
