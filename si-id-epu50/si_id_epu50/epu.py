@@ -351,8 +351,10 @@ class Epu():
                 self.b_drive.set_target_position(a_target)
 
     def gap_set(self, target_gap: float) -> float:
+        
         if _cte.minimum_gap <= target_gap <= _cte.maximum_gap:
             while 1:
+                self.stop_event.wait() # prevents send message to drive while fast gap updating is running
                 self.stop_event.clear()
                 try:
                     self.a_drive.set_target_position(target_gap)
