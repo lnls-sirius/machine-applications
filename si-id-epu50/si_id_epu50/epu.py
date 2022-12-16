@@ -2,10 +2,12 @@ import logging
 logger = logging.getLogger(__name__)
 import logging.handlers as handlers
 import threading, socket
-from ecodrive import EcoDrive
-from utils import *
 from datetime import datetime
-import constants as _cte
+
+from . import constants as _cte
+from .utils import *
+from .ecodrive import EcoDrive
+
 
 ################################### LOGGING #######################################
 logger.setLevel(logging.INFO)
@@ -16,19 +18,48 @@ logger.addHandler(logHandler)
 logger.info(datetime.now().strftime('%m/%d/%Y, %H:%M:%S'))
 ###################################################################################
 
+
 class Epu():
 
-    def __init__(self, callback_update=lambda: 1):
+    def __init__(self, args, callback_update=lambda: 1):
 
         logger.info('Class EPU started\n\n')
-        
+
+        self.args = args
         self.gpio_connected = False
         self.tcp_wait_connection()
 
-        self.a_drive = EcoDrive(address=_cte.a_drive_address, min_limit=_cte.minimum_gap,   max_limit=_cte.maximum_gap,   drive_name='A')
-        self.b_drive = EcoDrive(address=_cte.b_drive_address, min_limit=_cte.minimum_gap,   max_limit=_cte.maximum_gap,   drive_name='B')
-        self.i_drive = EcoDrive(address=_cte.i_drive_address, min_limit=_cte.minimum_phase, max_limit=_cte.maximum_phase, drive_name='I')
-        self.s_drive = EcoDrive(address=_cte.s_drive_address, min_limit=_cte.minimum_phase, max_limit=_cte.maximum_phase, drive_name='S')
+        self.a_drive = EcoDrive(
+            address=_cte.a_drive_address,
+            min_limit=_cte.minimum_gap,
+            max_limit=_cte.maximum_gap,
+            bbb_hostname=self.args.beaglebone_addr,
+            rs458_tcp_port=self.args.msg_port,
+            drive_name='A')
+
+        self.b_drive = EcoDrive(
+            address=_cte.b_drive_address,
+            min_limit=_cte.minimum_gap,
+            max_limit=_cte.maximum_gap,
+            bbb_hostname=self.args.beaglebone_addr,
+            rs458_tcp_port=self.args.msg_port,
+            drive_name='B')
+
+        self.i_drive = EcoDrive(
+            address=_cte.i_drive_address,
+            min_limit=_cte.minimum_phase,
+            max_limit=_cte.maximum_phase,
+            bbb_hostname=self.args.beaglebone_addr,
+            rs458_tcp_port=self.args.msg_port,
+            drive_name='I')
+
+        self.s_drive = EcoDrive(
+            address=_cte.s_drive_address,
+            min_limit=_cte.minimum_phase,
+            max_limit=_cte.maximum_phase,
+            bbb_hostname=self.args.beaglebone_addr,
+            rs458_tcp_port=self.args.msg_port,
+            drive_name='S')
 
         self.callback_update = callback_update
         self.warnings = [] # not used yet
@@ -54,15 +85,14 @@ class Epu():
         self.monitor_phase_movement_thread.start()
         self.monitor_gap_movement_thread.start()
 
-
     # tests connection with GPIO server (BBB)
     def tcp_wait_connection(self):
-        
+
         while True:
-            
+
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.connect((_cte.beaglebone_addr, _cte.io_port))
+                s.connect((self.args.beaglebone_addr, self.args.io_port))
 
             except socket.timeout as e:
                 self.gpio_connected = False
@@ -85,29 +115,35 @@ class Epu():
                 s.shutdown(socket.SHUT_RDWR)
                 s.close()
                 return True
-            
-            time.sleep(5)
 
+            time.sleep(5)
 
     # not been used yet
     def check_tcp_connection(self):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            con = s.connect_ex((_cte.beaglebone_addr, _cte.io_port))
+            _ = s.connect_ex((self.args.beaglebone_addr, self.args.io_port))
             time.sleep(.001)
 
         except Exception as e:
             self.gpio_connected = False
             logger.exception('Disconnected from GPIO server.')
-            try: s.close()
-            except: return False
-            else: return False
-
+            try:
+                s.close()
+            except:
+                return False
+            else:
+                return False
         else:
             self.gpio_connected = True
             s.shutdown(socket.SHUT_RDWR)
             s.close()
             return True
+
+    @property
+    def tcp_connected(self):
+        """."""
+        return self.check_tcp_connection()
 
     # motion monitoring
 
@@ -166,35 +202,38 @@ class Epu():
         self.phase = self.i_encoder_phase
         self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
 
-   
     def monitor_gap_movement(self):
 
         while True:
-
             try:
-
                 self.gap_start_event.wait()
+                logger.info('\nGap movement started\n')
                 self.a_drive.drive_connect() # sends BCD:{address}
+                start = time.time()
+                update_count = 0
 
                 while self.gap_start_event.is_set():
 
                     g = self.a_drive.get_encoder_position(False)
-                    
+
                     if type(g) == float:
-                        
                         self.gap = g
                         self.callback_update()
+                        update_count += 1
+                        logger.info(f'Gap: {self.gap}') # helps to diagnose updating problems
 
                     if abs(self.gap - self.gap_target) < .001:
-                        
                         self.gap_is_moving = 0
                         self.gap_start_event.clear()
+                        end = time.time()
+                        logger.info(f'\nGap movement finished. \
+                            Update rate: {update_count/(end-start)}')
 
                 self.stop_event.set()
 
-            except Exception: logger.exception('Gap fast update error.')
+            except Exception:
+                logger.exception('Gap fast update error.')
 
-   
     def monitor_phase_movement(self):
 
         while True:
@@ -207,12 +246,12 @@ class Epu():
                 while self.phase_start_event.is_set():
 
                     p = self.i_drive.get_encoder_position(False)
-                    
+
                     if type(p) == float:
-                        
+
                         self.phase = p
                         self.callback_update()
-                        
+
 
                     if abs(self.phase - self.phase_target) < .001:
 
@@ -222,71 +261,74 @@ class Epu():
                 self.stop_event.set()
 
             except Exception:  logger.exception('Phase fast update error.')
-            
 
     def standstill_monitoring(self):
-        
+
         while True:
-            
+
             try:
-                ### THIS FUNCTIONS COULD ALSO BE USED TO
-                # self.gap_enable_status()
-                # self.gap_halt_release_status()
-                # self.phase_enable_status()
-                # self.phase_halt_release_status()
-                # self.stop_event.wait()
 
                 self.allowed_to_change_gap()
                 self.allowed_to_change_phase()
 
-                self.i_resolver_phase = self.i_drive.get_resolver_position()
-                
-                self.stop_event.wait()
-                self.i_encoder_phase = self.i_drive.get_encoder_position()
-                self.phase = self.i_encoder_phase
-                
-                self.stop_event.wait()
-                e, h = self.i_drive.get_halten_status()
-                self.phase_enable, self.phase_halt_released = e, h
-                self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
-                
-                self.stop_event.wait()
-                self.i_diag_code = self.i_drive.get_diagnostic_code()
-                
-                self.stop_event.wait()
-                self.s_resolver_phase = self.s_drive.get_resolver_position()
-                
-                self.stop_event.wait()
-                self.s_encoder_phase = self.s_drive.get_encoder_position()
-                
-                self.stop_event.wait()
-                self.s_diag_code = self.s_drive.get_diagnostic_code()
-                
+                # Drive A
+
                 self.stop_event.wait()
                 self.a_resolver_gap = self.a_drive.get_resolver_position()
-                
+
                 self.stop_event.wait()
                 self.a_encoder_gap = self.a_drive.get_encoder_position()
                 self.gap = self.a_encoder_gap
-                
+
                 self.stop_event.wait()
                 self.a_diag_code = self.a_drive.get_diagnostic_code()
-                
+
                 self.stop_event.wait()
                 e, h = self.a_drive.get_halten_status()
                 self.gap_enable, self.gap_halt_released = e, h
                 self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
-                
+
+                # Drive B
+
                 self.stop_event.wait()
                 self.b_resolver_gap = self.b_drive.get_resolver_position()
-                
+
                 self.stop_event.wait()
                 self.b_encoder_gap = self.b_drive.get_encoder_position()
-                
+
                 self.stop_event.wait()
                 self.b_diag_code = self.b_drive.get_diagnostic_code()
 
-            except Exception: logger.exception('Standstill monitoring error.')
+                # Drive I
+
+                self.stop_event.wait()
+                self.i_encoder_phase = self.i_drive.get_encoder_position()
+                
+                self.stop_event.wait()
+                self.i_resolver_phase = self.i_drive.get_resolver_position()
+                self.phase = self.i_encoder_phase
+
+                self.stop_event.wait()
+                e, h = self.i_drive.get_halten_status()
+                self.phase_enable, self.phase_halt_released = e, h
+                self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
+
+                self.stop_event.wait()
+                self.i_diag_code = self.i_drive.get_diagnostic_code()
+
+                # Drive S
+
+                self.stop_event.wait()
+                self.s_resolver_phase = self.s_drive.get_resolver_position()
+
+                self.stop_event.wait()
+                self.s_encoder_phase = self.s_drive.get_encoder_position()
+
+                self.stop_event.wait()
+                self.s_diag_code = self.s_drive.get_diagnostic_code()
+
+            except Exception:
+                logger.error('Standstill monitoring error.')
 
     # General
 
@@ -309,8 +351,10 @@ class Epu():
                 self.b_drive.set_target_position(a_target)
 
     def gap_set(self, target_gap: float) -> float:
+        
         if _cte.minimum_gap <= target_gap <= _cte.maximum_gap:
             while 1:
+                self.stop_event.wait() # prevents send message to drive while fast gap updating is running
                 self.stop_event.clear()
                 try:
                     self.a_drive.set_target_position(target_gap)
@@ -419,9 +463,8 @@ class Epu():
 
         except Exception:
             # Just reinforce the need of stop_event ben set in this point, after validation, it could be removed.
-            if not self.stop_event_is_set(): self.stop_event.set()
+            if not self.stop_event.is_set(): self.stop_event.set()
             logger.exception('Could not complete gap check for move.')
-
 
     # Phase stuff
 
@@ -557,24 +600,22 @@ class Epu():
             if not self.stop_event.is_set(): self.stop_event.set()
             logger.exception('Could not complete phase check for move')
 
-
     # GPIOs functions
-
 
     def gap_set_enable(self, val: bool):
 
         if val:
-            
+
             with self._epu_lock:
 
                 try:
-                    
+
                     a_diagnostic_code = self.a_drive.get_diagnostic_code()
                     b_diagnostic_code = self.b_drive.get_diagnostic_code()
                     self.stop_event.set()
 
                 except Exception:
-                    
+
                     self.stop_event.set()
                     logger.exception('Gap enable setting error.')
                     return
@@ -587,7 +628,7 @@ class Epu():
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                             s.settimeout(1)
-                            s.connect((_cte.beaglebone_addr, _cte.io_port))
+                            s.connect((self.args.beaglebone_addr, self.args.io_port))
                             s.sendall(bsmp_enable_message)
                             time.sleep(.01) # magic number
 
@@ -610,7 +651,7 @@ class Epu():
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                     s.settimeout(1)
-                    s.connect((_cte.beaglebone_addr, _cte.io_port))
+                    s.connect((self.args.beaglebone_addr, self.args.io_port))
                     s.sendall(bsmp_enable_message)
                     time.sleep(.01) # magic number
 
@@ -621,7 +662,6 @@ class Epu():
             else:
                 logger.info('Release halt to disable drive.')
                 return False
-
 
     def gap_release_halt(self, val: bool):
 
@@ -644,7 +684,7 @@ class Epu():
 
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             s.settimeout(.1)
-                            s.connect((_cte.beaglebone_addr, _cte.io_port))
+                            s.connect((self.args.beaglebone_addr, self.args.io_port))
                             s.sendall(bsmp_enable_message)
                             time.sleep(.01) # magic number
 
@@ -666,7 +706,7 @@ class Epu():
 
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(.1)
-                s.connect((_cte.beaglebone_addr, _cte.io_port))
+                s.connect((self.args.beaglebone_addr, self.args.io_port))
                 s.sendall(bsmp_enable_message)
                 time.sleep(.01) # magic number
 
@@ -675,16 +715,15 @@ class Epu():
                     if not data: break
                     return data
 
-
     def gap_enable_and_release_halt(self, val: bool = True) -> bool:
 
         try:
             with self._epu_lock:
-                
+
                 if val:
-                    
+
                     timeout_count = 10
-                    
+
                     while not self.gap_enable_status():
                         self.gap_set_enable(1)
                         time.sleep(.1)
@@ -692,7 +731,7 @@ class Epu():
                         if not timeout_count: break
 
                     timeout_count = 10
-                    
+
                     while not self.gap_halt_release_status():
                         self.gap_release_halt(1)
                         time.sleep(.1)
@@ -700,9 +739,9 @@ class Epu():
                         if not timeout_count: break
 
                 else:
-                    
+
                     timeout_count = 10
-                    
+
                     while self.gap_halt_release_status():
                         self.gap_release_halt(0)
                         time.sleep(.1)
@@ -710,7 +749,7 @@ class Epu():
                         if not timeout_count: break
 
                     timeout_count = 10
-                    
+
                     while self.gap_enable_status():
                         self.gap_set_enable(0)
                         time.sleep(.1)
@@ -722,21 +761,20 @@ class Epu():
             return False
 
     def gap_enable_status(self) -> bool:
-        
+
         bsmp_enable_message = bsmp_send( _cte.BSMP_READ, variableID=_cte.ENABLE_CH_AB, size=0).encode()
-        
+
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            
+
             s.settimeout(.1)
-            s.connect((_cte.beaglebone_addr, _cte.io_port))
+            s.connect((self.args.beaglebone_addr, self.args.io_port))
             s.sendall(bsmp_enable_message)
             time.sleep(.01) # magic number
-            
+
             while True:
                 data = s.recv(16)
                 if not data: break
                 return(bool(data[-2]))
-
 
     def gap_halt_release_status(self):
 
@@ -745,7 +783,7 @@ class Epu():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
             s.settimeout(.1)
-            s.connect((_cte.beaglebone_addr, _cte.io_port))
+            s.connect((self.args.beaglebone_addr, self.args.io_port))
             s.sendall(bsmp_enable_message)
             time.sleep(.01) # magic number
 
@@ -753,7 +791,6 @@ class Epu():
                 data = s.recv(16)
                 if not data: break
                 return(bool(data[-2]))
-
 
     def gap_start(self, val: bool):
 
@@ -763,23 +800,21 @@ class Epu():
             self.stop_event.clear()
 
             if self.gap_check_for_move():
-
                 try:
                     a_diagnostic_code = self.a_drive.get_diagnostic_code()
                     b_diagnostic_code = self.b_drive.get_diagnostic_code()
 
                 except:
-                    logger.exception('Error while getting diagnostic codes')
+                    logger.exception('Error while getting diagnostic codes.')
                     self.stop_event.set()
 
                 else:
                     if a_diagnostic_code == b_diagnostic_code == 'A211':
-
                         bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.START_CH_AB, value=val).encode()
 
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             s.settimeout(1)
-                            s.connect((_cte.beaglebone_addr, _cte.io_port))
+                            s.connect((self.args.beaglebone_addr, self.args.io_port))
                             self.gap_start_event.set()
                             self.gap_is_moving = True
                             time.sleep(.1) # waits for the tcp reading in default thread
@@ -818,21 +853,20 @@ class Epu():
             timeout_count -= 1
             if not timeout_count: break
 
-
     def phase_set_enable(self, val: bool):
 
         if val:
-            
+
             with self._epu_lock:
 
                 try:
-                    
+
                     i_diagnostic_code = self.i_drive.get_diagnostic_code()
                     s_diagnostic_code = self.s_drive.get_diagnostic_code()
                     self.stop_event.set()
 
                 except Exception:
-                    
+
                     self.stop_event.set()
                     logger.exception('Phase enable setting error.')
                     return
@@ -845,7 +879,7 @@ class Epu():
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                             s.settimeout(1)
-                            s.connect((_cte.beaglebone_addr, _cte.io_port))
+                            s.connect((self.args.beaglebone_addr, self.args.io_port))
                             s.sendall(bsmp_enable_message)
                             time.sleep(.01) # magic number
 
@@ -868,7 +902,7 @@ class Epu():
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                     s.settimeout(1)
-                    s.connect((_cte.beaglebone_addr, _cte.io_port))
+                    s.connect((self.args.beaglebone_addr, self.args.io_port))
                     s.sendall(bsmp_enable_message)
                     time.sleep(.01) # magic number
 
@@ -879,7 +913,6 @@ class Epu():
             else:
                 logger.info('Release halt to disable drive.')
                 return False
-
 
     def phase_release_halt(self, val: bool):
 
@@ -902,7 +935,7 @@ class Epu():
 
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             s.settimeout(.1)
-                            s.connect((_cte.beaglebone_addr, _cte.io_port))
+                            s.connect((self.args.beaglebone_addr, self.args.io_port))
                             s.sendall(bsmp_enable_message)
                             time.sleep(.01) # magic number
 
@@ -922,7 +955,7 @@ class Epu():
 
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(.1)
-                s.connect((_cte.beaglebone_addr, _cte.io_port))
+                s.connect((self.args.beaglebone_addr, self.args.io_port))
                 s.sendall(bsmp_enable_message)
                 time.sleep(.01) # magic number
 
@@ -931,16 +964,15 @@ class Epu():
                     if not data: break
                     return data
 
-
     def phase_enable_and_release_halt(self, val) -> bool:
 
         try:
             with self._epu_lock:
-                
+
                 if val:
-                    
+
                     timeout_count = 10
-                    
+
                     while not self.phase_enable_status():
                         self.phase_set_enable(1)
                         time.sleep(.1)
@@ -948,7 +980,7 @@ class Epu():
                         if not timeout_count: break
 
                     timeout_count = 10
-                    
+
                     while not self.phase_halt_release_status():
                         self.phase_release_halt(1)
                         time.sleep(.1)
@@ -956,9 +988,9 @@ class Epu():
                         if not timeout_count: break
 
                 else:
-                    
+
                     timeout_count = 10
-                    
+
                     while self.phase_halt_release_status():
                         self.phase_release_halt(0)
                         time.sleep(.1)
@@ -966,7 +998,7 @@ class Epu():
                         if not timeout_count: break
 
                     timeout_count = 10
-                    
+
                     while self.phase_enable_status():
                         self.phase_set_enable(0)
                         time.sleep(.1)
@@ -985,7 +1017,7 @@ class Epu():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
             s.settimeout(.1)
-            s.connect((_cte.beaglebone_addr, _cte.io_port))
+            s.connect((self.args.beaglebone_addr, self.args.io_port))
             s.sendall(bsmp_enable_message)
             time.sleep(.01) # magic number
 
@@ -993,7 +1025,6 @@ class Epu():
                 data = s.recv(16)
                 if not data: break
                 return(bool(data[-2]))
-
 
     def phase_halt_release_status(self):
 
@@ -1002,7 +1033,7 @@ class Epu():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
             s.settimeout(.1)
-            s.connect((_cte.beaglebone_addr, _cte.io_port))
+            s.connect((self.args.beaglebone_addr, self.args.io_port))
             s.sendall(bsmp_enable_message)
             time.sleep(.01) # magic number
 
@@ -1010,7 +1041,6 @@ class Epu():
                 data = s.recv(16)
                 if not data: break
                 return(bool(data[-2]))
-
 
     def phase_start(self, val: bool) -> bool:
 
@@ -1035,7 +1065,7 @@ class Epu():
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                             s.settimeout(1)
-                            s.connect((_cte.beaglebone_addr, _cte.io_port))
+                            s.connect((self.args.beaglebone_addr, self.args.io_port))
                             self.phase_start_event.set()
                             self.phase_is_moving = True
                             time.sleep(.1) # waits for the tcp reading in default thread
@@ -1083,7 +1113,7 @@ class Epu():
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                 s.settimeout(1)
-                s.connect((_cte.beaglebone_addr, _cte.io_port))
+                s.connect((self.args.beaglebone_addr, self.args.io_port))
                 time.sleep(.1) # waits for the tcp reading in default thread
                 s.sendall(bsmp_enable_message)
                 time.sleep(.1)
@@ -1101,7 +1131,7 @@ class Epu():
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                 s.settimeout(1)
-                s.connect((_cte.beaglebone_addr, _cte.io_port))
+                s.connect((self.args.beaglebone_addr, self.args.io_port))
                 time.sleep(.1) # waits for the tcp reading in default thread
                 s.sendall(bsmp_enable_message)
                 time.sleep(.1)
@@ -1114,5 +1144,3 @@ class Epu():
         self.gap_turn_on()
         time.sleep(1)
         self.phase_turn_on()
-
-

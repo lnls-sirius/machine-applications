@@ -13,3 +13,8 @@ ASG(readonly) {
     RULE(1, READ)
     RULE(0, WRITE)
 }
+
+# ASG(rbpv) {
+#     RULE(1, READ)
+#     RULE(0, WRITE)
+# }

@@ -1,33 +1,36 @@
-import argparse
+import os as _os
 import toml, yaml
 from pydantic import BaseModel
 from typing import Optional
 import traceback
 
-############## IOC Structure ###################
-
-TOP = '..'
-
 ################# ETHERNET #####################
 GPIO_TCP_DEFAULT_PORT = 5050
-RS485_TCP_DEFAULT_PORT = 5051
-BBB_DEFAULT_HOSTNAME = 'BBB-DRIVERS-EPU-2022'
+RS485_TCP_DEFAULT_PORT = 5052
 
 ############### GPIO COMMANDS ##################
-BSMP_WRITE = 0X20
-BSMP_READ = 0X10
 
-HALT_CH_AB =   0x10
-START_CH_AB =  0x20
+BSMP_WRITE = 0x20
+BSMP_READ = 0x10
+
+HALT_CH_AB = 0x10
+START_CH_AB = 0x20
 ENABLE_CH_AB = 0x30
 
-HALT_CH_SI =   0x11
-START_CH_SI =  0x21
+HALT_CH_SI = 0x11
+START_CH_SI = 0x21
 ENABLE_CH_SI = 0x31
 
-RESET_CH_AB=  0x40
-RESET_CH_SI=  0x41
+RESET_CH_AB = 0x40
+RESET_CH_SI = 0x41
+
 ############### EPU constants ################
+
+DEFAULT_PATH = '/home/sirius/iocs-log/si-id-epu50/'
+AUTOSAVE_DEFAULT_SAVE_LOCATION = DEFAULT_PATH
+AUTOSAVE_DEFAULT_REQUEST_FILE = _os.path.join(
+    _os.path.dirname(__file__), 'config', 'autosave_epu.req')
+
 
 ## pydantic data validation
 class EpuConfig(BaseModel):
@@ -46,8 +49,9 @@ class EpuConfig(BaseModel):
     EPU_LOG_FILE_PATH: str
 
 ## loads config data
-with open(TOP+'/config/config.toml') as f:
-    config = toml.load(TOP+'/config/config.toml')
+fname = _os.path.join(
+        _os.path.dirname(__file__), 'config', 'config.toml')
+config = toml.load(fname)
 
 epu_config = EpuConfig(**config['EPU'])
 
@@ -69,7 +73,9 @@ ecodrive_log_file_path = epu_config.ECODRIVE_LOG_FILE_PATH
 epu_log_file_path = epu_config.EPU_LOG_FILE_PATH
 
 ######## Drive error codes and messages #########
-with open(TOP+"/config/drive_messages.yaml", "r") as f:
+fname = _os.path.join(
+        _os.path.dirname(__file__), 'config', 'drive_messages.yaml')
+with open(fname, "r") as f:
     try:
         drive_code_dict = yaml.safe_load(f)
         drive_diag_msgs = drive_code_dict['diagnostic_messages']
@@ -78,8 +84,6 @@ with open(TOP+"/config/drive_messages.yaml", "r") as f:
 
 default_unknown_diag_msg = "? Unknown diagnostic code"
 ################## Autosave #####################
-AUTOSAVE_DEFAULT_REQUEST_FILE = TOP+'/source/autosave_epu.req'
-AUTOSAVE_DEFAULT_SAVE_LOCATION = TOP+'/autosave'
 autosave_update_rate = 10.0
 autosave_num_backup_files = 10
 
@@ -126,52 +130,9 @@ position_precision = 3
 scan_rate = 0.1
 
 ## EPICS access security
-access_security_filename = 'epu.as'
+access_security_filename = _os.path.join(
+        _os.path.dirname(__file__), 'access_rules.as')
 
 ## CA server
 ### transaction update rate
 ca_process_rate = 0.1
-
-# input arguments
-
-def getArgs():
-    """ Return command line arguments
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--pv-prefix', dest='pv_prefix', type=str, required=False,
-        default='', help="Prefix for EPICS IOC PVs"
-        )
-    parser.add_argument(
-        '--drive-msg-port', dest='msg_port', type=int, required=False,
-        default=RS485_TCP_DEFAULT_PORT, help="TCP port for drive messages"
-        )
-    parser.add_argument(
-        '--drive-io-port', dest='io_port', type=int, required=False,
-        default=GPIO_TCP_DEFAULT_PORT,
-        help="TCP port for virtual I/O commands"
-        )
-    parser.add_argument(
-        '--beaglebone-addr', dest='beaglebone_addr', type=str, required=False,
-        default=BBB_DEFAULT_HOSTNAME, help="Beaglebone IP address"
-        )
-    parser.add_argument(
-        '--autosave-dir', dest='autosave_dir', type=str, required=False,
-        default=AUTOSAVE_DEFAULT_SAVE_LOCATION, help="Autosave save directory"
-        )
-    parser.add_argument(
-        '--request-file', dest='request_file', type=str, required=False,
-        default=AUTOSAVE_DEFAULT_REQUEST_FILE, help="Autosave request file name"
-        )
-    args = parser.parse_args()
-    return args
-
-args = getArgs()
-
-# IOC parameters
-pv_prefix = args.pv_prefix
-msg_port = args.msg_port
-io_port = args.io_port
-beaglebone_addr = args.beaglebone_addr
-autosave_save_location = args.autosave_dir
-autosave_request_file = args.request_file

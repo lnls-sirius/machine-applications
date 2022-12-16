@@ -1,7 +1,11 @@
+#!/usr/bin/env python-sirius
+
+import os as _os
 from urllib.request import install_opener
 import serial, time, threading, yaml
 from pcaspy import SimpleServer, Driver
-import constants
+
+from . import constants
 
 # Quando for implementada a leitura do encoder externo, criar um método para calcular o desvio entre ele e o resolver
 # AFTER A E-STOP BECOME DESACTIVATED, THE EXTERNAL ENABLE INPUT MUST RECIEVE A 0-1 EDGE. 
@@ -9,7 +13,10 @@ import constants
 # Passar isso para TOML
 port="/dev/ttyUSB0"
 
-with open('drive_messages.yaml', 'r') as f:
+fname = _os.path.join(
+        _os.path.dirname(__file__), 'config', 'drive_messages.yaml')
+
+with open(fname, 'r') as f:
     diag_messages = yaml.safe_load(f)['diagnostic_messages']
     '''Indramat ecodrive 3 class for RS232 communication using ASCII protocol,
         based on functional description SMT-02VRS'''
@@ -142,6 +149,7 @@ with open('drive_messages.yaml', 'r') as f:
         if len(tmp) >= 2:
             return float(tmp[1])
         else: return False
+
 
 class EcoDrive(Driver):
     '''Indramat ecodrive 3 class for RS232 communication using ASCII protocol,
@@ -284,20 +292,20 @@ class EcoDrive(Driver):
 
 # --------------
 
-prefix = 'Ecodrive:'
-pvdb = {
-    'Resolver-Mon' : {
-        'prec' : 3,
-    },
-}
-
 if __name__ == '__main__':
     server = SimpleServer()
 
-server.createPV(prefix, pvdb)
-driver = EcoDrive(serial_port=port, address=constants.drive_A_address, baud_rate=constants.baud_rate)
+    prefix = 'Ecodrive:'
+    pvdb = {
+        'Resolver-Mon' : {
+            'prec' : 3,
+        },
+    }
 
-while True:
-    # process CA transactions
-    server.process(0.1)
+    server.createPV(prefix, pvdb)
+    driver = EcoDrive(serial_port=port, address=constants.drive_A_address, baud_rate=constants.baud_rate)
+
+    while True:
+        # process CA transactions
+        server.process(0.1)
 
