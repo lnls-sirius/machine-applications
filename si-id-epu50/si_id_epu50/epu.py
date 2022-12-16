@@ -461,7 +461,7 @@ class Epu():
 
         except Exception:
             # Just reinforce the need of stop_event ben set in this point, after validation, it could be removed.
-            if not self.stop_event_is_set(): self.stop_event.set()
+            if not self.stop_event.is_set(): self.stop_event.set()
             logger.exception('Could not complete gap check for move.')
 
     # Phase stuff
