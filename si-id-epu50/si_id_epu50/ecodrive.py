@@ -38,6 +38,7 @@ class EcoDrive():
         self.rs485_connected = False
         self.tcp_wait_connection()
         self.drive_connect()
+        logger.info(f'Soft driver {self.DRIVE_NAME} connected do ecodrive address {self.ADDRESS}')
 
         # sets ecodrive answer delay (in ms, minimum is 1)
         # self.set_rs485_delay(1)
@@ -81,7 +82,7 @@ class EcoDrive():
                 else:
 
                     self.tcp_connected = True
-                    logger.info(f'Drive {self.DRIVE_NAME} connected to {self.BBB_HOSTNAME} on port {self.RS458_TCP_PORT}.')
+                    logger.debug(f'Drive {self.DRIVE_NAME} connected to {self.BBB_HOSTNAME} on port {self.RS458_TCP_PORT}.')
                     s.shutdown(socket.SHUT_RDWR)
                     s.close()
                     return True
@@ -113,7 +114,7 @@ class EcoDrive():
                     else:
 
                         self.rs485_connected = True
-                        logger.info(f'Soft driver {self.DRIVE_NAME} connected do ecodrive address {self.ADDRESS}')
+                        logger.debug(f'Soft driver {self.DRIVE_NAME} connected do ecodrive address {self.ADDRESS}')
                         return True
 
     #@timer # prints the execution time of the function
@@ -131,7 +132,7 @@ class EcoDrive():
                         break
 
                     except Exception as e:
-                        logger.error('Communication error.', e)
+                        logger.debug('Communication error.', e)
                         self.tcp_wait_connection()
                         self.drive_connect()
 
@@ -148,9 +149,9 @@ class EcoDrive():
                                 break
                             else: data += chunk.decode()
 
-                        except Exception:
+                        except Exception as e:
                             if not data:
-                                logger.exception('Communication error.')
+                                logger.debug('Communication error.', e)
                                 return
 
                 s.sendall(f'{message}\r'.encode())
@@ -158,15 +159,15 @@ class EcoDrive():
 
                 while True:
                     try:
-                        chunk = s.recv(16)
+                        chunk = s.recv(32)
                         if not chunk or chunk.decode()[-1]=='>' or chunk.decode()[-1]=='?':
                             data += chunk.decode()
                             break
                         else: data += chunk.decode()
 
-                    except Exception:
+                    except Exception as e:
                         if not data:
-                            logger.exception('Communicatio error')
+                            logger.debug('Communicatio error', e)
                             return
 
 
