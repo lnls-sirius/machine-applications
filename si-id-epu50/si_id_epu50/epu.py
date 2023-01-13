@@ -8,15 +8,12 @@ from . import constants as _cte
 from .utils import *
 from .ecodrive import EcoDrive
 
-
-################################### LOGGING #######################################
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logHandler = handlers.RotatingFileHandler(filename='epu.log', maxBytes=10*1024*1024)
 logHandler.setFormatter(formatter)
 logger.addHandler(logHandler)
 logger.info(datetime.now().strftime('%m/%d/%Y, %H:%M:%S'))
-###################################################################################
 
 
 class Epu():
@@ -442,29 +439,30 @@ class Epu():
             return False
 
     def allowed_to_change_gap(self) -> bool:
-        try:
-            if self.gap_enable_status():
-                if self.gap_halt_release_status():
-                    self.stop_event.clear()
-                    if self.gap_check_for_move():
-                        self.stop_event.set()
-                        self.gap_change_allowed = True
-                        return True
+        with self._epu_lock:
+            try:
+                if self.gap_enable_status():
+                    if self.gap_halt_release_status():
+                        self.stop_event.clear()
+                        if self.gap_check_for_move():
+                            self.stop_event.set()
+                            self.gap_change_allowed = True
+                            return True
+                        else:
+                            self.stop_event.set()
+                            self.gap_change_allowed = False
+                            return False
                     else:
-                        self.stop_event.set()
                         self.gap_change_allowed = False
                         return False
                 else:
                     self.gap_change_allowed = False
                     return False
-            else:
-                self.gap_change_allowed = False
-                return False
 
-        except Exception:
-            # Just reinforce the need of stop_event ben set in this point, after validation, it could be removed.
-            if not self.stop_event.is_set(): self.stop_event.set()
-            logger.exception('Could not complete gap check for move.')
+            except Exception:
+                # Just reinforce the need of stop_event ben set in this point, after validation, it could be removed.
+                if not self.stop_event.is_set(): self.stop_event.set()
+                logger.debug('Could not complete gap check for move.')
 
     # Phase stuff
 
@@ -576,29 +574,30 @@ class Epu():
             return False
 
     def allowed_to_change_phase(self) -> bool:
-        try:
-            if self.phase_enable_status():
-                if self.phase_halt_release_status():
-                    self.stop_event.clear()
-                    if self.phase_check_for_move():
-                        self.stop_event.set()
-                        self.phase_change_allowed = True
-                        return True
+        with self._epu_lock:
+            try:
+                if self.phase_enable_status():
+                    if self.phase_halt_release_status():
+                        self.stop_event.clear()
+                        if self.phase_check_for_move():
+                            self.stop_event.set()
+                            self.phase_change_allowed = True
+                            return True
+                        else:
+                            self.stop_event.set()
+                            self.phase_change_allowed = False
+                            return False
                     else:
-                        self.stop_event.set()
                         self.phase_change_allowed = False
                         return False
+
                 else:
                     self.phase_change_allowed = False
                     return False
-
-            else:
-                self.phase_change_allowed = False
-                return False
-        except Exception:
-            # Just reinforce the need of stop_event ben set in this point, after validation, it could be removed.
-            if not self.stop_event.is_set(): self.stop_event.set()
-            logger.exception('Could not complete phase check for move')
+            except Exception:
+                # Just reinforce the need of stop_event ben set in this point, after validation, it could be removed.
+                if not self.stop_event.is_set(): self.stop_event.set()
+                logger.debug('Could not complete phase check for move')
 
     # GPIOs functions
 
