@@ -146,24 +146,27 @@ class App:
             for proptype in conns.keys():
                 reason = psname + ':' + strenname + proptype
                 self.driver.setParamStatus(
-                    reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+                    reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
             return
 
         # all connected, calculate strengths
         streconv = self._streconvs[psname]
-        conn = self._connectors[psname]
-        limits = conn['-SP'].limits
-        curr0 = conn['-SP'].value
-        curr1 = conn['-RB'].value
-        curr2 = conn['Ref-Mon'].value
-        curr3 = conn['-Mon'].value
-        curr4 = limits[3]
-        curr5 = limits[4]
-        values = (curr0, curr1, curr2, curr3, curr4, curr5)
-        try:
-            strengths = streconv.conv_current_2_strength(values)
-        except TypeError:
-            # this exception occurs when low level IOC crashes
+        conns = self._connectors[psname]
+        if all([conn.connected for conn in conns.values()]):
+            limits = conns['-SP'].limits
+            curr0 = conns['-SP'].value
+            curr1 = conns['-RB'].value
+            curr2 = conns['Ref-Mon'].value
+            curr3 = conns['-Mon'].value
+            curr4 = limits[3]
+            curr5 = limits[4]
+            values = (curr0, curr1, curr2, curr3, curr4, curr5)
+            try:
+                strengths = streconv.conv_current_2_strength(values)
+            except TypeError:
+                # this exception occurs when low level IOC crashes
+                strengths = None
+        else:
             strengths = None
         if strengths is None or None in strengths:
             slims = None
@@ -173,7 +176,7 @@ class App:
                 slims = slims[1], slims[0]
 
         # update epics database
-        for i, proptype in enumerate(conn.keys()):
+        for i, proptype in enumerate(conns.keys()):
             reason = psname + ':' + strenname + proptype
             if slims is None:
                 self.driver.setParamStatus(
