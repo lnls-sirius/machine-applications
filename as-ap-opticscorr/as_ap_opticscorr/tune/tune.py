@@ -42,11 +42,11 @@ class _PCASDriver(_pcaspy.Driver):
         self.app.add_callback(self.update_pv)
 
     def read(self, reason):
-        """Read IOC pvs acording to main application."""
+        """Read IOC pvs according to main application."""
         return super().read(reason)
 
     def write(self, reason, value):
-        """Write IOC pvs acording to main application."""
+        """Write IOC pvs according to main application."""
         if self.app.write(reason, value):
             return super().write(reason, value)
         return False
