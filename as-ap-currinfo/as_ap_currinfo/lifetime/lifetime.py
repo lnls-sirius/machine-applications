@@ -4,6 +4,7 @@ import os as _os
 import sys as _sys
 import signal as _signal
 import logging as _log
+
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 
@@ -43,7 +44,7 @@ class _PCASDriver(_pcaspy.Driver):
         self.app.add_callback(self.update_pv)
 
     def read(self, reason):
-        """Read IOC pvs acording to main application."""
+        """Read IOC pvs according to main application."""
         value = self.app.read(reason)
         if value is None:
             return super().read(reason)
@@ -51,8 +52,11 @@ class _PCASDriver(_pcaspy.Driver):
             return value
 
     def write(self, reason, value):
-        """Write IOC pvs acording to main application."""
-        if self.app.write(reason, value):
+        """Write IOC pvs according to main application."""
+        ret_val = self.app.write(reason, value)
+        if reason.endswith('-Cmd'):
+            value = self.getParam(reason) + 1
+        if ret_val:
             return super().write(reason, value)
         return False
 
