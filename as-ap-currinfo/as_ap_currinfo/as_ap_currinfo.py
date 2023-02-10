@@ -7,7 +7,6 @@ import logging as _log
 
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-import visa as _visa
 
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
@@ -44,11 +43,9 @@ def _get_app(acc):
     elif acc == 'si':
         return _SICurrInfoApp()
     elif acc == 'li':
-        resource_manager = _visa.ResourceManager('@py')
-        return _LICurrInfoApp(resource_manager)
+        return _LICurrInfoApp()
     elif acc == 'ts':
-        resource_manager = _visa.ResourceManager('@py')
-        return _TSCurrInfoApp(resource_manager)
+        return _TSCurrInfoApp()
     else:
         raise ValueError('There is no App defined for accelarator '+acc+'.')
 
