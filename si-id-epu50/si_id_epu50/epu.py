@@ -1,27 +1,32 @@
+import threading
+import socket
 import logging
-logger = logging.getLogger(__name__)
-import logging.handlers as handlers
-import threading, socket
-from datetime import datetime
 
 from . import constants as _cte
-from .utils import *
-from .ecodrive import EcoDrive
+from .utils.utils import *
+import utils.utils_logging as logging_utils
+from .ecodrive import *
 
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logHandler = handlers.RotatingFileHandler(filename='epu.log', maxBytes=10*1024*1024)
-logHandler.setFormatter(formatter)
-logger.addHandler(logHandler)
-logger.info(datetime.now().strftime('%m/%d/%Y, %H:%M:%S'))
+logger = logging.getLogger(__name__)
 
+# This shoud be in main application in the future, not in this module
+def epu_logging():
+    logger.handlers.clear()
+    file_handler = logging_utils.get_file_handler(logging_utils.LOG_FILE)
+    root = logging_utils.configure_root_logger(file_handler) # root logger
+    logger.addHandler(file_handler) # if multiples modules have logger, then all will have 'file_handler' handler added.
+epu_logging()
+class Namespace:
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+default_args = Namespace(pv_prefix='SI-10SB:ID-EPU50:', msg_port=5052, io_port=5050, beaglebone_addr='10.128.110.160')
 
 class Epu():
 
     def __init__(self, args, callback_update=lambda: 1):
 
         logger.info('Class EPU started\n\n')
-
         self.args = args
         self.gpio_connected = False
         self.tcp_wait_connection()
@@ -58,6 +63,8 @@ class Epu():
             rs458_tcp_port=self.args.msg_port,
             drive_name='S')
 
+        logger.info('The 4 drives were initialized correctly.')
+
         self.callback_update = callback_update
         self.warnings = [] # not used yet
 
@@ -71,11 +78,15 @@ class Epu():
         self.monitor_gap_movement_thread = Thread(target=self.monitor_gap_movement, daemon=True)
         self.standstill_monitoring_thread = Thread(target=self.standstill_monitoring, daemon=True)
 
+        logger.info('Initializing variables.')
+
         # initialize variables
         while True:
             try: self.init_variables_scope()
             except Exception: logger.error('Trying to initialize variables...')
             else: break
+
+        logger.info('Variables initialized correctly.')
 
         # starts threads
         self.standstill_monitoring_thread.start()
@@ -1143,3 +1154,9 @@ class Epu():
         self.gap_turn_on()
         time.sleep(1)
         self.phase_turn_on()
+
+if __name__ == '__main__':
+    logger.handlers.clear()
+    epu_logging()
+    logger.info('EPU HERE')
+    epu = Epu(default_args)

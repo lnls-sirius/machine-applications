@@ -3,7 +3,7 @@ from functools import wraps
 from threading import Thread
 import socket
 
-from . import constants as _cte
+import constants as _cte
 
 
 def schedule(interval):

@@ -2,20 +2,12 @@
 
 import logging
 logger = logging.getLogger(__name__)
-import logging.handlers as handlers
 import socket
 import threading
 import time
 
-from . import constants as _cte
-from .utils import *
-
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logHandler = handlers.RotatingFileHandler(filename='ecodrive.log', maxBytes=10*1024*1024)
-logHandler.setFormatter(formatter)
-logger.addHandler(logHandler)
-
+import constants as _cte
+from utils.utils import *
 
 class EcoDrive():
 
@@ -489,10 +481,5 @@ class EcoDrive():
             self.tcp_read_parameter('S-0-0128,7,W,00', False)
 
 
-################### MODULE TESTING ##################
 if __name__ == '__main__':
-    eco_test = EcoDrive(address=21, min_limit=_cte.minimum_gap, max_limit=_cte.maximum_gap, drive_name='Teste')
-    for i in range(10):
-        print(eco_test.get_resolver_position())
-        print(eco_test.get_max_velocity())
-        print(eco_test.get_halten_status())
+    pass
