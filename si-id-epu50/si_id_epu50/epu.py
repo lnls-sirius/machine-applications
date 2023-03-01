@@ -3,19 +3,10 @@ import socket
 import logging
 
 from . import constants as _cte
-from .utils.utils import *
-import utils.utils_logging as logging_utils
+from .utils import *
 from .ecodrive import *
 
 logger = logging.getLogger(__name__)
-
-# This shoud be in main application in the future, not in this module
-def epu_logging():
-    logger.handlers.clear()
-    file_handler = logging_utils.get_file_handler(logging_utils.LOG_FILE)
-    root = logging_utils.configure_root_logger(file_handler) # root logger
-    logger.addHandler(file_handler) # if multiples modules have logger, then all will have 'file_handler' handler added.
-epu_logging()
 class Namespace:
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)

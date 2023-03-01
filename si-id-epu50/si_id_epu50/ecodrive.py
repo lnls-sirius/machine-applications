@@ -6,22 +6,29 @@ import socket
 import threading
 import time
 
-import constants as _cte
-from utils.utils import *
+from . import constants as _cte
+from .utils import *
 
 class EcoDrive():
 
     _lock = threading.RLock()
-    _SOCKET_TIMEOUT = 1 # tcp socket timeout
+    _TCP_SOCKET_TIMEOUT = 1 # ms
 
-    def __init__(self, address, max_limit=+25, min_limit=-25,
-                    bbb_hostname = None, rs458_tcp_port=None, drive_name = 'EcoDrive') -> None:
-        """."""
+    def __init__(self, address: int, max_limit=+25, min_limit=-25,
+                    bbb_hostname: str = None, rs458_tcp_port: int = None, drive_name: str = 'EcoDrive') -> None:
+        """Intramat EcoDirve 03 (controllers DKC**.3-040, -100, -200) class.
+           Encaptulate ASCII messages into TCP datagrams.
+           Makes available a subset of possible readings and
+           writes from/to EcoDrive 03 controllers. It is required that on the
+           other side of communication, there is some software
+           unwrapping tcp messages and delivering it to a RS485 interface; on CNPEM
+           this is typically done with a beagle bone black configured properly.
+        """
         self.ADDRESS = address
         self.UPPER_LIMIT = max_limit
         self.LOWER_LIMIT = min_limit
         self.DRIVE_NAME = drive_name
-        self.soft_drive_message = ''  # holds general information about events
+        self.soft_drive_message = ''  # not used yet. purpose: holding ephemeral messages about software operation
 
         # connections
         self.BBB_HOSTNAME = bbb_hostname
@@ -32,58 +39,59 @@ class EcoDrive():
         self.drive_connect()
         logger.info(f'Soft driver {self.DRIVE_NAME} connected do ecodrive address {self.ADDRESS}')
 
-        # sets ecodrive answer delay (in ms, minimum is 1)
+        # minimum ecodrive answer delay in ms
         # self.set_rs485_delay(1)
 
     def tcp_wait_connection(self) -> bool:
-        """TCP wait connection.
-
+        """
         Any time this function is called, it keeps on a loop trying to reach
-        the other side of a tcp connection, when it succeed,
-        it returnts True.
+        the other side of a tcp connection, when it succeed, it returnts True.
         """
         with self._lock:
+
+            count = 0
 
             while True:
 
                 try:
-
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
 
                 except socket.timeout as e:
-
                     self.tcp_connected = False
                     self.rs485_connected = False
                     logger.info(f'Trying to connect...', e)
-                    print(f'Trying to connect...', e)
-                    time.sleep(3)
+                    if not count:
+                        print(f'Trying to connect...', e)
+                        time.sleep(3)
 
                 except socket.error as e:
-
                     self.tcp_connected = False
                     self.rs485_connected = False
-                    logger.info(f'Trying to connect.', e)
+                    if not count:
+                        logger.info(f'Trying to connect.', e)
 
                 except Exception:
-
                     self.tcp_connected = False
                     self.rs485_connected = False
-                    logger.info('Trying to connect...', e)
+                    if not count:
+                        logger.info('Trying to connect...', e)
 
                 else:
-
                     self.tcp_connected = True
-                    logger.debug(f'Drive {self.DRIVE_NAME} connected to {self.BBB_HOSTNAME} on port {self.RS458_TCP_PORT}.')
+                    logger.info(f'Drive {self.DRIVE_NAME} connected to {self.BBB_HOSTNAME} on port {self.RS458_TCP_PORT}.')
                     s.shutdown(socket.SHUT_RDWR)
                     s.close()
                     return True
 
+                finally:
+                    count += 1
+
 
     def drive_connect(self) -> True:
         """Drive connect.
-        Keeps trying to connect to drive (rs485 level with provided
-        drive address) untill it succeed, then returns True.
+        Keeps trying to connect to drive (SERIAL, NOT TCP CONNECTION) untill it succeed, then returns True.
+        Success is accomplished when the drive responds properly.
         """
         with self._lock:
 
@@ -116,7 +124,7 @@ class EcoDrive():
 
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
-                s.settimeout(EcoDrive._SOCKET_TIMEOUT)
+                s.settimeout(EcoDrive._TCP_SOCKET_TIMEOUT)
 
                 while True:
                     try:

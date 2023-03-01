@@ -14,8 +14,8 @@ def get_file_handler(file: str):
     fh.setFormatter(logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s"))
     return fh
 
-def configure_root_logger(file_handler):
-    root = logging.getLogger()
-    root.setLevel(logging.DEBUG)
-    root.addHandler(file_handler)
-    return root
+def get_logger(name, file_handler):
+    lg = logging.getLogger(name)
+    lg.setLevel(logging.DEBUG)
+    lg.addHandler(file_handler)
+    return lg
