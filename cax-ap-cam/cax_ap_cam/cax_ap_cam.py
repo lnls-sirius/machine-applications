@@ -4,12 +4,15 @@ import os as _os
 import logging as _log
 import signal as _signal
 from threading import Event as _Event
+
 import pcaspy as _pcaspy
 from pcaspy.tools import ServerThread
+
 from siriuspy import util as _util
 from siriuspy import csdev as _csdev
 from siriuspy.meas.lienergy.csdev import Const as _csenergy
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
+
 from .main import App
 
 
@@ -71,12 +74,12 @@ class _Driver(_pcaspy.Driver):
         return True
 
 
-def run(debug=False):
+def run(devname, debug=False):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
     ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
-    ioc_prefix += 'CAX:B:BASLER01:' # Base_IOC_Change prefix
+    ioc_prefix += devname + ':' # Base_IOC_Change prefix
 
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
@@ -95,7 +98,7 @@ def run(debug=False):
         _log.error('Another ' + ioc_prefix + ' is already running!')
         return
     _util.print_ioc_banner(
-            '', db, 'Carcará Camera Image Processing IOC.', __version__, ioc_prefix)
+            '', db, 'Image Processing IOC.', __version__, ioc_prefix)
     # create a new simple pcaspy server and driver to respond client's requests
     _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
