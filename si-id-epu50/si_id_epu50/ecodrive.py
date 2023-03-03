@@ -14,8 +14,9 @@ class EcoDrive():
     _lock = threading.RLock()
     _TCP_SOCKET_TIMEOUT = 1 # ms
 
-    def __init__(self, address: int, max_limit=+25, min_limit=-25,
-                    bbb_hostname: str = None, rs458_tcp_port: int = None, drive_name: str = 'EcoDrive') -> None:
+    def __init__(self, socket: socket.socket, address: int, max_limit, min_limit,
+                 bbb_hostname, rs458_tcp_port: int = None, drive_name: str = 'EcoDrive') -> None:
+        
         """Intramat EcoDirve 03 (controllers DKC**.3-040, -100, -200) class.
            Encaptulate ASCII messages into TCP datagrams.
            Makes available a subset of possible readings and
@@ -24,20 +25,20 @@ class EcoDrive():
            unwrapping tcp messages and delivering it to a RS485 interface; on CNPEM
            this is typically done with a beagle bone black configured properly.
         """
+        
         self.ADDRESS = address
         self.UPPER_LIMIT = max_limit
         self.LOWER_LIMIT = min_limit
         self.DRIVE_NAME = drive_name
-        self.soft_drive_message = ''  # not used yet. purpose: holding ephemeral messages about software operation
-
-        # connections
         self.BBB_HOSTNAME = bbb_hostname
         self.RS458_TCP_PORT = rs458_tcp_port
+        self.sock = socket
         self.tcp_connected = False
         self.rs485_connected = False
+        
         self.tcp_wait_connection()
         self.drive_connect()
-        logger.info(f'Soft driver {self.DRIVE_NAME} connected do ecodrive address {self.ADDRESS}')
+        logger.info(f'Drive {self.DRIVE_NAME}. Address {self.ADDRESS}')
 
         # minimum ecodrive answer delay in ms
         # self.set_rs485_delay(1)
@@ -47,46 +48,37 @@ class EcoDrive():
         Any time this function is called, it keeps on a loop trying to reach
         the other side of a tcp connection, when it succeed, it returnts True.
         """
+        count = 0
         with self._lock:
-
-            count = 0
 
             while True:
 
                 try:
-                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
-
-                except socket.timeout as e:
+                    self.sock.sendall(b'')
+                except BrokenPipeError:
+                    logger.error('BrokenPipeError')
                     self.tcp_connected = False
                     self.rs485_connected = False
-                    logger.info(f'Trying to connect...', e)
-                    if not count:
-                        print(f'Trying to connect...', e)
-                        time.sleep(3)
-
-                except socket.error as e:
+                else:
+                    self.tcp_connected = True
+                    logger.info(f'Drive {self.DRIVE_NAME} connected to {self.BBB_HOSTNAME} on port {self.RS458_TCP_PORT}.')
+                    return True
+                
+                try:
+                    self.sock.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
+                except Exception as e:
                     self.tcp_connected = False
                     self.rs485_connected = False
                     if not count:
+                        print(f'Trying to connect.')
                         logger.info(f'Trying to connect.', e)
-
-                except Exception:
-                    self.tcp_connected = False
-                    self.rs485_connected = False
-                    if not count:
-                        logger.info('Trying to connect...', e)
+                        time.sleep(5)
+                    count += 1
 
                 else:
                     self.tcp_connected = True
                     logger.info(f'Drive {self.DRIVE_NAME} connected to {self.BBB_HOSTNAME} on port {self.RS458_TCP_PORT}.')
-                    s.shutdown(socket.SHUT_RDWR)
-                    s.close()
                     return True
-
-                finally:
-                    count += 1
-
 
     def drive_connect(self) -> True:
         """Drive connect.
@@ -117,49 +109,41 @@ class EcoDrive():
                         logger.debug(f'Soft driver {self.DRIVE_NAME} connected do ecodrive address {self.ADDRESS}')
                         return True
 
-    #@timer # prints the execution time of the function
-    def tcp_read_parameter(self, message: str, change_drive: bool = True) -> str:
-
+    def send_data(self, message: str) -> str:
+        '''
+        Sends data to drive and returns the drive answer.
+        In the future this should be a 'handler class' outside acodrive class.
+        '''
+                
         with self._lock:
-
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-
-                s.settimeout(EcoDrive._TCP_SOCKET_TIMEOUT)
-
+            
+            try:
+                self.sock.sendall(message.encode())
+                
+            except BrokenPipeError:
+                logger.error(BrokenPipeError)
+                
+                show_message = True
                 while True:
+                    if show_message:
+                        logger.debug('Disconnected. Trying to reconnect.')
+                        show_message = False
                     try:
-                        s.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
+                        self.sock.connect((self.BBB_HOSTNAME, self.RS458_TCP_PORT))
                         break
-
                     except Exception as e:
-                        logger.debug('Communication error.', e)
-                        self.tcp_wait_connection()
-                        self.drive_connect()
-
-                if change_drive:
-
-                    s.sendall(f'BCD:{self.ADDRESS}\r'.encode())
-                    data: str = ''
-
-                    while True:
-                        try:
-                            chunk = s.recv(16)
-                            if not chunk or chunk.decode()[-1]=='>':
-                                data += chunk.decode()
-                                break
-                            else: data += chunk.decode()
-
-                        except Exception as e:
-                            if not data:
-                                logger.debug('Communication error.', e)
-                                return
-
-                s.sendall(f'{message}\r'.encode())
-                data: str = ''
-
+                        logger.debug(e)
+                    time.sleep(5)
+            
+            except Exception as e:
+                logger.debug(e)
+                time.sleep(5)
+            
+            else:
+                data = ''
                 while True:
                     try:
-                        chunk = s.recv(32)
+                        chunk = self.sock.recv(32)
                         if not chunk or chunk.decode()[-1]=='>' or chunk.decode()[-1]=='?':
                             data += chunk.decode()
                             break
@@ -167,13 +151,26 @@ class EcoDrive():
 
                     except Exception as e:
                         if not data:
-                            logger.debug('Communicatio error', e)
+                            logger.debug(e)
                             return
+                
+                return data
+                                      
+    #@timer # prints the execution time of the function
+    def tcp_read_parameter(self, message: str, change_drive: bool = True) -> str:
 
+        try:
+            if change_drive:
+                self.send_data(f'BCD:{self.ADDRESS}\r')
+
+            data = self.send_data(f'{message}\r')
 
             if change_drive: time.sleep(.007) # makes significant difference
             return data.encode()
-
+        
+        except Exception as e:
+            logger.debug(e)
+                
     def get_resolver_position(self, change_drive = True) -> float:
 
         try:

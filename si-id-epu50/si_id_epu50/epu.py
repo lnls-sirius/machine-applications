@@ -1,6 +1,7 @@
 import threading
 import socket
 import logging
+import logging.handlers
 
 from . import constants as _cte
 from .utils import *
@@ -17,12 +18,12 @@ class Epu():
 
     def __init__(self, args, callback_update=lambda: 1):
 
-        logger.info('Class EPU started\n\n')
+        serialStream = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.args = args
         self.gpio_connected = False
         self.tcp_wait_connection()
 
-        self.a_drive = EcoDrive(
+        self.a_drive = EcoDrive(socket=serialStream,
             address=_cte.a_drive_address,
             min_limit=_cte.minimum_gap,
             max_limit=_cte.maximum_gap,
@@ -30,7 +31,7 @@ class Epu():
             rs458_tcp_port=self.args.msg_port,
             drive_name='A')
 
-        self.b_drive = EcoDrive(
+        self.b_drive = EcoDrive(socket=serialStream,
             address=_cte.b_drive_address,
             min_limit=_cte.minimum_gap,
             max_limit=_cte.maximum_gap,
@@ -38,7 +39,7 @@ class Epu():
             rs458_tcp_port=self.args.msg_port,
             drive_name='B')
 
-        self.i_drive = EcoDrive(
+        self.i_drive = EcoDrive(socket=serialStream,
             address=_cte.i_drive_address,
             min_limit=_cte.minimum_phase,
             max_limit=_cte.maximum_phase,
@@ -46,7 +47,7 @@ class Epu():
             rs458_tcp_port=self.args.msg_port,
             drive_name='I')
 
-        self.s_drive = EcoDrive(
+        self.s_drive = EcoDrive(socket=serialStream,
             address=_cte.s_drive_address,
             min_limit=_cte.minimum_phase,
             max_limit=_cte.maximum_phase,
@@ -1146,8 +1147,24 @@ class Epu():
         time.sleep(1)
         self.phase_turn_on()
 
+
+def get_file_handler(file: str):
+    # logger.handlers.clear()
+    fh = logging.handlers.RotatingFileHandler(file, maxBytes=1000000, backupCount=10)
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s"))
+    return fh
+
+def get_logger(file_handler):
+    lg = logging.getLogger()
+    lg.setLevel(logging.DEBUG)
+    lg.addHandler(file_handler)
+    return lg
+
+logger.handlers.clear()
+fh = get_file_handler('testing.log')
+root = get_logger(fh)
+
 if __name__ == '__main__':
-    logger.handlers.clear()
-    epu_logging()
     logger.info('EPU HERE')
     epu = Epu(default_args)
