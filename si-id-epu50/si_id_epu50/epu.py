@@ -118,33 +118,6 @@ class Epu():
 
             time.sleep(5)
 
-    # not been used yet
-    def check_tcp_connection(self):
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            _ = s.connect_ex((self.args.beaglebone_addr, self.args.io_port))
-            time.sleep(.001)
-
-        except Exception as e:
-            self.gpio_connected = False
-            logger.exception('Disconnected from GPIO server.')
-            try:
-                s.close()
-            except:
-                return False
-            else:
-                return False
-        else:
-            self.gpio_connected = True
-            s.shutdown(socket.SHUT_RDWR)
-            s.close()
-            return True
-
-    @property
-    def tcp_connected(self):
-        """."""
-        return self.check_tcp_connection()
-
     # motion monitoring
 
     def init_variables_scope(self):
@@ -207,29 +180,32 @@ class Epu():
         while True:
             try:
                 self.gap_start_event.wait()
-                logger.info('\nGap movement started\n')
-                self.a_drive.drive_connect() # sends BCD:{address}
-                start = time.time()
-                update_count = 0
+                
+                with self._epu_lock:
+                    logger.info('\nGap movement started\n')
+                    self.a_drive.drive_connect() # sends BCD:{address} to drive A
+                    start = time.time()
+                    update_count = 0
 
-                while self.gap_start_event.is_set():
+                    while self.gap_start_event.is_set():
 
-                    g = self.a_drive.get_encoder_position(False)
+                        g = self.a_drive.get_encoder_position(False)
 
-                    if type(g) == float:
-                        self.gap = g
-                        self.callback_update()
-                        update_count += 1
-                        logger.info(f'Gap: {self.gap}') # helps to diagnose updating problems
+                        if type(g) == float:
+                            self.gap = g
+                            self.callback_update()
+                            update_count += 1
+                            # logger.info(f'Gap: {self.gap}') # helps to diagnose updating problems
 
-                    if abs(self.gap - self.gap_target) < .001:
-                        self.gap_is_moving = 0
-                        self.gap_start_event.clear()
-                        end = time.time()
-                        logger.info(f'\nGap movement finished. \
-                            Update rate: {update_count/(end-start)}')
+                        if abs(self.gap - self.gap_target) < .001:
+                            self.gap_is_moving = 0
+                            self.gap_start_event.clear()
+                            end = time.time()
+                            # logger.info(f'\nGap movement finished. \
+                            #     Update rate: {update_count/(end-start)}')
+                            logger.info(f'{self.gap}\t{update_count/(end-start)}')
 
-                self.stop_event.set()
+                    self.stop_event.set()
 
             except Exception:
                 logger.exception('Gap fast update error.')
@@ -353,7 +329,7 @@ class Epu():
     def gap_set(self, target_gap: float) -> float:
         
         if _cte.minimum_gap <= target_gap <= _cte.maximum_gap:
-            while 1:
+            while True:
                 self.stop_event.wait() # prevents send message to drive while fast gap updating is running
                 self.stop_event.clear()
                 try:
@@ -364,10 +340,8 @@ class Epu():
                 except Exception as e:
                     self.stop_event.set()
                     logger.exception('Could not change target gap')
-                    print('Could not change target gap')
                     if self.a_target_position != self.b_target_position:
                         logger.warning('GC01 warning: correct cause before moving')
-                        self.warnings.append('GC01')
                 else:
                     if self.a_target_position == self.b_target_position:
                         self.stop_event.set()
@@ -375,13 +349,10 @@ class Epu():
                         return target_gap
                     else:
                         logger.warning('GC01 warning: correct cause before moving')
-                        self.warnings.append('GC01')
-                        print('GC01 warning: correct cause before moving')
                         self.gap_target = None
         else:
             self.stop_event.set()
             logger.error(f'Gap value given, ({target_gap}), is out of range.')
-            print(f'Gap value given, ({target_gap}), is out of range.')
             return self.gap_target
 
     def gap_set_velocity(self, target_velocity: float):
@@ -1150,7 +1121,7 @@ class Epu():
 
 def get_file_handler(file: str):
     # logger.handlers.clear()
-    fh = logging.handlers.RotatingFileHandler(file, maxBytes=1000000, backupCount=10)
+    fh = logging.handlers.RotatingFileHandler(file, maxBytes=10000000, backupCount=10)
     fh.setLevel(logging.DEBUG)
     fh.setFormatter(logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s"))
     return fh
@@ -1161,10 +1132,13 @@ def get_logger(file_handler):
     lg.addHandler(file_handler)
     return lg
 
+def cycling():
+    ''' For future cycling tests'''
+    pass
+      
 logger.handlers.clear()
 fh = get_file_handler('testing.log')
 root = get_logger(fh)
-
+            
 if __name__ == '__main__':
-    logger.info('EPU HERE')
     epu = Epu(default_args)

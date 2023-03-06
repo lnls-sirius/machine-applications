@@ -157,7 +157,7 @@ class EcoDrive():
                 return data
                                       
     #@timer # prints the execution time of the function
-    def tcp_read_parameter(self, message: str, change_drive: bool = True) -> str:
+    def tcp_read_parameter(self, message: str, change_drive: bool = True) -> bytes:
 
         try:
             if change_drive:
