@@ -118,6 +118,32 @@ class Epu():
 
             time.sleep(5)
 
+    def check_tcp_connection(self):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            _ = s.connect_ex((self.args.beaglebone_addr, self.args.io_port))
+            time.sleep(.001)
+
+        except Exception as e:
+            self.gpio_connected = False
+            logger.exception('Disconnected from GPIO server.')
+            try:
+                s.close()
+            except:
+                return False
+            else:
+                return False
+        else:
+            self.gpio_connected = True
+            s.shutdown(socket.SHUT_RDWR)
+            s.close()
+            return True
+
+    @property
+    def tcp_connected(self):
+        """."""
+        return self.check_tcp_connection()
+
     # motion monitoring
 
     def init_variables_scope(self):
