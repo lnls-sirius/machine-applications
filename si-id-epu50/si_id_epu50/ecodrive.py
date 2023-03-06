@@ -38,7 +38,6 @@ class EcoDrive():
         
         self.tcp_wait_connection()
         self.drive_connect()
-        logger.info(f'Drive {self.DRIVE_NAME}. Address {self.ADDRESS}')
 
         # minimum ecodrive answer delay in ms
         # self.set_rs485_delay(1)
