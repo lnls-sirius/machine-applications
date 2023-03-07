@@ -2,16 +2,15 @@
 
 import os
 import argparse as _argparse
-from cax_ap_cam import run
+from cax_ap_cam import run_imag_proc
 
-
-# Linac image is very large! (2448 X 2050)
 os.environ['EPICS_CA_MAX_ARRAY_BYTES'] = '21000000'
 
 BASLER_NAME = 'BASLER01'
 BL_NAME = 'CAX'
 BL_SECTOR = 'B'
-DEVNAME = ':'.join(BL_NAME, BL_SECTOR, BASLER_NAME)
+DEVNAME = ':'.join(
+    [BL_NAME, BL_SECTOR, BASLER_NAME])
 
 parser = _argparse.ArgumentParser(
     description="Run Carcará X BASLER01 Image Processing IOC.")
@@ -23,4 +22,4 @@ parser.add_argument(
     help=f"Device name. ({DEVNAME})")
 
 args = parser.parse_args()
-run(devname=args.devname, debug=args.debug)
+run_imag_proc(devname=args.devname, debug=args.debug)

@@ -5,19 +5,14 @@ import logging as _log
 import signal as _signal
 from threading import Event as _Event
 
+from .const import Constants
 import pcaspy as _pcaspy
 from pcaspy.tools import ServerThread
-
 from siriuspy import util as _util
-from siriuspy import csdev as _csdev
-from siriuspy.meas.lienergy.csdev import Const as _csenergy
-from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 
 from .main import App
 
 
-__version__ = _util.get_last_commit_hash()
-INTERVAL = 0.5
 stop_event = _Event()
 
 
@@ -59,68 +54,111 @@ class _Driver(_pcaspy.Driver):
         self.updatePV(reason)
         return True
 
-    def _isValid(self, reason, val):
-        if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
+    def check_read_only(self, reason):
+        is_read_only = reason.endswith(('-Sts', '-RB', '-Mon', '-Cte'))
+        if is_read_only:
             _log.debug('PV {0:s} is read only.'.format(reason))
-            return False
+
+        return not is_read_only
+
+    def check_value_none(self, val):
         if val is None:
             msg = 'client tried to set None value. refusing...'
             _log.error(msg)
             return False
-        enums = self.getParamInfo(reason, info_keys=('enums', ))['enums']
-        if enums and isinstance(val, int) and val >= len(enums):
-            _log.warning('value %d too large for enum type PV %s', val, reason)
-            return False
         return True
 
+    def check_enums(self, reason, val):
+        enums = self.getParamInfo(reason, info_keys=('enums', ))['enums']
+        enum_verifier = enums and isinstance(val, int) and val >= len(enums)
+        if enum_verifier:
+            _log.warning('value %d too large for enum type PV %s', val, reason)
+        return not enum_verifier
 
-def run(devname, debug=False):
-    """Start the IOC."""
-    _util.configure_log_file(debug=debug)
-    _log.info('Starting...')
-    ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
-    ioc_prefix += devname + ':' # Base_IOC_Change prefix
+    def _isValid(self, reason, val):
+        is_valid = self.check_read_only(reason)
+        is_valid = self.check_value_none(val)
+        is_valid = self.check_enums(reason, val)
+        return is_valid
 
-    # define abort function
+
+def defineAbortFunction():
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
-    # Creates App object
-    db = _csenergy.get_database() # Base_IOC_Change database
-    db['Version-Cte'] = {'type': 'string', 'value': __version__}
-    # add PV Properties-Cte with list of all IOC PVs:
-    db = _csdev.add_pvslist_cte(db, prefix='')
-    # check if IOC is already running
+
+def ioc_is_running(const):
+    ioc_prefix = const.get_prefix()
+    db = const.get_database()
     running = _util.check_pv_online(
         pvname=ioc_prefix + sorted(db.keys())[0],
         use_prefix=False, timeout=0.5)
+
     if running:
         _log.error('Another ' + ioc_prefix + ' is already running!')
-        return
+        return True
+
     _util.print_ioc_banner(
-            '', db, 'Image Processing IOC.', __version__, ioc_prefix)
-    # create a new simple pcaspy server and driver to respond client's requests
+        '', db, 'Image Processing IOC.',
+        db['Version-Cte']['value'], ioc_prefix)
+    return False
+
+
+def create_server(const):
     _log.info('Creating Server.')
+    ioc_prefix = const.get_prefix()
+    db = const.get_database()
+
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, db)
+
     _log.info('Setting Server Database.')
     server.createPV(ioc_prefix, db)
-    _log.info('Creating Driver.')
-    app = App()
-    _Driver(app)
+    return server
 
-    # initiate a new thread responsible for listening for client connections
+
+def initialize_server_thread(server):
     server_thread = ServerThread(server)
     server_thread.daemon = True
     _log.info('Starting Server Thread.')
     server_thread.start()
+    return server_thread
 
-    # main loop
-    while not stop_event.is_set():
-        app.process(INTERVAL)
 
+def stop_server_thread(server_thread):
     _log.info('Stoping Server Thread...')
     # send stop signal to server thread
     server_thread.stop()
     server_thread.join()
     _log.info('Server Thread stopped.')
+    return server_thread
+
+
+def create_driver(const):
+    _log.info('Creating Driver.')
+    app = App(const=const)
+    _Driver(app)
+    return app
+
+
+def ioc_main_loop(app):
+    interval = 0.5
+    while not stop_event.is_set():
+        app.process(interval)
+
+
+def run_imag_proc(devname, debug=False):
+    """Start the IOC."""
+
+    _util.configure_log_file(debug=debug)
+    _log.info('Starting...')
+
+    defineAbortFunction()
+
+    const = Constants(devname)
+
+    if not ioc_is_running(const):
+        server = create_server(const)
+        server_thread = initialize_server_thread(server)
+        ioc_main_loop(create_driver(const))
+        server_thread = stop_server_thread(server_thread)
