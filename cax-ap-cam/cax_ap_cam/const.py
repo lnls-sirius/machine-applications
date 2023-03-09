@@ -14,16 +14,16 @@ class Constants:
         sufix = '-RB'
         return {
             'Intensity_Min' + sufix: {
-                'type': 'int'
+                'type': 'int', 'unit': 'intensity'
             },
             'Intensity_Max' + sufix: {
-                'type': 'int'
+                'type': 'int', 'unit': 'intensity'
             },
             'Intensity_Avg' + sufix: {
-                'type': 'float'
+                'type': 'float', 'unit': 'intensity'
             },
             'Intensity_Sum' + sufix: {
-                'type': 'int'
+                'type': 'int', 'unit': 'intensity'
             },
             'Is_Saturated' + sufix: {
                 'type': 'int'
@@ -37,25 +37,25 @@ class Constants:
         for axis in ['X', 'Y']:
             db.update({
                 'Size' + axis + sufix: {
-                    'type': 'int'
+                    'type': 'int', 'unit': 'px'
                 },
                 'ROI' + axis + sufixW: {
-                    'type': 'int', 'count': 2
+                    'type': 'int', 'count': 2, 'unit': 'px'
                 },
                 'ROI' + axis + '_Center' + sufix: {
-                    'type': 'int'
+                    'type': 'int', 'unit': 'px'
                 },
                 'ROI' + axis + '_FWHM' + sufix: {
-                    'type': 'int'
+                    'type': 'int', 'unit': 'px'
                 },
                 'ROI' + axis + '_Sigma' + sufix: {
-                    'type': 'float'
+                    'type': 'float', 'unit': 'px'
                 },
                 'ROI' + axis + '_Mean' + sufix: {
-                    'type': 'float'
+                    'type': 'float', 'unit': 'px'
                 },
                 'ROI' + axis + '_Amplitude' + sufix: {
-                    'type': 'float'
+                    'type': 'float', 'unit': 'intensity'
                 },
                 'ROI' + axis + '_Fit_Error' + sufix: {
                     'type': 'float', 'unit': '%'
