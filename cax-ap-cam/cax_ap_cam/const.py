@@ -1,4 +1,6 @@
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
+from siriuspy import util as _util
+
 
 class Constants:
 
@@ -8,14 +10,69 @@ class Constants:
 
         self.set_database()
 
-    # Base_IOC_Change measurement object
+    def _get_intensity_saturated_db(self):
+        sufix = '-RB'
+        return {
+            'Intensity_Min' + sufix: {
+                'type': 'int'
+            },
+            'Intensity_Max' + sufix: {
+                'type': 'int'
+            },
+            'Intensity_Avg' + sufix: {
+                'type': 'float'
+            },
+            'Intensity_Sum' + sufix: {
+                'type': 'int'
+            },
+            'Is_Saturated' + sufix: {
+                'type': 'int'
+            }
+        }
+
+    def _get_ROI_db(self):
+        db = {}
+        sufix = '-RB'
+        sufixW = '-SP'
+        for axis in ['X', 'Y']:
+            db.update({
+                'Size' + axis + sufix: {
+                    'type': 'int'
+                },
+                'ROI' + axis + sufixW: {
+                    'type': 'int', 'count': 2
+                },
+                'ROI' + axis + '_Center' + sufix: {
+                    'type': 'int'
+                },
+                'ROI' + axis + '_FWHM' + sufix: {
+                    'type': 'int'
+                },
+                'ROI' + axis + '_Sigma' + sufix: {
+                    'type': 'float'
+                },
+                'ROI' + axis + '_Mean' + sufix: {
+                    'type': 'float'
+                },
+                'ROI' + axis + '_Amplitude' + sufix: {
+                    'type': 'float'
+                },
+                'ROI' + axis + '_Fit_Error' + sufix: {
+                    'type': 'float', 'unit': '%'
+                }
+            })
+
+        return db
+
     def set_database(self):
-        self.database = {'Dispersion-SP': {
-                'type': 'string', 'prec': 4, 'unit': 'mm',
-                'value': '213'}}
+        self.database = dict()
+        self.database.update(
+            self._get_intensity_saturated_db())
+        self.database.update(
+            self._get_ROI_db())
         self.database['Version-Cte'] = {
             'type': 'string',
-            'value': '1.0' #_util.get_last_commit_hash()
+            'value': _util.get_last_commit_hash()
         }
 
     def get_database(self):
