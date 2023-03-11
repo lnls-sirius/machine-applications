@@ -78,7 +78,7 @@ class Constants:
                     'type': 'float', 'unit': 'px'
                 },
                 'ImgFit' + axis + 'Amplitude' + mon_: {
-                    'type': 'float', 'unit': 'intensity'
+                    'type': 'float', 'unit': 'intensity',
                 },
                 'ImgFit' + axis + 'Error' + mon_: {
                     'type': 'float', 'unit': '%'
@@ -87,6 +87,9 @@ class Constants:
         db.update({
             'ImgFitAngle' + mon_: {
                 'type': 'float', 'unit': 'rad'
+            },
+            'ImgLog' + mon_: {
+                'type': 'string', 'value': 'Starting...',
             },
             })
         return db

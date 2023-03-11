@@ -53,6 +53,10 @@ class App:
                     reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
                 return True
             else:
+                msg = '{}: could not write value {}'.format(reason, value)
+                self.driver.setParam('ImgLog-Mon', value)
+                _log.debug(msg)
+                self.driver.updatePV('ImgLog-Mon')
                 self.driver.setParamStatus(
                     reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
                 return False
@@ -142,6 +146,22 @@ class App:
                 else:
                     obj = imgproc
                 value = getattr(obj, attr)
+
+                # check if fit is valid and update value
+                if 'FitX' in pvname:
+                    invalid = self._meas.fitx_is_nan
+                elif 'FitY' in pvname:
+                    invalid = self._meas.fity_is_nan
+                elif 'FitAngle' in pvname:
+                    invalid = self._meas.fitx_is_nan or self._meas.fity_is_nan
+                else:
+                    invalid = False
+
+                new_value = 0 if invalid else value
+
+                if 'Fit' in pvname:
+                    print(pvname, value, invalid, new_value)
+
                 # update epics db
                 self.driver.setParam(pvname, value)
                 _log.debug('{0:40s}: updated'.format(pvname))

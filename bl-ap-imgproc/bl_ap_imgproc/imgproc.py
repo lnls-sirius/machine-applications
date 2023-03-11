@@ -48,6 +48,14 @@ class Measurement():
         """."""
         self._callback = value
 
+    @property
+    def fitx_is_nan(self):
+        return _np.isnan(self._imgproc.fitx.roi_fit_error)
+
+    @property
+    def fity_is_nan(self):
+        return _np.isnan(self._imgproc.fity.roi_fit_error)
+
     def set_roix(self, value):
         """."""
         _, roiy = self._imgproc.roi
