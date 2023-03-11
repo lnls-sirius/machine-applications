@@ -2,7 +2,7 @@
 
 import os
 import argparse as _argparse
-from cax_ap_cam import run_imag_proc
+from bl_ap_imgproc import run
 
 os.environ['EPICS_CA_MAX_ARRAY_BYTES'] = '21000000'
 
@@ -22,4 +22,4 @@ parser.add_argument(
     help=f"Device name. ({DEVNAME})")
 
 args = parser.parse_args()
-run_imag_proc(devname=args.devname, debug=args.debug)
+run(devname=args.devname, debug=args.debug)

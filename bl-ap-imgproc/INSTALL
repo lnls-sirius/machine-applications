@@ -1,5 +1,5 @@
-INSTALL - cax-ap-cam
-=================
+INSTALL - bl-ap-imgproc
+=======================
 
 This package can be installed using setuptools (>=16.0). There is no automatic
 dependency checking, so read the list below and ensure necessary dependencies

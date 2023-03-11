@@ -36,6 +36,7 @@ class _Driver(_pcaspy.Driver):
         super().__init__()
         self.app = app
         self.app.driver = self
+        self.app.init_driver()
 
     def read(self, reason):
         _log.debug("Reading {0:s}.".format(reason))
@@ -147,7 +148,7 @@ def ioc_main_loop(app):
         app.process(interval)
 
 
-def run_imag_proc(devname, debug=False):
+def run(devname, debug=False):
     """Start the IOC."""
 
     _util.configure_log_file(debug=debug)
