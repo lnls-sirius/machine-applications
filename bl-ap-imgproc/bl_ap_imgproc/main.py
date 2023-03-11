@@ -6,7 +6,7 @@ import logging as _log
 from pcaspy import Alarm as _Alarm
 from pcaspy import Severity as _Severity
 
-from .imgproc import Measurement
+from .meas import Measurement
 
 
 class App:
@@ -19,83 +19,26 @@ class App:
             self._database = const.get_database()
         else:
             self._database = {}
-        self._meas = Measurement(const.devname)
+            self._const = const
+        fwhmx_factor = \
+            self._database['ImgFitXUpdateROIWithFWHMFactor-SP']['value']
+        fwhmy_factor = \
+            self._database['ImgFitYUpdateROIWithFWHMFactor-SP']['value']
+
+        roi_with_fwhm = \
+            self._database['ImgFitUpdateROIWithFWHM-Sts']['value']
+        self._meas = Measurement(
+            const.devname,
+            fwhmx_factor=fwhmx_factor, fwhmy_factor=fwhmy_factor,
+            roi_with_fwhm=roi_with_fwhm)
         self._meas.callback = self._update_driver
-        self._map2writepvs = self.get_funct_dict()
 
     def process(self, interval):
         """Run continuously in the main thread."""
         _time.sleep(interval)
 
-    def write(self, reason, value):
-        """Write value in objects and database."""
-        if not reason.endswith('-SP'):
-            _log.warning('PV %s is not settable!', reason)
-            return False
-        if reason in ('ImgROIX-SP', 'ImgROIY-SP'):
-            if 'X' in reason:
-                self._meas.set_roix(value)
-            else:
-                self._meas.set_roiy(value)
-            if self._meas.update_success:
-                # update SP
-                self.driver.setParam(reason, value)
-                _log.debug('{0:40s}: updated'.format(reason))
-                self.driver.updatePV(reason)
-                self.driver.setParamStatus(
-                    reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
-                # update RB
-                reason = reason.replace('-SP', '-RB')
-                self.driver.setParam(reason, value)
-                _log.debug('{0:40s}: updated'.format(reason))
-                self.driver.updatePV(reason)
-                self.driver.setParamStatus(
-                    reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
-                return True
-            else:
-                msg = '{}: could not write value {}'.format(reason, value)
-                self.driver.setParam('ImgLog-Mon', value)
-                _log.debug(msg)
-                self.driver.updatePV('ImgLog-Mon')
-                self.driver.setParamStatus(
-                    reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
-                return False
-        return True
-
-    def get_attribute_value(self, pvname, image_processed):
-        attr_name = self._meas.pvname2attrname(pvname)
-        return getattr(image_processed, attr_name)
-
-    def update_with_roi_change(self, image_processed):
-        for pvname in self._database.keys():
-            changes_wroi = pvname not in [
-                'Version-Cte', 'ROIY-SP', 'ROIX-SP',
-                'SizeX-RB', 'SizeY-RB']
-            if changes_wroi:
-                value = 0
-                if pvname == 'Intensity_Avg-RB':
-                    value = self.get_avg_intensity(
-                        image_processed)
-                else:
-                    value = self.get_attribute_value(
-                        pvname, image_processed)
-                if 'Error' in pvname:
-                    value *= 100
-                self.driver.setParam(pvname, value)
-
-    def callback_caput(self, reason, value):
-        self._meas.update_roi(
-            reason, value,
-            self.update_with_roi_change)
-        return value
-
-    def get_funct_dict(self):
-        map2functpvs = dict()
-        map2functpvs.update({'ImgROIX-SP': self.callback_caput})
-        map2functpvs.update({'ImgROIY-SP': self.callback_caput})
-        return {k: v for k, v in map2functpvs.items() if k in self._database}
-
     def init_driver(self):
+        """Initialize PVs ate startup."""
         pv2attr = {
             'ImgSizeX-Cte': 'sizex',
             'ImgSizeY-Cte': 'sizey',
@@ -119,8 +62,93 @@ class App:
             else:
                 self.driver.setParamStatus(
                     pvname, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+    
+    def write(self, reason, value):
+        """Write value in objects and database."""
+        if not reason.endswith('-SP'):
+            _log.warning('PV %s is not settable!', reason)
+            return False
+        
+        res = self._write_roi(reason, value)
+        if res is not None:
+            return res
+
+        res = self._write_fwhm_factor(reason, value)
+        if res is not None:
+            return res
             
+        return True
+
+    def _create_meas(self):
+        # build arguments
+        fwhmx_factor = \
+            self._database['ImgFitXUpdateROIWithFWHMFactor-SP']['value']
+        fwhmy_factor = \
+            self._database['ImgFitYUpdateROIWithFWHMFactor-SP']['value']
+        roi_with_fwhm = \
+            self._database['ImgFitUpdateROIWithFWHM-Sts']['value']
+        
+        # create object
+        self._meas = Measurement(
+            self._const.devname,
+            fwhmx_factor=fwhmx_factor, fwhmy_factor=fwhmy_factor,
+            roi_with_fwhm=roi_with_fwhm)
+
+        # add callback
+        self._meas.callback = self._update_driver
+
+    def _write_sp_rb(self, reason, value):
+        # update SP
+        self.driver.setParam(reason, value)
+        _log.debug('{}: updated'.format(reason))
+        self.driver.updatePV(reason)
+        self.driver.setParamStatus(
+            reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+
+        # update RB
+        reason = reason.replace('-SP', '-RB')
+        self.driver.setParam(reason, value)
+        _log.debug('{}: updated'.format(reason))
+        self.driver.updatePV(reason)
+        self.driver.setParamStatus(
+            reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+
+    def _write_roi(self, reason, value):
+        if reason not in ('ImgROIX-SP', 'ImgROIY-SP'):
+            return None
+        if 'X' in reason:
+            self._meas.set_roix(value)
+        else:
+            self._meas.set_roiy(value)
+        if self._meas.update_success:
+            self._write_sp_rb(reason, value)
+            return True
+        else:
+            msg = '{}: could not write value {}'.format(reason, value)
+            self.driver.setParam('ImgLog-Mon', value)
+            _log.debug(msg)
+            self.driver.updatePV('ImgLog-Mon')
+            self.driver.setParamStatus(
+                reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+            return False
+
+    def _write_fwhm_factor(self, reason, value):
+        if reason not in (
+                'ImgFitXUpdateROIWithFWHMFactor-SP',
+                'ImgFitYUpdateROIWithFWHMFactor-SP'
+                ):
+            return
+        # TODO: check value
+        if 'X' in reason:
+            self._meas._fwhmx_factor = value
+        else:
+            self._meas._fwhmy_factor = value
+        self._write_sp_rb(reason, value)
+
+        return True
+        
     def _update_driver(self):
+        """Update all parameters at every image PV callback."""
         pv2attr = {
             'ImgIntensityMin-Mon': 'intensity_min',
             'ImgIntensityMax-Mon': 'intensity_max',
@@ -159,8 +187,8 @@ class App:
 
                 new_value = 0 if invalid else value
 
-                if 'Fit' in pvname:
-                    print(pvname, value, invalid, new_value)
+                # if 'Fit' in pvname:
+                #     print(pvname, value, invalid, new_value)
 
                 # update epics db
                 self.driver.setParam(pvname, value)

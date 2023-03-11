@@ -7,7 +7,8 @@ from mathphys import imgproc as _imgproc
 class Measurement():
     """."""
 
-    def __init__(self, devname, callback=None):
+    def __init__(self,
+            devname, fwhmx_factor, fwhmy_factor, roi_with_fwhm, callback=None):
         """."""
         self._devname = devname
         self._callback = callback
@@ -16,6 +17,9 @@ class Measurement():
         self._imgproc = None
         self._sizex = None
         self._sizey = None
+        self._fwhmx_factor = fwhmx_factor
+        self._fwhmy_factor = fwhmy_factor
+        self._roi_with_fwhm = roi_with_fwhm
         self._create_dvf()
 
     @property
@@ -32,6 +36,16 @@ class Measurement():
     def sizey(self):
         """."""
         return self._sizey
+
+    @property
+    def fwhmx_factor(self):
+        """."""
+        return self._fwhmx_factor
+
+    @property
+    def fwhmy_factor(self):
+        """."""
+        return self._fwhmy_factor
 
     @property
     def update_success(self):
@@ -80,7 +94,14 @@ class Measurement():
     def process_image(self, **kwargs):
         """."""
         try:
-            roix, roiy = self._imgproc.roi if self._imgproc else (None, None)
+            if not self._imgproc:
+                roix, roiy = (None, None)
+            elif self._roi_with_fwhm:
+                roix = self._imgproc.fitx.calc_roi_with_fwhm(self.fwhmx_factor)
+                roiy = self._imgproc.fity.calc_roi_with_fwhm(self.fwhmy_factor)
+            else:
+                roix = self._imgproc.fitx.roi
+                roiy = self._imgproc.fity.roi
             data = self._dvf.image
             self._imgproc = _imgproc.Image2D_Fit(
                 data=data, roix=roix, roiy=roiy)

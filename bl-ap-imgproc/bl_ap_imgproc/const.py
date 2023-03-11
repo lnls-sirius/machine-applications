@@ -1,8 +1,15 @@
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from siriuspy import util as _util
+from siriuspy import csdev as _csdev
 
 
-class Constants:
+class ETypes(_csdev.ETypes):
+    """Local enumerate types."""
+
+_et = ETypes  # syntactic sugar
+
+
+class Constants(_csdev.Const):
 
     def __init__(self, devname=''):
         self._devname = devname
@@ -82,9 +89,23 @@ class Constants:
                 },
                 'ImgFit' + axis + 'Error' + mon_: {
                     'type': 'float', 'unit': '%'
-                }
+                },
+                'ImgFit' + axis + 'UpdateROIWithFWHMFactor-SP': {
+                    'type': 'float', 'value': 2.0, 'unit': 'fwhm_factor',
+                },
+                'ImgFit' + axis + 'UpdateROIWithFWHMFactor-RB': {
+                    'type': 'float', 'value': 2.0, 'unit': 'fwhm_factor',
+                },
             })
         db.update({
+            'ImgFitUpdateROIWithFWHM-Sel': {
+                'type': 'enum', 'enums': _et.DSBL_ENBL,
+                'value': self.DsblEnbl.Dsbl,
+            },
+            'ImgFitUpdateROIWithFWHM-Sts': {
+                'type': 'enum', 'enums': _et.DSBLD_ENBLD,
+                'value': self.DsblEnbl.Dsbl,
+            },
             'ImgFitAngle' + mon_: {
                 'type': 'float', 'unit': 'rad'
             },
