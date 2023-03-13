@@ -7,6 +7,8 @@ from mathphys import imgproc as _imgproc
 class Measurement():
     """."""
 
+    DVF_IMAGE_PROPTY = 'image1:ArrayData'
+
     def __init__(self,
             devname, fwhmx_factor, fwhmy_factor, roi_with_fwhm, callback=None):
         """."""
@@ -14,7 +16,7 @@ class Measurement():
         self._callback = callback
         self._update_success = True
         self._dvf = None
-        self._imgproc = None
+        self._image2dfit = None
         self._sizex = None
         self._sizey = None
         self._fwhmx_factor = fwhmx_factor
@@ -23,9 +25,19 @@ class Measurement():
         self._create_dvf()
 
     @property
-    def imgproc(self):
+    def devname(self):
         """."""
-        return self._imgproc
+        return self._devname
+
+    @property
+    def dvf(self):
+        """."""
+        return self._dvf
+
+    @property
+    def image2dfit(self):
+        """."""
+        return self._image2dfit
 
     @property
     def sizex(self):
@@ -53,6 +65,16 @@ class Measurement():
         return self._update_success
 
     @property
+    def update_roi_with_fwhm(self):
+        """."""
+        return self._roi_with_fwhm
+
+    @update_roi_with_fwhm.setter
+    def update_roi_with_fwhm(self, value):
+        """."""
+        self._roi_with_fwhm = value
+
+    @property
     def callback(self):
         """."""
         return self._callback
@@ -64,59 +86,65 @@ class Measurement():
 
     @property
     def fitx_is_nan(self):
-        return _np.isnan(self._imgproc.fitx.roi_fit_error)
+        return _np.isnan(self._image2dfit.fitx.roi_fit_error)
 
     @property
     def fity_is_nan(self):
-        return _np.isnan(self._imgproc.fity.roi_fit_error)
+        return _np.isnan(self._image2dfit.fity.roi_fit_error)
 
     def set_roix(self, value):
         """."""
-        _, roiy = self._imgproc.roi
+        _, roiy = self._image2dfit.roi
         try:
-            self._imgproc.roi = [value, roiy]
+            self._image2dfit.roi = [value, roiy]
             self._update_success = True
         except:
             self._update_success = False
 
     def set_roiy(self, value):
         """."""
-        roix, _ = self._imgproc.roi
+        roix, _ = self._image2dfit.roi
         try:
-            self._imgproc.roi = [roix, value]
+            self._image2dfit.roi = [roix, value]
             self._update_success = True
         except:
             self._update_success = False
 
-    def pvname2attrname(self, pvname):
-        return pvname[:-3].lower()
-
     def process_image(self, **kwargs):
-        """."""
+        """Process image."""
+        # NOTE: should we check whether IOC is providing image
+        # (DVF.acquisition_status) and run DVF.cmd_acquire_on if not?
         try:
-            if not self._imgproc:
+            if not self._image2dfit:
+                # no image2dfit yet
                 roix, roiy = (None, None)
-            elif self._roi_with_fwhm:
-                roix = self._imgproc.fitx.calc_roi_with_fwhm(self.fwhmx_factor)
-                roiy = self._imgproc.fity.calc_roi_with_fwhm(self.fwhmy_factor)
+            elif self.update_roi_with_fwhm:
+                # recalc roi using fwhm factors
+                roix = self._image2dfit.fitx.calc_roi_with_fwhm(self.fwhmx_factor)
+                roiy = self._image2dfit.fity.calc_roi_with_fwhm(self.fwhmy_factor)
             else:
-                roix = self._imgproc.fitx.roi
-                roiy = self._imgproc.fity.roi
+                # reuse current roi for new image
+                roix = self._image2dfit.fitx.roi
+                roiy = self._image2dfit.fity.roi
+            self._
             data = self._dvf.image
-            self._imgproc = _imgproc.Image2D_Fit(
+            self._image2dfit = _imgproc.Image2D_Fit(
                 data=data, roix=roix, roiy=roiy)
             self._update_success = True
         except:
             self._update_success = False
+
+        # run registered driver callback
         if self._callback:
             self._callback()
 
     def _create_dvf(self):
+        """Create DVO object and add process_image callback."""
         self._dvf = _DVF(self._devname)
         self._sizey = self._dvf.parameters.IMAGE_SIZE_Y
         self._sizex = self._dvf.parameters.IMAGE_SIZE_X
         self._dvf.wait_for_connection(timeout=5)
-        imgpv = self._dvf.pv_object('image1:ArrayData')
+        imgpv = self._dvf.pv_object(Measurement.DVF_IMAGE_PROPTY)
         imgpv.add_callback(self.process_image)
 
 

@@ -5,11 +5,12 @@ import logging as _log
 import signal as _signal
 from threading import Event as _Event
 
-from .const import Constants
 import pcaspy as _pcaspy
 from pcaspy.tools import ServerThread
+
 from siriuspy import util as _util
 
+from .const import Constants
 from .main import App
 
 
@@ -94,15 +95,7 @@ def ioc_is_running(const):
     running = _util.check_pv_online(
         pvname=ioc_prefix + sorted(db.keys())[0],
         use_prefix=False, timeout=0.5)
-
-    if running:
-        _log.error('Another ' + ioc_prefix + ' is already running!')
-        return True
-
-    _util.print_ioc_banner(
-        '', db, 'Image Processing IOC.',
-        db['Version-Cte']['value'], ioc_prefix)
-    return False
+    return running
 
 
 def create_server(const):
@@ -135,31 +128,38 @@ def stop_server_thread(server_thread):
     return server_thread
 
 
-def create_driver(const):
+def create_driver_app(const):
     _log.info('Creating Driver.')
     app = App(const=const)
-    _Driver(app)
+    _Driver(app)  # a handle to Drive object is set within the app object.
     return app
-
-
-def ioc_main_loop(app):
-    interval = 0.5
-    while not stop_event.is_set():
-        app.process(interval)
 
 
 def run(devname, debug=False):
     """Start the IOC."""
 
+    # initial configurations
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
-
     defineAbortFunction()
 
+    # application constants with database
     const = Constants(devname)
 
-    if not ioc_is_running(const):
-        server = create_server(const)
-        server_thread = initialize_server_thread(server)
-        ioc_main_loop(create_driver(const))
-        server_thread = stop_server_thread(server_thread)
+    # check whether an instance is already running
+    if ioc_is_running(const):
+        raise ValueError('Another instance of this IOC is already running !')
+    
+    # create server and driver app
+    server = create_server(const)
+    server_thread = initialize_server_thread(server)
+    app = create_driver_app(const)
+    
+    # main loop
+    interval = 0.5
+    while not stop_event.is_set():
+        app.process(interval)
+
+    # end of application, stop server thread
+    server_thread = stop_server_thread(server_thread)
+

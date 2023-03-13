@@ -17,14 +17,14 @@ INSTALLATION
 
 To install to a default Python directory, run
 
-    <python> setup.py install
+    make install
 
-Use the appropriate command in <python>. Depending on permissions, it may be
+Depending on permissions, it may be
 necessary to run the command with sudo or as superuser.
 
 To install a development version, with a link to the local package files in the
 default Python directory, run
 
-    <python> setup.py develop
+    make install-develop
 
 Details and further options can be found in setuptools documentation.
