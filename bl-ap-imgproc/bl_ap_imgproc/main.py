@@ -14,6 +14,35 @@ from .meas import Measurement
 class App:
     """BL Image Processing IOC Application."""
 
+    _MON_PVS_2_IMGFIT = {
+            'TimestampUpdate-Mon': None,
+            'ImgROIX-RB': ('fitx', 'roi'),
+            'ImgROIY-RB': ('fity', 'roi'),
+            'ImgROIXCenter-Mon': ('fitx', 'roi_center'),
+            'ImgROIYCenter-Mon': ('fity', 'roi_center'),
+            'ImgROIXFWHM-Mon': ('fitx', 'roi_fwhm'),
+            'ImgROIYFWHM-Mon': ('fity', 'roi_fwhm'),
+            'ImgIntensityMin-Mon': 'intensity_min',
+            'ImgIntensityMax-Mon': 'intensity_max',
+            'ImgIntensitySum-Mon': 'intensity_sum',
+            'ImgIsSaturated-Mon': 'is_saturated',
+            'ImgROIXFitAmplitude-Mon': ('fitx', 'roi_amplitude'),
+            'ImgROIXFitMean-Mon': ('fitx', 'roi_mean'),
+            'ImgROIXFitSigma-Mon': ('fitx', 'roi_sigma'),
+            'ImgROIXFitError-Mon': ('fitx', 'roi_fit_error'),
+            'ImgROIYFitAmplitude-Mon': ('fity', 'roi_amplitude'),
+            'ImgROIYFitMean-Mon': ('fity', 'roi_mean'),
+            'ImgROIYFitSigma-Mon': ('fity', 'roi_sigma'),
+            'ImgROIYFitError-Mon': ('fity', 'roi_fit_error'),
+            'ImgFitAngle-Mon': 'angle',
+        }
+    _INIT_PVS_2_IMGFIT = {
+            'ImgSizeX-Cte': ('fitx', 'size'),
+            'ImgSizeY-Cte': ('fity', 'size'),
+            'ImgROIX-RB': ('fitx', 'roi'),
+            'ImgROIY-RB': ('fity', 'roi'),
+        }
+
     def __init__(self, driver=None, const=None):
         """Initialize the instance."""
         self._driver = driver
@@ -22,11 +51,11 @@ class App:
         
         # get measurement arguments
         fwhmx_factor = \
-            self._database['ImgFitXUpdateROIWithFWHMFactor-SP']['value']
+            self._database['ImgROIXUpdateWithFWHMFactor-RB']['value']
         fwhmy_factor = \
-            self._database['ImgFitYUpdateROIWithFWHMFactor-SP']['value']
+            self._database['ImgROIYUpdateWithFWHMFactor-RB']['value']
         roi_with_fwhm = \
-            self._database['ImgFitUpdateROIWithFWHM-Sts']['value']
+            self._database['ImgROIUpdateWithFWHM-Sts']['value']
         
         # create measurement objects
         self._meas = Measurement(
@@ -39,7 +68,7 @@ class App:
         _util.print_ioc_banner(
             ioc_name='BL ImgProc IOC',
             db=dbase,
-            description='Power Supply IOC (FAC)',
+            description='Image Processing IOC (FAC)',
             version=dbase['Version-Cte']['value'],
             prefix=const.devname)
 
@@ -60,24 +89,18 @@ class App:
         _time.sleep(interval)
 
     def init_driver(self):
-        """Initialize PVs ate startup."""
-        pv2attr = {
-            'ImgSizeX-Cte': 'sizex',
-            'ImgSizeY-Cte': 'sizey',
-            }
-        for pvname, attr in pv2attr.items():
+        """Initialize PVs at startup."""
+        # NOTE: this method has the same struct as _update_driver.
+        # maybe they should be unified.
+        for pvname, attr in App._INIT_PVS_2_IMGFIT.items():
             if self._meas.update_success:
-                meas = self._meas
+
                 # get image attribute value
-                if not isinstance(attr, str):
-                    field, attr = attr
-                    obj = getattr(meas, field)
-                else:
-                    obj = meas
-                value = getattr(obj, attr)
+                value = self._conv_imgattr2value(attr)
+
                 # update epics db
                 self._driver.setParam(pvname, value)
-                _log.debug('{0:40s}: updated'.format(pvname))
+                _log.debug('{}: updated'.format(pvname))
                 self._driver.updatePV(pvname)
                 self._driver.setParamStatus(
                     pvname, _Alarm.NO_ALARM, _Severity.NO_ALARM)
@@ -162,72 +185,78 @@ class App:
 
     def _write_fwhm_factor(self, reason, value):
         if reason not in (
-                'ImgFitXUpdateROIWithFWHMFactor-SP',
-                'ImgFitYUpdateROIWithFWHMFactor-SP'
+                'ImgROIXUpdateWithFWHMFactor-SP',
+                'ImgROIYUpdateWithFWHMFactor-SP'
                 ):
             return None
         # TODO: check value
         if 'X' in reason:
-            self._meas._fwhmx_factor = value
+            self._meas.fwhmx_factor = value
         else:
-            self._meas._fwhmy_factor = value
+            self._meas.fwhmy_factor = value
         self._write_sp_rb(reason, value)
 
         return True
         
     def _write_update_roi_with_fwhm(self, reason, value):
         """."""
-        if reason not in ('ImgFitUpdateROIWithFWHM-Sel'):
+        if reason not in ('ImgROIUpdateWithFWHM-Sel'):
             return None
         self._meas.update_roi_with_fwhm = value
         self._write_sp_rb(reason, value)
 
+        return True
+
+    def _conv_imgattr2value(self, attr):
+        value = self._meas.image2dfit
+        if isinstance(attr, tuple):
+            for obj in attr:
+                value = getattr(value, obj)
+        else:
+            value = getattr(value, attr)
+        return value
+
     def _update_driver(self):
         """Update all parameters at every image PV callback."""
-        pv2attr = {
-            'ImgIntensityMin-Mon': 'intensity_min',
-            'ImgIntensityMax-Mon': 'intensity_max',
-            'ImgIntensitySum-Mon': 'intensity_sum',
-            'ImgIsSaturated-Mon': 'is_saturated',
-            'ImgFitXAmplitude-Mon': ('fitx', 'roi_amplitude'),
-            'ImgFitXMean-Mon': ('fitx', 'roi_mean'),
-            'ImgFitXSigma-Mon': ('fitx', 'roi_sigma'),
-            'ImgFitXError-Mon': ('fitx', 'roi_fit_error'),
-            'ImgFitYAmplitude-Mon': ('fity', 'roi_amplitude'),
-            'ImgFitYMean-Mon': ('fity', 'roi_mean'),
-            'ImgFitYSigma-Mon': ('fity', 'roi_sigma'),
-            'ImgFitYError-Mon': ('fity', 'roi_fit_error'),
-            'ImgFitAngle-Mon': 'angle',
-        }
-        for pvname, attr in pv2attr.items():
-            if self._meas.update_success:
-                img2ffit = self._meas.image2dfit
-                # get image attribute value
-                if not isinstance(attr, str):
-                    field, attr = attr
-                    obj = getattr(img2ffit, field)
-                else:
-                    obj = img2ffit
-                value = getattr(obj, attr)
+        for pvname, attr in App._MON_PVS_2_IMGFIT.items():
 
-                # check if fit is valid and update value
-                if 'FitX' in pvname:
-                    invalid = self._meas.fitx_is_nan
-                elif 'FitY' in pvname:
-                    invalid = self._meas.fity_is_nan
-                elif 'FitAngle' in pvname:
-                    invalid = self._meas.fitx_is_nan or self._meas.fity_is_nan
-                else:
-                    invalid = False
-
-                new_value = 0 if invalid else value
-
-                # if 'Fit' in pvname:
-                #     print(pvname, value, invalid, new_value)
-
-                # update epics db
+            # heartbeat update (NOTE: move outside loop?)
+            if pvname == 'TimestampUpdate-Mon':
+                value = _time.time()
                 self._driver.setParam(pvname, value)
-                _log.debug('{0:40s}: updated'.format(pvname))
+                # _log.debug('{}: updated'.format(pvname))
+                self._driver.updatePV(pvname)
+                self._driver.setParamStatus(
+                    pvname, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+                continue
+
+            # check if is roi_rb and if it needs updating
+            if pvname in ('ImgROIX-RB', 'ImgROIY-RB'):
+                if not self._meas.update_roi_with_fwhm:
+                    continue
+
+            # print(pvname)
+            # get image attribute value
+            value = self._conv_imgattr2value(attr)
+
+            # check if fit is valid and update value
+            if 'FitX' in pvname:
+                invalid = self._meas.fitx_is_nan
+            elif 'FitY' in pvname:
+                invalid = self._meas.fity_is_nan
+            elif 'FitAngle' in pvname:
+                invalid = self._meas.fitx_is_nan or self._meas.fity_is_nan
+            else:
+                invalid = False
+
+            new_value = 0 if invalid else value
+            # if 'Fit' in pvname:
+            #     print(pvname, value, invalid, new_value)
+
+            # update epics db
+            if self._meas.update_success:
+                self._driver.setParam(pvname, new_value)
+                _log.debug('{}: updated'.format(pvname))
                 self._driver.updatePV(pvname)
                 self._driver.setParamStatus(
                     pvname, _Alarm.NO_ALARM, _Severity.NO_ALARM)

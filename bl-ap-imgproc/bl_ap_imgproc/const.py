@@ -1,3 +1,5 @@
+import time as _time
+
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from siriuspy import util as _util
 from siriuspy import csdev as _csdev
@@ -41,6 +43,7 @@ class Constants(_csdev.Const):
         database.update(self._get_image_db())
         database.update(self._get_roi_db())
         database.update(self._get_fit_db())
+        database.update(self._get_others_db())
         # TODO: add timestamps PVs (see PS csdev example)
         # TODO: add Properties-Cte
         # TODO: Version here will take value from siriuspy package, when
@@ -104,39 +107,59 @@ class Constants(_csdev.Const):
         mon_ = '-Mon'
         for axis in ['X', 'Y']:
             db.update({
-                'ImgFit' + axis + 'Sigma' + mon_: {
-                    'type': 'float', 'unit': 'px'
+                'ImgROI' + axis + 'FitSigma' + mon_: {
+                    'type': 'float', 'unit': 'px', 'prec': 3,
                 },
-                'ImgFit' + axis + 'Mean' + mon_: {
-                    'type': 'float', 'unit': 'px'
+                'ImgROI' + axis + 'FitMean' + mon_: {
+                    'type': 'float', 'unit': 'px', 'prec': 3,
                 },
-                'ImgFit' + axis + 'Amplitude' + mon_: {
-                    'type': 'float', 'unit': 'intensity',
+                'ImgROI' + axis + 'FitAmplitude' + mon_: {
+                    'type': 'float', 'unit': 'intensity', 'prec': 3,
                 },
-                'ImgFit' + axis + 'Error' + mon_: {
-                    'type': 'float', 'unit': '%'
+                'ImgROI' + axis + 'FitError' + mon_: {
+                    'type': 'float', 'unit': '%', 'prec': 3,
                 },
-                'ImgFit' + axis + 'UpdateROIWithFWHMFactor-SP': {
+                'ImgROI' + axis + 'UpdateWithFWHMFactor-SP': {
                     'type': 'float', 'value': 2.0, 'unit': 'fwhm_factor',
+                    'prec': 3,
                 },
-                'ImgFit' + axis + 'UpdateROIWithFWHMFactor-RB': {
+                'ImgROI' + axis + 'UpdateWithFWHMFactor-RB': {
                     'type': 'float', 'value': 2.0, 'unit': 'fwhm_factor',
+                    'prec': 3,
                 },
             })
         db.update({
-            'ImgFitUpdateROIWithFWHM-Sel': {
+            'ImgROIUpdateWithFWHM-Sel': {
                 'type': 'enum', 'enums': _et.DSBL_ENBL,
                 'value': self.DsblEnbl.Dsbl,
             },
-            'ImgFitUpdateROIWithFWHM-Sts': {
+            'ImgROIUpdateWithFWHM-Sts': {
                 'type': 'enum', 'enums': _et.DSBLD_ENBLD,
                 'value': self.DsblEnbl.Dsbl,
             },
             'ImgFitAngle' + mon_: {
                 'type': 'float', 'unit': 'rad'
             },
+            })
+        return db
+
+    def _get_others_db(self):
+        db = {}
+        mon_ = '-Mon'
+        db.update({
+            'Version-Cte': {
+            'type': 'string',
+            'value': _util.get_last_commit_hash()
+            },
             'ImgLog' + mon_: {
                 'type': 'string', 'value': 'Starting...',
             },
+            'TimestampBoot-Cte': {
+                'type': 'float', 'value': _time.time(),
+                'prec': 7, 'unit': 'timestamp'
+            },
+            'TimestampUpdate-Mon': {
+                'type': 'float',
+                'prec': 7, 'unit': 'timestamp'},
             })
         return db

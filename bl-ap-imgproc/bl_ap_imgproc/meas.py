@@ -22,7 +22,17 @@ class Measurement():
         self._fwhmx_factor = fwhmx_factor
         self._fwhmy_factor = fwhmy_factor
         self._roi_with_fwhm = roi_with_fwhm
+
+        # create DVF device
         self._create_dvf()
+
+        # init image2dfit object
+        self.process_image()
+
+        # add callback
+        imgpv = self._dvf.pv_object(Measurement.DVF_IMAGE_PROPTY)
+        imgpv.add_callback(self.process_image)
+
 
     @property
     def devname(self):
@@ -54,10 +64,20 @@ class Measurement():
         """."""
         return self._fwhmx_factor
 
+    @fwhmx_factor.setter
+    def fwhmx_factor(self, value):
+        """."""
+        self._fwhmx_factor = value
+
     @property
     def fwhmy_factor(self):
         """."""
         return self._fwhmy_factor
+
+    @fwhmy_factor.setter
+    def fwhmy_factor(self, value):
+        """."""
+        self._fwhmy_factor = value
 
     @property
     def update_success(self):
@@ -115,23 +135,36 @@ class Measurement():
         # NOTE: should we check whether IOC is providing image
         # (DVF.acquisition_status) and run DVF.cmd_acquire_on if not?
         try:
+            # define roi
+            img2dfit = self._image2dfit
             if not self._image2dfit:
                 # no image2dfit yet
                 roix, roiy = (None, None)
             elif self.update_roi_with_fwhm:
                 # recalc roi using fwhm factors
-                roix = self._image2dfit.fitx.calc_roi_with_fwhm(self.fwhmx_factor)
-                roiy = self._image2dfit.fity.calc_roi_with_fwhm(self.fwhmy_factor)
+                roix = img2dfit.fitx.calc_roi_with_fwhm(
+                    image=img2dfit.fitx, fwhm_factor=self.fwhmx_factor)
+                roiy = img2dfit.fity.calc_roi_with_fwhm(
+                    image=img2dfit.fity, fwhm_factor=self.fwhmy_factor)
+                if roix[1] - roix[0] < Measurement.MIN_ROI_SIZE:
+                    roix = self._image2dfit.fitx.roi
+                if roiy[1] - roiy[0] < Measurement.MIN_ROI_SIZE:
+                    roiy = self._image2dfit.fity.roi
             else:
                 # reuse current roi for new image
                 roix = self._image2dfit.fitx.roi
                 roiy = self._image2dfit.fity.roi
-            self._
+            print(roix, roiy)
+            # get data and process
+            # NOTE: sometimes data returns not as numpy arrays with 2 indices
+            # need to investigate and maybe protect in DVF class.
+            # It always solved running DVF.cmd_acquisiton_on()...
             data = self._dvf.image
             self._image2dfit = _imgproc.Image2D_Fit(
                 data=data, roix=roix, roiy=roiy)
             self._update_success = True
-        except:
+
+        except Exception:
             self._update_success = False
 
         # run registered driver callback
@@ -144,7 +177,5 @@ class Measurement():
         self._sizey = self._dvf.parameters.IMAGE_SIZE_Y
         self._sizex = self._dvf.parameters.IMAGE_SIZE_X
         self._dvf.wait_for_connection(timeout=5)
-        imgpv = self._dvf.pv_object(Measurement.DVF_IMAGE_PROPTY)
-        imgpv.add_callback(self.process_image)
 
 
