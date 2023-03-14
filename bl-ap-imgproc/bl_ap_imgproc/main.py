@@ -69,7 +69,7 @@ class App:
             ioc_name='BL ImgProc IOC',
             db=dbase,
             description='Image Processing IOC (FAC)',
-            version=dbase['Version-Cte']['value'],
+            version=dbase['ImgVersion-Cte']['value'],
             prefix=const.devname)
 
         self._meas.callback = self.update_driver
@@ -86,7 +86,7 @@ class App:
 
     def process(self, interval):
         """Run continuously in the main thread."""
-        self._update_pv('TimestampUpdate-Mon', _time.time())
+        self._update_pv('ImgTimestampUpdate-Mon', _time.time())
         _time.sleep(interval)
 
     def write(self, reason, value):
@@ -108,6 +108,26 @@ class App:
             return res
 
         return True
+
+    def init_driver(self):
+        """Initialize PVs at startup."""
+        # NOTE: this method has the same struct as _update_driver.
+        # maybe they should be unified.
+        for pvname, attr in App._INIT_PVS_2_IMGFIT.items():
+            if self._meas.update_success:
+
+                # get image attribute value
+                value = self._conv_imgattr2value(attr)
+
+                # update epics db
+                self._driver.setParam(pvname, value)
+                _log.debug('{}: updated'.format(pvname))
+                self._driver.updatePV(pvname)
+                self._driver.setParamStatus(
+                    pvname, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+            else:
+                self._driver.setParamStatus(
+                    pvname, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
 
     def _create_meas(self):
         # build arguments
@@ -195,19 +215,14 @@ class App:
             _log.debug('{}: updated'.format(pvname))
             self._driver.updatePV(pvname)
             self._driver.setParamStatus(
-            pvname, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+                pvname, _Alarm.NO_ALARM, _Severity.NO_ALARM)
         else:
             self._driver.setParamStatus(
-                    pvname, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+                pvname, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
 
-    def _update_driver(self):
+    def update_driver(self):
         """Update all parameters at every image PV callback."""
-        # heartbeat update
-        self._heart_beat_update()
-
         for pvname, attr in App._MON_PVS_2_IMGFIT.items():
-            if pvname == 'TimestampUpdate-Mon':
-                continue
 
             # check if is roi_rb and if it needs updating
             if pvname in ('ImgROIX-RB', 'ImgROIY-RB'):
@@ -228,10 +243,9 @@ class App:
                 invalid = False
 
             new_value = 0 if invalid else value
-            
+
             # update epics db
             if self._meas.update_success:
                 self._update_pv(pvname, new_value)
             else:
                 self._update_pv(pvname, success=False)
-            

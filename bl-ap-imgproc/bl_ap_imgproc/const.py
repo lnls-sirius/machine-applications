@@ -1,3 +1,5 @@
+"""Const module."""
+
 import time as _time
 
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
@@ -15,8 +17,10 @@ _et = ETypes  # syntactic sugar
 
 
 class Constants(_csdev.Const):
+    """."""
 
     def __init__(self, devname):
+        """."""
         self._devname = devname
         self._ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
         self._ioc_prefix += devname + ':'
@@ -33,9 +37,11 @@ class Constants(_csdev.Const):
         return self._ioc_prefix
 
     def get_database(self):
+        """."""
         return self._database
 
     def get_prefix(self):
+        """."""
         return self.ioc_prefix
 
     def _create_database(self):
@@ -45,10 +51,15 @@ class Constants(_csdev.Const):
         database.update(self._get_fit_db())
         database.update(self._get_others_db())
         database = _csdev.add_pvslist_cte(database)
+
+        # NOTE: rename Properties-Cte to ImgProperties-Cte
+        database['ImgProperties-Cte'] = database['Properties-Cte']
+        del database['Properties-Cte']
+
         # TODO: Version here will take value from siriuspy package, when
         # code is moved to this repo. Is this what we want? maybe we should
         # start composing the string from siriuspy + machine-applicaions?
-        database['Version-Cte'] = {
+        database['ImgVersion-Cte'] = {
             'type': 'string',
             'value': _util.get_last_commit_hash()
         }
@@ -146,18 +157,18 @@ class Constants(_csdev.Const):
         db = {}
         mon_ = '-Mon'
         db.update({
-            'Version-Cte': {
+            'ImgVersion-Cte': {
                 'type': 'string',
                 'value': _util.get_last_commit_hash()
             },
             'ImgLog' + mon_: {
                 'type': 'string', 'value': 'Starting...',
             },
-            'TimestampBoot-Cte': {
+            'ImgTimestampBoot-Cte': {
                 'type': 'float', 'value': _time.time(),
                 'prec': 7, 'unit': 'timestamp'
             },
-            'TimestampUpdate-Mon': {
+            'ImgTimestampUpdate-Mon': {
                 'type': 'float',
                 'prec': 7, 'unit': 'timestamp'},
             })

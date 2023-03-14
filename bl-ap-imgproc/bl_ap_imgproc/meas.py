@@ -107,10 +107,12 @@ class Measurement():
 
     @property
     def fitx_is_nan(self):
+        """."""
         return _np.isnan(self._image2dfit.fitx.roi_fit_error)
 
     @property
     def fity_is_nan(self):
+        """."""
         return _np.isnan(self._image2dfit.fity.roi_fit_error)
 
     def set_roix(self, value):
@@ -119,7 +121,7 @@ class Measurement():
         try:
             self._image2dfit.roi = [value, roiy]
             self._update_success = True
-        except:
+        except Exception:
             self._update_success = False
 
     def set_roiy(self, value):
@@ -128,7 +130,7 @@ class Measurement():
         try:
             self._image2dfit.roi = [roix, value]
             self._update_success = True
-        except:
+        except Exception:
             self._update_success = False
 
     def process_image(self, **kwargs):
@@ -152,7 +154,7 @@ class Measurement():
                     roix = None
                 if roiy[1] - roiy[0] < Measurement.MIN_ROI_SIZE:
                     # roiy = self._image2dfit.fity.roi
-                    roix = None
+                    roiy = None
             else:
                 # reuse current roi for new image
                 roix = self._image2dfit.fitx.roi

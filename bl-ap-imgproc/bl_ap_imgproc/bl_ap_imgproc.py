@@ -37,7 +37,7 @@ class _Driver(_pcaspy.Driver):
         super().__init__()
         self.app = app
         self.app.driver = self
-        self.app.update_driver()
+        self.app.init_driver()
 
     def read(self, reason):
         _log.debug("Reading {0:s}.".format(reason))
@@ -85,11 +85,13 @@ class _Driver(_pcaspy.Driver):
 
 
 def defineAbortFunction():
+    """."""
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
 
 def ioc_is_running(const):
+    """."""
     ioc_prefix = const.get_prefix()
     db = const.get_database()
     running = _util.check_pv_online(
@@ -99,6 +101,7 @@ def ioc_is_running(const):
 
 
 def create_server(const):
+    """."""
     _log.info('Creating Server.')
     ioc_prefix = const.get_prefix()
     db = const.get_database()
