@@ -15,7 +15,6 @@ class App:
     """BL Image Processing IOC Application."""
 
     _MON_PVS_2_IMGFIT = {
-            'TimestampUpdate-Mon': None,
             'ImgROIX-RB': ('fitx', 'roi'),
             'ImgROIY-RB': ('fity', 'roi'),
             'ImgROIXCenter-Mon': ('fitx', 'roi_center'),
@@ -36,6 +35,7 @@ class App:
             'ImgROIYFitError-Mon': ('fity', 'roi_fit_error'),
             'ImgFitAngle-Mon': 'angle',
         }
+
     _INIT_PVS_2_IMGFIT = {
             'ImgSizeX-Cte': ('fitx', 'size'),
             'ImgSizeY-Cte': ('fity', 'size'),
@@ -86,6 +86,7 @@ class App:
 
     def process(self, interval):
         """Run continuously in the main thread."""
+        self._update_pv('TimestampUpdate-Mon', _time.time())
         _time.sleep(interval)
 
     def init_driver(self):
@@ -148,21 +149,13 @@ class App:
 
     def _write_sp_rb(self, reason, value):
         # update SP
-        self._driver.setParam(reason, value)
-        _log.debug('{}: updated'.format(reason))
-        self._driver.updatePV(reason)
-        self._driver.setParamStatus(
-            reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+        self._update_pv(reason, value)
 
         reason = reason.replace('-SP', '-RB')
         reason = reason.replace('-Sel', '-Sts')
 
         # update RB
-        self._driver.setParam(reason, value)
-        _log.debug('{}: updated'.format(reason))
-        self._driver.updatePV(reason)
-        self._driver.setParamStatus(
-            reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+        self._update_pv(reason, value)
 
     def _write_roi(self, reason, value):
         if reason not in ('ImgROIX-SP', 'ImgROIY-SP'):
@@ -216,6 +209,18 @@ class App:
             value = getattr(value, attr)
         return value
 
+    def _update_pv(self, pvname, value=None, success=True):
+        """."""
+        if success:
+            self._driver.setParam(pvname, value)
+            _log.debug('{}: updated'.format(pvname))
+            self._driver.updatePV(pvname)
+            self._driver.setParamStatus(
+            pvname, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+        else:
+            self._driver.setParamStatus(
+                    pvname, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+
     def _update_driver(self):
         """Update all parameters at every image PV callback."""
         for pvname, attr in App._MON_PVS_2_IMGFIT.items():
@@ -255,12 +260,7 @@ class App:
 
             # update epics db
             if self._meas.update_success:
-                self._driver.setParam(pvname, new_value)
-                _log.debug('{}: updated'.format(pvname))
-                self._driver.updatePV(pvname)
-                self._driver.setParamStatus(
-                    pvname, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+                self._update_pv(pvname, new_value)
             else:
-                self._driver.setParamStatus(
-                    pvname, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+                self._update_pv(pvname, success=False)
             

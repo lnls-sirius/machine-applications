@@ -8,6 +8,7 @@ class Measurement():
     """."""
 
     DVF_IMAGE_PROPTY = 'image1:ArrayData'
+    MIN_ROI_SIZE = 5  # [pixels]
 
     def __init__(self,
             devname, fwhmx_factor, fwhmy_factor, roi_with_fwhm, callback=None):
@@ -147,14 +148,16 @@ class Measurement():
                 roiy = img2dfit.fity.calc_roi_with_fwhm(
                     image=img2dfit.fity, fwhm_factor=self.fwhmy_factor)
                 if roix[1] - roix[0] < Measurement.MIN_ROI_SIZE:
-                    roix = self._image2dfit.fitx.roi
+                    # roix = self._image2dfit.fitx.roi
+                    roix = None
                 if roiy[1] - roiy[0] < Measurement.MIN_ROI_SIZE:
-                    roiy = self._image2dfit.fity.roi
+                    # roiy = self._image2dfit.fity.roi
+                    roix = None
             else:
                 # reuse current roi for new image
                 roix = self._image2dfit.fitx.roi
                 roiy = self._image2dfit.fity.roi
-            print(roix, roiy)
+            # print(roix, roiy)
             # get data and process
             # NOTE: sometimes data returns not as numpy arrays with 2 indices
             # need to investigate and maybe protect in DVF class.
