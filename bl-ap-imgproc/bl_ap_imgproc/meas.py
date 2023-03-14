@@ -180,5 +180,3 @@ class Measurement():
         self._sizey = self._dvf.parameters.IMAGE_SIZE_Y
         self._sizex = self._dvf.parameters.IMAGE_SIZE_X
         self._dvf.wait_for_connection(timeout=5)
-
-
