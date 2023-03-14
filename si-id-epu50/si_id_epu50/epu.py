@@ -2,6 +2,7 @@ import threading
 import socket
 import logging
 import logging.handlers
+import time
 
 from . import constants as _cte
 from .utils import *
@@ -208,7 +209,7 @@ class Epu():
                 self.gap_start_event.wait()
                 
                 with self._epu_lock:
-                    logger.info('\nGap movement started\n')
+                    logger.info('Gap movement started')
                     self.a_drive.drive_connect() # sends BCD:{address} to drive A
                     start = time.time()
                     update_count = 0
@@ -224,12 +225,12 @@ class Epu():
                             # logger.info(f'Gap: {self.gap}') # helps to diagnose updating problems
 
                         if abs(self.gap - self.gap_target) < .001:
-                            self.gap_is_moving = 0
+                            self.gap_is_moving = False
                             self.gap_start_event.clear()
                             end = time.time()
                             # logger.info(f'\nGap movement finished. \
                             #     Update rate: {update_count/(end-start)}')
-                            logger.info(f'{self.gap}\t{update_count/(end-start)}')
+                            logger.info(f'Gap: {round(self.gap, 2)}\tUpdaterate: {int(update_count/(end-start))}')
 
                     self.stop_event.set()
 
@@ -1154,13 +1155,44 @@ def get_file_handler(file: str):
 
 def get_logger(file_handler):
     lg = logging.getLogger()
-    lg.setLevel(logging.DEBUG)
+    lg.setLevel(logging.INFO)
     lg.addHandler(file_handler)
     return lg
 
-def cycling():
+def cycling(epu: Epu, min, max, times):
     ''' For future cycling tests'''
-    pass
+    for _ in range(times):
+        epu.gap_set(min)
+        time.sleep(1)
+        if epu.stop_event.is_set() and epu.gap_start_event.is_set():
+            logger.error(f'BEFORE GAP START - STOP EVENT: {epu.stop_event.is_set()}\
+                GAP START EVENT: {epu.stop_event.is_set()}!')
+            
+        epu.gap_start(1)
+        
+        if epu.stop_event.is_set() and epu.gap_start_event.is_set():
+            logger.error(f'AFTER GAP START - STOP EVENT: {epu.stop_event.is_set()}\
+                GAP START EVENT: {epu.stop_event.is_set()}!')
+            
+        while epu.gap_is_moving:
+            time.sleep(1)
+            
+        epu.gap_set(max)
+        
+        time.sleep(1)
+        
+        if epu.stop_event.is_set() and epu.gap_start_event.is_set():
+            logger.error(f'BEFORE GAP START - STOP EVENT: {epu.stop_event.is_set()}\
+                GAP START EVENT: {epu.stop_event.is_set()}!')
+            
+        epu.gap_start(1)
+        
+        if epu.stop_event.is_set() and epu.gap_start_event.is_set():
+            logger.error(f'AFTER GAP START - STOP EVENT: {epu.stop_event.is_set()}\
+                GAP START EVENT: {epu.stop_event.is_set()}!')
+            
+        while epu.gap_is_moving:
+            time.sleep(1)
       
 logger.handlers.clear()
 fh = get_file_handler('testing.log')
@@ -1168,3 +1200,4 @@ root = get_logger(fh)
             
 if __name__ == '__main__':
     epu = Epu(default_args)
+    cycling(epu, 36, 36.1, 10)
