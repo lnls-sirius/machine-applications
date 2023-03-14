@@ -154,7 +154,7 @@ class Measurement():
                 # reuse current roi for new image
                 roix = self._image2dfit.fitx.roi
                 roiy = self._image2dfit.fity.roi
-            print(roix, roiy)
+                
             # get data and process
             # NOTE: sometimes data returns not as numpy arrays with 2 indices
             # need to investigate and maybe protect in DVF class.
@@ -177,5 +177,3 @@ class Measurement():
         self._sizey = self._dvf.parameters.IMAGE_SIZE_Y
         self._sizex = self._dvf.parameters.IMAGE_SIZE_X
         self._dvf.wait_for_connection(timeout=5)
-
-

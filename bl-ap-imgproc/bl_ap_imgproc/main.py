@@ -48,7 +48,7 @@ class App:
         self._driver = driver
         self._const = const
         self._database = const.get_database()
-        
+
         # get measurement arguments
         fwhmx_factor = \
             self._database['ImgROIXUpdateWithFWHMFactor-RB']['value']
@@ -56,7 +56,7 @@ class App:
             self._database['ImgROIYUpdateWithFWHMFactor-RB']['value']
         roi_with_fwhm = \
             self._database['ImgROIUpdateWithFWHM-Sts']['value']
-        
+
         # create measurement objects
         self._meas = Measurement(
             const.devname,
@@ -72,7 +72,7 @@ class App:
             version=dbase['Version-Cte']['value'],
             prefix=const.devname)
 
-        self._meas.callback = self._update_driver
+        self._meas.callback = self.update_driver
 
     @property
     def driver(self):
@@ -88,32 +88,12 @@ class App:
         """Run continuously in the main thread."""
         _time.sleep(interval)
 
-    def init_driver(self):
-        """Initialize PVs at startup."""
-        # NOTE: this method has the same struct as _update_driver.
-        # maybe they should be unified.
-        for pvname, attr in App._INIT_PVS_2_IMGFIT.items():
-            if self._meas.update_success:
-
-                # get image attribute value
-                value = self._conv_imgattr2value(attr)
-
-                # update epics db
-                self._driver.setParam(pvname, value)
-                _log.debug('{}: updated'.format(pvname))
-                self._driver.updatePV(pvname)
-                self._driver.setParamStatus(
-                    pvname, _Alarm.NO_ALARM, _Severity.NO_ALARM)
-            else:
-                self._driver.setParamStatus(
-                    pvname, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
-    
     def write(self, reason, value):
         """Write value in objects and database."""
         if not reason.endswith('-SP') and not reason.endswith('-Sel'):
             _log.warning('PV %s is not writable!', reason)
             return False
-        
+
         res = self._write_roi(reason, value)
         if res is not None:
             return res
@@ -121,7 +101,7 @@ class App:
         res = self._write_fwhm_factor(reason, value)
         if res is not None:
             return res
-            
+
         res = self._write_update_roi_with_fwhm(reason, value)
         if res is not None:
             return res
@@ -136,7 +116,7 @@ class App:
             self._database['ImgFitYUpdateROIWithFWHMFactor-SP']['value']
         roi_with_fwhm = \
             self._database['ImgFitUpdateROIWithFWHM-Sts']['value']
-        
+
         # create object
         self._meas = Measurement(
             self._const.devname,
@@ -144,7 +124,7 @@ class App:
             roi_with_fwhm=roi_with_fwhm)
 
         # add callback
-        self._meas.callback = self._update_driver
+        self._meas.callback = self.update_driver
 
     def _write_sp_rb(self, reason, value):
         # update SP
@@ -189,7 +169,6 @@ class App:
                 'ImgROIYUpdateWithFWHMFactor-SP'
                 ):
             return None
-        # TODO: check value
         if 'X' in reason:
             self._meas.fwhmx_factor = value
         else:
@@ -197,7 +176,7 @@ class App:
         self._write_sp_rb(reason, value)
 
         return True
-        
+
     def _write_update_roi_with_fwhm(self, reason, value):
         """."""
         if reason not in ('ImgROIUpdateWithFWHM-Sel'):
@@ -216,18 +195,22 @@ class App:
             value = getattr(value, attr)
         return value
 
-    def _update_driver(self):
-        """Update all parameters at every image PV callback."""
-        for pvname, attr in App._MON_PVS_2_IMGFIT.items():
+    def _heart_beat_update(self):
+        pvname = 'TimestampUpdate-Mon'
+        value = _time.time()
+        self._driver.setParam(pvname, value)
+        # _log.debug('{}: updated'.format(pvname))
+        self._driver.updatePV(pvname)
+        self._driver.setParamStatus(
+            pvname, _Alarm.NO_ALARM, _Severity.NO_ALARM)
 
-            # heartbeat update (NOTE: move outside loop?)
+    def update_driver(self):
+        """Update all parameters at every image PV callback."""
+        # heartbeat update
+        self._heart_beat_update()
+
+        for pvname, attr in App._MON_PVS_2_IMGFIT.items():
             if pvname == 'TimestampUpdate-Mon':
-                value = _time.time()
-                self._driver.setParam(pvname, value)
-                # _log.debug('{}: updated'.format(pvname))
-                self._driver.updatePV(pvname)
-                self._driver.setParamStatus(
-                    pvname, _Alarm.NO_ALARM, _Severity.NO_ALARM)
                 continue
 
             # check if is roi_rb and if it needs updating
@@ -235,7 +218,6 @@ class App:
                 if not self._meas.update_roi_with_fwhm:
                     continue
 
-            # print(pvname)
             # get image attribute value
             value = self._conv_imgattr2value(attr)
 
@@ -250,9 +232,7 @@ class App:
                 invalid = False
 
             new_value = 0 if invalid else value
-            # if 'Fit' in pvname:
-            #     print(pvname, value, invalid, new_value)
-
+            
             # update epics db
             if self._meas.update_success:
                 self._driver.setParam(pvname, new_value)
@@ -263,4 +243,3 @@ class App:
             else:
                 self._driver.setParamStatus(
                     pvname, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
-            

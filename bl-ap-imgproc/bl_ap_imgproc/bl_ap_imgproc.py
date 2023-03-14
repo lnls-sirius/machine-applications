@@ -37,7 +37,7 @@ class _Driver(_pcaspy.Driver):
         super().__init__()
         self.app = app
         self.app.driver = self
-        self.app.init_driver()
+        self.app.update_driver()
 
     def read(self, reason):
         _log.debug("Reading {0:s}.".format(reason))
@@ -149,12 +149,12 @@ def run(devname, debug=False):
     # check whether an instance is already running
     if ioc_is_running(const):
         raise ValueError('Another instance of this IOC is already running !')
-    
+
     # create server and driver app
     server = create_server(const)
     server_thread = initialize_server_thread(server)
     app = create_driver_app(const)
-    
+
     # main loop
     interval = 0.5
     while not stop_event.is_set():
@@ -162,4 +162,3 @@ def run(devname, debug=False):
 
     # end of application, stop server thread
     server_thread = stop_server_thread(server_thread)
-

@@ -44,8 +44,7 @@ class Constants(_csdev.Const):
         database.update(self._get_roi_db())
         database.update(self._get_fit_db())
         database.update(self._get_others_db())
-        # TODO: add timestamps PVs (see PS csdev example)
-        # TODO: add Properties-Cte
+        database = _csdev.add_pvslist_cte(database)
         # TODO: Version here will take value from siriuspy package, when
         # code is moved to this repo. Is this what we want? maybe we should
         # start composing the string from siriuspy + machine-applicaions?
@@ -53,7 +52,7 @@ class Constants(_csdev.Const):
             'type': 'string',
             'value': _util.get_last_commit_hash()
         }
-        
+
         return database
 
     def _get_image_db(self):
@@ -121,7 +120,7 @@ class Constants(_csdev.Const):
                 },
                 'ImgROI' + axis + 'UpdateWithFWHMFactor-SP': {
                     'type': 'float', 'value': 2.0, 'unit': 'fwhm_factor',
-                    'prec': 3,
+                    'prec': 3, 'lolim': 0.0
                 },
                 'ImgROI' + axis + 'UpdateWithFWHMFactor-RB': {
                     'type': 'float', 'value': 2.0, 'unit': 'fwhm_factor',
@@ -148,8 +147,8 @@ class Constants(_csdev.Const):
         mon_ = '-Mon'
         db.update({
             'Version-Cte': {
-            'type': 'string',
-            'value': _util.get_last_commit_hash()
+                'type': 'string',
+                'value': _util.get_last_commit_hash()
             },
             'ImgLog' + mon_: {
                 'type': 'string', 'value': 'Starting...',
