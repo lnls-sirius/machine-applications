@@ -1,4 +1,8 @@
+"""."""
+
 import numpy as _np
+from scipy.optimize import curve_fit as _scipy_curve_fit
+
 
 from siriuspy.devices import DVF as _DVF
 from mathphys import imgproc as _imgproc
@@ -10,13 +14,17 @@ class Measurement():
     DVF_IMAGE_PROPTY = 'image1:ArrayData'
     MIN_ROI_SIZE = 5  # [pixels]
 
-    def __init__(self,
-            devname, fwhmx_factor, fwhmy_factor, roi_with_fwhm, callback=None):
+    def __init__(
+            self, devname, fwhmx_factor, fwhmy_factor,
+            roi_with_fwhm, callback=None):
         """."""
         self._devname = devname
         self._callback = callback
         self._update_success = True
         self._dvf = None
+        self._scipy_curve_fit = \
+            _imgproc.ScipyFitGauss(
+                scipy_curv_fit_func=_scipy_curve_fit)
         self._image2dfit = None
         self._sizex = None
         self._sizey = None
@@ -166,7 +174,9 @@ class Measurement():
             # It always solved running DVF.cmd_acquisiton_on()...
             data = self._dvf.image
             self._image2dfit = _imgproc.Image2D_Fit(
-                data=data, roix=roix, roiy=roiy)
+                data=data,
+                curve_fit=self._scipy_curve_fit,
+                roix=roix, roiy=roiy)
             self._update_success = True
 
         except Exception:
