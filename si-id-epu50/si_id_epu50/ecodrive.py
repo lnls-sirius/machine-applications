@@ -17,7 +17,7 @@ class EcoDrive():
     def __init__(self, socket: socket.socket, address: int, max_limit, min_limit,
                  bbb_hostname, rs458_tcp_port: int = None, drive_name: str = 'EcoDrive') -> None:
         
-        """Intramat EcoDirve 03 (controllers DKC**.3-040, -100, -200) class.
+        """Indramat EcoDirve 03 (controllers DKC**.3-040, -100, -200) class.
            Encaptulate ASCII messages into TCP datagrams.
            Makes available a subset of possible readings and
            writes from/to EcoDrive 03 controllers. It is required that on the
@@ -45,7 +45,7 @@ class EcoDrive():
     def tcp_wait_connection(self) -> bool:
         """
         Any time this function is called, it keeps on a loop trying to reach
-        the other side of a tcp connection, when it succeed, it returnts True.
+        the other side of a tcp connection, when it succeed, it returns True.
         """
         count = 0
         with self._lock:
