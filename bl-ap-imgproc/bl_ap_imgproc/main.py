@@ -14,7 +14,10 @@ from .meas import Measurement
 class App:
     """BL Image Processing IOC Application."""
 
+    CHECK_IMG_ACQUIRE = True
+
     _MON_PVS_2_IMGFIT = {
+            # These PVs are updated at evry image processing
             'ImgROIX-RB': ('fitx', 'roi'),
             'ImgROIY-RB': ('fity', 'roi'),
             'ImgROIXCenter-Mon': ('fitx', 'roi_center'),
@@ -37,6 +40,8 @@ class App:
         }
 
     _INIT_PVS_2_IMGFIT = {
+            # These are either constant PVs or readback PVs whose
+            # initializations need external input
             'ImgSizeX-Cte': ('fitx', 'size'),
             'ImgSizeY-Cte': ('fity', 'size'),
             'ImgROIX-RB': ('fitx', 'roi'),
@@ -48,6 +53,8 @@ class App:
         self._driver = driver
         self._const = const
         self._database = const.get_database()
+        self._heartbeat = 0
+        self._timestamp_last_update = _time.time()
 
         # get measurement arguments
         fwhmx_factor = \
@@ -75,6 +82,11 @@ class App:
         self._meas.callback = self.update_driver
 
     @property
+    def const(self):
+        """."""
+        return self._const
+
+    @property
     def driver(self):
         """."""
         return self._driver
@@ -84,9 +96,30 @@ class App:
         """."""
         self._driver = value
 
+    @property
+    def heartbeat(self):
+        """."""
+        return self._heartbeat
+
+    def increment_heartbeat(self):
+        """."""
+        self._heartbeat += 1
+
+    @property
+    def meas(self):
+        """."""
+        return self._meas
+
     def process(self, interval):
         """Run continuously in the main thread."""
-        self._update_pv('ImgTimestampUpdate-Mon', _time.time())
+        # update heartbeat
+        self.increment_heartbeat()
+        self._write_pv('ImgTimestampUpdate-Mon', _time.time())
+
+        # if enabled, check if image acquisition is not working and set it
+        if App.CHECK_IMG_ACQUIRE:
+            self._check_acquisition_timeout()
+
         _time.sleep(interval)
 
     def write(self, reason, value):
@@ -114,20 +147,61 @@ class App:
         # NOTE: this method has the same struct as _update_driver.
         # maybe they should be unified.
         for pvname, attr in App._INIT_PVS_2_IMGFIT.items():
-            if self._meas.update_success:
-
+            if self.meas.update_success:
                 # get image attribute value
                 value = self._conv_imgattr2value(attr)
-
-                # update epics db
-                self._driver.setParam(pvname, value)
-                _log.debug('{}: updated'.format(pvname))
-                self._driver.updatePV(pvname)
-                self._driver.setParamStatus(
-                    pvname, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+                # update epics db successfully
+                self._write_pv(pvname, value)
             else:
-                self._driver.setParamStatus(
-                    pvname, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+                # update epics db failure
+                self._write_pv(pvname, success=False)
+                # update Log
+                self._write_log(self.meas.update_success)
+
+    def update_driver(self):
+        """Update all parameters at every image PV callback."""
+        self._timestamp_last_update = _time.time()
+        for pvname, attr in App._MON_PVS_2_IMGFIT.items():
+
+            # check if is roi_rb and if it needs updating
+            if pvname in ('ImgROIX-RB', 'ImgROIY-RB'):
+                if not self.meas.update_roi_with_fwhm:
+                    continue
+
+            # get image attribute value
+            value = self._conv_imgattr2value(attr)
+
+            # check if fit is valid and update value
+            if 'FitX' in pvname:
+                invalid = self.meas.fitx_is_nan
+            elif 'FitY' in pvname:
+                invalid = self.meas.fity_is_nan
+            elif 'FitAngle' in pvname:
+                invalid = self.meas.fitx_is_nan or self.meas.fity_is_nan
+            else:
+                invalid = False
+
+            new_value = 0 if invalid else value
+
+            # update epics db
+            if self.meas.update_success:
+                self._write_pv(pvname, new_value)
+            else:
+                self._write_pv(pvname, success=False)
+
+        if not self.meas.update_success:
+            # update Log
+            self._write_log(self.meas.update_success)
+
+    def _check_acquisition_timeout(self):
+        """."""
+        interval = _time.time() - self._timestamp_last_update
+        if self.meas.acquisition_timeout(interval):
+            # NOTE: this set_acquire is a long process. should we run it
+            # in a unique thread?
+            self._write_log('DVF Image update timeout!')
+            self.meas.set_acquire()
+            self._timestamp_last_update = _time.time()
 
     def _create_meas(self):
         # build arguments
@@ -147,25 +221,43 @@ class App:
         # add callback
         self._meas.callback = self.update_driver
 
-    def _write_sp_rb(self, reason, value):
+    def _write_pv(self, pvname, value=None, success=True):
+        """."""
+        if success:
+            self._driver.setParam(pvname, value)
+            _log.debug('{}: updated'.format(pvname))
+            self._driver.updatePV(pvname)
+            self._driver.setParamStatus(
+                pvname, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+        else:
+            self._driver.setParamStatus(
+                pvname, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+
+    def _write_log(self, message, success=True):
+        """."""
+        message += f' (heartbeat {self.heartbeat})'
+        self._write_pv('ImgLog-Mon', message, success)
+
+    def _write_pv_sp_rb(self, reason, value):
         # update SP
-        self._update_pv(reason, value)
+        self._write_pv(reason, value)
 
         reason = reason.replace('-SP', '-RB')
         reason = reason.replace('-Sel', '-Sts')
 
         # update RB
-        self._update_pv(reason, value)
+        self._write_pv(reason, value)
 
     def _write_roi(self, reason, value):
         if reason not in ('ImgROIX-SP', 'ImgROIY-SP'):
             return None
         if 'X' in reason:
-            self._meas.set_roix(value)
+            self.meas.set_roix(value)
         else:
             self._meas.set_roiy(value)
-        if self._meas.update_success:
-            self._write_sp_rb(reason, value)
+        if self.meas.update_success:
+            self._write_pv_sp_rb(reason, value)
+            self._write_pv('ImgLog-Mon', self.meas.update_success)
             return True
         else:
             msg = '{}: could not write value {}'.format(reason, value)
@@ -183,10 +275,10 @@ class App:
                 ):
             return None
         if 'X' in reason:
-            self._meas.fwhmx_factor = value
+            self.meas.fwhmx_factor = value
         else:
-            self._meas.fwhmy_factor = value
-        self._write_sp_rb(reason, value)
+            self.meas.fwhmy_factor = value
+        self._write_pv_sp_rb(reason, value)
 
         return True
 
@@ -194,58 +286,16 @@ class App:
         """."""
         if reason not in ('ImgROIUpdateWithFWHM-Sel'):
             return None
-        self._meas.update_roi_with_fwhm = value
-        self._write_sp_rb(reason, value)
+        self.meas.update_roi_with_fwhm = value
+        self._write_pv_sp_rb(reason, value)
 
         return True
 
     def _conv_imgattr2value(self, attr):
-        value = self._meas.image2dfit
+        value = self.meas.image2dfit
         if isinstance(attr, tuple):
             for obj in attr:
                 value = getattr(value, obj)
         else:
             value = getattr(value, attr)
         return value
-
-    def _update_pv(self, pvname, value=None, success=True):
-        """."""
-        if success:
-            self._driver.setParam(pvname, value)
-            _log.debug('{}: updated'.format(pvname))
-            self._driver.updatePV(pvname)
-            self._driver.setParamStatus(
-                pvname, _Alarm.NO_ALARM, _Severity.NO_ALARM)
-        else:
-            self._driver.setParamStatus(
-                pvname, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
-
-    def update_driver(self):
-        """Update all parameters at every image PV callback."""
-        for pvname, attr in App._MON_PVS_2_IMGFIT.items():
-
-            # check if is roi_rb and if it needs updating
-            if pvname in ('ImgROIX-RB', 'ImgROIY-RB'):
-                if not self._meas.update_roi_with_fwhm:
-                    continue
-
-            # get image attribute value
-            value = self._conv_imgattr2value(attr)
-
-            # check if fit is valid and update value
-            if 'FitX' in pvname:
-                invalid = self._meas.fitx_is_nan
-            elif 'FitY' in pvname:
-                invalid = self._meas.fity_is_nan
-            elif 'FitAngle' in pvname:
-                invalid = self._meas.fitx_is_nan or self._meas.fity_is_nan
-            else:
-                invalid = False
-
-            new_value = 0 if invalid else value
-
-            # update epics db
-            if self._meas.update_success:
-                self._update_pv(pvname, new_value)
-            else:
-                self._update_pv(pvname, success=False)

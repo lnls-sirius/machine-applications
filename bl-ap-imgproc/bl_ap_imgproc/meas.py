@@ -1,3 +1,4 @@
+import time as _time
 import numpy as _np
 
 from siriuspy.devices import DVF as _DVF
@@ -7,15 +8,17 @@ from mathphys import imgproc as _imgproc
 class Measurement():
     """."""
 
+    UPDATE_SUCCESS = ''
     DVF_IMAGE_PROPTY = 'image1:ArrayData'
     MIN_ROI_SIZE = 5  # [pixels]
+    TIMEOUT_CONN = 5  # [s]
 
     def __init__(self,
             devname, fwhmx_factor, fwhmy_factor, roi_with_fwhm, callback=None):
         """."""
         self._devname = devname
         self._callback = callback
-        self._update_success = True
+        self._update_success = Measurement.UPDATE_SUCCESS
         self._dvf = None
         self._image2dfit = None
         self._sizex = None
@@ -115,28 +118,37 @@ class Measurement():
         """."""
         return _np.isnan(self._image2dfit.fity.roi_fit_error)
 
+    def acquisition_timeout(self, interval):
+        """Check if given interval defines an image update timeout."""
+        return interval > 10 * self.dvf.acquisition_time
+
+    def set_acquire(self):
+        """."""
+        self.dvf.cmd_acquire_off()
+        _time.time(1)
+        self.dvf.cmd_acquire_on()
+        _time.time(1)
+
     def set_roix(self, value):
         """."""
         _, roiy = self._image2dfit.roi
         try:
             self._image2dfit.roi = [value, roiy]
-            self._update_success = True
+            self._update_success = Measurement.UPDATE_SUCCESS
         except Exception:
-            self._update_success = False
+            self._update_success = 'Unable to set ROIX'
 
     def set_roiy(self, value):
         """."""
         roix, _ = self._image2dfit.roi
         try:
             self._image2dfit.roi = [roix, value]
-            self._update_success = True
+            self._update_success = Measurement.UPDATE_SUCCESS
         except Exception:
-            self._update_success = False
+            self._update_success = 'Unable to set ROIY'
 
     def process_image(self, **kwargs):
         """Process image."""
-        # NOTE: should we check whether IOC is providing image
-        # (DVF.acquisition_status) and run DVF.cmd_acquire_on if not?
         try:
             # define roi
             img2dfit = self._image2dfit
@@ -164,13 +176,18 @@ class Measurement():
             # NOTE: sometimes data returns not as numpy arrays with 2 indices
             # need to investigate and maybe protect in DVF class.
             # It always solved running DVF.cmd_acquisiton_on()...
+            if not self._dvf.connected:
+                self._update_success = 'DVF not connecetd'
+                return
+
             data = self._dvf.image
             self._image2dfit = _imgproc.Image2D_Fit(
                 data=data, roix=roix, roiy=roiy)
-            self._update_success = True
+            self._update_success = Measurement.UPDATE_SUCCESS
 
         except Exception:
-            self._update_success = False
+            self._update_success = \
+                f'Unable to process image shape {data.shape}'
 
         # run registered driver callback
         if self._callback:
@@ -181,4 +198,4 @@ class Measurement():
         self._dvf = _DVF(self._devname)
         self._sizey = self._dvf.parameters.IMAGE_SIZE_Y
         self._sizex = self._dvf.parameters.IMAGE_SIZE_X
-        self._dvf.wait_for_connection(timeout=5)
+        self._dvf.wait_for_connection(timeout=Measurement.TIMEOUT_CONN)
