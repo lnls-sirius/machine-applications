@@ -6,7 +6,7 @@ import time
 
 from . import constants as _cte
 from .utils import *
-from .ecodrive import *
+from .ecodrive import EcoDrive
 
 logger = logging.getLogger(__name__)
 class Namespace:
