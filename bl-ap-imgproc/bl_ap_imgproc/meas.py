@@ -27,8 +27,8 @@ class Measurement():
         self._update_success = Measurement.UPDATE_SUCCESS
         self._dvf = None
         self._scipy_curve_fit = \
-            _imgproc.ScipyFitGauss(
-                scipy_curv_fit_func=_scipy_curve_fit)
+            _imgproc.FitGaussianScipy(
+                curve_fit_func=_scipy_curve_fit)
         self._image2dfit = None
         self._sizex = None
         self._sizey = None
