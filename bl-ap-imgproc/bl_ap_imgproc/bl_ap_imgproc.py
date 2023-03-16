@@ -46,42 +46,45 @@ class _Driver(_pcaspy.Driver):
     def write(self, reason, value):
         if not self._isValid(reason, value):
             return False
+
+        # NOTE: app.write should update driver pv values in database
         ret_val = self.app.write(reason, value)
         if ret_val:
             _log.info('YES Write %s: %s', reason, str(value))
         else:
             value = self.getParam(reason)
             _log.warning('NO Write %s: %s', reason, str(value))
-        self.setParam(reason, value)
-        self.updatePV(reason)
         return True
 
     def check_read_only(self, reason):
         is_read_only = reason.endswith(('-Sts', '-RB', '-Mon', '-Cte'))
         if is_read_only:
             _log.debug('PV {0:s} is read only.'.format(reason))
-
-        return not is_read_only
+        return is_read_only
 
     def check_value_none(self, val):
         if val is None:
             msg = 'client tried to set None value. refusing...'
             _log.error(msg)
-            return False
-        return True
+            return True
+        return False
 
     def check_enums(self, reason, val):
         enums = self.getParamInfo(reason, info_keys=('enums', ))['enums']
         enum_verifier = enums and isinstance(val, int) and val >= len(enums)
         if enum_verifier:
             _log.warning('value %d too large for enum type PV %s', val, reason)
-        return not enum_verifier
+        return enum_verifier
 
-    def _isValid(self, reason, val):
-        is_valid = self.check_read_only(reason)
-        is_valid = self.check_value_none(val)
-        is_valid = self.check_enums(reason, val)
-        return is_valid
+    def _isValid(self, reason, value):
+        if self.check_read_only(reason):
+            return False
+        if self.check_value_none(value):
+            return False
+        # NOTE: is this enum check really necessary?
+        # if self.check_enums(reason, value):
+        #     return False
+        return True
 
 
 def defineAbortFunction():
@@ -115,6 +118,7 @@ def create_server(const):
 
 
 def initialize_server_thread(server):
+    """."""
     server_thread = ServerThread(server)
     server_thread.daemon = True
     _log.info('Starting Server Thread.')
@@ -123,6 +127,7 @@ def initialize_server_thread(server):
 
 
 def stop_server_thread(server_thread):
+    """."""
     _log.info('Stoping Server Thread...')
     # send stop signal to server thread
     server_thread.stop()
@@ -132,6 +137,7 @@ def stop_server_thread(server_thread):
 
 
 def create_driver_app(const):
+    """."""
     _log.info('Creating Driver.')
     app = App(const=const)
     _Driver(app)  # a handle to Drive object is set within the app object.
@@ -140,7 +146,6 @@ def create_driver_app(const):
 
 def run(devname, debug=False):
     """Start the IOC."""
-
     # initial configurations
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
