@@ -134,9 +134,9 @@ class Measurement():
     def set_acquire(self):
         """."""
         self.dvf.cmd_acquire_off()
-        _time.time(1)
+        _time.sleep(1)
         self.dvf.cmd_acquire_on()
-        _time.time(1)
+        _time.sleep(1)
 
     def set_roix(self, value):
         """."""
