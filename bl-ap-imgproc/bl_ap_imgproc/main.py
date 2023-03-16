@@ -18,24 +18,30 @@ class App:
 
     _MON_PVS_2_IMGFIT = {
             # These PVs are updated at evry image processing
-            'ImgROIX-RB': ('fitx', 'roi'),
-            'ImgROIY-RB': ('fity', 'roi'),
-            'ImgROIXCenter-Mon': ('fitx', 'roi_center'),
-            'ImgROIYCenter-Mon': ('fity', 'roi_center'),
-            'ImgROIXFWHM-Mon': ('fitx', 'roi_fwhm'),
-            'ImgROIYFWHM-Mon': ('fity', 'roi_fwhm'),
+            # --- image intensity ---
             'ImgIntensityMin-Mon': 'intensity_min',
             'ImgIntensityMax-Mon': 'intensity_max',
             'ImgIntensitySum-Mon': 'intensity_sum',
             'ImgIsSaturated-Mon': 'is_saturated',
+            # --- roix ---
+            'ImgROIX-RB': ('fitx', 'roi'),
+            'ImgROIXCenter-Mon': ('fitx', 'roi_center'),
+            'ImgROIXFWHM-Mon': ('fitx', 'roi_fwhm'),
+            # --- roix_fit ---
             'ImgROIXFitAmplitude-Mon': ('fitx', 'roi_amplitude'),
             'ImgROIXFitMean-Mon': ('fitx', 'roi_mean'),
             'ImgROIXFitSigma-Mon': ('fitx', 'roi_sigma'),
             'ImgROIXFitError-Mon': ('fitx', 'roi_fit_error'),
+            # --- roixy ---
+            'ImgROIY-RB': ('fity', 'roi'),
+            'ImgROIYCenter-Mon': ('fity', 'roi_center'),
+            'ImgROIYFWHM-Mon': ('fity', 'roi_fwhm'),
+            # --- roiy_fit ---
             'ImgROIYFitAmplitude-Mon': ('fity', 'roi_amplitude'),
             'ImgROIYFitMean-Mon': ('fity', 'roi_mean'),
             'ImgROIYFitSigma-Mon': ('fity', 'roi_sigma'),
             'ImgROIYFitError-Mon': ('fity', 'roi_fit_error'),
+            # --- gauss2d fit ---
             'ImgFitAngle-Mon': 'angle',
         }
 
@@ -46,6 +52,8 @@ class App:
             'ImgSizeY-Cte': ('fity', 'size'),
             'ImgROIX-RB': ('fitx', 'roi'),
             'ImgROIY-RB': ('fity', 'roi'),
+            'ImgROIX-SP': ('fitx', 'roi'),  # NOTE: should we initialize this?
+            'ImgROIY-SP': ('fity', 'roi'),  # NOTE: should we initialize this?
         }
 
     def __init__(self, driver=None, const=None):
@@ -97,6 +105,11 @@ class App:
         self._driver = value
 
     @property
+    def meas(self):
+        """."""
+        return self._meas
+
+    @property
     def heartbeat(self):
         """."""
         return self._heartbeat
@@ -104,11 +117,6 @@ class App:
     def increment_heartbeat(self):
         """."""
         self._heartbeat += 1
-
-    @property
-    def meas(self):
-        """."""
-        return self._meas
 
     def process(self, interval):
         """Run continuously in the main thread."""
@@ -151,7 +159,11 @@ class App:
                 # get image attribute value
                 value = self._conv_imgattr2value(attr)
                 # update epics db successfully
-                self._write_pv(pvname, value)
+                if value is not None:
+                    self._write_pv(pvname, value)
+                else:
+                    msg = f'PV {pvname} could not be initialized!'
+                    _log.warning(msg)
             else:
                 # update epics db failure
                 self._write_pv(pvname, success=False)
@@ -170,18 +182,24 @@ class App:
 
             # get image attribute value
             value = self._conv_imgattr2value(attr)
+            if value is None:
+                msg = f'PV {pvname} could not be updated!'
+                _log.warning(msg)
+                continue
 
             # check if fit is valid and update value
-            if 'FitX' in pvname:
-                invalid = self.meas.fitx_is_nan
-            elif 'FitY' in pvname:
-                invalid = self.meas.fity_is_nan
+            if 'XFit' in pvname and self.meas.image2dfit.fitx.invalid_fit:
+                valid = False
+            elif 'YFit' in pvname and self.meas.image2dfit.fity.invalid_fit:
+                valid = False
             elif 'FitAngle' in pvname:
-                invalid = self.meas.fitx_is_nan or self.meas.fity_is_nan
+                valid = \
+                    not self.meas.image2dfit.fitx.invalid_fit and \
+                    not self.meas.image2dfit.fity.invalid_fit
             else:
-                invalid = False
+                valid = True
 
-            new_value = 0 if invalid else value
+            new_value = value if valid else 0
 
             # update epics db
             if self.meas.update_success:
@@ -293,6 +311,9 @@ class App:
 
     def _conv_imgattr2value(self, attr):
         value = self.meas.image2dfit
+        if value is None:
+            # image2dfit object anomalously not created yet!
+            return None
         if isinstance(attr, tuple):
             for obj in attr:
                 value = getattr(value, obj)

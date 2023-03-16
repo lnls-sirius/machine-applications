@@ -117,16 +117,6 @@ class Measurement():
         """."""
         self._callback = value
 
-    @property
-    def fitx_is_nan(self):
-        """."""
-        return _np.isnan(self._image2dfit.fitx.roi_fit_error)
-
-    @property
-    def fity_is_nan(self):
-        """."""
-        return _np.isnan(self._image2dfit.fity.roi_fit_error)
-
     def acquisition_timeout(self, interval):
         """Check if given interval defines an image update timeout."""
         return interval > 10 * self.dvf.acquisition_time
@@ -158,43 +148,41 @@ class Measurement():
 
     def process_image(self, **kwargs):
         """Process image."""
-        try:
-            # define roi
-            img2dfit = self._image2dfit
-            if not self._image2dfit:
-                # no image2dfit yet
-                roix, roiy = (None, None)
-            elif self.update_roi_with_fwhm:
-                # recalc roi using fwhm factors
-                roix = img2dfit.fitx.calc_roi_with_fwhm(
-                    image=img2dfit.fitx, fwhm_factor=self.fwhmx_factor)
-                roiy = img2dfit.fity.calc_roi_with_fwhm(
-                    image=img2dfit.fity, fwhm_factor=self.fwhmy_factor)
-                if roix[1] - roix[0] < Measurement.MIN_ROI_SIZE:
-                    # roix = self._image2dfit.fitx.roi
-                    roix = None
-                if roiy[1] - roiy[0] < Measurement.MIN_ROI_SIZE:
-                    # roiy = self._image2dfit.fity.roi
-                    roiy = None
-            else:
-                # reuse current roi for new image
-                roix = self._image2dfit.fitx.roi
-                roiy = self._image2dfit.fity.roi
-            # print(roix, roiy)
-            # get data and process
-            # NOTE: sometimes data returns not as numpy arrays with 2 indices
-            # need to investigate and maybe protect in DVF class.
-            # It always solved running DVF.cmd_acquisiton_on()...
-            if not self._dvf.connected:
-                self._update_success = 'DVF not connecetd'
-                return
 
+        # check if DVF is connected
+        if not self._dvf.connected:
+            self._update_success = 'DVF not connecetd'
+            return
+
+        # symbol to image2d fit object
+        img2dfit = self._image2dfit
+
+        # define roi based on previus image or fwhm factors
+        if not self._image2dfit:
+            # no image2dfit yet
+            roix, roiy = (None, None)
+        elif self.update_roi_with_fwhm:
+            # recalc roi using fwhm factors
+            roix = img2dfit.fitx.calc_roi_with_fwhm(
+                image=img2dfit.fitx, fwhm_factor=self.fwhmx_factor)
+            roiy = img2dfit.fity.calc_roi_with_fwhm(
+                image=img2dfit.fity, fwhm_factor=self.fwhmy_factor)
+            if roix[1] - roix[0] < Measurement.MIN_ROI_SIZE:
+                roix = None
+            if roiy[1] - roiy[0] < Measurement.MIN_ROI_SIZE:
+                roiy = None
+        else:
+            # reuse current roi for new image
+            roix = self._image2dfit.fitx.roi
+            roiy = self._image2dfit.fity.roi
+
+        # get image data and process fitting
+        try:
             data = self._dvf.image
             self._image2dfit = _imgproc.Image2D_Fit(
                 data=data, curve_fit=self._scipy_curve_fit,
                 roix=roix, roiy=roiy)
             self._update_success = True
-
         except Exception:
             self._update_success = \
                 f'Unable to process image shape {data.shape}'
