@@ -173,6 +173,8 @@ class App:
     def update_driver(self):
         """Update all parameters at every image PV callback."""
         self._timestamp_last_update = _time.time()
+
+        invalid_fitx, invalid_fity = [False]*2
         for pvname, attr in App._MON_PVS_2_IMGFIT.items():
 
             # check if is roi_rb and if it needs updating
@@ -188,18 +190,9 @@ class App:
                 continue
 
             # check if fit is valid and update value
-            if 'XFit' in pvname and self.meas.image2dfit.fitx.invalid_fit:
-                valid = False
-            elif 'YFit' in pvname and self.meas.image2dfit.fity.invalid_fit:
-                valid = False
-            elif 'FitAngle' in pvname:
-                valid = \
-                    not self.meas.image2dfit.fitx.invalid_fit and \
-                    not self.meas.image2dfit.fity.invalid_fit
-            else:
-                valid = True
-
-            new_value = value if valid else 0
+            invalid_fit, new_value = self._check_invalid_fit(pvname, value)
+            invalid_fitx |= invalid_fit if 'XFit' in pvname else False
+            invalid_fity |= invalid_fit if 'YFit' in pvname else False
 
             # update epics db
             if self.meas.update_success:
@@ -207,6 +200,10 @@ class App:
             else:
                 self._write_pv(pvname, success=False)
 
+        if invalid_fitx:
+            self._write_log('Invalid XFit')
+        if invalid_fity:
+            self._write_log('Invalid YFit')
         if not self.meas.update_success:
             # update Log
             self._write_log(self.meas.update_success)
@@ -220,6 +217,25 @@ class App:
             self._write_log('DVF Image update timeout!')
             self.meas.set_acquire()
             self._timestamp_last_update = _time.time()
+
+    def _check_invalid_fit(self, pvname, value):
+        """."""
+        if 'XFit' in pvname:
+            invalid_fit = self.meas.image2dfit.fitx.invalid_fit:
+        elif 'YFit' in pvname:
+            invalid_fit = self.meas.image2dfit.fity.invalid_fit:
+        elif 'FitAngle' in pvname:
+            invalid_fit = \
+                self.meas.image2dfit.fitx.invalid_fit or \
+                self.meas.image2dfit.fity.invalid_fit
+        else:
+            invalid_fit = False
+
+        if invalid_fit:
+            new_value = 0
+        else:
+            new_value = value
+        return invalid_fit, new_value
 
     def _create_meas(self):
         # build arguments

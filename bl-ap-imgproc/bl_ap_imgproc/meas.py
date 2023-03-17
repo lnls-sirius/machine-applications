@@ -2,10 +2,6 @@
 
 import time as _time
 
-import numpy as _np
-from scipy.optimize import curve_fit as _scipy_curve_fit
-
-
 from siriuspy.devices import DVF as _DVF
 from mathphys import imgproc as _imgproc
 
@@ -26,9 +22,7 @@ class Measurement():
         self._callback = callback
         self._update_success = Measurement.UPDATE_SUCCESS
         self._dvf = None
-        self._scipy_curve_fit = \
-            _imgproc.FitGaussianScipy(
-                curve_fit_func=_scipy_curve_fit)
+        self._scipy_curve_fit = _imgproc.FitGaussianScipy()
         self._image2dfit = None
         self._sizex = None
         self._sizey = None
