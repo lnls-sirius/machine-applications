@@ -221,9 +221,9 @@ class App:
     def _check_invalid_fit(self, pvname, value):
         """."""
         if 'XFit' in pvname:
-            invalid_fit = self.meas.image2dfit.fitx.invalid_fit:
+            invalid_fit = self.meas.image2dfit.fitx.invalid_fit
         elif 'YFit' in pvname:
-            invalid_fit = self.meas.image2dfit.fity.invalid_fit:
+            invalid_fit = self.meas.image2dfit.fity.invalid_fit
         elif 'FitAngle' in pvname:
             invalid_fit = \
                 self.meas.image2dfit.fitx.invalid_fit or \
