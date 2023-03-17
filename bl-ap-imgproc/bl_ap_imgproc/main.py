@@ -155,7 +155,7 @@ class App:
         # NOTE: this method has the same struct as _update_driver.
         # maybe they should be unified.
         for pvname, attr in App._INIT_PVS_2_IMGFIT.items():
-            if self.meas.update_success:
+            if self.meas.update_success == self.meas.UPDATE_SUCCESS:
                 # get image attribute value
                 value = self._conv_imgattr2value(attr)
                 # update epics db successfully
@@ -195,7 +195,7 @@ class App:
             invalid_fity |= invalid_fit if 'YFit' in pvname else False
 
             # update epics db
-            if self.meas.update_success:
+            if self.meas.update_success == self.meas.UPDATE_SUCCESS:
                 self._write_pv(pvname, new_value)
             else:
                 self._write_pv(pvname, success=False)
@@ -204,7 +204,7 @@ class App:
             self._write_log('Invalid XFit')
         if invalid_fity:
             self._write_log('Invalid YFit')
-        if not self.meas.update_success:
+        if self.meas.update_success != self.meas.UPDATE_SUCCESS:
             # update Log
             self._write_log(self.meas.update_success)
 
@@ -289,7 +289,8 @@ class App:
             self.meas.set_roix(value)
         else:
             self._meas.set_roiy(value)
-        if self.meas.update_success:
+
+        if self.meas.update_success == self.meas.UPDATE_SUCCESS:
             self._write_pv_sp_rb(reason, value)
             self._write_pv('ImgLog-Mon', self.meas.update_success)
             return True

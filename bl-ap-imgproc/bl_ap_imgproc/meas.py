@@ -40,7 +40,6 @@ class Measurement():
         imgpv = self._dvf.pv_object(Measurement.DVF_IMAGE_PROPTY)
         imgpv.add_callback(self.process_image)
 
-
     @property
     def devname(self):
         """."""
@@ -142,7 +141,6 @@ class Measurement():
 
     def process_image(self, **kwargs):
         """Process image."""
-
         # check if DVF is connected
         if not self._dvf.connected:
             self._update_success = 'DVF not connecetd'
@@ -176,7 +174,7 @@ class Measurement():
             self._image2dfit = _imgproc.Image2D_Fit(
                 data=data, curve_fit=self._scipy_curve_fit,
                 roix=roix, roiy=roiy)
-            self._update_success = True
+            self._update_success = Measurement.UPDATE_SUCCESS
         except Exception:
             self._update_success = \
                 f'Unable to process image shape {data.shape}'
