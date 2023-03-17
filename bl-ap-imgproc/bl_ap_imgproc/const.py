@@ -148,7 +148,7 @@ class Constants(_csdev.Const):
                 'value': self.DsblEnbl.Dsbl,
             },
             'ImgFitAngle' + mon_: {
-                'type': 'float', 'unit': 'rad'
+                'type': 'float', 'unit': 'deg'
             },
             })
         return db
