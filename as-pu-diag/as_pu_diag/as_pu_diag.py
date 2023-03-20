@@ -88,7 +88,8 @@ def run(debug=False):
     # create PV database
     device_filter = dict()
     device_filter['dis'] = 'PU'
-    device_filter['dev'] = '.*(Kckr|Sept)((?!:CCoil).)*$'
+    device_filter['dev'] = '.*(Kckr|Sept)'
+    device_filter['propty_name'] = '(?!:CCoil).*'
     punames = _PSSearch.get_psnames(device_filter)
 
     if not punames:
