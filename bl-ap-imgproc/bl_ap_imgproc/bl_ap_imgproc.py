@@ -81,9 +81,6 @@ class _Driver(_pcaspy.Driver):
             return False
         if self.check_value_none(value):
             return False
-        # NOTE: is this enum check really necessary?
-        # if self.check_enums(reason, value):
-        #     return False
         return True
 
 

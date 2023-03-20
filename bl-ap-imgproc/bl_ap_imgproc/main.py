@@ -150,25 +150,27 @@ class App:
 
         return True
 
+    def failed2write(self, pvname):
+        # update epics db failure
+        self._write_pv(pvname, success=False)
+        # update Log
+        self._write_log(self.meas.update_success)
+
     def init_driver(self):
         """Initialize PVs at startup."""
-        # NOTE: this method has the same struct as _update_driver.
-        # maybe they should be unified.
         for pvname, attr in App._INIT_PVS_2_IMGFIT.items():
             if self.meas.update_success == self.meas.UPDATE_SUCCESS:
-                # get image attribute value
-                value = self._conv_imgattr2value(attr)
+
                 # update epics db successfully
-                if value is not None:
-                    self._write_pv(pvname, value)
-                else:
-                    msg = f'PV {pvname} could not be initialized!'
+                value = self._conv_imgattr2value(attr)
+                if value is None:
+                    msg = f'PV {pvname} could not be initalized!'
                     _log.warning(msg)
+                    self.failed2write(pvname)
+                else:
+                    self._write_pv(pvname, value)
             else:
-                # update epics db failure
-                self._write_pv(pvname, success=False)
-                # update Log
-                self._write_log(self.meas.update_success)
+                self.failed2write(pvname)
 
     def update_driver(self):
         """Update all parameters at every image PV callback."""
@@ -198,7 +200,7 @@ class App:
             if self.meas.update_success == self.meas.UPDATE_SUCCESS:
                 self._write_pv(pvname, new_value)
             else:
-                self._write_pv(pvname, success=False)
+                self.failed2write(pvname)
 
         if invalid_fitx:
             self._write_log('Invalid XFit')
@@ -212,8 +214,6 @@ class App:
         """."""
         interval = _time.time() - self._timestamp_last_update
         if self.meas.acquisition_timeout(interval):
-            # NOTE: this set_acquire is a long process. should we run it
-            # in a unique thread?
             self._write_log('DVF Image update timeout!')
             self.meas.set_acquire()
             self._timestamp_last_update = _time.time()

@@ -52,10 +52,8 @@ class Constants(_csdev.Const):
         database.update(self._get_others_db())
         database = _csdev.add_pvslist_cte(database)
 
-        # NOTE: rename Properties-Cte to ImgProperties-Cte
         database['ImgProperties-Cte'] = database['Properties-Cte']
         del database['Properties-Cte']
-
         # TODO: Version here will take value from siriuspy package, when
         # code is moved to this repo. Is this what we want? maybe we should
         # start composing the string from siriuspy + machine-applicaions?

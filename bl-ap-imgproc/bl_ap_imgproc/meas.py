@@ -112,7 +112,9 @@ class Measurement():
 
     def acquisition_timeout(self, interval):
         """Check if given interval defines an image update timeout."""
-        return interval > 10 * self.dvf.acquisition_time
+        if self.dvf.acquisition_time:
+            return interval > 10 * self.dvf.acquisition_time
+        return False
 
     def set_acquire(self):
         """."""
