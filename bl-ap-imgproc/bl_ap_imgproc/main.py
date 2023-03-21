@@ -139,6 +139,9 @@ class App:
         res = self._write_reset(reason, value)
         if res is not None:
             return res
+        # else:
+        #     self._write_pv('ImgReset-SP', 0)
+        #     self._write_pv('ImgReset-Sts', 0)
 
         res = self._write_roi(reason, value)
         if res is not None:
@@ -291,10 +294,11 @@ class App:
         if reason != 'ImgReset-SP':
             return None
         if value != 0:
-            self._meas.reset_dvf()
             self._write_pv('ImgReset-SP', 1)
+            default = self._meas.reset_dvf()
+            if default:
+                self._write_pv('ImgReset-Sts', 1)
             return True
-        self._write_pv('ImgReset-SP', 0)
         return False
 
 
