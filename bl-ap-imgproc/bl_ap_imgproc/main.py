@@ -162,7 +162,7 @@ class App:
                     _log.warning(msgfmt_nok.format(pvname))
                     self._write_pv_failed(pvname)
                 else:
-                    _log.warning(msgfmt_ok.format(pvname))
+                    _log.info(msgfmt_ok.format(pvname))
                     self._write_pv(pvname, value)
             else:
                 _log.warning(msgfmt_nok.format(pvname))
@@ -281,7 +281,6 @@ class App:
         """."""
         message += f' (heartbeat {self.heartbeat})'
         self._write_pv('ImgLog-Mon', message, success)
-        # _log.warning(message)
 
     def _write_pv_sp_rb(self, reason, value):
         # update SP
@@ -303,12 +302,11 @@ class App:
 
         if self.meas.status == self.meas.STATUS_SUCCESS:
             self._write_pv_sp_rb(reason, value)
-            self._write_pv('ImgLog-Mon', self.meas.status)
             return True
         else:
             msg = '{}: could not write value {}'.format(reason, value)
+            _log.warning(msg)
             self._driver.setParam('ImgLog-Mon', value)
-            _log.debug(msg)
             self._driver.updatePV('ImgLog-Mon')
             self._driver.setParamStatus(
                 reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
