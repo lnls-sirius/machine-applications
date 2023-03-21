@@ -144,7 +144,7 @@ class Constants(_csdev.Const):
                 'value': self.DsblEnbl.Dsbl,
             },
             'ImgROIUpdateWithFWHM-Sts': {
-                'type': 'enum', 'enums': _et.DSBLD_ENBLD,
+                'type': 'enum', 'enums': _et.DSBL_ENBL,
                 'value': self.DsblEnbl.Dsbl,
             },
             'ImgFitAngle' + mon_: {
