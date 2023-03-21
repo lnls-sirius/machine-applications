@@ -150,12 +150,6 @@ class App:
 
         return True
 
-    def failed2write(self, pvname):
-        # update epics db failure
-        self._write_pv(pvname, success=False)
-        # update Log
-        self._write_log(self.meas.update_success)
-
     def init_driver(self):
         """Initialize PVs at startup."""
         for pvname, attr in App._INIT_PVS_2_IMGFIT.items():
@@ -166,11 +160,11 @@ class App:
                 if value is None:
                     msg = f'PV {pvname} could not be initalized!'
                     _log.warning(msg)
-                    self.failed2write(pvname)
+                    self._write_failed(pvname)
                 else:
                     self._write_pv(pvname, value)
             else:
-                self.failed2write(pvname)
+                self._write_failed(pvname)
 
     def update_driver(self):
         """Update all parameters at every image PV callback."""
@@ -200,7 +194,7 @@ class App:
             if self.meas.update_success == self.meas.UPDATE_SUCCESS:
                 self._write_pv(pvname, new_value)
             else:
-                self.failed2write(pvname)
+                self._write_failed(pvname)
 
         if invalid_fitx:
             self._write_log('Invalid XFit')
@@ -214,6 +208,8 @@ class App:
         """."""
         interval = _time.time() - self._timestamp_last_update
         if self.meas.acquisition_timeout(interval):
+            # NOTE: this set_acquire is a long process. should we run it
+            # in a unique thread?
             self._write_log('DVF Image update timeout!')
             self.meas.set_acquire()
             self._timestamp_last_update = _time.time()
@@ -266,6 +262,12 @@ class App:
         else:
             self._driver.setParamStatus(
                 pvname, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+
+    def _write_failed(self, pvname):
+        # update epics db failure
+        self._write_pv(pvname, success=False)
+        # update Log
+        self._write_log(self.meas.update_success)
 
     def _write_log(self, message, success=True):
         """."""
