@@ -141,6 +141,10 @@ class Measurement():
         except Exception:
             self._update_success = 'Unable to set ROIY'
 
+    def reset_dvf(self):
+        self._dvf.cmd_reset()
+        return True
+
     def process_image(self, **kwargs):
         """Process image."""
         # check if DVF is connected

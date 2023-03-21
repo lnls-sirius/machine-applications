@@ -136,6 +136,10 @@ class App:
             _log.warning('PV %s is not writable!', reason)
             return False
 
+        res = self._write_reset(reason, value)
+        if res is not None:
+            return res
+
         res = self._write_roi(reason, value)
         if res is not None:
             return res
@@ -273,7 +277,6 @@ class App:
         """."""
         message += f' (heartbeat {self.heartbeat})'
         self._write_pv('ImgLog-Mon', message, success)
-
     def _write_pv_sp_rb(self, reason, value):
         # update SP
         self._write_pv(reason, value)
@@ -283,6 +286,17 @@ class App:
 
         # update RB
         self._write_pv(reason, value)
+
+    def _write_reset(self, reason, value):
+        if reason != 'ImgReset-SP':
+            return None
+        if value != 0:
+            self._meas.reset_dvf()
+            self._write_pv('ImgReset-SP', 1)
+            return True
+        self._write_pv('ImgReset-SP', 0)
+        return False
+
 
     def _write_roi(self, reason, value):
         if reason not in ('ImgROIX-SP', 'ImgROIY-SP'):

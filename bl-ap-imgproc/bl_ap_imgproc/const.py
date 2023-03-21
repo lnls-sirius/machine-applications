@@ -87,7 +87,7 @@ class Constants(_csdev.Const):
             'ImgIsSaturated' + sufix: {
                 'type': 'int',
             },
-            }
+        }
         return dbase
 
     def _get_roi_db(self):
@@ -155,13 +155,12 @@ class Constants(_csdev.Const):
 
     def _get_others_db(self):
         db = {}
-        mon_ = '-Mon'
         db.update({
             'ImgVersion-Cte': {
                 'type': 'string',
                 'value': _util.get_last_commit_hash()
             },
-            'ImgLog' + mon_: {
+            'ImgLog-Mon': {
                 'type': 'string', 'value': 'Starting...',
             },
             'ImgTimestampBoot-Cte': {
@@ -170,6 +169,12 @@ class Constants(_csdev.Const):
             },
             'ImgTimestampUpdate-Mon': {
                 'type': 'float',
-                'prec': 7, 'unit': 'timestamp'},
-            })
+                'prec': 7, 'unit': 'timestamp'
+            },
+            'ImgReset-SP': {
+                'type': 'int',
+            },
+            'ImgReset-Sts': {
+                'type': 'int',
+            }})
         return db
