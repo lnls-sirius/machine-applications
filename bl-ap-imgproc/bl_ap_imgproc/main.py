@@ -152,19 +152,21 @@ class App:
 
     def init_driver(self):
         """Initialize PVs at startup."""
+        msgfmt_nok = 'PV {} could not be initialized!'
+        msgfmt_ok = 'PV {} initialized.'
         for pvname, attr in App._INIT_PVS_2_IMGFIT.items():
-            if self.meas.update_success == self.meas.UPDATE_SUCCESS:
-
+            if self.meas.status == self.meas.STATUS_SUCCESS:
                 # update epics db successfully
                 value = self._conv_imgattr2value(attr)
                 if value is None:
-                    msg = f'PV {pvname} could not be initalized!'
-                    _log.warning(msg)
-                    self._write_failed(pvname)
+                    _log.warning(msgfmt_nok.format(pvname))
+                    self._write_pv_failed(pvname)
                 else:
+                    _log.warning(msgfmt_ok.format(pvname))
                     self._write_pv(pvname, value)
             else:
-                self._write_failed(pvname)
+                _log.warning(msgfmt_nok.format(pvname))
+                self._write_pv_failed(pvname)
 
     def update_driver(self):
         """Update all parameters at every image PV callback."""
@@ -181,7 +183,7 @@ class App:
             # get image attribute value
             value = self._conv_imgattr2value(attr)
             if value is None:
-                msg = f'PV {pvname} could not be updated!'
+                msg = f'PV {pvname} could not be updated with None value!'
                 _log.warning(msg)
                 continue
 
@@ -191,26 +193,31 @@ class App:
             invalid_fity |= invalid_fit if 'YFit' in pvname else False
 
             # update epics db
-            if self.meas.update_success == self.meas.UPDATE_SUCCESS:
+            if self.meas.status == self.meas.STATUS_SUCCESS:
                 self._write_pv(pvname, new_value)
             else:
-                self._write_failed(pvname)
+                self._write_pv_failed(pvname)
 
         if invalid_fitx:
-            self._write_log('Invalid XFit')
+            msgerr = 'Invalid ROIXFit'
+            _log.warning(msgerr)
+            self._write_pv_log(msgerr)
         if invalid_fity:
-            self._write_log('Invalid YFit')
-        if self.meas.update_success != self.meas.UPDATE_SUCCESS:
-            # update Log
-            self._write_log(self.meas.update_success)
+            msgerr = 'Invalid ROIYFit'
+            _log.warning(msgerr)
+            self._write_pv_log(msgerr)
+
+        if self.meas.status != self.meas.STATUS_SUCCESS:
+            _log.warning(self.meas.status)
+            self._write_pv_log(self.meas.status)
 
     def _check_acquisition_timeout(self):
         """."""
         interval = _time.time() - self._timestamp_last_update
         if self.meas.acquisition_timeout(interval):
-            # NOTE: this set_acquire is a long process. should we run it
-            # in a unique thread?
-            self._write_log('DVF Image update timeout!')
+            msgfmt_nok = 'DVF Image update timeout!'
+            _log.warning(msgfmt_nok)
+            self._write_pv_log(msgfmt_nok)
             self.meas.set_acquire()
             self._timestamp_last_update = _time.time()
 
@@ -260,19 +267,21 @@ class App:
             self._driver.setParamStatus(
                 pvname, _Alarm.NO_ALARM, _Severity.NO_ALARM)
         else:
+            _log.debug('{}: updated with alarm'.format(pvname))
             self._driver.setParamStatus(
                 pvname, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
 
-    def _write_failed(self, pvname):
+    def _write_pv_failed(self, pvname):
         # update epics db failure
         self._write_pv(pvname, success=False)
         # update Log
-        self._write_log(self.meas.update_success)
+        self._write_pv_log(self.meas.status)
 
-    def _write_log(self, message, success=True):
+    def _write_pv_log(self, message, success=True):
         """."""
         message += f' (heartbeat {self.heartbeat})'
         self._write_pv('ImgLog-Mon', message, success)
+        # _log.warning(message)
 
     def _write_pv_sp_rb(self, reason, value):
         # update SP
@@ -292,9 +301,9 @@ class App:
         else:
             self._meas.set_roiy(value)
 
-        if self.meas.update_success == self.meas.UPDATE_SUCCESS:
+        if self.meas.status == self.meas.STATUS_SUCCESS:
             self._write_pv_sp_rb(reason, value)
-            self._write_pv('ImgLog-Mon', self.meas.update_success)
+            self._write_pv('ImgLog-Mon', self.meas.status)
             return True
         else:
             msg = '{}: could not write value {}'.format(reason, value)

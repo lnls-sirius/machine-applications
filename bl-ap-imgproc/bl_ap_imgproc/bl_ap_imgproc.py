@@ -69,22 +69,24 @@ class _Driver(_pcaspy.Driver):
             return True
         return False
 
-    def check_enums(self, reason, val):
+    def check_enums_nok(self, reason, val):
         enums = self.getParamInfo(reason, info_keys=('enums', ))['enums']
-        enum_verifier = enums and isinstance(val, int) and val >= len(enums)
-        if enum_verifier:
-            _log.warning('value %d too large for enum type PV %s', val, reason)
-        return enum_verifier
+        if not enums:
+            return False  # not enum
+        elif isinstance(val, int) and val < len(enums):
+            return False  # enum index in range
+        else:
+            return True  # enum index out of range
 
     def _isValid(self, reason, value):
         if self.check_read_only(reason):
             return False
-        if self.check_value_none(value):
+        elif self.check_value_none(value):
             return False
-         # NOTE: is this enum check really necessary?
-         # if self.check_enums(reason, value):
-         #     return False
-        return True
+        elif self.check_enums_nok(reason, value):
+            return False
+        else:
+            return True
 
 
 def defineAbortFunction():
