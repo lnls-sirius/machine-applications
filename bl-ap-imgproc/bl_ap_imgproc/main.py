@@ -314,7 +314,7 @@ class App:
             return False
 
     def _log_warning(self, message):
-        message = f'[heartbeat {self.heartbeat}] ' + message
+        message = f'[{self.heartbeat}] ' + message
         _log.warning(message)
 
     def _write_fwhm_factor(self, reason, value):
