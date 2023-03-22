@@ -182,7 +182,7 @@ class Measurement():
             self._callback()
 
     def _create_dvf(self):
-        """Create DVO object and add process_image callback."""
+        """Create DVF object and add process_image callback."""
         self._dvf = _DVF(self._devname)
         self._sizey = self._dvf.parameters.IMAGE_SIZE_Y
         self._sizex = self._dvf.parameters.IMAGE_SIZE_X
