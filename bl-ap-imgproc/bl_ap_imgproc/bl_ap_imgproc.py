@@ -162,8 +162,8 @@ def run(devname, debug=False):
 
     # create server and driver app
     server = create_server(const)
-    server_thread = initialize_server_thread(server)
     app = create_driver_app(const)
+    server_thread = initialize_server_thread(server)
 
     # main loop
     interval = 0.5
