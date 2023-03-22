@@ -35,8 +35,8 @@ class Measurement():
         self.process_image()
 
         # add callback
-        imgpv = self._dvf.pv_object(Measurement.DVF_IMAGE_PROPTY)
-        imgpv.add_callback(self.process_image)
+        self._imgpv = self._dvf.pv_object(Measurement.DVF_IMAGE_PROPTY)
+        self._imgpv.add_callback(self.process_image)
 
     @property
     def devname(self):
