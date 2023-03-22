@@ -172,6 +172,7 @@ class App:
         """Update all parameters at every image PV callback."""
         self._timestamp_last_update = _time.time()
 
+        self._log_warning('update driver')
         invalid_fitx, invalid_fity = [False]*2
         for pvname, attr in App._MON_PVS_2_IMGFIT.items():
 
@@ -279,7 +280,7 @@ class App:
 
     def _write_pv_log(self, message, success=True):
         """."""
-        message += f' (heartbeat {self.heartbeat})'
+        message = f' [{self.heartbeat}] ' + message
         self._write_pv('ImgLog-Mon', message, success)
 
     def _write_pv_sp_rb(self, reason, value):
