@@ -13,7 +13,7 @@ from siriuspy import csdev as _csdev
 
 class ETypes(_csdev.ETypes):
     """Local enumerate types."""
-    FALSE_TRUE = ('False', 'True')
+    NO_YES = ('No', 'Yes')
 
 
 _et = ETypes  # syntactic sugar
@@ -22,7 +22,7 @@ _et = ETypes  # syntactic sugar
 class Constants(_csdev.Const):
     """."""
 
-    FalseTrue = _get_namedtuple('FalseTrue', _et.FALSE_TRUE)
+    NoYes = _get_namedtuple('NoYes', _et.NO_YES)
 
     def __init__(self, devname):
         """."""
@@ -91,7 +91,7 @@ class Constants(_csdev.Const):
             },
             'ImgIsSaturated' + sufix: {
                 'type': 'enum', 'enums': _et.FALSE_TRUE,
-                'value': self.FalseTrue.False,
+                'value': self.NoYes.No,
             },
             }
         return dbase
