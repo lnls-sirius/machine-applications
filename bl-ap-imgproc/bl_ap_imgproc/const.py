@@ -2,6 +2,8 @@
 
 import time as _time
 
+from mathphys.functions import get_namedtuple as _get_namedtuple
+
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from siriuspy import util as _util
 from siriuspy import csdev as _csdev
@@ -11,6 +13,7 @@ from siriuspy import csdev as _csdev
 
 class ETypes(_csdev.ETypes):
     """Local enumerate types."""
+    FALSE_TRUE = ('False', 'True')
 
 
 _et = ETypes  # syntactic sugar
@@ -18,6 +21,8 @@ _et = ETypes  # syntactic sugar
 
 class Constants(_csdev.Const):
     """."""
+
+    FalseTrue = _get_namedtuple('FalseTrue', _et.FALSE_TRUE)
 
     def __init__(self, devname):
         """."""
@@ -85,7 +90,8 @@ class Constants(_csdev.Const):
                 'type': 'int', 'unit': 'intensity'
             },
             'ImgIsSaturated' + sufix: {
-                'type': 'int',
+                'type': 'enum', 'enums': _et.FALSE_TRUE,
+                'value': self.FalseTrue.False,
             },
             }
         return dbase
