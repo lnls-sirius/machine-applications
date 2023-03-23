@@ -184,9 +184,11 @@ class Constants(_csdev.Const):
                 'prec': 7, 'unit': 'timestamp'
             },
             'ImgReset-SP': {
-                'type': 'int',
+                'type': 'enum', 'enums': _et.NO_YES,
+                'value': self.NoYes.Yes,
             },
             'ImgReset-Sts': {
-                'type': 'int',
+                'type': 'enum', 'enums': _et.NO_YES,
+                'value': self.NoYes.Yes,
             }})
         return db
