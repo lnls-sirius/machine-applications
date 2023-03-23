@@ -96,7 +96,7 @@ class Constants(_csdev.Const):
                 'type': 'int', 'unit': 'intensity'
             },
             'ImgIsSaturated' + sufix: {
-                'type': 'enum', 'enums': _et.FALSE_TRUE,
+                'type': 'enum', 'enums': _et.NO_YES,
                 'value': self.NoYes.No,
             },
         }

@@ -179,7 +179,7 @@ class Measurement():
             self._status = Measurement.STATUS_SUCCESS
         except Exception:
             self._status = \
-                f'Unable to process image shape {data.shape}'
+                f'Unable to process image shape'
 
         # run registered driver callback
         if self._callback:
