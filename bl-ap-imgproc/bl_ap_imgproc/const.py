@@ -75,9 +75,15 @@ class Constants(_csdev.Const):
         sufix = '-Mon'
         dbase = {
             'ImgSizeX-Cte': {
-                'type': 'int', 'unit': 'px'
+                'type': 'int', 'unit': 'pixel'
             },
             'ImgSizeY-Cte': {
+                'type': 'int', 'unit': 'pixel'
+            },
+            'ImgProjX' + sufix: {
+                'type': 'int', 'unit': 'pixel'
+            },
+            'ImgProjY' + sufix: {
                 'type': 'int', 'unit': 'pixel'
             },
             'ImgIntensityMin' + sufix: {

@@ -23,6 +23,9 @@ class App:
             'ImgIntensityMax-Mon': 'intensity_max',
             'ImgIntensitySum-Mon': 'intensity_sum',
             'ImgIsSaturated-Mon': 'is_saturated',
+            # --- image projection ---
+            'ImgProjX-Mon': ('imagex', 'data'),
+            'ImgProjY-Mon': ('imagey', 'data'),
             # --- roix ---
             'ImgROIX-RB': ('fitx', 'roi'),
             'ImgROIXCenter-Mon': ('fitx', 'roi_center'),
@@ -139,9 +142,6 @@ class App:
         res = self._write_reset(reason, value)
         if res is not None:
             return res
-        # else:
-        #     self._write_pv('ImgReset-SP', 0)
-        #     self._write_pv('ImgReset-Sts', 0)
 
         res = self._write_roi(reason, value)
         if res is not None:
@@ -289,6 +289,7 @@ class App:
         """."""
         message = f' [{self.heartbeat}] ' + message
         self._write_pv('ImgLog-Mon', message, success)
+
     def _write_pv_sp_rb(self, reason, value):
         # update SP
         self._write_pv(reason, value)
