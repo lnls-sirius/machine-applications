@@ -1,7 +1,5 @@
 """."""
 
-import time as _time
-
 from siriuspy.devices import DVF as _DVF
 from mathphys import imgproc as _imgproc
 
@@ -9,7 +7,7 @@ from mathphys import imgproc as _imgproc
 class Measurement():
     """."""
 
-    UPDATE_SUCCESS = ''
+    STATUS_SUCCESS = ''
     DVF_IMAGE_PROPTY = 'image1:ArrayData'
     MIN_ROI_SIZE = 5  # [pixels]
     TIMEOUT_CONN = 5  # [s]
@@ -20,7 +18,7 @@ class Measurement():
         """."""
         self._devname = devname
         self._callback = callback
-        self._update_success = Measurement.UPDATE_SUCCESS
+        self._status = Measurement.STATUS_SUCCESS
         self._dvf = None
         self._scipy_curve_fit = _imgproc.FitGaussianScipy()
         self._image2dfit = None
@@ -37,8 +35,8 @@ class Measurement():
         self.process_image()
 
         # add callback
-        imgpv = self._dvf.pv_object(Measurement.DVF_IMAGE_PROPTY)
-        imgpv.add_callback(self.process_image)
+        self._imgpv = self._dvf.pv_object(Measurement.DVF_IMAGE_PROPTY)
+        self._imgpv.add_callback(self.process_image)
 
     @property
     def devname(self):
@@ -86,9 +84,9 @@ class Measurement():
         self._fwhmy_factor = value
 
     @property
-    def update_success(self):
+    def status(self):
         """."""
-        return self._update_success
+        return self._status
 
     @property
     def update_roi_with_fwhm(self):
@@ -119,27 +117,25 @@ class Measurement():
     def set_acquire(self):
         """."""
         self.dvf.cmd_acquire_off()
-        _time.sleep(1)
         self.dvf.cmd_acquire_on()
-        _time.sleep(1)
 
     def set_roix(self, value):
         """."""
         _, roiy = self._image2dfit.roi
         try:
             self._image2dfit.roi = [value, roiy]
-            self._update_success = Measurement.UPDATE_SUCCESS
+            self._status = Measurement.STATUS_SUCCESS
         except Exception:
-            self._update_success = 'Unable to set ROIX'
+            self._status = 'Unable to set ROIX'
 
     def set_roiy(self, value):
         """."""
         roix, _ = self._image2dfit.roi
         try:
             self._image2dfit.roi = [roix, value]
-            self._update_success = Measurement.UPDATE_SUCCESS
+            self._status = Measurement.STATUS_SUCCESS
         except Exception:
-            self._update_success = 'Unable to set ROIY'
+            self._status = 'Unable to set ROIY'
 
     def reset_dvf(self):
         self._dvf.cmd_reset()
@@ -149,7 +145,7 @@ class Measurement():
         """Process image."""
         # check if DVF is connected
         if not self._dvf.connected:
-            self._update_success = 'DVF not connecetd'
+            self._status = 'DVF not connecetd'
             return
 
         # symbol to image2d fit object
@@ -180,9 +176,9 @@ class Measurement():
             self._image2dfit = _imgproc.Image2D_Fit(
                 data=data, curve_fit=self._scipy_curve_fit,
                 roix=roix, roiy=roiy)
-            self._update_success = Measurement.UPDATE_SUCCESS
+            self._status = Measurement.STATUS_SUCCESS
         except Exception:
-            self._update_success = \
+            self._status = \
                 f'Unable to process image shape {data.shape}'
 
         # run registered driver callback
@@ -190,7 +186,7 @@ class Measurement():
             self._callback()
 
     def _create_dvf(self):
-        """Create DVO object and add process_image callback."""
+        """Create DVF object and add process_image callback."""
         self._dvf = _DVF(self._devname)
         self._sizey = self._dvf.parameters.IMAGE_SIZE_Y
         self._sizex = self._dvf.parameters.IMAGE_SIZE_X

@@ -6,9 +6,9 @@ from bl_ap_imgproc import run
 
 os.environ['EPICS_CA_MAX_ARRAY_BYTES'] = '21000000'
 
-BASLER_NAME = 'BASLER01'
 BL_NAME = 'CAX'
-BL_SECTOR = 'B'
+BL_SECTOR = 'A'
+BASLER_NAME = 'BASLER01'
 DEVNAME = ':'.join(
     [BL_NAME, BL_SECTOR, BASLER_NAME])
 

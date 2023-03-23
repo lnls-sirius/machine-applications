@@ -21,6 +21,8 @@ setup(
     packages=['bl_ap_imgproc'],
     package_data={'bl_ap_imgproc': ['VERSION']},
     include_package_data=True,
-    scripts=['scripts/sirius-ioc-bl-ap-imgproc.py'],
+    scripts=[
+        'scripts/sirius-ioc-bl-ap-imgproc-caxdvf1.py',
+        'scripts/sirius-ioc-bl-ap-imgproc-caxdvf2.py'],
     zip_safe=False
 )
