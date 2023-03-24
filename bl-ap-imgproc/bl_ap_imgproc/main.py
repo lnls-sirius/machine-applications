@@ -263,7 +263,11 @@ class App:
         if success:
             self._driver.setParam(pvname, value)
             _log.debug('{}: updated'.format(pvname))
-            self._driver.updatePV(pvname)
+            try:
+                self._driver.updatePV(pvname)
+            except:
+                _log.warning(
+                    '_write_pv: error in updatePV for ', pvname, value)
             self._driver.setParamStatus(
                 pvname, _Alarm.NO_ALARM, _Severity.NO_ALARM)
         else:

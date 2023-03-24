@@ -20,7 +20,7 @@ class Measurement():
         self._callback = callback
         self._status = Measurement.STATUS_SUCCESS
         self._dvf = None
-        self._scipy_curve_fit = _imgproc.FitGaussianScipy()
+        self._fitgauss = _imgproc.FitGaussianScipy()
         self._image2dfit = None
         self._sizex = None
         self._sizey = None
@@ -170,7 +170,7 @@ class Measurement():
         try:
             data = self._dvf.image
             self._image2dfit = _imgproc.Image2D_Fit(
-                data=data, curve_fit=self._scipy_curve_fit,
+                data=data, fitgauss=self._fitgauss,
                 roix=roix, roiy=roiy)
             self._status = Measurement.STATUS_SUCCESS
         except Exception:
