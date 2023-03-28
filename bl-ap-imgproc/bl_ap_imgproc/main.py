@@ -315,7 +315,6 @@ class App:
             return True
         return False
 
-
     def _write_roi(self, reason, value):
         if reason not in ('ImgROIX-SP', 'ImgROIY-SP'):
             return None
