@@ -138,8 +138,7 @@ class Measurement():
             self._status = 'Unable to set ROIY'
 
     def reset_dvf(self):
-        self._dvf.cmd_reset()
-        return True
+        return self._dvf.cmd_reset()
 
     def process_image(self, **kwargs):
         """Process image."""
