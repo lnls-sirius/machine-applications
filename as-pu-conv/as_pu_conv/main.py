@@ -43,7 +43,7 @@ class App:
         self._dequethread = _DequeThread() if _USE_WRITE_QUEUE else None
 
         # mapping device to bbb
-        self._psnames = psnames
+        self._psnames = [_SiriusPVName(psn) for psn in psnames]
 
         # define update interval
         self._interval = 1 / UPDATE_FREQUECY
@@ -110,7 +110,7 @@ class App:
 
     def write(self, reason, value):
         """Enqueue write request."""
-        _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
+        _log.info("[{:.2s}] - {:.36s} = {:.50s}".format(
             'W ', reason, str(value)))
         pvname = _SiriusPVName(reason)
         if _USE_WRITE_QUEUE:
@@ -130,7 +130,7 @@ class App:
             t0_ = _time.time()
             self._write_operation(pvname, value)
             t1_ = _time.time()
-            _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
+            _log.info("[{:.2s}] - {:.36s} : {:.50s}".format(
                 'T ', reason, '{:.3f} ms'.format((t1_ - t0_)*1000)))
 
     def scan_device(self, psname):
@@ -139,7 +139,9 @@ class App:
         if not self.check_connected(psname):
             conns = self._connectors[psname]
             for proptype in conns.keys():
-                reason = psname + ':Kick' + proptype
+                reason = psname.substitute(
+                    propty_name=psname.propty_name+'Kick',
+                    propty_suffix=proptype)
                 self.driver.setParamStatus(
                     reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
             return
@@ -147,10 +149,10 @@ class App:
         # all connected, calculate strengths
         streconv = self._streconvs[psname]
         conn = self._connectors[psname]
-        limits = conn['-SP'].limits
-        curr0 = conn['-SP'].value
-        curr1 = conn['-RB'].value
-        curr2 = conn['-Mon'].value
+        limits = conn['SP'].limits
+        curr0 = conn['SP'].value
+        curr1 = conn['RB'].value
+        curr2 = conn['Mon'].value
         curr3 = limits[0]
         curr4 = limits[-1]
 
@@ -190,9 +192,11 @@ class App:
             if slims[0] > slims[1]:
                 slims = slims[1], slims[0]
 
-        # update -SP, -RB and -Mon epics database
+        # update SP, RB and Mon epics database
         for i, proptype in enumerate(conn.keys()):
-            reason = psname + ':Kick' + proptype
+            reason = psname.substitute(
+                propty_name=psname.propty_name+'Kick',
+                propty_suffix=proptype)
             if slims is None:
                 self.driver.setParamStatus(
                     reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
@@ -219,21 +223,23 @@ class App:
         for psname in self.psnames:
             connectors[psname] = dict()
             conn = connectors[psname]
-            conn['-SP'] = _PSProperty(psname, propty='Voltage-SP')
-            conn['-RB'] = _PSProperty(psname, propty='Voltage-RB')
-            conn['-Mon'] = _PSProperty(psname, propty='Voltage-Mon')
+            conn['SP'] = _PSProperty(psname, propty='Voltage-SP')
+            conn['RB'] = _PSProperty(psname, propty='Voltage-RB')
+            conn['Mon'] = _PSProperty(psname, propty='Voltage-Mon')
             streconv[psname] = _StrengthConv(psname, proptype='Ref-Mon')
         return connectors, streconv
 
     def _write_operation(self, pvname, value):
         t0_ = _time.time()
         psname = pvname.device_name
+        if 'CCoil' in pvname:
+            psname += ':' + pvname.propty_name.split('Kick')[0]
         streconv = self._streconvs[psname]
         voltage = streconv.conv_strength_2_current(value)
-        conn = self._connectors[psname]['-SP']
+        conn = self._connectors[psname]['SP']
         if conn.connected:
-            self._connectors[psname]['-SP'].value = voltage
+            self._connectors[psname]['SP'].value = voltage
         t1_ = _time.time()
-        _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
+        _log.info("[{:.2s}] - {:.36s} : {:.50s}".format(
             'T ', pvname,
             'write operation took {:.3f} ms'.format((t1_-t0_)*1000)))
