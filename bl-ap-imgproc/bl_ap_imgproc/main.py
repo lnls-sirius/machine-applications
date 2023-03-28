@@ -179,7 +179,6 @@ class App:
         """Update all parameters at every image PV callback."""
         self._timestamp_last_update = _time.time()
 
-        self._log_warning('update driver')
         invalid_fitx, invalid_fity = [False]*2
         for pvname, attr in App._MON_PVS_2_IMGFIT.items():
 
