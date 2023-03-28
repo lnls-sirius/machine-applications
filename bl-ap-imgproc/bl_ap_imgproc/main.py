@@ -261,11 +261,13 @@ class App:
     def _write_pv(self, pvname, value=None, success=True):
         """."""
         if success:
-            self._driver.setParam(pvname, value)
-            _log.debug('{}: updated'.format(pvname))
             try:
+                if value in (True, False):
+                    value = 1 if value else 0
+                self._driver.setParam(pvname, value)
+                _log.debug('{}: updated'.format(pvname))
                 self._driver.updatePV(pvname)
-            except:
+            except TypeError:
                 _log.warning(
                     '_write_pv: error in updatePV for ', pvname, value)
             self._driver.setParamStatus(
