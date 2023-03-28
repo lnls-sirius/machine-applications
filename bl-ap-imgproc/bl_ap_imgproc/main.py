@@ -265,7 +265,6 @@ class App:
                 if value in (True, False):
                     value = 1 if value else 0
                 self._driver.setParam(pvname, value)
-                _log.debug('{}: updated'.format(pvname))
                 self._driver.updatePV(pvname)
             except TypeError:
                 _log.warning(
