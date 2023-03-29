@@ -18,11 +18,14 @@ class ETypes(_csdev.ETypes):
 
 _et = ETypes  # syntactic sugar
 
-
 class Constants(_csdev.Const):
     """."""
 
     NoYes = _get_namedtuple('NoYes', _et.NO_YES)
+    MAX_IMAGE_SIZE = {
+        'X': 2 * 1280,
+        'Y': 2 * 1024
+    }
 
     def __init__(self, devname):
         """."""
@@ -75,16 +78,16 @@ class Constants(_csdev.Const):
         sufix = '-Mon'
         dbase = {
             'ImgSizeX-Cte': {
-                'type': 'int', 'unit': 'pixel'
+                'type': 'int', 'unit': 'px'
             },
             'ImgSizeY-Cte': {
-                'type': 'int', 'unit': 'pixel'
+                'type': 'int', 'unit': 'px'
             },
             'ImgProjX' + sufix: {
-                'type': 'int', 'unit': 'pixel'
+                'type': 'int', 'count': self.MAX_IMAGE_SIZE['X'], 'unit': 'px'
             },
             'ImgProjY' + sufix: {
-                'type': 'int', 'unit': 'pixel'
+                'type': 'int', 'count': self.MAX_IMAGE_SIZE['Y'], 'unit': 'px'
             },
             'ImgIntensityMin' + sufix: {
                 'type': 'int', 'unit': 'intensity'
@@ -183,12 +186,10 @@ class Constants(_csdev.Const):
                 'type': 'float',
                 'prec': 7, 'unit': 'timestamp'
             },
-            'ImgReset-SP': {
-                'type': 'enum', 'enums': _et.NO_YES,
-                'value': self.NoYes.Yes,
+            'ImgReset-Cmd': {
+                'type': 'int', 'value': 0
             },
             'ImgReset-Sts': {
-                'type': 'enum', 'enums': _et.NO_YES,
-                'value': self.NoYes.Yes,
+                'type': 'int', 'value': 0
             }})
         return db

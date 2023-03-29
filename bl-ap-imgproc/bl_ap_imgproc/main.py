@@ -65,6 +65,7 @@ class App:
         self._const = const
         self._database = const.get_database()
         self._heartbeat = 0
+        self._reset = 0
         self._timestamp_last_update = _time.time()
 
         # get measurement arguments
@@ -120,6 +121,11 @@ class App:
     def increment_heartbeat(self):
         """."""
         self._heartbeat += 1
+
+    def increment_reset(self):
+        """."""
+        self._reset += 1
+        return self._reset
 
     def process(self, interval):
         """Run continuously in the main thread."""
@@ -305,13 +311,15 @@ class App:
         self._write_pv(reason, value)
 
     def _write_reset(self, reason, value):
-        if reason != 'ImgReset-SP':
+        if reason != 'ImgReset-Cmd':
             return None
         if value != 0:
-            self._write_pv('ImgReset-SP', 1)
+            self._write_pv(
+                'ImgReset-Cmd', self.increment_reset())
             default = self._meas.reset_dvf()
             if default:
-                self._write_pv('ImgReset-Sts', 1)
+                self._write_pv(
+                    'ImgReset-Sts', self.increment_reset())
             return True
         return False
 
