@@ -137,8 +137,19 @@ class Measurement():
         except Exception:
             self._status = 'Unable to set ROIY'
 
+    def set_intensity_threshold(self, value):
+        """."""
+        try:
+            self._image2dfit.intensity_threshold = int(value)
+            self._status = Measurement.STATUS_SUCCESS
+        except Exception:
+            self._status = 'Unable to set intensity threshold'
+
     def process_image(self, **kwargs):
         """Process image."""
+        # assume image can be processed for the time being
+        self._status = Measurement.STATUS_SUCCESS
+
         # check if DVF is connected
         if not self._dvf.connected:
             self._status = 'DVF not connecetd'
@@ -172,10 +183,9 @@ class Measurement():
             self._image2dfit = _imgproc.Image2D_Fit(
                 data=data, fitgauss=self._fitgauss,
                 roix=roix, roiy=roiy)
-            self._status = Measurement.STATUS_SUCCESS
         except Exception:
             self._status = \
-                f'Unable to process image shape'
+                f'Unable to process image'
 
         # run registered driver callback
         if self._callback:

@@ -23,6 +23,7 @@ class App:
             'ImgIntensityMax-Mon': 'intensity_max',
             'ImgIntensitySum-Mon': 'intensity_sum',
             'ImgIsSaturated-Mon': 'is_saturated',
+            'ImgIsWithBeam-Mon': 'is_with_image',
             # --- roix ---
             'ImgROIX-RB': ('fitx', 'roi'),
             'ImgROIXCenter-Mon': ('fitx', 'roi_center'),
@@ -52,8 +53,10 @@ class App:
             'ImgSizeY-Cte': ('fity', 'size'),
             'ImgROIX-RB': ('fitx', 'roi'),
             'ImgROIY-RB': ('fity', 'roi'),
-            'ImgROIX-SP': ('fitx', 'roi'),  # NOTE: should we initialize this?
-            'ImgROIY-SP': ('fity', 'roi'),  # NOTE: should we initialize this?
+            'ImgROIX-SP': ('fitx', 'roi'),
+            'ImgROIY-SP': ('fity', 'roi'),
+            'ImgIntensityThreshold-SP': 'intensity_threshold',
+            'ImgIntensityThreshold-RB': 'intensity_threshold',
         }
 
     def __init__(self, driver=None, const=None):
@@ -64,19 +67,8 @@ class App:
         self._heartbeat = 0
         self._timestamp_last_update = _time.time()
 
-        # get measurement arguments
-        fwhmx_factor = \
-            self._database['ImgROIXUpdateWithFWHMFactor-RB']['value']
-        fwhmy_factor = \
-            self._database['ImgROIYUpdateWithFWHMFactor-RB']['value']
-        roi_with_fwhm = \
-            self._database['ImgROIUpdateWithFWHM-Sts']['value']
-
-        # create measurement objects
-        self._meas = Measurement(
-            const.devname,
-            fwhmx_factor=fwhmx_factor, fwhmy_factor=fwhmy_factor,
-            roi_with_fwhm=roi_with_fwhm)
+        # create measurement object
+        self._create_meas()
 
         # print info about the IOC
         dbase = self._database
@@ -87,6 +79,7 @@ class App:
             version=dbase['ImgVersion-Cte']['value'],
             prefix=const.devname)
 
+        # add epics app callback to measurement
         self._meas.callback = self.update_driver
 
     @property
@@ -172,9 +165,12 @@ class App:
         """Update all parameters at every image PV callback."""
         self._timestamp_last_update = _time.time()
 
+        if not self.meas.image2dfit.is_with_image:
+            self._write_pv('ImgIsWithBeam-Mon', 0)
+            return
+
         invalid_fitx, invalid_fity = [False]*2
         for pvname, attr in App._MON_PVS_2_IMGFIT.items():
-
             # check if is roi_rb and if it needs updating
             if pvname in ('ImgROIX-RB', 'ImgROIY-RB'):
                 if not self.meas.update_roi_with_fwhm:
@@ -243,27 +239,24 @@ class App:
     def _create_meas(self):
         # build arguments
         fwhmx_factor = \
-            self._database['ImgFitXUpdateROIWithFWHMFactor-SP']['value']
+            self._database['ImgFitXUpdateROIWithFWHMFactor-RB']['value']
         fwhmy_factor = \
-            self._database['ImgFitYUpdateROIWithFWHMFactor-SP']['value']
+            self._database['ImgFitYUpdateROIWithFWHMFactor-RB']['value']
         roi_with_fwhm = \
             self._database['ImgFitUpdateROIWithFWHM-Sts']['value']
 
         # create object
         self._meas = Measurement(
-            self._const.devname,
+            self.const.devname,
             fwhmx_factor=fwhmx_factor, fwhmy_factor=fwhmy_factor,
             roi_with_fwhm=roi_with_fwhm)
-
-        # add callback
-        self._meas.callback = self.update_driver
 
     def _write_pv(self, pvname, value=None, success=True):
         """."""
         if success:
+            if value in (True, False):
+                value = 1 if value else 0
             try:
-                if value in (True, False):
-                    value = 1 if value else 0
                 self._driver.setParam(pvname, value)
                 self._driver.updatePV(pvname)
             except TypeError:
@@ -284,17 +277,16 @@ class App:
 
     def _write_pv_log(self, message, success=True):
         """."""
-        message = f' [{self.heartbeat}] ' + message
+        message = f'[{self.heartbeat}] ' + message
         self._write_pv('ImgLog-Mon', message, success)
 
     def _write_pv_sp_rb(self, reason, value):
         # update SP
         self._write_pv(reason, value)
 
+        # update RB
         reason = reason.replace('-SP', '-RB')
         reason = reason.replace('-Sel', '-Sts')
-
-        # update RB
         self._write_pv(reason, value)
 
     def _write_roi(self, reason, value):
@@ -311,10 +303,25 @@ class App:
         else:
             msg = '{}: could not write value {}'.format(reason, value)
             self._log_warning(msg)
-            self._driver.setParam('ImgLog-Mon', value)
+            self._driver.setParam('ImgLog-Mon', msg)
             self._driver.updatePV('ImgLog-Mon')
-            self._driver.setParamStatus(
-                reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+            return False
+
+    def _write_intensity_threshold(self, reason, value):
+        if reason != 'ImgIntensityThreshold-SP':
+            return None
+
+        # set threshold
+        self.meas.set_intensity_threshold(value)
+
+        if self.meas_status == self.meas.STATUS_SUCCESS:
+            self._write_pv_sp_rb(reason, value)
+            return True
+        else:
+            msg = '{}: could not write value {}'.format(reason, value)
+            self._log_warning(msg)
+            self._driver.setParam('ImgLog-Mon', msg)
+            self._driver.updatePV('ImgLog-Mon')
             return False
 
     def _log_warning(self, message):

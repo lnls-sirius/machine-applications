@@ -78,7 +78,7 @@ class Constants(_csdev.Const):
                 'type': 'int', 'unit': 'px'
             },
             'ImgSizeY-Cte': {
-                'type': 'int', 'unit': 'pixel'
+                'type': 'int', 'unit': 'px'
             },
             'ImgIntensityMin' + sufix: {
                 'type': 'int', 'unit': 'intensity'
@@ -89,7 +89,17 @@ class Constants(_csdev.Const):
             'ImgIntensitySum' + sufix: {
                 'type': 'int', 'unit': 'intensity'
             },
+            'ImgIntensityThreshold-SP': {
+                'type': 'int', 'unit': 'intensity', 'value': 0,
+            },
+            'ImgIntensityThreshold-RB': {
+                'type': 'int', 'unit': 'intensity', 'value': 0,
+            },
             'ImgIsSaturated' + sufix: {
+                'type': 'enum', 'enums': _et.NO_YES,
+                'value': self.NoYes.No,
+            },
+            'ImgIsWithBeam' + sufix: {
                 'type': 'enum', 'enums': _et.NO_YES,
                 'value': self.NoYes.No,
             },
@@ -104,7 +114,7 @@ class Constants(_csdev.Const):
         for axis in ['X', 'Y']:
             db.update({
                 'ImgROI' + axis + sp_: {
-                    'type': 'int', 'count': 2, 'unit': 'px'
+                    'type': 'int', 'count': 2, 'unit': 'px', 'lolim': 0
                 },
                 'ImgROI' + axis + rb_: {
                     'type': 'int', 'count': 2, 'unit': 'px'
@@ -114,6 +124,14 @@ class Constants(_csdev.Const):
                 },
                 'ImgROI' + axis + 'FWHM' + mon_: {
                     'type': 'int', 'unit': 'px'
+                },
+                'ImgROI' + axis + 'UpdateWithFWHMFactor-SP': {
+                    'type': 'float', 'value': 2.0, 'unit': 'fwhm_factor',
+                    'prec': 3, 'lolim': 0
+                },
+                'ImgROI' + axis + 'UpdateWithFWHMFactor-RB': {
+                    'type': 'float', 'value': 2.0, 'unit': 'fwhm_factor',
+                    'prec': 3, 'lolim': 0
                 },
             })
         return db
@@ -134,14 +152,6 @@ class Constants(_csdev.Const):
                 },
                 'ImgROI' + axis + 'FitError' + mon_: {
                     'type': 'float', 'unit': '%', 'prec': 3,
-                },
-                'ImgROI' + axis + 'UpdateWithFWHMFactor-SP': {
-                    'type': 'float', 'value': 2.0, 'unit': 'fwhm_factor',
-                    'prec': 3, 'lolim': 0.0
-                },
-                'ImgROI' + axis + 'UpdateWithFWHMFactor-RB': {
-                    'type': 'float', 'value': 2.0, 'unit': 'fwhm_factor',
-                    'prec': 3,
                 },
             })
         db.update({
