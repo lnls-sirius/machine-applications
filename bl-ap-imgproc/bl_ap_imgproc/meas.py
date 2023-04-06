@@ -14,18 +14,19 @@ class Measurement():
 
     def __init__(
             self, devname, fwhmx_factor, fwhmy_factor,
-            roi_with_fwhm, callback=None):
+            roi_with_fwhm, intensity_threshold, callback=None):
         """."""
         self._devname = devname
         self._callback = callback
         self._status = Measurement.STATUS_SUCCESS
         self._dvf = None
-        self._fitgauss = _imgproc.FitGaussianScipy()
+        self._fitgauss = _imgproc.FitGaussianScipy()  # needs scipy
         self._image2dfit = None
         self._sizex = None
         self._sizey = None
         self._fwhmx_factor = fwhmx_factor
         self._fwhmy_factor = fwhmy_factor
+        self._intensity_threshold = intensity_threshold
         self._roi_with_fwhm = roi_with_fwhm
 
         # create DVF device
@@ -82,6 +83,11 @@ class Measurement():
     def fwhmy_factor(self, value):
         """."""
         self._fwhmy_factor = value
+
+    @property
+    def intensity_threshold(self):
+        """."""
+        return self._intensity_threshold
 
     @property
     def status(self):
@@ -180,8 +186,11 @@ class Measurement():
         # get image data and process fitting
         try:
             data = self._dvf.image
+            saturation_threshold = self._dvf.intensity_saturation_value
             self._image2dfit = _imgproc.Image2D_Fit(
                 data=data, fitgauss=self._fitgauss,
+                saturation_threshold=saturation_threshold,
+                intensity_threshold=self._intensity_threshold,
                 roix=roix, roiy=roiy)
         except Exception:
             self._status = \

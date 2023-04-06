@@ -55,8 +55,6 @@ class App:
             'ImgROIY-RB': ('fity', 'roi'),
             'ImgROIX-SP': ('fitx', 'roi'),
             'ImgROIY-SP': ('fity', 'roi'),
-            'ImgIntensityThreshold-SP': 'intensity_threshold',
-            'ImgIntensityThreshold-RB': 'intensity_threshold',
         }
 
     def __init__(self, driver=None, const=None):
@@ -134,6 +132,10 @@ class App:
             return res
 
         res = self._write_fwhm_factor(reason, value)
+        if res is not None:
+            return res
+
+        res = self._write_iswithbeam_threshold(reason, value)
         if res is not None:
             return res
 
@@ -244,12 +246,15 @@ class App:
             self._database['ImgFitYUpdateROIWithFWHMFactor-RB']['value']
         roi_with_fwhm = \
             self._database['ImgFitUpdateROIWithFWHM-Sts']['value']
-
+        intensity_threshold = \
+            self._database['ImgIsWithBeamThreshold-RB']['value']
         # create object
         self._meas = Measurement(
             self.const.devname,
             fwhmx_factor=fwhmx_factor, fwhmy_factor=fwhmy_factor,
-            roi_with_fwhm=roi_with_fwhm)
+            roi_with_fwhm=roi_with_fwhm,
+            intensity_threshold=intensity_threshold,
+            )
 
     def _write_pv(self, pvname, value=None, success=True):
         """."""
@@ -307,8 +312,8 @@ class App:
             self._driver.updatePV('ImgLog-Mon')
             return False
 
-    def _write_intensity_threshold(self, reason, value):
-        if reason != 'ImgIntensityThreshold-SP':
+    def _write_iswithbeam_threshold(self, reason, value):
+        if reason != 'ImgIsWithBeamThreshold-SP':
             return None
 
         # set threshold

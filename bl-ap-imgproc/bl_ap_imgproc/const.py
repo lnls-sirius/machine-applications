@@ -89,12 +89,6 @@ class Constants(_csdev.Const):
             'ImgIntensitySum' + sufix: {
                 'type': 'int', 'unit': 'intensity'
             },
-            'ImgIntensityThreshold-SP': {
-                'type': 'int', 'unit': 'intensity', 'value': 0,
-            },
-            'ImgIntensityThreshold-RB': {
-                'type': 'int', 'unit': 'intensity', 'value': 0,
-            },
             'ImgIsSaturated' + sufix: {
                 'type': 'enum', 'enums': _et.NO_YES,
                 'value': self.NoYes.No,
@@ -102,6 +96,12 @@ class Constants(_csdev.Const):
             'ImgIsWithBeam' + sufix: {
                 'type': 'enum', 'enums': _et.NO_YES,
                 'value': self.NoYes.No,
+            },
+            'ImgIsWithBeamThreshold-SP': {
+                'type': 'int', 'unit': 'intensity', 'value': 10,
+            },
+            'ImgIsWithBeamThreshold-RB': {
+                'type': 'int', 'unit': 'intensity', 'value': 10,
             },
             }
         return dbase
@@ -114,7 +114,7 @@ class Constants(_csdev.Const):
         for axis in ['X', 'Y']:
             db.update({
                 'ImgROI' + axis + sp_: {
-                    'type': 'int', 'count': 2, 'unit': 'px', 'lolim': 0
+                    'type': 'int', 'count': 2, 'unit': 'px',
                 },
                 'ImgROI' + axis + rb_: {
                     'type': 'int', 'count': 2, 'unit': 'px'
