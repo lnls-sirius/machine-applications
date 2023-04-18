@@ -6,8 +6,7 @@ import argparse
 
 from si_id_epu50 import constants as cte
 from si_id_epu50 import si_id_epu50 as ioc_module
-
-from .utils_logging import get_file_handler, get_logger
+from si_id_epu50.utils import get_file_handler, get_logger
 
 # NOTE: maximum epics array size
 os.environ['EPICS_CA_MAX_ARRAY_BYTES'] = '100000'
