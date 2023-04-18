@@ -3,3 +3,4 @@ toml>=0.10.2
 pydantic>=1.9.2
 pcaspy>=0.7.3
 pyepics>=3.5.0
+singleton>=0.1.0

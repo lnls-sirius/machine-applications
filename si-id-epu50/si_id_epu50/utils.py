@@ -3,8 +3,27 @@ from functools import wraps
 from threading import Thread
 import socket
 
-from . import constants as _cte
+import constants as _cte
 
+def run_periodically_in_detached_thread(interval):
+    """
+    Decorator to run a function periodically in a separate thread detached from terminal.
+    """
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            # Define the target function to be executed in a thread
+            def target():
+                while True:
+                    func(*args, **kwargs)
+                    time.sleep(interval)
+
+            # Create a new daemon thread without a terminal
+            daemon_thread = Thread(target=target, daemon=True)
+            daemon_thread.start()
+
+        return wrapper
+
+    return decorator
 
 def schedule(interval):
     def decorator(func):
