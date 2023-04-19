@@ -2,8 +2,8 @@
 import logging
 import threading
 
-from connection_handler import TCPClient
-from utils import *
+from .connection_handler import TCPClient
+from .utils import *
 
 logger = logging.getLogger(__name__)
 
@@ -81,11 +81,11 @@ class EcoDrive:
 
         if not response:
             logger.error(f"No response received from {self.DRIVE_NAME}.")
-            return ''
+            return None
 
         if f'E{self.ADDRESS}' not in response:
             logger.error(f"Address not found in response from {self.DRIVE_NAME}.")
-            return ''
+            return None
 
         if treat_answer:
             parameter_data = response.split('\r\n')[1]

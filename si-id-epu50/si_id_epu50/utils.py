@@ -7,7 +7,7 @@ import socket
 import logging.handlers
 import logging
 
-import constants as _cte
+from . import constants as _cte
 
 def run_periodically_in_detached_thread(interval):
     """

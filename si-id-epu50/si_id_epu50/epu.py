@@ -2,10 +2,10 @@ import logging
 import logging.handlers
 import threading
 
-import constants as _cte
-from connection_handler import TCPClient
-from ecodrive import EcoDrive
-from utils import *
+from . import constants as _cte
+from .connection_handler import TCPClient
+from .ecodrive import EcoDrive
+from .utils import *
 
 logger = logging.getLogger(__name__)
 
@@ -571,38 +571,32 @@ class Epu:
 
     # TODO: Change to gap standard
     def _phase_check_for_move(self) -> bool:
-        try:
+        with self._epu_lock:
             drive_i_max_velocity = self.i_drive.get_max_velocity()
             drive_s_max_velocity = self.s_drive.get_max_velocity()
 
-            if drive_i_max_velocity == drive_s_max_velocity:
-
-                drive_i_target_position = self.i_drive.get_target_position()
-                drive_s_target_position = self.s_drive.get_target_position()
-
-                if drive_i_target_position == drive_s_target_position:
-                    drive_i_diag_code = self.i_drive.get_diagnostic_code()
-                    drive_s_diag_code = self.s_drive.get_diagnostic_code()
-
-                    return drive_i_diag_code == drive_s_diag_code
-
-                else:
-                    logger.info('Movement not allowed. Drives I and S have different target positions.')
-                    return False
-
-            else:
-                # Verificar a diferença entre setpoint de velocidade e velocidade máxima
-                logger.info('Movement not allowed. Drives I and S have different target velocities.')
+            if drive_i_max_velocity != drive_s_max_velocity:
+                logger.info('Phase drives have different maximum velocities.')
+                self.message = 'Phase drives have different maximum velocities.'
                 return False
 
-        except ValueError as e:
-            logger.info('Drive did not respond as expected while trying to check for move')
-            logger.debug(e)
-            return False
+            drive_i_target_position = self.i_drive.get_target_position()
+            drive_s_target_position = self.s_drive.get_target_position()
 
-        except TypeError as e:
-            logger.info('Drive did not respond while trying to check for move')
-            logger.debug(e)
+            if drive_i_target_position != drive_s_target_position:
+                logger.info('Phase drives have different target positions.')
+                self.message = 'Phase drives have different target positions.'
+                return False
+
+            drive_i_diag_code = self.i_drive.get_diagnostic_code()
+            drive_s_diag_code = self.s_drive.get_diagnostic_code()
+
+            if drive_i_diag_code == drive_s_diag_code == 'A211':
+                return True
+
+            else:
+                logger.info('Phase drives diagnostic codes do not allow movement.')
+                self.message = 'Phase drives diagnostic codes do not allow movement.'
             return False
 
     def allowed_to_change_phase(self) -> bool:
@@ -815,15 +809,14 @@ if __name__ == '__main__':
     epu = Epu(default_args)
     with open('testing.txt', 'w') as f:
         for i in range(10):
-            epu.gap_set(240)
+            epu.gap_set(245)
             epu.gap_start(True)
-            time.sleep(.1)
             while epu.gap_is_moving:
-                f.write(str(epu.gap))
-                f.write('\n')
+                time.sleep(1)
+            f.write(str(epu.gap))
             epu.gap_set(250)
             epu.gap_start(True)
             time.sleep(.1)
             while epu.gap_is_moving:
-                f.write(str(epu.gap))
-                f.write('\n')
+                time.sleep(1)
+            f.write(str(epu.gap))
