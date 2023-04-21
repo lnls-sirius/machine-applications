@@ -3,7 +3,6 @@ import logging
 import threading
 
 from .connection_handler import TCPClient
-from .utils import *
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +61,7 @@ class EcoDrive:
                     self.sock.clean_socket_buffer()
                     return False
 
-    # @timer # prints the execution time of the function
+    # @utils.timer # prints the execution time of the function
     def tcp_read_parameter(self, message: str, change_drive: bool = True) -> bytes:
         if change_drive:
             self.sock.send_data(f'BCD:{self.ADDRESS}\r')

@@ -3,9 +3,9 @@ import logging.handlers
 import threading
 
 from . import constants as _cte
+from . import utils
 from .connection_handler import TCPClient
 from .ecodrive import EcoDrive
-from .utils import *
 
 logger = logging.getLogger(__name__)
 
@@ -209,7 +209,7 @@ def gpio_server_connection_test(addr, port) -> bool:
 
 
 def read_digital_status(host, port, bsmp_id: int) -> bytes:
-    bsmp_enable_message = bsmp_send(_cte.BSMP_READ, variableID=bsmp_id, size=0).encode()
+    bsmp_enable_message = utils.bsmp_send(_cte.BSMP_READ, variableID=bsmp_id, size=0).encode()
     return send_bsmp_message(bsmp_enable_message, host, port)
 
 
@@ -371,7 +371,7 @@ class Epu:
     def _monitor_phase_movement(self):
         self._monitor_movement(self.phase_start_event, self.i_drive, 'phase', 'Phase movement')
 
-    @run_periodically_in_detached_thread(interval=2)
+    @utils.run_periodically_in_detached_thread(interval=2)
     def _standstill_monitoring(self):
         while self.gap_is_moving:
             time.sleep(1)
@@ -619,7 +619,7 @@ class Epu:
                 logger.info('To disable the gap, it must be halted first.')
                 return False
             else:
-                bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_AB, value=val).encode()
+                bsmp_enable_message = utils.bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_AB, value=val).encode()
                 return set_digital_signal(val, bsmp_enable_message, self.a_drive, self.b_drive, 'A012',
                                           self.args.beaglebone_addr, self.args.io_port)
 
@@ -633,7 +633,7 @@ class Epu:
                 logger.info('To halt the gap, it must be enabled.')
                 return False
             else:
-                bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.HALT_CH_AB, value=val).encode()
+                bsmp_enable_message = utils.bsmp_send(_cte.BSMP_WRITE, variableID=_cte.HALT_CH_AB, value=val).encode()
                 return set_digital_signal(val, bsmp_enable_message, self.a_drive, self.b_drive, 'A010',
                                           self.args.beaglebone_addr, self.args.io_port)
 
@@ -643,7 +643,7 @@ class Epu:
         logger.debug('Gap start function called.')
         if self._gap_check_for_move():
             logger.debug('Gap is ok to move.')
-            bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE,
+            bsmp_enable_message = utils.bsmp_send(_cte.BSMP_WRITE,
                                             variableID=_cte.START_CH_AB,
                                             value=val).encode()
             self.gap_start_event.set()
@@ -689,7 +689,7 @@ class Epu:
 
     def gap_turn_on(self) -> bool:
         with self._epu_lock:
-            bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.RESET_CH_AB, value=1).encode()
+            bsmp_enable_message = utils.bsmp_send(_cte.BSMP_WRITE, variableID=_cte.RESET_CH_AB, value=1).encode()
             response = send_bsmp_message(bsmp_enable_message, self.args.beaglebone_addr, self.args.io_port)
             return True if response else False
 
@@ -704,7 +704,7 @@ class Epu:
                 epu.message = 'Phase is not halted.'
                 return False
             else:
-                bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_SI, value=val).encode()
+                bsmp_enable_message = utils.bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_SI, value=val).encode()
                 return set_digital_signal(val, bsmp_enable_message, self.i_drive, self.s_drive, 'A012',
                                           self.args.beaglebone_addr, self.args.io_port)
 
@@ -717,14 +717,14 @@ class Epu:
                 epu.message = 'Phase is not halted.'
                 return False
             else:
-                bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.HALT_CH_SI, value=val).encode()
+                bsmp_enable_message = utils.bsmp_send(_cte.BSMP_WRITE, variableID=_cte.HALT_CH_SI, value=val).encode()
                 return self._send_digital_signal(val, bsmp_enable_message, self.i_drive, self.s_drive, 'A010')
 
     phase_release_halt = phase_set_halt
 
     def phase_start(self, val: bool) -> bool:
         if self._phase_check_for_move():
-            bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.START_CH_SI, value=val).encode()
+            bsmp_enable_message = utils.bsmp_send(_cte.BSMP_WRITE, variableID=_cte.START_CH_SI, value=val).encode()
             self.phase_start_event.set()
             return bool(send_bsmp_message(
                         bsmp_enable_message,
@@ -769,7 +769,7 @@ class Epu:
 
     def phase_turn_on(self) -> bool:
         with self._epu_lock:
-            bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.RESET_CH_SI, value=1).encode()
+            bsmp_enable_message = utils.bsmp_send(_cte.BSMP_WRITE, variableID=_cte.RESET_CH_SI, value=1).encode()
             response = send_bsmp_message(bsmp_enable_message, self.args.beaglebone_addr, self.args.io_port)
             return True if response else False
     
