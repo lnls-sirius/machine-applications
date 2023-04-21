@@ -279,15 +279,13 @@ class Epu:
             logger.info('All drives initialized.')
 
             # Threads and events
+            self._epu_lock = threading.RLock()
             self.gap_start_event = threading.Event()
             self.phase_start_event = threading.Event()
-            self._epu_lock = threading.RLock()
             self.monitor_phase_movement_thread = Thread(target=self._monitor_phase_movement, daemon=True)
             self.monitor_gap_movement_thread = Thread(target=self._monitor_gap_movement, daemon=True)
 
-            logger.info('Initializing variables.')
             self._init_variables()
-            logger.info('Variables initialized.')
 
             # Starts threads
             self._standstill_monitoring()
@@ -304,6 +302,7 @@ class Epu:
         The several attempts are necessary because the drives may not respond correctly.
         The initialization is separated in several while loops to avoid initializing of all variables if one fails.
         """
+        logger.info('Initializing variables.')
         drives = [self.a_drive, self.b_drive, self.i_drive, self.s_drive]
         variables = ['a', 'b', 'i', 's']
 
@@ -343,6 +342,8 @@ class Epu:
         self.phase_target_velocity = self.i_target_velocity
         self.phase = self.i_encoder_phase
         self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
+        
+        logger.info('Variables initialized.')
 
     def _monitor_movement(self, start_event, drive, attribute, logger_message):
         while True:
