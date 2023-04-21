@@ -245,11 +245,12 @@ class Epu:
             self.args = args
             self.callback_update = callback_update
             self.epu_message = None
-            self.tcp_
+            self.tcp_connected = False
 
             # Try to reach the GPIO server
-            while not gpio_server_connection_test(self.args.beaglebone_addr, self.args.msg_port):
+            while not self.tcp_connected:
                 time.sleep(5)
+                self.tcp_connected = gpio_server_connection_test(self.args.beaglebone_addr, self.args.msg_port)
 
             self.a_drive = EcoDrive(tcp_client=self._serial_socket,
                                     address=_cte.a_drive_address,
