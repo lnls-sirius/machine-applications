@@ -1,6 +1,7 @@
 #!/usr/bin/env python-sirius
 import logging
 import threading
+import time
 
 from .connection_handler import TCPClient
 

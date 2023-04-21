@@ -1,6 +1,9 @@
 import logging
 import logging.handlers
 import threading
+from threading import Thread
+import time
+import socket
 
 from . import constants as _cte
 from . import utils
@@ -242,6 +245,7 @@ class Epu:
             self.args = args
             self.callback_update = callback_update
             self.epu_message = None
+            self.tcp_
 
             # Try to reach the GPIO server
             while not gpio_server_connection_test(self.args.beaglebone_addr, self.args.msg_port):

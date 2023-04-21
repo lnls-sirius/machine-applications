@@ -4,8 +4,6 @@ import struct
 from functools import wraps
 from threading import Thread
 import socket
-import logging.handlers
-import logging
 
 from . import constants as _cte
 
