@@ -63,7 +63,7 @@ class TCPClient:
                 logger.info(data)
 
     #TODO: Set timeout and treat it as an error
-    def receive_data(self):
+    def receive_data(self, conn = 'serial'):
         """Receive data from the server."""
         if not self.connected:
             logger.error("Not connected to server. Call connect() method first.")
@@ -71,14 +71,22 @@ class TCPClient:
         
         try:
             data = ''
-            while True:
-                chunk = self.sock.recv(64)
-                if not chunk or chunk.decode('utf-8', errors='ignore')[-1] in ('>', '?'):
-                    data += chunk.decode('utf-8', errors='ignore')
-                    break
-                else:
-                    data += chunk.decode('utf-8', errors='ignore')
-            return data
+            if conn == 'io':
+                while True:
+                    data = self.sock.recv(16)
+                    if not data:
+                        break
+                    return data
+            
+            else:  
+                while True:
+                    chunk = self.sock.recv(64)
+                    if not chunk or chunk.decode('utf-8', errors='ignore')[-1] in ('>', '?'):
+                        data += chunk.decode('utf-8', errors='ignore')
+                        break
+                    else:
+                        data += chunk.decode('utf-8', errors='ignore')
+                return data
 
         except ConnectionResetError:
             logger.error("Connection lost. Retrying...")
