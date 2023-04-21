@@ -50,7 +50,7 @@ def get_setpoint(drive_1, drive_2) -> float:
         raise RuntimeError('Failed to get/set setpoint for operation.')
 
 
-def send_bsmp_message(bsmp_enable_message, host, port) -> bytes:
+def send_bsmp_message(bsmp_enable_message, tcp_client: TCPClient) -> bytes:
     """
     Sends a BSMPmessage to the specified host and port and receives response.
 
@@ -76,45 +76,15 @@ def send_bsmp_message(bsmp_enable_message, host, port) -> bytes:
         The function uses a 16-byte buffer to receive response data from the host. If the response data is longer
         than 16 bytes, only the first 16 bytes will be returned.
     """
-    attempt = 0
-    try:
-        with socket.create_connection((host, port)) as s:
-            s.sendall(bsmp_enable_message)
-            time.sleep(.01)  # magic number
-
-            while True:
-                data = s.recv(16)
-                if not data:
-                    break
-                return data
-
-    except ConnectionRefusedError:
-        logger.error(f'Connection refused by {host}:{port}')
-        return b''
-
-    except socket.timeout:
-        logger.error(f'Connection timeout to {host}:{port}')
-        return b''
-
-    except ConnectionResetError:
-        if not attempt:
-            attempt += 1
-            return send_bsmp_message(bsmp_enable_message, host, port)
-        else:
-            logger.warning(f'Connection reset by {host}:{port}')
-            return b''
-
-    except BrokenPipeError:
-        logger.error(f'Broken pipe to {host}:{port}')
-        return b''
-
-    except OSError:
-        logger.error(f'Connection error to {host}:{port}')
-        return b''
+    if not tcp_client.connected:
+        tcp_client.connect()
+    
+    tcp_client.send_data(bsmp_enable_message.decode())
+    return tcp_client.receive_data(conn = 'io')
 
 
 def set_digital_signal(val: bool, bsmp_enable_message: bytes, drive1: EcoDrive,
-                       drive2: EcoDrive, right_diagnostic_code: str, host: str, port: int) -> bool:
+                       drive2: EcoDrive, right_diagnostic_code: str, tcp_client: TCPClient) -> bool:
     """
     Sets a digital signal by sending a BSMP message to the specified host and port.
 
@@ -147,7 +117,7 @@ def set_digital_signal(val: bool, bsmp_enable_message: bytes, drive1: EcoDrive,
         diagnostic_code_2 = drive2.get_diagnostic_code()
 
         if diagnostic_code_1 == diagnostic_code_2 == right_diagnostic_code:
-            response = send_bsmp_message(bsmp_enable_message, host, port)
+            response = send_bsmp_message(bsmp_enable_message, tcp_client)
             if response:
                 logger.debug('BSMP message sent successfully.')
                 return True
@@ -162,10 +132,8 @@ def set_digital_signal(val: bool, bsmp_enable_message: bytes, drive1: EcoDrive,
             return False
 
     else:
-        send_bsmp_message(
-            bsmp_enable_message,
-            host,
-            port)
+        send_bsmp_message(bsmp_enable_message,tcp_client)
+        
     return True
 
 
@@ -211,9 +179,9 @@ def gpio_server_connection_test(addr, port) -> bool:
     return False
 
 
-def read_digital_status(host, port, bsmp_id: int) -> bytes:
+def read_digital_status(tcp_client, bsmp_id: int) -> bytes:
     bsmp_enable_message = utils.bsmp_send(_cte.BSMP_READ, variableID=bsmp_id, size=0).encode()
-    return send_bsmp_message(bsmp_enable_message, host, port)
+    return send_bsmp_message(bsmp_enable_message, tcp_client)
 
 
 class Epu:
@@ -240,17 +208,14 @@ class Epu:
 
         # Ensure that the instance has not been initialized before
         if not hasattr(self, 'initialized'):
-            self._serial_socket = TCPClient(args.beaglebone_addr, args.msg_port)
-            self._serial_socket.connect()
             self.args = args
+            self._serial_socket = TCPClient(args.beaglebone_addr, args.msg_port)
+            self._gpio_socket = TCPClient(args.beaglebone_addr, args.io_port)
+            self._serial_socket.connect()
+            self._gpio_socket.connect()
             self.callback_update = callback_update
-            self.epu_message = None
+            self.message = None
             self.tcp_connected = False
-
-            # Try to reach the GPIO server
-            while not self.tcp_connected:
-                time.sleep(5)
-                self.tcp_connected = gpio_server_connection_test(self.args.beaglebone_addr, self.args.msg_port)
 
             self.a_drive = EcoDrive(tcp_client=self._serial_socket,
                                     address=_cte.a_drive_address,
@@ -354,7 +319,9 @@ class Epu:
                 start = time.monotonic()
                 update_count = 0
 
+                prev_value = getattr(self, attribute)
                 while start_event.is_set():
+                    loop_count = 0
                     value = drive.read_encoder(False)
                     if isinstance(value, float):
                         setattr(self, attribute, value)
@@ -370,6 +337,14 @@ class Epu:
                         end = time.monotonic()
                         logger.info(f'{logger_message.capitalize()} finished. \
                                     Update rate: {int(update_count / (end - start))}')
+                    
+                    if loop_count % 10 == 0:
+                        if prev_value == getattr(self, attribute):
+                            start_event.clear()
+                            return
+                        prev_value = getattr(self, attribute)
+                    
+                    
 
     def _monitor_gap_movement(self):
         self._monitor_movement(self.gap_start_event, self.a_drive, 'gap', 'Gap movement')
@@ -535,35 +510,49 @@ class Epu:
             logger.error(f'Velocity value given, ({velocity}), is out of range.')
             return False
 
-    # TODO: catch exceptions
     def _gap_check_for_move(self) -> bool:
-        with self._epu_lock:
-            drive_a_max_velocity = self.a_drive.get_max_velocity()
-            drive_b_max_velocity = self.b_drive.get_max_velocity()
+        retry_count = 3 # number of times to retry in case of an exception
+        while retry_count > 0:
+            with self._epu_lock:
+                try:
+                    drive_a_max_velocity = self.a_drive.get_max_velocity()
+                    drive_b_max_velocity = self.b_drive.get_max_velocity()
 
-            if drive_a_max_velocity != drive_b_max_velocity:
-                logger.info('Gap drives have different maximum velocities.')
-                self.message = 'Gap drives have different maximum velocities.'
+                    if drive_a_max_velocity != drive_b_max_velocity:
+                        logger.info('Gap drives have different maximum velocities.')
+                        self.message = 'Gap drives have different maximum velocities.'
+                        return False
+
+                    drive_a_target_position = self.a_drive.get_target_position()
+                    drive_b_target_position = self.b_drive.get_target_position()
+                
+                except (ValueError, TypeError) as e:
+                    logger.info(
+                        f'Drive did not respond as expected, probably due to serial \
+                            communication problem, retrying. ({retry_count} retries left)')
+                    logger.debug(e)
+                    retry_count -= 1
+                    continue
+
+                if drive_a_target_position != drive_b_target_position:
+                    logger.info('Gap drives have different target positions.')
+                    self.message = 'Gap drives have different target positions.'
+                    return False
+
+                drive_a_diag_code = self.a_drive.get_diagnostic_code()
+                drive_b_diag_code = self.b_drive.get_diagnostic_code()
+
+                if drive_a_diag_code == drive_b_diag_code == 'A211':
+                    return True
+
+                else:
+                    logger.info('Gap drives diagnostic codes do not allow movement.')
+                    self.message = 'Gap drives diagnostic codes do not allow movement.'
                 return False
-
-            drive_a_target_position = self.a_drive.get_target_position()
-            drive_b_target_position = self.b_drive.get_target_position()
-
-            if drive_a_target_position != drive_b_target_position:
-                logger.info('Gap drives have different target positions.')
-                self.message = 'Gap drives have different target positions.'
-                return False
-
-            drive_a_diag_code = self.a_drive.get_diagnostic_code()
-            drive_b_diag_code = self.b_drive.get_diagnostic_code()
-
-            if drive_a_diag_code == drive_b_diag_code == 'A211':
-                return True
-
-            else:
-                logger.info('Gap drives diagnostic codes do not allow movement.')
-                self.message = 'Gap drives diagnostic codes do not allow movement.'
-            return False
+        
+        logger.info(f'Gap check failed after {retry_count} retries.')
+        self.message = 'Gap check failed after retries.'
+        return False
 
     # TODO: check if it is necessary to treat exceptions.
     # TODO: write another function just to update the status of the gap in which there is no serial communication
@@ -626,8 +615,10 @@ class Epu:
                 return False
             else:
                 bsmp_enable_message = utils.bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_AB, value=val).encode()
-                return set_digital_signal(val, bsmp_enable_message, self.a_drive, self.b_drive, 'A012',
-                                          self.args.beaglebone_addr, self.args.io_port)
+                return set_digital_signal(
+                        val, bsmp_enable_message,
+                        self.a_drive, self.b_drive, 'A012',
+                        self._gpio_socket)
 
     def gap_set_halt(self, val: bool):
         """
@@ -641,7 +632,7 @@ class Epu:
             else:
                 bsmp_enable_message = utils.bsmp_send(_cte.BSMP_WRITE, variableID=_cte.HALT_CH_AB, value=val).encode()
                 return set_digital_signal(val, bsmp_enable_message, self.a_drive, self.b_drive, 'A010',
-                                          self.args.beaglebone_addr, self.args.io_port)
+                                          self._gpio_socket)
 
     gap_release_halt = gap_set_halt
 
@@ -653,27 +644,25 @@ class Epu:
                                             variableID=_cte.START_CH_AB,
                                             value=val).encode()
             self.gap_start_event.set()
-            response = send_bsmp_message(bsmp_enable_message,
-                                         self.args.beaglebone_addr,
-                                         self.args.io_port)
+            response = send_bsmp_message(bsmp_enable_message, self._gpio_socket)
             logger.debug('Gap start response: {}'.format(response))
-            return bool(response[-2])
+            return bool(response) # response for start query is always not empty if it works
 
     def gap_enable_and_release_halt(self, val: bool = True) -> None:
         self.gap_set_halt(False)
+        time.sleep(0.1)
         self.gap_set_enable(False)
         if val:
             self.gap_set_enable(True)
+            time.sleep(0.1)
             self.gap_set_halt(True)
 
     def gap_enable_status(self) -> bool:
-        return bool(read_digital_status(self.args.beaglebone_addr,
-                                        self.args.io_port,
+        return bool(read_digital_status(self._gpio_socket,
                                         _cte.ENABLE_CH_AB)[-2])
 
     def gap_halt_status(self) -> bool:
-        return bool(read_digital_status(self.args.beaglebone_addr,
-                                        self.args.io_port,
+        return bool(read_digital_status(self._gpio_socket,
                                         _cte.HALT_CH_AB)[-2])
 
     gap_halt_release_status = gap_halt_status
@@ -712,7 +701,7 @@ class Epu:
             else:
                 bsmp_enable_message = utils.bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_SI, value=val).encode()
                 return set_digital_signal(val, bsmp_enable_message, self.i_drive, self.s_drive, 'A012',
-                                          self.args.beaglebone_addr, self.args.io_port)
+                                          self._gpio_socket)
 
     def phase_set_halt(self, val: bool):
         """
@@ -745,13 +734,11 @@ class Epu:
             self.phase_set_halt(True)
 
     def phase_enable_status(self):
-        return bool(read_digital_status(self.args.beaglebone_addr,
-                                        self.args.io_port,
+        return bool(read_digital_status(self._gpio_socket,
                                         _cte.ENABLE_CH_SI)[-2])
         
     def phase_halt_status(self):
-        return bool(read_digital_status(self.args.beaglebone_addr,
-                                        self.args.io_port,
+        return bool(read_digital_status(self._gpio_socket,
                                         _cte.HALT_CH_SI)[-2])
     
     phase_halt_release_status = phase_halt_status

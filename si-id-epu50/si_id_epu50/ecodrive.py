@@ -88,8 +88,13 @@ class EcoDrive:
             return None
 
         if treat_answer:
-            parameter_data = response.split('\r\n')[1]
-            return parameter_data
+            try:
+                parameter_data = response.split('\r\n')[1]
+                return parameter_data
+            except IndexError:
+                logger.error(f"IndexError in response from {self.DRIVE_NAME}.")
+                logger.debug(f"Response: {response}")
+                return None
         else:
             return response
 
