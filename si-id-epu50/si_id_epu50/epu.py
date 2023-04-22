@@ -215,7 +215,7 @@ class Epu:
             self._gpio_socket.connect()
             self.callback_update = callback_update
             self.message = None
-            self.tcp_connected = False
+            self.tcp_connected = self._gpio_socket.connected and self._serial_socket.connected
 
             self.a_drive = EcoDrive(tcp_client=self._serial_socket,
                                     address=_cte.a_drive_address,
@@ -344,8 +344,6 @@ class Epu:
                             return
                         prev_value = getattr(self, attribute)
                     
-                    
-
     def _monitor_gap_movement(self):
         self._monitor_movement(self.gap_start_event, self.a_drive, 'gap', 'Gap movement')
 
@@ -357,9 +355,18 @@ class Epu:
         while self.gap_is_moving:
             time.sleep(1)
 
-        # Check TODO of this functions
         self.allowed_to_change_gap()
         self.allowed_to_change_phase()
+
+        io_com_status = self._gpio_socket.connected
+        serial_com_status = self._serial_socket.connected
+        
+        if not io_com_status:
+            self._gpio_socket.connect()
+        if not serial_com_status:
+            self._serial_socket.connect()
+            
+        self.tcp_connected = self._gpio_socket.connected and self._serial_socket.connected
 
         self._read_drive_a()
         self._read_drive_b()
@@ -658,12 +665,24 @@ class Epu:
             self.gap_set_halt(True)
 
     def gap_enable_status(self) -> bool:
-        return bool(read_digital_status(self._gpio_socket,
+        try:
+            status = bool(read_digital_status(self._gpio_socket,
                                         _cte.ENABLE_CH_AB)[-2])
+            
+        except (IndexError, TypeError):
+            status = False
+        
+        return status
 
     def gap_halt_status(self) -> bool:
-        return bool(read_digital_status(self._gpio_socket,
+        try:
+            status = bool(read_digital_status(self._gpio_socket,
                                         _cte.HALT_CH_AB)[-2])
+            
+        except (IndexError, TypeError):
+            status = False
+        
+        return status
 
     gap_halt_release_status = gap_halt_status
 
@@ -734,12 +753,24 @@ class Epu:
             self.phase_set_halt(True)
 
     def phase_enable_status(self):
-        return bool(read_digital_status(self._gpio_socket,
+        try:
+            status = bool(read_digital_status(self._gpio_socket,
                                         _cte.ENABLE_CH_SI)[-2])
+            
+        except (IndexError, TypeError):
+            status = False
+        
+        return status
         
     def phase_halt_status(self):
-        return bool(read_digital_status(self._gpio_socket,
+        try:
+            status = bool(read_digital_status(self._gpio_socket,
                                         _cte.HALT_CH_SI)[-2])
+            
+        except (IndexError, TypeError):
+            status = False
+            
+        return status
     
     phase_halt_release_status = phase_halt_status
 
