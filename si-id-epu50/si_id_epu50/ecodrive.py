@@ -64,16 +64,17 @@ class EcoDrive:
 
     # @utils.timer # prints the execution time of the function
     def tcp_read_parameter(self, message: str, change_drive: bool = True) -> bytes:
-        if change_drive:
-            self.sock.send_data(f'BCD:{self.ADDRESS}\r')
-            self.sock.receive_data()  # TODO: verify the coherence of the answer
+        with EcoDrive._lock:
+            if change_drive:
+                self.sock.send_data(f'BCD:{self.ADDRESS}\r')
+                self.sock.receive_data()  # TODO: verify the coherence of the answer
 
-        self.sock.send_data(f'{message}\r')
-        data = self.sock.receive_data()
+            self.sock.send_data(f'{message}\r')
+            data = self.sock.receive_data()
 
-        if change_drive:
-            time.sleep(.01)  # makes significant difference
-        return data.encode() if data else b''
+            if change_drive:
+                time.sleep(.01)  # makes significant difference
+            return data.encode() if data else b''
 
     def read_parameter_data(self, parameter: str, change_drive: bool = True, treat_answer: bool = True) -> str:
         response = self.tcp_read_parameter(f"{parameter},7,R", change_drive)
