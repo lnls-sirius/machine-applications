@@ -353,8 +353,8 @@ class Epu:
     @utils.run_periodically_in_detached_thread(interval=2)
     def _standstill_monitoring(self):
 
+        # If this condition to allow movement would be changed, try not to use serial communication.
         self.gap_change_allowed = self.a_diag_code == self.b_diag_code == 'A211'
-        
         self.phase_change_allowed = self.i_diag_code == self.s_diag_code == 'A211'
 
         io_com_status = self._gpio_socket.connected
@@ -448,8 +448,6 @@ class Epu:
 
                 # Gap stuff
 
-    # TODO: This function is not used anywhere, check if it is worth change
-    # the gap update to use this instead of a_drive directly. Same to phase.
     @property
     def gap_setpoint(self):
         """
@@ -560,8 +558,6 @@ class Epu:
         self.message = 'Check for gap movement failed after retries.'
         return False
 
-    # TODO: check if it is necessary to treat exceptions.
-    # TODO: write another function just to update the status of the gap in which there is no serial communication
     def allowed_to_change_gap(self) -> bool:
         if self.gap_enable_status() and self.gap_halt_status() and self._gap_check_for_move():
             self.gap_change_allowed = True
