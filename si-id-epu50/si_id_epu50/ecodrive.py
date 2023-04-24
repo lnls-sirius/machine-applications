@@ -4,6 +4,7 @@ import threading
 import time
 
 from .connection_handler import TCPClient
+from .utils import DriveCOMError
 
 logger = logging.getLogger(__name__)
 
@@ -129,34 +130,34 @@ class EcoDrive:
             raise e
 
     def set_target_position(self, target: float) -> bool:
-        try:
-            if not (self.LOWER_LIMIT <= target <= self.UPPER_LIMIT):
-                raise ValueError('Target position out of limits.')
+        if not (self.LOWER_LIMIT <= target <= self.UPPER_LIMIT):
+            raise ValueError('Target position out of limits.')
 
-            with self._lock:
-                response = self.tcp_read_parameter('P-0-4006,7,W,>')
-                if b'?' not in response:
-                    logger.error(f'Error: {response}')
-                    return False
+        with self._lock:
+            response = self.tcp_read_parameter('P-0-4006,7,W,>')
+            if b'?' not in response:
+                logger.error(f'Error: {response}')
+                
+                raise DriveCOMError('Error setting target position.')
 
-                response = self.tcp_read_parameter(f'{target}', change_drive=False)
-                if str(target).encode() not in response:
-                    logger.error('Target position not set. Intended target velocity not found in drive answer.')
-                    return False
+            response = self.tcp_read_parameter(f'{target}', change_drive=False)
+            if str(target).encode() not in response:
+                logger.error('Target position not set. Intended target\
+                            position not found in drive answer.')
+                
+                raise DriveCOMError('Error setting target position.')
 
-                response = self.tcp_read_parameter('<', change_drive=False)
-                if f'{self.ADDRESS}'.encode() not in response:
-                    logger.error(
-                        f'Parameter reading error; drive answer to last step of setting target position: {response}')
-                    return False
-
+            response = self.tcp_read_parameter('<', change_drive=False)
+            if f'{self.ADDRESS}'.encode() not in response:
+                logger.error(
+                    f'Parameter reading error; drive answer to last step of setting target position: {response}')
+                
+                raise DriveCOMError('Error setting target position.')
+            
+            else:
                 logger.info(f'Drive {self.DRIVE_NAME} target position changed to {target} mm.')
                 return True
-
-        except Exception as e:
-            logger.error(f'Error setting target position: {e}')
-            return False
-
+                
     def get_max_velocity(self, change_drive: bool = True) -> float:
         try:
             answer = self.read_parameter_data('P-0-4007', change_drive=change_drive)

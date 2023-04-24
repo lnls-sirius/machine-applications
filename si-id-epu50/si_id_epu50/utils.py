@@ -7,6 +7,10 @@ import socket
 
 from . import constants as _cte
 
+class DriveCOMError(Exception):
+    "Raised when the drive does not respond as expected to a command."
+    pass
+
 def run_periodically_in_detached_thread(interval):
     """
     Decorator to run a function periodically in a separate thread detached from terminal.

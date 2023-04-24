@@ -9,6 +9,8 @@ from . import constants as _cte
 from . import utils
 from .connection_handler import TCPClient
 from .ecodrive import EcoDrive
+from .utils import DriveCOMError
+
 
 logger = logging.getLogger(__name__)
 
@@ -353,9 +355,8 @@ class Epu:
     @utils.run_periodically_in_detached_thread(interval=2)
     def _standstill_monitoring(self):
 
-        # If this condition to allow movement would be changed, try not to use serial communication.
-        self.gap_change_allowed = self.a_diag_code == self.b_diag_code == 'A211'
-        self.phase_change_allowed = self.i_diag_code == self.s_diag_code == 'A211'
+        self.allowed_to_change_gap()
+        self.allowed_to_change_phase()
 
         io_com_status = self._gpio_socket.connected
         serial_com_status = self._serial_socket.connected
@@ -474,44 +475,73 @@ class Epu:
 
     def _set_drive_values(self, value: float, func: callable) -> bool:
         attempts = 0
-        with self._epu_lock:
-            while not func(value):
-                time.sleep(.5)
+        while attempts < 3:
+            try:
+                return func(value)
+            except (DriveCOMError, ValueError):
+                logger.error('Could not set drive value.')
+                time.sleep(0.5)
                 attempts += 1
-                if attempts == 3:
+                logger.error('Could not set drive value.')
+                raise
+
+    def _set_undulator_property(self, movement_property, value, undulator_property) -> bool:
+        with self._epu_lock:
+            drive_funcs = {
+                ('position', 'gap'): (self.a_drive.set_target_position, self.b_drive.set_target_position),
+                ('velocity', 'gap'): (self.a_drive.set_target_velocity, self.b_drive.set_target_velocity),
+                ('position', 'phase'): (self.i_drive.set_target_position, self.s_drive.set_target_position),
+                ('velocity', 'phase'): (self.i_drive.set_target_velocity, self.s_drive.set_target_velocity),
+            }
+            
+            func1, func2 = drive_funcs.get((movement_property, undulator_property))
+            if func1 is not None:
+                try:
+                    self._set_drive_values(value, func1)
+                except (DriveCOMError, ValueError):
+                    logger.error('Could not set drive value.')
                     return False
-            return True
-
-    def gap_set(self, gap: float) -> bool:
-        if _cte.minimum_gap <= gap <= _cte.maximum_gap:
-            return self._set_drive_values(gap, self.a_drive.set_target_position) and \
-                self._set_drive_values(gap, self.b_drive.set_target_position)
+                else:
+                    try:
+                        self._set_drive_values(value, func2)
+                    except (DriveCOMError, ValueError):
+                        logger.warning(
+                                f'Could not set {undulator_property} {movement_property} on drive B. \
+                                {undulator_property} {movement_property} drives may have different target values.')
+                        self.message = f'{undulator_property} {movement_property} drives may have different target values.'
+                        self.gap_change_allowed = False
+                        return False
+                
+    def gap_set(self, target: float) -> bool:
+        if _cte.minimum_gap <= target <= _cte.maximum_gap:
+            self._set_undulator_property('position', target, 'gap')
         else:
-            logger.error(f'Gap value given, ({gap}), is out of range.')
+            logger.error(f'Gap value given, ({target}), is out of range.')
             return False
 
-    def gap_set_velocity(self, velocity: float) -> bool:
-        if _cte.minimum_velo_mm_per_min <= velocity <= _cte.maximum_velo_mm_per_min:
-            return self._set_drive_values(velocity, self.a_drive.set_target_velocity) and \
-                self._set_drive_values(velocity, self.b_drive.set_target_velocity)
+    def gap_set_velocity(self, target: float) -> bool:
+        if _cte.minimum_velo_mm_per_min <= target <= _cte.maximum_velo_mm_per_min:
+            self._set_undulator_property('position', target, 'gap')
         else:
-            logger.error(f'Velocity value given, ({velocity}), is out of range.')
+            logger.error(
+                f'Velocity ({target}) mm/s is out of range \
+                    {_cte.minimum_velo_mm_per_min} < velocity < {_cte.maximum_velo_mm_per_min}')
             return False
 
-    def phase_set(self, phase: float) -> bool:
-        if _cte.minimum_phase <= phase <= _cte.maximum_phase:
-            return self._set_drive_values(phase, self.i_drive.set_target_position) and \
-                self._set_drive_values(phase, self.s_drive.set_target_position)
+    def phase_set(self, target: float) -> bool:
+        if _cte.minimum_phase <= target <= _cte.maximum_phase:
+            self._set_undulator_property('position', target, 'gap')
         else:
-            logger.error(f'Phase value given, ({phase}), is out of range.')
+            logger.error(f'Phase value given, ({target}), is out of range.')
             return False
 
-    def phase_set_velocity(self, velocity: float) -> bool:
-        if _cte.minimum_velo_mm_per_min <= velocity <= _cte.maximum_velo_mm_per_min:
-            return self._set_drive_values(velocity, self.i_drive.set_target_velocity) and \
-                self._set_drive_values(velocity, self.s_drive.set_target_velocity)
+    def phase_set_velocity(self, target: float) -> bool:
+        if _cte.minimum_velo_mm_per_min <= target <= _cte.maximum_velo_mm_per_min:
+            self._set_undulator_property('position', target, 'gap')
         else:
-            logger.error(f'Velocity value given, ({velocity}), is out of range.')
+            logger.error(
+                f'Velocity ({target}) mm/s is out of range \
+                    {_cte.minimum_velo_mm_per_min} < velocity < {_cte.maximum_velo_mm_per_min}')
             return False
 
     def _gap_check_for_move(self) -> bool:
