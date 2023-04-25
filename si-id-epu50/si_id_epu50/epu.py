@@ -337,14 +337,14 @@ class Epu:
                     if isinstance(value, float):
                         setattr(self, attribute, value)
                         self.callback_update()
+                        logger.info(f'{attribute}: {value}')
                         update_count += 1
 
                     if abs(getattr(self, attribute) - getattr(self, f'{attribute}_target')) < .001:
                         setattr(self, f'{attribute}_is_moving', False)
                         start_event.clear()
                         end = time.monotonic()
-                        logger.info(
-                            f'{logger_message} finished. Update rate: {int(update_count / (end - start))}')
+                        logger.info(f'{logger_message} finished. Update rate: {int(update_count / (end - start))}')
                     
                     if loop_count % 100 == 0:
                         if prev_value == getattr(self, attribute):
