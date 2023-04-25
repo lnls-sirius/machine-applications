@@ -34,10 +34,11 @@ class EcoDrive:
 
         if not self.sock.connected:
             self.sock.connect()
-        self.connect_to_drive()
+        while not self.connect_to_drive():
+            time.sleep(.1)
 
         # minimum ecodrive answer delay in ms
-        self.set_rs485_delay(1)
+        # self.set_rs485_delay(1)
 
     # Communication functions
 
@@ -47,7 +48,7 @@ class EcoDrive:
         Keeps trying to connect to drive until it succeeds.
         Success is achieved when the drive responds correctly.
         """
-        with self._lock:
+        with EcoDrive._lock:
             while True:
                 time.sleep(1)
                 answer = self.tcp_read_parameter(f'BCD:{self.ADDRESS}', change_drive=False)
@@ -68,13 +69,15 @@ class EcoDrive:
         with EcoDrive._lock:
             if change_drive:
                 self.sock.send_data(f'BCD:{self.ADDRESS}\r')
-                self.sock.receive_data()  # TODO: verify the coherence of the answer
-
+                if f'{self.ADDRESS}' not in self.sock.receive_data():
+                    self.sock.clean_socket_buffer()
+                    return None
+                
             self.sock.send_data(f'{message}\r')
             data = self.sock.receive_data()
 
             if change_drive:
-                time.sleep(.01)  # makes significant difference
+                time.sleep(.02)  # makes significant difference
             return data.encode() if data else b''
 
     def read_parameter_data(self, parameter: str, change_drive: bool = True, treat_answer: bool = True) -> str:
@@ -108,8 +111,8 @@ class EcoDrive:
             pos = float(answer)
             return pos
 
-        except (ValueError, TypeError) as e:
-            raise e
+        except (ValueError, TypeError):
+            raise
 
     def read_encoder(self, change_drive: bool = True) -> float:
         try:
@@ -117,8 +120,8 @@ class EcoDrive:
             pos = float(answer)
             return pos
 
-        except (ValueError, TypeError) as e:
-            raise e
+        except (ValueError, TypeError):
+            raise
 
     def get_target_position(self, change_drive: bool = True) -> float:
         try:
@@ -126,14 +129,14 @@ class EcoDrive:
             pos = float(answer)
             return pos
 
-        except (ValueError, TypeError) as e:
-            raise e
+        except (ValueError, TypeError):
+            raise
 
     def set_target_position(self, target: float) -> bool:
         if not (self.LOWER_LIMIT <= target <= self.UPPER_LIMIT):
             raise ValueError('Target position out of limits.')
 
-        with self._lock:
+        with EcoDrive._lock:
             response = self.tcp_read_parameter('P-0-4006,7,W,>')
             if b'?' not in response:
                 logger.error(f'Error: {response}')
@@ -164,8 +167,8 @@ class EcoDrive:
             pos = float(answer)
             return pos
 
-        except (ValueError, TypeError) as e:
-            raise e
+        except (ValueError, TypeError):
+            raise
 
     # TODO: put limits outside the function
     def set_target_velocity(self, target: float) -> bool:
@@ -173,7 +176,7 @@ class EcoDrive:
             if not (30 <= target <= 500):
                 raise ValueError('Target velocity out of limits.')
 
-            with self._lock:
+            with EcoDrive._lock:
                 response = self.tcp_read_parameter('P-0-4007,7,W,>')
                 if b'?' not in response:
                     logger.error(f'Error: {response}')
@@ -255,7 +258,7 @@ class EcoDrive:
         return delay
 
     def clear_error(self):
-        with self._lock:
+        with EcoDrive._lock:
             self.tcp_read_parameter(f'BCD:{self.ADDRESS}', False)
             self.tcp_read_parameter("S-0-0099,3,r", False)
             self.tcp_read_parameter("S-0-0099,7,w,11", False)

@@ -26,6 +26,7 @@ class TCPClient:
         while not self.connected:
             try:
                 self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.sock.settimeout(5)
                 self.sock.connect((self.server_ip, self.server_port))
                 self.connected = True
                 logger.info(f"Connected to {self.server_ip}:{self.server_port}.")
@@ -51,7 +52,7 @@ class TCPClient:
         try:
             self.sock.sendall(data.encode())
         except BrokenPipeError:
-            logger.error("Connection lost. Retrying...")
+            logger.exception("Connection lost. Retrying...")
             self.connected = False
             self.connect()
             
@@ -80,11 +81,18 @@ class TCPClient:
             else:  
                 while True:
                     chunk = self.sock.recv(64)
-                    if not chunk or chunk.decode('utf-8', errors='ignore')[-1] in ('>', '?'):
-                        data += chunk.decode('utf-8', errors='ignore')
+                    
+                    if not chunk:
                         break
+                    
+                    chunk_str = chunk.decode('utf-8', errors='ignore')
+                    if chunk_str[-1] in ('>', '?'):
+                        data += chunk_str
+                        break
+                    
                     else:
-                        data += chunk.decode('utf-8', errors='ignore')
+                        data += chunk_str
+                        
                 return data
 
         except ConnectionResetError:
@@ -121,7 +129,7 @@ class TCPClient:
             None
         """
         # Set a timeout on the socket
-        self.sock.settimeout(1)  # Set the timeout period as needed
+        self.sock.settimeout(2)  # Set the timeout period as needed
 
         try:
             while True:
