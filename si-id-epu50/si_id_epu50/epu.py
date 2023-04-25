@@ -314,6 +314,11 @@ class Epu:
         self.phase = self.i_encoder_phase
         self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
         
+        self._read_drive_a()
+        self._read_drive_b()
+        self._read_drive_i()
+        self._read_drive_s()
+        
         logger.info('Variables initialized.')
 
     def _monitor_movement(self, start_event, drive, attribute, logger_message):
