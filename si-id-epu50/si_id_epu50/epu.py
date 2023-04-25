@@ -5,12 +5,11 @@ from threading import Thread
 import time
 import socket
 
-from . import constants as _cte
-from . import utils
-from .connection_handler import TCPClient
-from .ecodrive import EcoDrive
-from .utils import DriveCOMError
-
+import constants as _cte
+import utils
+from connection_handler import TCPClient
+from ecodrive import EcoDrive
+from utils import DriveCOMError
 
 logger = logging.getLogger(__name__)
 
@@ -359,7 +358,6 @@ class Epu:
         """
         Read sensor data and monitor the communications.
         """
-        print('monitoring')
         self._check_allowed_to_change()
         self._reconnect_io_serial()
 
