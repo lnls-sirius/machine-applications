@@ -11,7 +11,6 @@ from .connection_handler import TCPClient
 from .ecodrive import EcoDrive
 from .utils import DriveCOMError
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -324,13 +323,15 @@ class Epu:
 
     def _monitor_movement(self, start_event, drive, attribute, logger_message):
         while True:
-            print('waiting for start event')
             start_event.wait()
+            target = getattr(self, f'{attribute}_target')
             with self._epu_lock:
                 logger.info(f'{logger_message} started.')
                 drive.connect_to_drive()
                 start = time.monotonic()
                 update_count = 0
+                loop_count = 0
+                prev_value = getattr(self, attribute)
 
                 while start_event.is_set():
                     value = drive.read_encoder(False)
@@ -340,11 +341,21 @@ class Epu:
                         logger.info(f'{attribute}: {value}')
                         update_count += 1
 
-                    if abs(getattr(self, attribute) - getattr(self, f'{attribute}_target')) < .001:
-                        setattr(self, f'{attribute}_is_moving', False)
+                    if abs(getattr(self, attribute) - target) < .001:
                         start_event.clear()
+                        setattr(self, f'{attribute}_is_moving', False)
                         end = time.monotonic()
                         logger.info(f'{logger_message} finished. Update rate: {int(update_count / (end - start))}')
+                        
+                    if loop_count >= 10:
+                        if getattr(self, attribute) == prev_value:
+                            logger.warning(f'{logger_message} stopped because {attribute} has not changed after 10 loops.')
+                            start_event.clear()
+                            setattr(self, f'{attribute}_is_moving', False)
+                        loop_count = 0
+                        prev_value = getattr(self, attribute)
+                    else:
+                        loop_count += 1
                     
     def _monitor_gap_movement(self):
         self._monitor_movement(self.gap_start_event, self.a_drive, 'gap', 'Gap movement')
@@ -698,9 +709,9 @@ class Epu:
                                                       variableID=_cte.START_CH_AB,
                                                       value=val).encode()
                 
-                self.gap_start_event.set()
                 response = send_bsmp_message(bsmp_enable_message, self._gpio_socket)
                 logger.debug('IO server response to gap start request: {}'.format(response))
+                self.gap_start_event.set()
                 return bool(response)
 
     def gap_enable_and_release_halt(self, val: bool = True) -> None:
