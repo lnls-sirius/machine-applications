@@ -80,8 +80,17 @@ def get_logger(file_handler):
     lg.addHandler(file_handler)
     return lg
 
+class Namespace:
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+
+default_args = Namespace(pv_prefix='SI-10SB:ID-EPU50:',
+                         msg_port=5052, io_port=5050,
+                         beaglebone_addr='10.128.110.160')
+
 if __name__ == '__main__':
     logger.handlers.clear()
     fh = get_file_handler('testing.log')
     root = get_logger(fh)
-    run()
+    run(default_args)
