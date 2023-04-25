@@ -11,6 +11,7 @@ from .connection_handler import TCPClient
 from .ecodrive import EcoDrive
 from .utils import DriveCOMError
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -323,6 +324,7 @@ class Epu:
 
     def _monitor_movement(self, start_event, drive, attribute, logger_message):
         while True:
+            print('waiting for start event')
             start_event.wait()
             with self._epu_lock:
                 logger.info(f'{logger_message} started.')
@@ -330,9 +332,7 @@ class Epu:
                 start = time.monotonic()
                 update_count = 0
 
-                prev_value = getattr(self, attribute)
                 while start_event.is_set():
-                    loop_count = 0
                     value = drive.read_encoder(False)
                     if isinstance(value, float):
                         setattr(self, attribute, value)
@@ -345,12 +345,6 @@ class Epu:
                         start_event.clear()
                         end = time.monotonic()
                         logger.info(f'{logger_message} finished. Update rate: {int(update_count / (end - start))}')
-                    
-                    if loop_count % 100 == 0:
-                        if prev_value == getattr(self, attribute):
-                            start_event.clear()
-                            return
-                        prev_value = getattr(self, attribute)
                     
     def _monitor_gap_movement(self):
         self._monitor_movement(self.gap_start_event, self.a_drive, 'gap', 'Gap movement')
