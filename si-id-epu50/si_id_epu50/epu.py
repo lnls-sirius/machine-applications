@@ -702,17 +702,22 @@ class Epu:
     def gap_start(self, val: bool) -> bool:
         logger.debug('Gap start function called.')
         with self._epu_lock:
-            if self._gap_check_for_move():
-                logger.debug('Gap is ok to move.')
-                bsmp_enable_message = utils.bsmp_send(
-                                                      _cte.BSMP_WRITE,
-                                                      variableID=_cte.START_CH_AB,
-                                                      value=val).encode()
-                
-                response = send_bsmp_message(bsmp_enable_message, self._gpio_socket)
-                logger.debug('IO server response to gap start request: {}'.format(response))
-                self.gap_start_event.set()
-                return bool(response)
+            allow_move = self._gap_check_for_move()
+            
+        if allow_move:
+            logger.debug('Gap is ok to move.')
+            bsmp_enable_message = utils.bsmp_send(
+                                                    _cte.BSMP_WRITE,
+                                                    variableID=_cte.START_CH_AB,
+                                                    value=val).encode()
+            self.gap_start_event.set()
+            response = send_bsmp_message(bsmp_enable_message, self._gpio_socket)
+            logger.debug('IO server response to gap start request: {}'.format(response))
+            return bool(response)
+        
+        else:
+            logger.debug('Gap is not ok to move.')
+            return False
 
     def gap_enable_and_release_halt(self, val: bool = True) -> None:
         self.gap_set_halt(False)
