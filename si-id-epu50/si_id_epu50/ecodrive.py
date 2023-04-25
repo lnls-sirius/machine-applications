@@ -3,8 +3,8 @@ import logging
 import threading
 import time
 
-from connection_handler import TCPClient
-from utils import DriveCOMError
+from .connection_handler import TCPClient
+from .utils import DriveCOMError
 
 logger = logging.getLogger(__name__)
 

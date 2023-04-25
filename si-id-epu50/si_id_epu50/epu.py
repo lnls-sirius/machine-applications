@@ -5,11 +5,11 @@ from threading import Thread
 import time
 import socket
 
-import constants as _cte
-import utils
-from connection_handler import TCPClient
-from ecodrive import EcoDrive
-from utils import DriveCOMError
+from . import constants as _cte
+from . import utils
+from .connection_handler import TCPClient
+from .ecodrive import EcoDrive
+from .utils import DriveCOMError
 
 logger = logging.getLogger(__name__)
 

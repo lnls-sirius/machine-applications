@@ -5,7 +5,7 @@ from functools import wraps
 from threading import Thread
 import socket
 
-import constants as _cte
+from . import constants as _cte
 
 class DriveCOMError(Exception):
     "Raised when the drive does not respond as expected to a command."
