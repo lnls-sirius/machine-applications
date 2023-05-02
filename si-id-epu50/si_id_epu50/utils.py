@@ -4,11 +4,34 @@ import struct
 from functools import wraps
 from threading import Thread
 import socket
-import logging.handlers
 import logging
+import logging.handlers
 
 from . import constants as _cte
 
+class DriveCOMError(Exception):
+    "Raised when the drive does not respond as expected to a command."
+    pass
+
+def run_periodically_in_detached_thread(interval):
+    """
+    Decorator to run a function periodically in a separate thread detached from terminal.
+    """
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            # Define the target function to be executed in a thread
+            def target():
+                while True:
+                    func(*args, **kwargs)
+                    time.sleep(interval)
+
+            # Create a new daemon thread without a terminal
+            daemon_thread = Thread(target=target, daemon=True)
+            daemon_thread.start()
+
+        return wrapper
+
+    return decorator
 
 def schedule(interval):
     def decorator(func):
@@ -183,11 +206,6 @@ def set_phase_start(val):
             data = s.recv(16)
             if not data: break
             return data
-
-
-########################################## Logging ##########################################
-
-# https://www.toptal.com/python/in-depth-python-logging
 
 FORMATTER = logging.Formatter(
     "%(asctime)s | [%(levelname)s] %(name)s [%(module)s.%(funcName)s:%(lineno)d]: %(message)s")
