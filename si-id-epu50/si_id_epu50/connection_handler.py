@@ -1,24 +1,25 @@
-import logging
-logger = logging.getLogger(__name__)
+"""Connection handler module."""
+
 import socket
 import time
 import atexit
 import logging
-import socket
-import time
 
 # Create a logger instance
 logger = logging.getLogger(__name__)
 
-#TODO: Needs to be tested more thoroughly
+
+# TODO: Needs to be tested more thoroughly
 class TCPClient:
+    """TCP client."""
+
     def __init__(self, server_ip, server_port):
         self.server_ip = server_ip
         self.server_port = server_port
         self.sock = None
         self.connected = False
         self.last_data = None
-        
+
         atexit.register(self.close)
 
     def connect(self):
@@ -42,33 +43,33 @@ class TCPClient:
 
     def send_data(self, data):
         """Send data to the server."""
-        
+
         attempts = 0
-        
+
         if not self.connected:
             logger.error(f"Not connected to server. Call connect() method first.")
             return
-        
+
         try:
             self.sock.sendall(data.encode())
         except BrokenPipeError:
             logger.exception("Connection lost. Retrying...")
             self.connected = False
             self.connect()
-            
+
             # Wait for 5 seconds before retrying
             time.sleep(5)
             if attempts < 2:
                 self.send_data(data)
                 logger.info(data)
 
-    #TODO: Set timeout and treat it as an error
-    def receive_data(self, conn = 'serial'):
+    # TODO: Set timeout and treat it as an error
+    def receive_data(self, conn='serial'):
         """Receive data from the server."""
         if not self.connected:
             logger.error("Not connected to server. Call connect() method first.")
             return
-        
+
         try:
             data = ''
             if conn == 'io':
@@ -77,22 +78,22 @@ class TCPClient:
                     if not data:
                         break
                     return data
-            
-            else:  
+
+            else:
                 while True:
                     chunk = self.sock.recv(64)
-                    
+
                     if not chunk:
                         break
-                    
+
                     chunk_str = chunk.decode('utf-8', errors='ignore')
                     if chunk_str[-1] in ('>', '?'):
                         data += chunk_str
                         break
-                    
+
                     else:
                         data += chunk_str
-                        
+
                 return data
 
         except ConnectionResetError:

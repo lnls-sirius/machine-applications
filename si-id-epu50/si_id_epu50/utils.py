@@ -1,3 +1,5 @@
+"""Utilities module."""
+
 import sched
 import time
 import struct
@@ -9,9 +11,10 @@ import logging.handlers
 
 from . import constants as _cte
 
+
 class DriveCOMError(Exception):
     "Raised when the drive does not respond as expected to a command."
-    pass
+
 
 def run_periodically_in_detached_thread(interval):
     """
@@ -33,12 +36,14 @@ def run_periodically_in_detached_thread(interval):
 
     return decorator
 
+
 def schedule(interval):
     def decorator(func):
-        def periodic(scheduler, interval, action, actionargs=(), kwargs ={}):
+        def periodic(scheduler, interval, action, actionargs=(), kwargs={}):
             scheduler.enter(interval, 1, periodic,
                             (scheduler, interval, action, actionargs, kwargs))
             action(*actionargs, **kwargs)
+
         @wraps(func)
         def wrap(*args, **kwargs):
             scheduler = sched.scheduler()
@@ -79,7 +84,7 @@ def timer(func):
 def verify_checksum(list_values):
     counter = 0
     for data in list_values:
-        counter += data 
+        counter += data
     counter = (counter & 255)
     return(counter)
 
@@ -98,7 +103,7 @@ def include_checksum(list_values):
     return(list_values + [counter])
 
 
-def  bsmp_send(command_type, variableID = 0x00, value = 0x00, size = 1):
+def bsmp_send(command_type, variableID=0x00, value=0x00, size=1):
     send_message = [0x00, command_type] + [c for c in struct.pack("!h", size + 1)] + [variableID]
     if size == 1:
         send_message = send_message + [value]
@@ -115,97 +120,104 @@ def  bsmp_send(command_type, variableID = 0x00, value = 0x00, size = 1):
 def set_gap_en(val):
 
     bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_AB, value=val).encode()
-                        
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(.1)
         s.connect(('10.128.110.160', 5050))
         s.sendall(bsmp_enable_message)
-        time.sleep(.01) # magic number
+        time.sleep(.01)  # magic number
 
         while True:
             data = s.recv(16)
-            if not data: break
+            if not data:
+                break
             return data
 
 
 def set_phase_en(val):
-    
+
     bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.ENABLE_CH_SI, value=val).encode()
-                        
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(.1)
         s.connect(('10.128.110.160', 5050))
         s.sendall(bsmp_enable_message)
-        time.sleep(.01) # magic number
+        time.sleep(.01)  # magic number
 
         while True:
             data = s.recv(16)
-            if not data: break
+            if not data:
+                break
             return data
 
 
 def set_gap_start(val):
-    
+
     bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.START_CH_AB, value=val).encode()
-                        
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(.1)
         s.connect(('10.128.110.160', 5050))
         s.sendall(bsmp_enable_message)
-        time.sleep(.01) # magic number
+        time.sleep(.01)  # magic number
 
         while True:
             data = s.recv(16)
-            if not data: break
+            if not data:
+                break
             return data
 
 
 def set_gap_hal(val):
-    
+
     bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.HALT_CH_AB, value=val).encode()
-                        
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(.1)
         s.connect(('10.128.110.160', 5050))
         s.sendall(bsmp_enable_message)
-        time.sleep(.01) # magic number
+        time.sleep(.01)  # magic number
 
         while True:
             data = s.recv(16)
-            if not data: break
+            if not data:
+                break
             return data
 
 
 def get_phase_hal(val):
-    
+
     bsmp_enable_message = bsmp_send(_cte.BSMP_READ, variableID=_cte.HALT_CH_SI, value=val).encode()
-                        
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(.1)
         s.connect(('10.128.110.160', 5050))
         s.sendall(bsmp_enable_message)
-        time.sleep(.001) # magic number
+        time.sleep(.001)  # magic number
 
         while True:
             data = s.recv(16)
-            if not data: break
+            if not data:
+                break
             return data
 
 
 def set_phase_start(val):
-    
+
     bsmp_enable_message = bsmp_send(_cte.BSMP_WRITE, variableID=_cte.START_CH_SI, value=val).encode()
-                        
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(.1)
         s.connect(('10.128.110.160', 5050))
         s.sendall(bsmp_enable_message)
-        time.sleep(.01) # magic number
+        time.sleep(.01)  # magic number
 
         while True:
             data = s.recv(16)
-            if not data: break
+            if not data:
+                break
             return data
+
 
 FORMATTER = logging.Formatter(
     "%(asctime)s | [%(levelname)s] %(name)s [%(module)s.%(funcName)s:%(lineno)d]: %(message)s")
@@ -213,17 +225,19 @@ LOG_FILE = "si_id_epu50.log"
 
 
 def get_file_handler(file: str):
+    """Get file handler."""
     # logger.handlers.clear()
-    fh = logging.handlers.RotatingFileHandler(
+    fhr = logging.handlers.RotatingFileHandler(
         file, maxBytes=1000000, backupCount=10)
-    fh.setLevel(logging.INFO)
-    fh.setFormatter(logging.Formatter(
+    fhr.setLevel(logging.INFO)
+    fhr.setFormatter(logging.Formatter(
         "%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s"))
-    return fh
+    return fhr
 
 
 def get_logger(name, file_handler):
-    lg = logging.getLogger(name)
-    lg.setLevel(logging.INFO)
-    lg.addHandler(file_handler)
-    return lg
+    """Get logger."""
+    lgr = logging.getLogger(name)
+    lgr.setLevel(logging.INFO)
+    lgr.addHandler(file_handler)
+    return lgr

@@ -10,20 +10,20 @@ logger = logging.getLogger(__name__)
 
 
 class EcoDrive:
+    """EcoDrive."""
+
     _lock = threading.RLock()
 
-    def __init__(self, tcp_client: TCPClient, address: int, max_limit, min_limit,
-                 drive_name: str = 'EcoDrive') -> None:
-
+    def __init__(self, tcp_client: TCPClient, address: int, max_limit,
+                 min_limit, drive_name: str = 'EcoDrive') -> None:
         """Indramat EcoDrive 03 (controllers DKC**.3-040, -100, -200) class.
            Encapsulate ASCII messages into TCP datagrams.
            Makes available a subset of possible readings and
            writes from/to EcoDrive 03 controllers. It is required that on the
-           other side of communication, there is some software
-           unwrapping tcp messages and delivering it to a RS485 interface; on CNPEM
+           other side of communication, there is some software unwrapping
+           tcp messages and delivering it to a RS485 interface; on CNPEM
            this is typically done with a beagle bone black configured properly.
         """
-
         self.ADDRESS = address
         self.UPPER_LIMIT = max_limit
         self.LOWER_LIMIT = min_limit
@@ -72,7 +72,7 @@ class EcoDrive:
                 if f'{self.ADDRESS}' not in self.sock.receive_data():
                     self.sock.clean_socket_buffer()
                     return None
-                
+
             self.sock.send_data(f'{message}\r')
             data = self.sock.receive_data()
 
@@ -140,27 +140,27 @@ class EcoDrive:
             response = self.tcp_read_parameter('P-0-4006,7,W,>')
             if b'?' not in response:
                 logger.error(f'Error: {response}')
-                
+
                 raise DriveCOMError('Error setting target position.')
 
             response = self.tcp_read_parameter(f'{target}', change_drive=False)
             if str(target).encode() not in response:
                 logger.error('Target position not set. Intended target\
                             position not found in drive answer.')
-                
+
                 raise DriveCOMError('Error setting target position.')
 
             response = self.tcp_read_parameter('<', change_drive=False)
             if f'{self.ADDRESS}'.encode() not in response:
                 logger.error(
                     f'Parameter reading error; drive answer to last step of setting target position: {response}')
-                
+
                 raise DriveCOMError('Error setting target position.')
-            
+
             else:
                 logger.info(f'Drive {self.DRIVE_NAME} target position changed to {target} mm.')
                 return True
-                
+
     def get_max_velocity(self, change_drive: bool = True) -> float:
         try:
             answer = self.read_parameter_data('P-0-4007', change_drive=change_drive)

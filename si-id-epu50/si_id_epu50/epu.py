@@ -1,3 +1,5 @@
+"""EPU module."""
+
 import logging
 import logging.handlers
 import threading
@@ -79,9 +81,9 @@ def send_bsmp_message(bsmp_enable_message, tcp_client: TCPClient) -> bytes:
     """
     if not tcp_client.connected:
         tcp_client.connect()
-    
+
     tcp_client.send_data(bsmp_enable_message.decode())
-    return tcp_client.receive_data(conn = 'io')
+    return tcp_client.receive_data(conn='io')
 
 
 def set_digital_signal(val: bool, bsmp_enable_message: bytes, drive1: EcoDrive,
@@ -133,8 +135,8 @@ def set_digital_signal(val: bool, bsmp_enable_message: bytes, drive1: EcoDrive,
             return False
 
     else:
-        send_bsmp_message(bsmp_enable_message,tcp_client)
-        
+        send_bsmp_message(bsmp_enable_message, tcp_client)
+
     return True
 
 
@@ -194,7 +196,7 @@ class Epu:
 
     Returns:
         Epu object that can be used to communicate with the EPU.
-        
+
     Note:
         target velocity or position values None indicates that the drives have different values, need to be checked.
     """
@@ -313,12 +315,12 @@ class Epu:
         self.phase_target_velocity = self.i_target_velocity
         self.phase = self.i_encoder_phase
         self.phase_enable_and_halt_released = self.phase_enable and self.phase_halt_released
-        
+
         self._read_drive_a()
         self._read_drive_b()
         self._read_drive_i()
         self._read_drive_s()
-        
+
         logger.info('Variables initialized.')
 
     def _monitor_movement(self, start_event, drive, attribute, logger_message):
@@ -346,7 +348,7 @@ class Epu:
                         setattr(self, f'{attribute}_is_moving', False)
                         end = time.monotonic()
                         logger.info(f'{logger_message} finished. Update rate: {int(update_count / (end - start))}')
-                        
+
                     if loop_count >= 10:
                         if getattr(self, attribute) == prev_value:
                             logger.warning(f'{logger_message} stopped because {attribute} has not changed after 10 loops.')
@@ -356,7 +358,7 @@ class Epu:
                         prev_value = getattr(self, attribute)
                     else:
                         loop_count += 1
-                    
+
     def _monitor_gap_movement(self):
         self._monitor_movement(self.gap_start_event, self.a_drive, 'gap', 'Gap movement')
 
@@ -376,7 +378,7 @@ class Epu:
         self._read_drive_b()
         self._read_drive_i()
         self._read_drive_s()
-        
+
         # get gap and phase info from respective encoders and drives
         self.gap_target = self.a_target_position
         self.gap = self.a_encoder_gap
@@ -393,7 +395,7 @@ class Epu:
         self.gap_change_allowed = (self.a_target_position == self.b_target_position) and \
             (self.a_diag_code == self.b_diag_code == 'A211') and \
                 (self.a_target_velocity == self.b_target_velocity)
-        
+
         self.phase_change_allowed = (self.i_target_position == self.s_target_position) and \
             (self.i_diag_code == self.s_diag_code == 'A211') and \
                 (self.i_target_velocity == self.s_target_velocity)
@@ -405,7 +407,7 @@ class Epu:
         self.gpio_connected, self.rs485_connected = self._gpio_socket.connected, self._serial_socket.connected
         if not self.gpio_connected:
             self._gpio_socket.connect()
-            
+
         if not self.rs485_connected:
             self._serial_socket.connect()
 
@@ -423,7 +425,7 @@ class Epu:
                 drive_target_position = drive.get_target_position(False)
                 drive_diag_code = drive.get_diagnostic_code(False)
                 drive_target_velocity = drive.get_max_velocity(False)
-                
+
                 return (drive_resolver_gap, drive_encoder_gap, drive_target_position, drive_diag_code, drive_target_velocity)
 
             except (ValueError, TypeError) as e:
@@ -436,19 +438,19 @@ class Epu:
             self.a_resolver_gap, self.a_encoder_gap, self.a_target_position, self.a_diag_code, self.a_target_velocity = self._read_drive(self.a_drive)
         except (ValueError, TypeError):
             pass
-    
+
     def _read_drive_b(self):
         try:
             self.b_resolver_gap, self.b_encoder_gap, self.b_target_position, self.b_diag_code, self.b_target_velocity = self._read_drive(self.b_drive)
         except (ValueError, TypeError):
             pass
-    
+
     def _read_drive_i(self):
         try:
             self.i_encoder_phase, self.i_resolver_phase, self.i_target_position, self.i_diag_code, self.i_target_velocity = self._read_drive(self.i_drive)
         except (ValueError, TypeError):
             pass
-    
+
     def _read_drive_s(self):
         try:
             self.s_resolver_phase, self.s_encoder_phase, self.s_target_position, self.s_diag_code, self.s_target_velocity = self._read_drive(self.s_drive)
@@ -500,7 +502,7 @@ class Epu:
                 ('position', 'phase'): (self.i_drive.set_target_position, self.s_drive.set_target_position),
                 ('velocity', 'phase'): (self.i_drive.set_target_velocity, self.s_drive.set_target_velocity),
             }
-            
+
             func1, func2 = drive_funcs.get((movement_property, undulator_property))
             if func1 is not None:
                 try:
@@ -513,12 +515,12 @@ class Epu:
                         self._set_drive_values(value, func2)
                     except (DriveCOMError, ValueError):
                         logger.warning(
-                                f'Could not set {undulator_property} {movement_property} on drive B. \
-                                {undulator_property} {movement_property} drives may have different target values.')
+                            f'Could not set {undulator_property} {movement_property} on drive B. \
+                            {undulator_property} {movement_property} drives may have different target values.')
                         self.message = f'{undulator_property} {movement_property} drives may have different target values.'
                         self.gap_change_allowed = False
                         return False
-                
+
     def gap_set(self, target: float) -> bool:
         if _cte.minimum_gap <= target <= _cte.maximum_gap:
             self._set_undulator_property('position', target, 'gap')
@@ -670,14 +672,14 @@ class Epu:
                 return False
             else:
                 bsmp_enable_message = utils.bsmp_send(
-                                      _cte.BSMP_WRITE,
-                                      variableID=_cte.ENABLE_CH_AB,
-                                      value=val).encode()
-                
+                    _cte.BSMP_WRITE,
+                    variableID=_cte.ENABLE_CH_AB,
+                    value=val).encode()
+
                 return set_digital_signal(
-                        val, bsmp_enable_message,
-                        self.a_drive, self.b_drive, 'A012',
-                        self._gpio_socket)
+                    val, bsmp_enable_message,
+                    self.a_drive, self.b_drive, 'A012',
+                    self._gpio_socket)
 
     def gap_set_halt(self, val: bool):
         """
@@ -690,10 +692,10 @@ class Epu:
                 return False
             else:
                 bsmp_enable_message = utils.bsmp_send(
-                                                      _cte.BSMP_WRITE,
-                                                      variableID=_cte.HALT_CH_AB,
-                                                      value=val).encode()
-                
+                    _cte.BSMP_WRITE,
+                    variableID=_cte.HALT_CH_AB,
+                    value=val).encode()
+
                 return set_digital_signal(val, bsmp_enable_message, self.a_drive, self.b_drive, 'A010',
                                           self._gpio_socket)
 
@@ -703,18 +705,18 @@ class Epu:
         logger.debug('Gap start function called.')
         with self._epu_lock:
             allow_move = self._gap_check_for_move()
-            
+
         if allow_move:
             logger.debug('Gap is ok to move.')
             bsmp_enable_message = utils.bsmp_send(
-                                                    _cte.BSMP_WRITE,
-                                                    variableID=_cte.START_CH_AB,
-                                                    value=val).encode()
+                _cte.BSMP_WRITE,
+                variableID=_cte.START_CH_AB,
+                value=val).encode()
             self.gap_start_event.set()
             response = send_bsmp_message(bsmp_enable_message, self._gpio_socket)
             logger.debug('IO server response to gap start request: {}'.format(response))
             return bool(response)
-        
+
         else:
             logger.debug('Gap is not ok to move.')
             return False
@@ -732,23 +734,23 @@ class Epu:
     def gap_enable_status(self) -> bool:
         with self._epu_lock:
             try:
-                status = bool(read_digital_status(self._gpio_socket,
-                                            _cte.ENABLE_CH_AB)[-2])
-                
+                status = bool(read_digital_status(
+                    self._gpio_socket, _cte.ENABLE_CH_AB)[-2])
+
             except (IndexError, TypeError):
                 status = False
-            
+
             return status
 
     def gap_halt_status(self) -> bool:
         with self._epu_lock:
             try:
-                status = bool(read_digital_status(self._gpio_socket,
-                                            _cte.HALT_CH_AB)[-2])
-                
+                status = bool(read_digital_status(
+                    self._gpio_socket, _cte.HALT_CH_AB)[-2])
+
             except (IndexError, TypeError):
                 status = False
-            
+
             return status
 
     gap_halt_release_status = gap_halt_status
@@ -789,10 +791,10 @@ class Epu:
                 return False
             else:
                 bsmp_enable_message = utils.bsmp_send(
-                                      _cte.BSMP_WRITE,
-                                      variableID=_cte.ENABLE_CH_SI,
-                                      value=val).encode()
-                
+                    _cte.BSMP_WRITE,
+                    variableID=_cte.ENABLE_CH_SI,
+                    value=val).encode()
+
                 return set_digital_signal(val, bsmp_enable_message, self.i_drive, self.s_drive, 'A012',
                                           self._gpio_socket)
 
@@ -806,10 +808,10 @@ class Epu:
                 return False
             else:
                 bsmp_enable_message = utils.bsmp_send(
-                                                      _cte.BSMP_WRITE,
-                                                      variableID=_cte.HALT_CH_SI,
-                                                      value=val).encode()
-                
+                    _cte.BSMP_WRITE,
+                    variableID=_cte.HALT_CH_SI,
+                    value=val).encode()
+
                 return set_digital_signal(val, bsmp_enable_message, self.i_drive, self.s_drive, 'A010',
                                           self._gpio_socket)
 
@@ -821,10 +823,10 @@ class Epu:
             if self._phase_check_for_move():
                 logger.debug('Phase is ok to move.')
                 bsmp_enable_message = utils.bsmp_send(
-                                                      _cte.BSMP_WRITE,
-                                                      variableID=_cte.START_CH_SI,
-                                                      value=val).encode()
-                
+                    _cte.BSMP_WRITE,
+                    variableID=_cte.START_CH_SI,
+                    value=val).encode()
+
                 self.phase_start_event.set()
                 response = send_bsmp_message(bsmp_enable_message, self._gpio_socket)
                 logger.debug('IO server response to phase start request: {}'.format(response))
@@ -843,25 +845,25 @@ class Epu:
     def phase_enable_status(self):
         with self._epu_lock:
             try:
-                status = bool(read_digital_status(self._gpio_socket,
-                                            _cte.ENABLE_CH_SI)[-2])
-                
+                status = bool(read_digital_status(
+                    self._gpio_socket, _cte.ENABLE_CH_SI)[-2])
+
             except (IndexError, TypeError):
                 status = False
-            
+
             return status
-        
+
     def phase_halt_status(self):
         with self._epu_lock:
             try:
-                status = bool(read_digital_status(self._gpio_socket,
-                                            _cte.HALT_CH_SI)[-2])
-                
+                status = bool(read_digital_status(
+                    self._gpio_socket, _cte.HALT_CH_SI)[-2])
+
             except (IndexError, TypeError):
                 status = False
-                
+
             return status
-    
+
     phase_halt_release_status = phase_halt_status
 
     def phase_stop(self):
@@ -873,7 +875,7 @@ class Epu:
             if not timeout_count:
                 break
         timeout_count = 10
-        
+
         while self.phase_enable_status():
             self.phase_set_enable(False)
             time.sleep(.1)
@@ -889,9 +891,9 @@ class Epu:
             response = send_bsmp_message(bsmp_enable_message,
                                          self._gpio_socket)
             return True if response else False
-    
+
     # GPIO functions for both gap and phase
-    
+
     def turn_on_all(self):
         self.gap_turn_on()
         time.sleep(1)
@@ -932,7 +934,7 @@ def cycling_test():
             while my_epu.gap_is_moving:
                 time.sleep(1)
             f.write(str(my_epu.gap))
-            
+
             set_and_start_gap(my_epu, 250)
             time.sleep(.1)
             while my_epu.gap_is_moving:

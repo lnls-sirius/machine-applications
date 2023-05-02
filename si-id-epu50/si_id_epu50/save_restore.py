@@ -1,4 +1,4 @@
-"""."""
+"""Save restore module."""
 
 import re
 import os as _os
@@ -41,22 +41,22 @@ def restore_pvs(
     save_file = ''
     for f_name in glob.glob(save_location+'/'+filename+'*'+'.sav*'):
         canditate_file = _basename(f_name)
-        #search_res = re.search(filename+'__(.*)__*', canditate_file)
-        #timestamp_str = search_res.group(1)
+        # search_res = re.search(filename+'__(.*)__*', canditate_file)
+        # timestamp_str = search_res.group(1)
         timestamp_str = canditate_file.split('__')[1]
         timestamp = _date.strptime(timestamp_str, _TIMESTAMP_FORMAT)
         if timestamp > max_timestamp:
             save_file = f_name
     if save_file != '':
-        with open(save_file, 'r') as f:
-            lines = f.readlines()
-            for l in lines:
+        with open(save_file, 'r') as file:
+            lines = file.readlines()
+            for lin in lines:
                 try:
-                    if l == '':
+                    if lin == '':
                         continue
-                    if l[0] == '#':
+                    if lin[0] == '#':
                         continue
-                    l_str = l.replace('\n','').replace('\r','')
+                    l_str = lin.replace('\n', '').replace('\r', '')
                     l_data = l_str.split(' ')
                     pv_name = l_data[0]
                     pv_val = l_data[1]
@@ -107,14 +107,14 @@ def save_monitor(
 
     # read request file
     try:
-        with open(req_file, 'r') as f:
-            lines = f.readlines()
-            for l in lines:
-                if l == '':
+        with open(req_file, 'r') as file:
+            lines = file.readlines()
+            for lin in lines:
+                if lin == '':
                     continue
-                if l[0] == '#':
+                if lin[0] == '#':
                     continue
-                pvname = l.replace('\n','').replace('\r','').replace(' ','')
+                pvname = lin.replace('\n', '').replace('\r', '').replace(' ', '')
                 if bool(re.fullmatch(r'[a-zA-Z0-9:_-]*', pvname)):
                     pv_list.append(pvname)
                 else:
@@ -126,11 +126,11 @@ def save_monitor(
     # create save file
     try:
         _os.makedirs(save_location, exist_ok=True)
-        with open(save_file, 'w+') as f:
+        with open(save_file, 'w+') as file:
             for pvname in pv_list:
                 try:
                     pv_val = _caget(pv_prefix + pvname, as_string=True)
-                    f.write(pvname + ' ' + pv_val + '\n')
+                    file.write(pvname + ' ' + pv_val + '\n')
                 except Exception:
                     strf = 'Save-restore: Failed to save PV {}'
                     print(strf.format(pv_prefix + pvname))
@@ -147,7 +147,7 @@ def save_monitor(
                 shutil.copyfile(save_file, backup_file)
             # save PVs from list
             all_pvs_updated = True
-            with open(save_file, 'w+') as f:
+            with open(save_file, 'w+') as file:
                 for pvname in pv_list:
                     try:
                         pv_val = _caget(
@@ -159,7 +159,7 @@ def save_monitor(
                         print(strf.format(pv_prefix+pvname))
                     else:
                         # write pv value to file
-                        f.write(pvname + ' ' + pv_val + '\n')
+                        file.write(pvname + ' ' + pv_val + '\n')
             # erase backup file if save file
             # is fully up-to-date
             if _exists(backup_file) and all_pvs_updated:
