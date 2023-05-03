@@ -100,7 +100,7 @@ class TCPClient:
             logger.error("Connection lost. Retrying...")
             self.connected = False
             self.connect()
-            return self.receive_data('utf-8', errors='ignore')
+            return self.receive_data('utf-8')
 
         except Exception as e:
             logger.debug("Error receiving data.")
