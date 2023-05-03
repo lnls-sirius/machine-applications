@@ -9,7 +9,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-# TODO: Needs to be tested more thoroughly
 class TCPClient:
     """TCP client."""
 
@@ -30,13 +29,20 @@ class TCPClient:
                 self.sock.settimeout(5)
                 self.sock.connect((self.server_ip, self.server_port))
                 self.connected = True
-                logger.info(f"Connected to {self.server_ip}:{self.server_port}.")
+                logger.info(
+                    "Connected to %s:%s.", self.server_ip, self.server_port)
             except ConnectionRefusedError:
-                logger.error(f"Connection with {self.server_ip}:{self.server_port} refused. Retrying in 5 seconds...")
+                logger.error(
+                    "Connection with %s:%s \
+                        refused. Retrying in 5 seconds...", self.server_ip, self.server_port
+                )
                 time.sleep(5)
                 continue
             except OSError as e:
-                logger.error(f"Error connecting to {self.server_ip}:{self.server_port}. Retrying in 5 seconds...")
+                logger.error(
+                    "Error connecting to %s:%s. \
+                        Retrying in 5 seconds...", self.server_ip, self.server_port
+                )
                 logger.error(e)
                 time.sleep(5)
                 continue
@@ -47,7 +53,8 @@ class TCPClient:
         attempts = 0
 
         if not self.connected:
-            logger.error(f"Not connected to server. Call connect() method first.")
+            logger.error(
+                "Not connected to server. Call connect() method first.")
             return
 
         try:
@@ -64,15 +71,16 @@ class TCPClient:
                 logger.info(data)
 
     # TODO: Set timeout and treat it as an error
-    def receive_data(self, conn='serial'):
+    def receive_data(self, conn="serial"):
         """Receive data from the server."""
         if not self.connected:
-            logger.error("Not connected to server. Call connect() method first.")
+            logger.error(
+                "Not connected to server. Call connect() method first.")
             return
 
         try:
-            data = ''
-            if conn == 'io':
+            data = ""
+            if conn == "io":
                 while True:
                     data = self.sock.recv(16)
                     if not data:
@@ -86,8 +94,8 @@ class TCPClient:
                     if not chunk:
                         break
 
-                    chunk_str = chunk.decode('utf-8', errors='ignore')
-                    if chunk_str[-1] in ('>', '?'):
+                    chunk_str = chunk.decode("utf-8", errors="ignore")
+                    if chunk_str[-1] in (">", "?"):
                         data += chunk_str
                         break
 
@@ -100,7 +108,7 @@ class TCPClient:
             logger.error("Connection lost. Retrying...")
             self.connected = False
             self.connect()
-            return self.receive_data('utf-8')
+            return self.receive_data("utf-8")
 
         except Exception as e:
             logger.debug("Error receiving data.")
