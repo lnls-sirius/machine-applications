@@ -90,6 +90,11 @@ with open(fname, "r") as f:
 
 default_unknown_diag_msg = "? Unknown diagnostic code"
 
+######### Key diagnostic codes meaning ##########
+
+operational_diag_codes = ['A211', 'A012']
+powered_on_diag_codes = ['A012', 'A010', 'A211']
+
 ################## Autosave #####################
 autosave_update_rate = 10.0
 autosave_num_backup_files = 10

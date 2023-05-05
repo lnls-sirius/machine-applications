@@ -412,10 +412,10 @@ class EPUSupport(pcaspy.Driver):
                     and EPUSupport.isValid(driver.i_diag_code)
             ):
                 not_ok = not (
-                    driver.a_diag_code == 'A211'
-                    and driver.b_diag_code == 'A211'
-                    and driver.s_diag_code == 'A211'
-                    and driver.i_diag_code == 'A211'
+                    driver.a_diag_code in _cte.operational_diag_codes
+                    and driver.b_diag_code in _cte.operational_diag_codes
+                    and driver.s_diag_code in _cte.operational_diag_codes
+                    and driver.i_diag_code in _cte.operational_diag_codes
                     )
             else:
                 not_ok = True
@@ -427,16 +427,8 @@ class EPUSupport(pcaspy.Driver):
             if (
                     EPUSupport.isValid(driver.a_diag_code)
                     and EPUSupport.isValid(driver.b_diag_code)
-                    and (
-                        driver.a_diag_code == 'A012'
-                        or driver.a_diag_code == 'A010'
-                        or driver.a_diag_code == 'A211'
-                        )
-                    and (
-                        driver.b_diag_code == 'A012'
-                        or driver.b_diag_code == 'A010'
-                        or driver.b_diag_code == 'A211'
-                        )
+                    and driver.a_diag_code in _cte.powered_on_diag_codes
+                    and driver.b_diag_code in _cte.powered_on_diag_codes
             ):
                 self.setParam(
                     _db.pv_pwr_ab_mon,
@@ -450,16 +442,8 @@ class EPUSupport(pcaspy.Driver):
             if (
                     EPUSupport.isValid(driver.s_diag_code)
                     and EPUSupport.isValid(driver.i_diag_code)
-                    and (
-                        driver.s_diag_code == 'A012'
-                        or driver.s_diag_code == 'A010'
-                        or driver.s_diag_code == 'A211'
-                        )
-                    and (
-                        driver.i_diag_code == 'A012'
-                        or driver.i_diag_code == 'A010'
-                        or driver.i_diag_code == 'A211'
-                        )
+                    and driver.s_diag_code in _cte.powered_on_diag_codes
+                    and driver.i_diag_code in _cte.powered_on_diag_codes
             ):
                 self.setParam(
                     _db.pv_pwr_si_mon,
