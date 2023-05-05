@@ -11,7 +11,7 @@ from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 
 from siriuspy.fofb.main import App as _App
 
-INTERVAL = 1/8  # [s]
+INTERVAL = 1/20  # [s]
 STOP_EVENT = False
 
 
