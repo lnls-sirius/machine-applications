@@ -982,6 +982,10 @@ class Epu:
             self.phase_set_enable(val)
             time.sleep(0.1)
             self.phase_set_halt(val)
+        else:
+            self.phase_set_enable(val)
+            time.sleep(0.1)
+            self.phase_set_halt(val)
 
     def phase_enable_status(self):
         with self._epu_lock:
