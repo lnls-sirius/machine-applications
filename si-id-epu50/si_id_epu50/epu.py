@@ -346,7 +346,7 @@ class Epu:
 
                     if abs(getattr(self, attribute) - target) < .001:
                         try:
-                            pos_reached = get_target_position_reached()
+                            pos_reached = drive.get_target_position_reached()
                         except Exception as e:
                             logger.debug(f'Falied to read target position reached bit.')
                             logger.debug(e)
@@ -363,7 +363,7 @@ class Epu:
                     if loop_count >= 10:
                         if getattr(self, attribute) == prev_value:
                             try:
-                                pos_reached = get_target_position_reached()
+                                pos_reached = drive.get_target_position_reached()
                             except Exception as e:
                                 logger.debug(f'Falied to read target position reached bit.')
                                 logger.debug(e)
