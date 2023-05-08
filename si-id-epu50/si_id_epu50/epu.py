@@ -466,14 +466,6 @@ class Epu:
             self._gpio_socket.connected and self._serial_socket.connected
         )
 
-    def _update_gap_allow(self):
-        try:
-            self.a_diag_code = self.a_drive.get_diagnostic_code()
-            self.b_diag_code = self.b_drive.get_diagnostic_code()
-            self.allowed_to_change_gap = self.a_diag_code == self.b_diag_code == "A211"
-        except (IndexError, TypeError):
-            logger.debug("_update_gap_allow")
-
     def _read_drive(self, drive):
         """
         Read the sensor data from a drive.
@@ -866,7 +858,6 @@ class Epu:
             self.gap_set_enable(True)
             time.sleep(0.1)
             self.gap_set_halt(True)
-        self._update_gap_allow()
 
     def gap_enable_status(self) -> bool:
         with self._epu_lock:
