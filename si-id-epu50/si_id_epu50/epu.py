@@ -973,14 +973,15 @@ class Epu:
                 return bool(response)
 
     def phase_enable_and_release_halt(self, val) -> None:
-        self.phase_set_halt(False)
-        time.sleep(0.1)
-        self.phase_set_enable(False)
-        time.sleep(0.1)
+        """_summary_
+
+        Args:
+            val (_type_): _description_
+        """
         if val:
-            self.phase_set_enable(True)
+            self.phase_set_enable(val)
             time.sleep(0.1)
-            self.phase_set_halt(True)
+            self.phase_set_halt(val)
 
     def phase_enable_status(self):
         with self._epu_lock:
