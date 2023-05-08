@@ -443,17 +443,9 @@ class Epu:
         """
         Check if it is allowed to change the gap and phase.
         """
-        self.gap_change_allowed = (
-            (self.a_target_position == self.b_target_position)
-            and (self.a_diag_code == self.b_diag_code == "A211")
-            and (self.a_target_velocity == self.b_target_velocity)
-        )
+        self.gap_change_allowed = self.a_diag_code == self.b_diag_code == "A211"
 
-        self.phase_change_allowed = (
-            (self.i_target_position == self.s_target_position)
-            and (self.i_diag_code == self.s_diag_code == "A211")
-            and (self.i_target_velocity == self.s_target_velocity)
-        )
+        self.phase_change_allowed = self.i_diag_code == self.s_diag_code == "A211"
 
     def _reconnect_io_serial(self):
         """
@@ -866,6 +858,7 @@ class Epu:
             self.gap_set_enable(True)
             time.sleep(0.1)
             self.gap_set_halt(True)
+        self.gap_change_allowed = self.a_diag_code == self.b_diag_code == "A211"
 
     def gap_enable_status(self) -> bool:
         with self._epu_lock:
