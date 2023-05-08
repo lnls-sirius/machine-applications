@@ -405,24 +405,33 @@ class EPUSupport(pcaspy.Driver):
                         )
                     )
             # check overall fault state
+            ## gap
             if (
                     EPUSupport.isValid(driver.a_diag_code)
                     and EPUSupport.isValid(driver.b_diag_code)
-                    and EPUSupport.isValid(driver.s_diag_code)
-                    and EPUSupport.isValid(driver.i_diag_code)
             ):
-                not_ok = not (
+                gap_not_ok = not (
                     driver.a_diag_code in _cte.operational_diag_codes
                     and driver.b_diag_code in _cte.operational_diag_codes
-                    and driver.s_diag_code in _cte.operational_diag_codes
+                    )
+            else:
+                gap_not_ok = True
+            self.setParam(_db.pv_gap_status_mon, gap_not_ok)
+            ## phase
+            if (
+                    EPUSupport.isValid(driver.s_diag_code)
+                    and EPUSupport.isValid(driver.i_diag_code)
+            ):
+                phase_not_ok = not (
+                    driver.s_diag_code in _cte.operational_diag_codes
                     and driver.i_diag_code in _cte.operational_diag_codes
                     )
             else:
-                not_ok = True
-            self.setParam(
-                _db.pv_status_mon,
-                not_ok
-                )
+                phase_not_ok = True
+            self.setParam(_db.pv_status_mon, phase_not_ok)
+            ## both
+            not_ok = gap_not_ok or phase_not_ok
+            self.setParam(_db.pv_status_mon, not_ok)
             # check if drives are powered on
             if (
                     EPUSupport.isValid(driver.a_diag_code)
