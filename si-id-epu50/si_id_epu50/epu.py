@@ -34,7 +34,8 @@ def get_setpoint(drive_1, drive_2) -> float:
     """
     Returns the target position of the drives of a given operation.
     If the target positions are equal, return the target position for drive A.
-    Otherwise, set the target position of drive B to the target position of drive A and return the new target position.
+    Otherwise, set the target position of drive B to the target position of
+    drive A and return the new target position.
     """
     try:
         target_pos_drive_1 = drive_1.get_target_position()
@@ -47,13 +48,13 @@ def get_setpoint(drive_1, drive_2) -> float:
             logger.warning("Target positions of drives A and B do not match.")
             return drive_2.set_target_position(target_pos_drive_1)
 
-    except ValueError:
+    except ValueError as exc:
         logger.exception("Drive did not respond as expected.")
-        raise RuntimeError("Failed to get/set setpoint for operation.")
+        raise RuntimeError("Failed to get/set setpoint for operation.") from exc
 
-    except TypeError:
+    except TypeError as exc:
         logger.exception("Drive did not respond as expected.")
-        raise RuntimeError("Failed to get/set setpoint for operation.")
+        raise RuntimeError("Failed to get/set setpoint for operation.") from exc
 
 
 def send_bsmp_message(bsmp_enable_message, tcp_client: TCPClient) -> bytes:
@@ -80,7 +81,8 @@ def send_bsmp_message(bsmp_enable_message, tcp_client: TCPClient) -> bytes:
         OSError: If a general connection error occurs.
 
     Note:
-        The function uses a 16-byte buffer to receive response data from the host. If the response data is longer
+        The function uses a 16-byte buffer to receive response data from the host.
+        If the response data is longer
         than 16 bytes, only the first 16 bytes will be returned.
     """
     if not tcp_client.connected:
@@ -101,10 +103,10 @@ def set_digital_signal(
     """
     Sets a digital signal by sending a BSMP message to the specified host and port.
 
-    This function sets a digital signal by sending a BSMP message to the specified host and port. It checks
-    the diagnostic codes of two EcoDrive objects (drive1 and drive2) against a given right_diagnostic_code, and if
-    they match, the BSMP message is sent. The response from the host is logged and the function returns True if the
-    message is sent successfully, otherwise False.
+    This function sets a digital signal by sending a BSMP message to the specified host and port.
+    It checks the diagnostic codes of two EcoDrive objects (drive1 and drive2) against a given
+    right_diagnostic_code, and if they match, the BSMP message is sent. The response from the host
+    is logged and the function returns True if the message is sent successfully, otherwise False.
 
     Args:
         val (bool): The value of the digital signal to set (True or False).
@@ -119,9 +121,10 @@ def set_digital_signal(
         bool: True if the BSMP message is sent successfully, otherwise False.
 
     Note:
-        - If val is True, the diagnostic codes of drive1 and drive2 must both match the right_diagnostic_code in
-          order for the BSMP message to be sent.
-        - If val is False, the BSMP message will be sent unconditionally without checking diagnostic codes.
+        - If val is True, the diagnostic codes of drive1 and drive2 must both match the
+        right_diagnostic_code in order for the BSMP message to be sent.
+        - If val is False, the BSMP message will be sent unconditionally without checking
+        diagnostic codes.
         - If an error occurs during communication, the function returns False.
 
     """
@@ -153,11 +156,11 @@ def set_digital_signal(
 def gpio_server_connection_test(addr, port) -> bool:
     """
     Tests the connection to a GPIO server by attempting to create a TCP connection.
-
-    This function attempts to create a TCP connection to a GPIO server with the specified address (hostname or IP
-    address) and port number. It uses a timeout of 5 seconds for the connection attempt. If the connection is
-    successful, a log message is generated, the connection is closed, and True is returned. If the connection fails,
-    an appropriate error message is logged and False is returned.
+    This function attempts to create a TCP connection to a GPIO server with the
+    specified address (hostname or IP     address) and port number. It uses a timeout
+    of 5 seconds for the connection attempt. If the connection is successful, a log
+    message is generated, the connection is closed, and True is returned. If the connection
+    fails, an appropriate error message is logged and False is returned.
 
     Args:
         addr (str): The address (hostname or IP address) of the GPIO server.
@@ -168,26 +171,27 @@ def gpio_server_connection_test(addr, port) -> bool:
 
     Note:
         - The timeout for the connection attempt is set to 5 seconds.
-        - If an error occurs during the connection attempt, the function logs an error message and returns False.
+        - If an error occurs during the connection attempt, the function logs an
+        error message and returns False.
 
     """
     try:
         with socket.create_connection((addr, port), timeout=5) as s:
-            logger.info(f"Connected to GPIO server.")
+            logger.info("Connected to GPIO server.")
             s.close()
         return True
 
     except socket.timeout:
         logger.exception("Connection timed out while trying to connect to GPIO server.")
 
-    except ConnectionRefusedError as e:
-        logger.exception(f"Connection refused by GPIO server: {e}")
+    except ConnectionRefusedError:
+        logger.exception("Connection refused by GPIO server.")
 
-    except socket.gaierror as e:
-        logger.exception(f"Failed to resolve GPIO server address: {e}")
+    except socket.gaierror:
+        logger.exception("Failed to resolve GPIO server address.")
 
-    except OSError as e:
-        logger.exception(f"Error while trying to connect to GPIO server: {e}")
+    except OSError:
+        logger.exception("Error while trying to connect to GPIO server.")
 
     return False
 
@@ -201,16 +205,18 @@ def read_digital_status(tcp_client, bsmp_id: int) -> bytes:
 
 class Epu:
     """
-    Creates a singleton instance of the EPU class. This class is used to communicate with the EPU. Four EcoDrive
-    objects are created, one for each drive in the EPU. The EPU class also creates a TCPClient object, that is passed
-    to the EcoDrive objects, to communicate with beaglebone RS485 server. The server receives the messages,
-    converts them to RS485 and sends them to the drives. This docstring is being written yet.
+    Creates a singleton instance of the EPU class. This class is used to communicate with the EPU.
+    Four EcoDrive objects are created, one for each drive in the EPU. The EPU class also creates a
+    TCPClient object, that is passed to the EcoDrive objects, to communicate with beaglebone RS485
+    server. The server receives the messages, converts them to RS485 and sends them to the drives.
+    This docstring is being written yet.
 
     Returns:
         Epu object that can be used to communicate with the EPU.
 
     Note:
-        target velocity or position values None indicates that the drives have different values, need to be checked.
+        target velocity or position values None indicates that the drives have different values,
+        need to be checked.
     """
 
     _instance = None
@@ -294,7 +300,8 @@ class Epu:
         """
         Initializes variables that will be used in the monitoring threads.
         The several attempts are necessary because the drives may not respond correctly.
-        The initialization is separated in several while loops to avoid initializing of all variables if one fails.
+        The initialization is separated in several while loops to avoid initializing of all
+        variables if one fails.
         """
         logger.info("Initializing variables.")
         drives = [self.a_drive, self.b_drive, self.i_drive, self.s_drive]
@@ -360,7 +367,7 @@ class Epu:
             start_event.wait()
             target = getattr(self, f"{attribute}_target")
             with self._epu_lock:
-                logger.info(f"{logger_message} started.")
+                logger.info("%s started.", logger_message)
                 drive.connect_to_drive()
                 start = time.monotonic()
                 update_count = 0
@@ -372,7 +379,7 @@ class Epu:
                     if isinstance(value, float):
                         setattr(self, attribute, value)
                         self.callback_update()
-                        logger.info(f"{attribute}: {value}")
+                        logger.info("%s: %s", attribute, value)
                         update_count += 1
 
                     if abs(getattr(self, attribute) - target) < 0.001:
@@ -380,7 +387,9 @@ class Epu:
                         setattr(self, f"{attribute}_is_moving", False)
                         end = time.monotonic()
                         logger.info(
-                            f"{logger_message} finished. Update rate: {int(update_count / (end - start))}"
+                            "%s finished. Update rate: %s",
+                            logger_message,
+                            int(update_count / (end - start)),
                         )
 
                     if loop_count >= 10:
@@ -857,6 +866,7 @@ class Epu:
             self.gap_set_enable(True)
             time.sleep(0.1)
             self.gap_set_halt(True)
+        self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
 
     def gap_enable_status(self) -> bool:
         with self._epu_lock:
