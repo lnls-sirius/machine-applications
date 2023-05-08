@@ -92,7 +92,7 @@ default_unknown_diag_msg = "? Unknown diagnostic code"
 
 ######### Key diagnostic codes meaning ##########
 
-operational_diag_codes = ['A211', 'A012']
+operational_diag_codes = ['A211']
 powered_on_diag_codes = ['A012', 'A010', 'A211']
 
 ################## Autosave #####################
