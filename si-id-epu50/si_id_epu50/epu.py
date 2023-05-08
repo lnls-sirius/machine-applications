@@ -850,14 +850,14 @@ class Epu:
             return False
 
     def gap_enable_and_release_halt(self, val: bool = True) -> None:
-        self.gap_set_halt(False)
+        """_summary_
+
+        Args:
+            val (bool, optional): _description_. Defaults to True.
+        """
+        self.gap_set_enable(val)
         time.sleep(0.1)
-        self.gap_set_enable(False)
-        time.sleep(0.1)
-        if val:
-            self.gap_set_enable(True)
-            time.sleep(0.1)
-            self.gap_set_halt(True)
+        self.gap_set_halt(val)
 
     def gap_enable_status(self) -> bool:
         with self._epu_lock:
