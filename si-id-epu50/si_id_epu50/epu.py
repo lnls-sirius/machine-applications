@@ -866,9 +866,7 @@ class Epu:
             self.gap_set_enable(True)
             time.sleep(0.1)
             self.gap_set_halt(True)
-        self.gap_enable = self.gap_enable_status()
-        self.gap_halt_released = self.gap_halt_release_status()
-        self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
+        self.gap_change_allowed = self.allowed_to_change_gap()
 
     def gap_enable_status(self) -> bool:
         with self._epu_lock:
