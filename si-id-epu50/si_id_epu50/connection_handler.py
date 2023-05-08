@@ -29,19 +29,23 @@ class TCPClient:
                 self.sock.settimeout(5)
                 self.sock.connect((self.server_ip, self.server_port))
                 self.connected = True
-                logger.info(
-                    "Connected to %s:%s.", self.server_ip, self.server_port)
+                logger.info("Connected to %s:%s.", self.server_ip,
+                            self.server_port)
             except ConnectionRefusedError:
                 logger.error(
                     "Connection with %s:%s \
-                        refused. Retrying in 5 seconds...", self.server_ip, self.server_port
+                        refused. Retrying in 5 seconds...",
+                    self.server_ip,
+                    self.server_port,
                 )
                 time.sleep(5)
                 continue
             except OSError as e:
                 logger.error(
                     "Error connecting to %s:%s. \
-                        Retrying in 5 seconds...", self.server_ip, self.server_port
+                        Retrying in 5 seconds...",
+                    self.server_ip,
+                    self.server_port,
                 )
                 logger.error(e)
                 time.sleep(5)
@@ -137,22 +141,16 @@ class TCPClient:
         Returns:
             None
         """
-        # Set a timeout on the socket
-        self.sock.settimeout(2)  # Set the timeout period as needed
+        self.sock.settimeout(2)
 
         try:
             while True:
-                # Attempt to receive data from the socket
-                data = self.sock.recv(4096)  # Adjust the buffer size as needed
-
-                # If no data is received, break out of the loop
+                data = self.sock.recv(4096)
                 if not data:
                     break
 
         except socket.timeout:
-            # Timeout occurred, indicating that the buffer is empty
             pass
 
         finally:
-            # Reset the timeout on the socket to None
             self.sock.settimeout(None)
