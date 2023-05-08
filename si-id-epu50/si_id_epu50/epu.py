@@ -326,6 +326,7 @@ class Epu:
     def _monitor_movement(self, start_event, drive, attribute, logger_message):
         while True:
             start_event.wait()
+            setattr(self, f'{attribute}_is_moving', True)
             target = getattr(self, f'{attribute}_target')
             with self._epu_lock:
                 logger.info(f'{logger_message} started.')
@@ -344,16 +345,36 @@ class Epu:
                         update_count += 1
 
                     if abs(getattr(self, attribute) - target) < .001:
-                        start_event.clear()
-                        setattr(self, f'{attribute}_is_moving', False)
-                        end = time.monotonic()
-                        logger.info(f'{logger_message} finished. Update rate: {int(update_count / (end - start))}')
+                        try:
+                            pos_reached = get_target_position_reached()
+                        except Exception as e:
+                            logger.debug(f'Falied to read target position reached bit.')
+                            logger.debug(e)
+                        if True:
+                            if not pos_reached:
+                                logger.debug(f'Position reached status is FALSE.')
+                            else:
+                                logger.debug(f'Position reached status is TRUE.')
+                            start_event.clear()
+                            setattr(self, f'{attribute}_is_moving', False)
+                            end = time.monotonic()
+                            logger.info(f'{logger_message} finished. Update rate: {int(update_count / (end - start))}')
 
                     if loop_count >= 10:
                         if getattr(self, attribute) == prev_value:
-                            logger.warning(f'{logger_message} stopped because {attribute} has not changed after 10 loops.')
-                            start_event.clear()
-                            setattr(self, f'{attribute}_is_moving', False)
+                            try:
+                                pos_reached = get_target_position_reached()
+                            except Exception as e:
+                                logger.debug(f'Falied to read target position reached bit.')
+                                logger.debug(e)
+                            if True:
+                                if not pos_reached:
+                                    logger.debug(f'Position reached status is FALSE.')
+                                else:
+                                    logger.debug(f'Position reached status is TRUE.')
+                                logger.warning(f'{logger_message} stopped because {attribute} has not changed after 10 loops.')
+                                start_event.clear()
+                                setattr(self, f'{attribute}_is_moving', False)
                         loop_count = 0
                         prev_value = getattr(self, attribute)
                     else:
