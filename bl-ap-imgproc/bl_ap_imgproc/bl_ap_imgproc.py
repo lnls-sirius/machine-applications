@@ -10,7 +10,7 @@ from pcaspy.tools import ServerThread
 
 from siriuspy import util as _util
 
-from .const import Constants
+from .csdev import Constants
 from .main import App
 
 
@@ -89,7 +89,7 @@ class _Driver(_pcaspy.Driver):
             return True
 
 
-def defineAbortFunction():
+def define_abort_function():
     """."""
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
@@ -151,7 +151,7 @@ def run(devname, debug=False):
     # initial configurations
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
-    defineAbortFunction()
+    define_abort_function()
 
     # application constants with database
     const = Constants(devname)
