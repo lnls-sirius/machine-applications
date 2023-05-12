@@ -127,11 +127,11 @@ class Constants(_csdev.Const):
                 },
                 'ImgROI' + axis + 'UpdateWithFWHMFactor-SP': {
                     'type': 'float', 'value': 2.0, 'unit': 'fwhm_factor',
-                    'prec': 3, 'lolim': 0
+                    'prec': 3, 'lolim': 0, 'hilim': 2000,
                 },
                 'ImgROI' + axis + 'UpdateWithFWHMFactor-RB': {
                     'type': 'float', 'value': 2.0, 'unit': 'fwhm_factor',
-                    'prec': 3, 'lolim': 0
+                    'prec': 3, 'lolim': 0, 'hilim': 2000,
                 },
             })
         return db
@@ -164,7 +164,7 @@ class Constants(_csdev.Const):
                 'value': self.DsblEnbl.Dsbl,
             },
             'ImgFitAngle' + mon_: {
-                'type': 'float', 'unit': 'deg'
+                'type': 'float', 'unit': 'deg', 'prec': 3,
             },
             })
         return db
