@@ -320,7 +320,7 @@ class App:
         # set threshold
         self.meas.set_intensity_threshold(value)
 
-        if self.meas_status == self.meas.STATUS_SUCCESS:
+        if self.meas.status == self.meas.STATUS_SUCCESS:
             self._write_pv_sp_rb(reason, value)
             return True
         else:
