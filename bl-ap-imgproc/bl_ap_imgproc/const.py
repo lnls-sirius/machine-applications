@@ -166,6 +166,14 @@ class Constants(_csdev.Const):
             'ImgFitAngle' + mon_: {
                 'type': 'float', 'unit': 'deg'
             },
+            'ImgFitAngleUseCMomSVD-Sel': {
+                'type': 'enum', 'enums': _et.NO_YES,
+                'value': self.NoYes.No,
+            },
+            'ImgFitAngleUseCMomSVD-Sts': {
+                'type': 'enum', 'enums': _et.NO_YES,
+                'value': self.NoYes.No,
+            },
             })
         return db
 

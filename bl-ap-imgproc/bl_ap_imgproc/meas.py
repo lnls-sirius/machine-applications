@@ -13,8 +13,8 @@ class Measurement():
     TIMEOUT_CONN = 5  # [s]
 
     def __init__(
-            self, devname, fwhmx_factor, fwhmy_factor,
-            roi_with_fwhm, intensity_threshold, callback=None):
+            self, devname, fwhmx_factor, fwhmy_factor, roi_with_fwhm,
+            intensity_threshold, use_svd4theta, callback=None):
         """."""
         self._devname = devname
         self._callback = callback
@@ -27,6 +27,7 @@ class Measurement():
         self._fwhmx_factor = fwhmx_factor
         self._fwhmy_factor = fwhmy_factor
         self._intensity_threshold = intensity_threshold
+        self._use_svd4theta = use_svd4theta
         self._roi_with_fwhm = roi_with_fwhm
 
         # create DVF device
@@ -148,8 +149,18 @@ class Measurement():
         try:
             self._image2dfit.intensity_threshold = int(value)
             self._status = Measurement.STATUS_SUCCESS
+            self._intensity_threshold = self._image2dfit.intensity_threshold
         except Exception:
             self._status = 'Unable to set intensity threshold'
+
+    def set_use_svd4theta(self, value):
+        """."""
+        try:
+            self._image2dfit.use_svd4theta = value
+            self._status = Measurement.STATUS_SUCCESS
+            self._use_svd4theta = self._image2dfit.use_svd4theta
+        except Exception:
+            self._status = 'Unable to set angle fit method'
 
     def process_image(self, **kwargs):
         """Process image."""
@@ -187,11 +198,12 @@ class Measurement():
         try:
             data = self._dvf.image
             saturation_threshold = self._dvf.intensity_saturation_value
+            use_svd4theta = self._use_svd4theta
             self._image2dfit = _imgproc.Image2D_Fit(
                 data=data, fitgauss=self._fitgauss,
                 saturation_threshold=saturation_threshold,
                 intensity_threshold=self._intensity_threshold,
-                roix=roix, roiy=roiy)
+                roix=roix, roiy=roiy, use_svd4theta=use_svd4theta)
         except Exception:
             self._status = \
                 f'Unable to process image'

@@ -143,6 +143,9 @@ class App:
         if res is not None:
             return res
 
+        res = self._write_use_svd4theta(reason, value)
+        if res is not None:
+            return res
         return True
 
     def init_driver(self):
@@ -248,12 +251,16 @@ class App:
             self._database['ImgFitUpdateROIWithFWHM-Sts']['value']
         intensity_threshold = \
             self._database['ImgIsWithBeamThreshold-RB']['value']
+        use_svd4theta = \
+            self._database['ImgFitAngleUseCMomSVD-Sts']['value']
+
         # create object
         self._meas = Measurement(
             self.const.devname,
             fwhmx_factor=fwhmx_factor, fwhmy_factor=fwhmy_factor,
             roi_with_fwhm=roi_with_fwhm,
             intensity_threshold=intensity_threshold,
+            use_svd4theta=use_svd4theta,
             )
 
     def _write_pv(self, pvname, value=None, success=True):
@@ -286,12 +293,11 @@ class App:
         self._write_pv('ImgLog-Mon', message, success)
 
     def _write_pv_sp_rb(self, reason, value):
-        # update SP
+        # update SP/Sel
         self._write_pv(reason, value)
 
-        # update RB
-        reason = reason.replace('-SP', '-RB')
-        reason = reason.replace('-Sel', '-Sts')
+        # update RB/Sts
+        reason = reason.replace('-SP', '-RB').replace('-Sel', '-Sts')
         self._write_pv(reason, value)
 
     def _write_roi(self, reason, value):
@@ -301,6 +307,22 @@ class App:
             self.meas.set_roix(value)
         else:
             self._meas.set_roiy(value)
+
+        if self.meas.status == self.meas.STATUS_SUCCESS:
+            self._write_pv_sp_rb(reason, value)
+            return True
+        else:
+            msg = '{}: could not write value {}'.format(reason, value)
+            self._log_warning(msg)
+            self._driver.setParam('ImgLog-Mon', msg)
+            self._driver.updatePV('ImgLog-Mon')
+            return False
+
+    def _write_use_svd4theta(self, reason, value):
+        if reason != 'ImgFitAngleUseCMomSVD-Sel':
+            return None
+
+        self.meas.set_use_svd4theta(value)
 
         if self.meas.status == self.meas.STATUS_SUCCESS:
             self._write_pv_sp_rb(reason, value)
