@@ -66,7 +66,7 @@ class App:
         self._timestamp_last_update = _time.time()
 
         # create measurement object
-        self._create_meas()
+        self._meas = self._create_meas()
 
         # print info about the IOC
         dbase = self._database
@@ -244,24 +244,25 @@ class App:
     def _create_meas(self):
         # build arguments
         fwhmx_factor = \
-            self._database['ImgFitXUpdateROIWithFWHMFactor-RB']['value']
+            self._database['ImgROIXUpdateWithFWHMFactor-RB']['value']
         fwhmy_factor = \
-            self._database['ImgFitYUpdateROIWithFWHMFactor-RB']['value']
+            self._database['ImgROIYUpdateWithFWHMFactor-RB']['value']
         roi_with_fwhm = \
-            self._database['ImgFitUpdateROIWithFWHM-Sts']['value']
+            self._database['ImgROIUpdateWithFWHM-Sts']['value']
         intensity_threshold = \
             self._database['ImgIsWithBeamThreshold-RB']['value']
         use_svd4theta = \
             self._database['ImgFitAngleUseCMomSVD-Sts']['value']
 
         # create object
-        self._meas = Measurement(
+        meas = Measurement(
             self.const.devname,
             fwhmx_factor=fwhmx_factor, fwhmy_factor=fwhmy_factor,
             roi_with_fwhm=roi_with_fwhm,
             intensity_threshold=intensity_threshold,
             use_svd4theta=use_svd4theta,
             )
+        return meas
 
     def _write_pv(self, pvname, value=None, success=True):
         """."""
@@ -341,7 +342,7 @@ class App:
         # set threshold
         self.meas.set_intensity_threshold(value)
 
-        if self.meas_status == self.meas.STATUS_SUCCESS:
+        if self.meas.status == self.meas.STATUS_SUCCESS:
             self._write_pv_sp_rb(reason, value)
             return True
         else:
