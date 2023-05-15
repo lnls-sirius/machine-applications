@@ -1,6 +1,8 @@
 """."""
 
 import time as _time
+import logging as _log
+
 from siriuspy.devices import DVF as _DVF
 from mathphys import imgproc as _imgproc
 
@@ -213,7 +215,9 @@ class Measurement():
                 intensity_threshold=self._intensity_threshold,
                 roix=roix, roiy=roiy, use_svd4theta=use_svd4theta)
             self._proc_time = 1000 * (_time.time() - t0_)
-        except Exception:
+        except Exception as err:
+            message = str(err)
+            _log.warning(message)
             self._status = \
                 f'Unable to process image'
 
