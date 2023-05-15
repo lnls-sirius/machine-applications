@@ -15,10 +15,12 @@ develop-install:
 	cd li-ap-energy; make develop-install
 	cd li-ps-conv; make develop-install
 	cd si-ap-fofb; make develop-install
+	cd si-ap-idff; make develop-install
 	cd si-ap-stabinfo; make develop-install
 	cd si-id-conv; make develop-install
 	cd si-id-epu50; make develop-install
 	cd si-ps-conv-fastcorrs; make develop-install
+	cd bl-ap-imgproc; make develop-install
 
 develop-uninstall:
 	cd as-ap-currinfo; make develop-uninstall
@@ -37,10 +39,12 @@ develop-uninstall:
 	cd li-ap-energy; make develop-uninstall
 	cd li-ps-conv; make develop-uninstall
 	cd si-ap-fofb; make develop-uninstall
+	cd si-ap-idff; make develop-uninstall
 	cd si-ap-stabinfo; make develop-uninstall
 	cd si-id-conv; make develop-uninstall
 	cd si-id-epu50; make develop-uninstall
 	cd si-ps-conv-fastcorrs; make develop-uninstall
+	cd bl-ap-imgproc; make develop-uninstall
 
 install:
 	cd as-ap-currinfo; make install
@@ -59,10 +63,12 @@ install:
 	cd li-ap-energy; make install
 	cd li-ps-conv; make install
 	cd si-ap-fofb; make install
+	cd si-ap-idff; make install
 	cd si-ap-stabinfo; make install
 	cd si-id-conv; make install
 	cd si-id-epu50; make install
 	cd si-ps-conv-fastcorrs; make install
+	cd bl-ap-imgproc; make install
 
 uninstall:
 	cd as-ap-currinfo; make uninstall
@@ -81,10 +87,12 @@ uninstall:
 	cd li-ap-energy; make uninstall
 	cd li-ps-conv; make uninstall
 	cd si-ap-fofb; make uninstall
+	cd si-ap-idff; make uninstall
 	cd si-ap-stabinfo; make uninstall
 	cd si-id-conv; make uninstall
 	cd si-id-epu50; make uninstall
 	cd si-ps-conv-fastcorrs; make uninstall
+	cd bl-ap-imgproc; make uninstall
 
 clean:
 	cd as-ap-currinfo; make clean
@@ -103,7 +111,9 @@ clean:
 	cd li-ap-energy; make clean
 	cd li-ps-conv; make clean
 	cd si-ap-fofb; make clean
+	cd si-ap-idff; make clean
 	cd si-ap-stabinfo; make clean
 	cd si-id-conv; make clean
 	cd si-id-epu50; make clean
 	cd si-ps-conv-fastcorrs; make clean
+	cd bl-ap-imgproc; make clean
