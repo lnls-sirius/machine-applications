@@ -20,6 +20,7 @@ develop-install:
 	cd si-id-conv; make develop-install
 	cd si-id-epu50; make develop-install
 	cd si-ps-conv-fastcorrs; make develop-install
+	cd bl-ap-imgproc; make develop-install
 
 develop-uninstall:
 	cd as-ap-currinfo; make develop-uninstall
@@ -43,6 +44,7 @@ develop-uninstall:
 	cd si-id-conv; make develop-uninstall
 	cd si-id-epu50; make develop-uninstall
 	cd si-ps-conv-fastcorrs; make develop-uninstall
+	cd bl-ap-imgproc; make develop-uninstall
 
 install:
 	cd as-ap-currinfo; make install
@@ -66,6 +68,7 @@ install:
 	cd si-id-conv; make install
 	cd si-id-epu50; make install
 	cd si-ps-conv-fastcorrs; make install
+	cd bl-ap-imgproc; make install
 
 uninstall:
 	cd as-ap-currinfo; make uninstall
@@ -89,6 +92,7 @@ uninstall:
 	cd si-id-conv; make uninstall
 	cd si-id-epu50; make uninstall
 	cd si-ps-conv-fastcorrs; make uninstall
+	cd bl-ap-imgproc; make uninstall
 
 clean:
 	cd as-ap-currinfo; make clean
@@ -112,3 +116,4 @@ clean:
 	cd si-id-conv; make clean
 	cd si-id-epu50; make clean
 	cd si-ps-conv-fastcorrs; make clean
+	cd bl-ap-imgproc; make clean
