@@ -365,8 +365,8 @@ class Epu:
     def _monitor_movement(self, start_event, drive, attribute, logger_message):
         while True:
             start_event.wait()
-            setattr(self, f'{attribute}_is_moving', True)
-            target = getattr(self, f'{attribute}_target')
+            setattr(self, f"{attribute}_is_moving", True)
+            target = getattr(self, f"{attribute}_target")
             with self._epu_lock:
                 logger.info("%s started.", logger_message)
                 drive.connect_to_drive()
@@ -379,41 +379,50 @@ class Epu:
                     value = drive.read_encoder(False)
                     if isinstance(value, float):
                         setattr(self, attribute, value)
+                        if attribute == "gap":
+                            setattr(self, f"a_encoder_{attribute}", value)
+                        if attribute == "phase":
+                            setattr(self, f"i_encoder_{attribute}", value)
                         self.callback_update()
                         logger.info("%s: %s", attribute, value)
                         update_count += 1
 
-                    if abs(getattr(self, attribute) - target) < .001:
+                    if abs(getattr(self, attribute) - target) < 0.001:
                         try:
                             pos_reached = drive.get_target_position_reached()
                         except Exception as e:
-                            logger.debug(f'Falied to read target position reached bit.')
-                            logger.debug(e)
+                            logger.debug("Falied to read target position reached bit.")
                         if True:
                             if not pos_reached:
-                                logger.debug(f'Position reached status is FALSE.')
+                                logger.debug(f"Position reached status is FALSE.")
                             else:
-                                logger.debug(f'Position reached status is TRUE.')
+                                logger.debug(f"Position reached status is TRUE.")
                             start_event.clear()
-                            setattr(self, f'{attribute}_is_moving', False)
+                            setattr(self, f"{attribute}_is_moving", False)
                             end = time.monotonic()
-                            logger.info(f'{logger_message} finished. Update rate: {int(update_count / (end - start))}')
+                            logger.info(
+                                f"{logger_message} finished. Update rate: {int(update_count / (end - start))}"
+                            )
 
                     if loop_count >= 10:
                         if getattr(self, attribute) == prev_value:
                             try:
                                 pos_reached = drive.get_target_position_reached()
                             except Exception as e:
-                                logger.debug(f'Falied to read target position reached bit.')
+                                logger.debug(
+                                    f"Falied to read target position reached bit."
+                                )
                                 logger.debug(e)
                             if True:
                                 if not pos_reached:
-                                    logger.debug(f'Position reached status is FALSE.')
+                                    logger.debug(f"Position reached status is FALSE.")
                                 else:
-                                    logger.debug(f'Position reached status is TRUE.')
-                                logger.warning(f'{logger_message} stopped because {attribute} has not changed after 10 loops.')
+                                    logger.debug(f"Position reached status is TRUE.")
+                                logger.warning(
+                                    f"{logger_message} stopped because {attribute} has not changed after 10 loops."
+                                )
                                 start_event.clear()
-                                setattr(self, f'{attribute}_is_moving', False)
+                                setattr(self, f"{attribute}_is_moving", False)
                         loop_count = 0
                         prev_value = getattr(self, attribute)
                     else:
