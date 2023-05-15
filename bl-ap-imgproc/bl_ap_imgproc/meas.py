@@ -212,7 +212,7 @@ class Measurement():
                 saturation_threshold=saturation_threshold,
                 intensity_threshold=self._intensity_threshold,
                 roix=roix, roiy=roiy, use_svd4theta=use_svd4theta)
-            self._proc_time = _time.time() - t0_
+            self._proc_time = 1000 * (_time.time() - t0_)
         except Exception:
             self._status = \
                 f'Unable to process image'
