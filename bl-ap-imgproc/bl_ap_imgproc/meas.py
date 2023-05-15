@@ -1,5 +1,6 @@
 """."""
 
+import time as _time
 from siriuspy.devices import DVF as _DVF
 from mathphys import imgproc as _imgproc
 
@@ -29,6 +30,7 @@ class Measurement():
         self._intensity_threshold = intensity_threshold
         self._use_svd4theta = use_svd4theta
         self._roi_with_fwhm = roi_with_fwhm
+        self._proc_time = None
 
         # create DVF device
         self._create_dvf()
@@ -115,6 +117,11 @@ class Measurement():
         """."""
         self._callback = value
 
+    @property
+    def proc_time(self):
+        """."""
+        return self._proc_time
+
     def acquisition_timeout(self, interval):
         """Check if given interval defines an image update timeout."""
         if self.dvf.acquisition_time:
@@ -196,6 +203,7 @@ class Measurement():
 
         # get image data and process fitting
         try:
+            t0_ = _time.time()
             data = self._dvf.image
             saturation_threshold = self._dvf.intensity_saturation_value
             use_svd4theta = self._use_svd4theta
@@ -204,6 +212,7 @@ class Measurement():
                 saturation_threshold=saturation_threshold,
                 intensity_threshold=self._intensity_threshold,
                 roix=roix, roiy=roiy, use_svd4theta=use_svd4theta)
+            self._proc_time = 1000 * (_time.time() - t0_)
         except Exception:
             self._status = \
                 f'Unable to process image'

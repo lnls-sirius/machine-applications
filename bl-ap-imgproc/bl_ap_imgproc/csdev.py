@@ -166,6 +166,9 @@ class Constants(_csdev.Const):
             'ImgFitAngle' + mon_: {
                 'type': 'float', 'unit': 'deg', 'prec': 3,
             },
+            'ImgFitProcTime' + mon_: {
+                'type': 'float', 'unit': 'ms', 'prec': 3,
+            },
             'ImgFitAngleUseCMomSVD-Sel': {
                 'type': 'enum', 'enums': _et.NO_YES,
                 'value': self.NoYes.No,

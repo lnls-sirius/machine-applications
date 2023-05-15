@@ -211,6 +211,9 @@ class App:
         if self.meas.status != self.meas.STATUS_SUCCESS:
             self._log_warning(self.meas.status)
             self._write_pv_log(self.meas.status)
+        else:
+            if self.meas.proc_time is not None:
+                self._write_pv('ImgFitProcTime-Mon', self.meas.proc_time)
 
     def _check_acquisition_timeout(self):
         """."""
