@@ -6,7 +6,7 @@ import argparse
 
 from si_id_epu50 import constants as cte
 from si_id_epu50 import si_id_epu50 as ioc_module
-
+from si_id_epu50.utils import get_file_handler, get_logger
 
 # NOTE: maximum epics array size
 os.environ['EPICS_CA_MAX_ARRAY_BYTES'] = '100000'
@@ -14,7 +14,7 @@ os.environ['EPICS_CA_MAX_ARRAY_BYTES'] = '100000'
 
 DEFAULT_PV_PREFIX = 'SI-10SB:ID-EPU50:'
 BBB_DEFAULT_ADDR = '10.128.110.160'
-
+LOG_FILE = "si_id_epu50.log"
 
 def getArgs():
     """ Return command line arguments
@@ -51,6 +51,13 @@ def getArgs():
     return args
 
 
+def config_logging():
+    file_handler = get_file_handler('epu_class.log')
+    epu_logger = get_logger('si_id_epu50.epu', file_handler)
+    file_handler = get_file_handler('ecodrives.log')
+    ecodrive_logger = get_logger('si_id_epu50.ecodrive', file_handler)
+
+
 def main():
     """Launch EPU50 ID IOC."""
     args = getArgs()
@@ -58,4 +65,5 @@ def main():
 
 
 if __name__ == "__main__":
+    config_logging()
     main()

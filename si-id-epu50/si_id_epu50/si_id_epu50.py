@@ -1,8 +1,10 @@
-import pcaspy
+"""Main IOC module."""
+
 import sys
 import os
 import traceback
 from threading import Thread as _Thread
+import pcaspy
 
 from . import constants as _cte
 from . import iocDriver
