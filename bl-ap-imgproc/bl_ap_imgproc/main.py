@@ -18,6 +18,8 @@ class App:
 
     _MON_PVS_2_IMGFIT = {
             # These PVs are updated at evry image processing
+            # --- devices status ---
+            'ImgDVFStatus-Mon': 'status_dvf',
             # --- image intensity ---
             'ImgIntensityMin-Mon': 'intensity_min',
             'ImgIntensityMax-Mon': 'intensity_max',
@@ -49,8 +51,8 @@ class App:
     _INIT_PVS_2_IMGFIT = {
             # These are either constant PVs or readback PVs whose
             # initializations need external input
-            'ImgSizeX-Cte': ('fitx', 'size'),
-            'ImgSizeY-Cte': ('fity', 'size'),
+            'ImgSizeX-Cte': 'sizex',
+            'ImgSizeY-Cte': 'sizey',
             'ImgROIX-RB': ('fitx', 'roi'),
             'ImgROIY-RB': ('fity', 'roi'),
             'ImgROIX-SP': ('fitx', 'roi'),

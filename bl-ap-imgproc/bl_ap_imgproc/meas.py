@@ -55,6 +55,11 @@ class Measurement():
         return self._dvf
 
     @property
+    def status_dvf(self):
+        """."""
+        return 1 if self.dvf.connected else 0
+
+    @property
     def image2dfit(self):
         """."""
         return self._image2dfit
