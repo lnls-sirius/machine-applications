@@ -13,7 +13,6 @@ class Measurement():
     STATUS_SUCCESS = ''
     DVF_IMAGE_PROPTY = 'image1:ArrayData'
     MIN_ROI_SIZE = 5  # [pixels]
-    TIMEOUT_CONN = 5  # [s]
 
     def __init__(
             self, devname, fwhmx_factor, fwhmy_factor, roi_with_fwhm,
@@ -25,8 +24,6 @@ class Measurement():
         self._dvf = None
         self._fitgauss = _imgproc.FitGaussianScipy()  # needs scipy
         self._image2dfit = None
-        self._sizex = None
-        self._sizey = None
         self._fwhmx_factor = fwhmx_factor
         self._fwhmy_factor = fwhmy_factor
         self._intensity_threshold = intensity_threshold
@@ -65,14 +62,14 @@ class Measurement():
         return self._image2dfit
 
     @property
-    def sizex(self):
+    def dvf_sizex(self):
         """."""
-        return self._sizex
+        return self._dvf.parameters.IMAGE_SIZE_X
 
     @property
-    def sizey(self):
+    def dvf_sizey(self):
         """."""
-        return self._sizey
+        return self._dvf.parameters.IMAGE_SIZE_Y
 
     @property
     def fwhmx_factor(self):
@@ -233,6 +230,3 @@ class Measurement():
     def _create_dvf(self):
         """Create DVF object and add process_image callback."""
         self._dvf = _DVF(self._devname)
-        self._sizey = self._dvf.parameters.IMAGE_SIZE_Y
-        self._sizex = self._dvf.parameters.IMAGE_SIZE_X
-        self._dvf.wait_for_connection(timeout=Measurement.TIMEOUT_CONN)

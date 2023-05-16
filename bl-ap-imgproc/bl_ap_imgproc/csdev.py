@@ -77,10 +77,16 @@ class Constants(_csdev.Const):
     def _get_image_db(self):
         sufix = '-Mon'
         dbase = {
-            'ImgSizeX-Cte': {
+            'ImgDVFSizeX-Cte': {
                 'type': 'int', 'unit': 'px'
             },
-            'ImgSizeY-Cte': {
+            'ImgDVFSizeY-Cte': {
+                'type': 'int', 'unit': 'px'
+            },
+            'ImgSizeX' + sufix: {
+                'type': 'int', 'unit': 'px'
+            },
+            'ImgSizeY' + sufix: {
                 'type': 'int', 'unit': 'px'
             },
             'ImgIntensityMin' + sufix: {
