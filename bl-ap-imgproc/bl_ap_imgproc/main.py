@@ -48,6 +48,8 @@ class App:
             'ImgROIYFitError-Mon': ('fity', 'roi_fit_error'),
             # --- gauss2d fit ---
             'ImgFitAngle-Mon': 'angle',
+            'ImgFitSigma1-Mon': 'sigma1',
+            'ImgFitSigma2-Mon': 'sigma2',
         }
 
     _INIT_PVS_2_IMGFIT = {
