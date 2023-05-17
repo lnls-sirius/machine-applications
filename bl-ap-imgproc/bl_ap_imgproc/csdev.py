@@ -13,7 +13,9 @@ from siriuspy import csdev as _csdev
 
 class ETypes(_csdev.ETypes):
     """Local enumerate types."""
+
     NO_YES = ('No', 'Yes')
+    STS_LBLS_DVF = ('Connected', )
 
 
 _et = ETypes  # syntactic sugar
@@ -23,6 +25,7 @@ class Constants(_csdev.Const):
     """."""
 
     NoYes = _get_namedtuple('NoYes', _et.NO_YES)
+    StsLblsDVF = _get_namedtuple('StsLblsDVF', _et.STS_LBLS_DVF)
 
     def __init__(self, devname):
         """."""
@@ -74,10 +77,16 @@ class Constants(_csdev.Const):
     def _get_image_db(self):
         sufix = '-Mon'
         dbase = {
-            'ImgSizeX-Cte': {
+            'ImgDVFSizeX-Cte': {
                 'type': 'int', 'unit': 'px'
             },
-            'ImgSizeY-Cte': {
+            'ImgDVFSizeY-Cte': {
+                'type': 'int', 'unit': 'px'
+            },
+            'ImgSizeX' + sufix: {
+                'type': 'int', 'unit': 'px'
+            },
+            'ImgSizeY' + sufix: {
                 'type': 'int', 'unit': 'px'
             },
             'ImgIntensityMin' + sufix: {
@@ -193,10 +202,19 @@ class Constants(_csdev.Const):
             },
             'ImgTimestampBoot-Cte': {
                 'type': 'float', 'value': _time.time(),
-                'prec': 7, 'unit': 'timestamp'
+                'prec': 7, 'unit': 'timestamp',
             },
             'ImgTimestampUpdate-Mon': {
                 'type': 'float',
-                'prec': 7, 'unit': 'timestamp'},
+                'prec': 7, 'unit': 'timestamp',
+            },
+            'ImgDVFStatus-Mon': {
+                'type': 'int', 'value': 0b00000001,
+            },
+            'ImgDVFStatusLabels-Cte': {
+                'type': 'string', 'count': len(self.StsLblsDVF._fields),
+                'value': self.StsLblsDVF._fields,
+            },
             })
+
         return db
