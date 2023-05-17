@@ -1,5 +1,8 @@
 """."""
 
+import time as _time
+import logging as _log
+
 from siriuspy.devices import DVF as _DVF
 from mathphys import imgproc as _imgproc
 
@@ -10,7 +13,6 @@ class Measurement():
     STATUS_SUCCESS = ''
     DVF_IMAGE_PROPTY = 'image1:ArrayData'
     MIN_ROI_SIZE = 5  # [pixels]
-    TIMEOUT_CONN = 5  # [s]
 
     def __init__(
             self, devname, fwhmx_factor, fwhmy_factor, roi_with_fwhm,
@@ -22,13 +24,12 @@ class Measurement():
         self._dvf = None
         self._fitgauss = _imgproc.FitGaussianScipy()  # needs scipy
         self._image2dfit = None
-        self._sizex = None
-        self._sizey = None
         self._fwhmx_factor = fwhmx_factor
         self._fwhmy_factor = fwhmy_factor
         self._intensity_threshold = intensity_threshold
         self._use_svd4theta = use_svd4theta
         self._roi_with_fwhm = roi_with_fwhm
+        self._proc_time = None
 
         # create DVF device
         self._create_dvf()
@@ -51,19 +52,24 @@ class Measurement():
         return self._dvf
 
     @property
+    def status_dvf(self):
+        """."""
+        return 0 if self.dvf.connected else 1
+
+    @property
     def image2dfit(self):
         """."""
         return self._image2dfit
 
     @property
-    def sizex(self):
+    def dvf_sizex(self):
         """."""
-        return self._sizex
+        return self._dvf.parameters.IMAGE_SIZE_X
 
     @property
-    def sizey(self):
+    def dvf_sizey(self):
         """."""
-        return self._sizey
+        return self._dvf.parameters.IMAGE_SIZE_Y
 
     @property
     def fwhmx_factor(self):
@@ -114,6 +120,11 @@ class Measurement():
     def callback(self, value):
         """."""
         self._callback = value
+
+    @property
+    def proc_time(self):
+        """."""
+        return self._proc_time
 
     def acquisition_timeout(self, interval):
         """Check if given interval defines an image update timeout."""
@@ -196,6 +207,7 @@ class Measurement():
 
         # get image data and process fitting
         try:
+            t0_ = _time.time()
             data = self._dvf.image
             saturation_threshold = self._dvf.intensity_saturation_value
             use_svd4theta = self._use_svd4theta
@@ -204,7 +216,10 @@ class Measurement():
                 saturation_threshold=saturation_threshold,
                 intensity_threshold=self._intensity_threshold,
                 roix=roix, roiy=roiy, use_svd4theta=use_svd4theta)
-        except Exception:
+            self._proc_time = 1000 * (_time.time() - t0_)
+        except Exception as err:
+            message = str(err)
+            _log.warning(message)
             self._status = \
                 f'Unable to process image'
 
@@ -215,6 +230,3 @@ class Measurement():
     def _create_dvf(self):
         """Create DVF object and add process_image callback."""
         self._dvf = _DVF(self._devname)
-        self._sizey = self._dvf.parameters.IMAGE_SIZE_Y
-        self._sizex = self._dvf.parameters.IMAGE_SIZE_X
-        self._dvf.wait_for_connection(timeout=Measurement.TIMEOUT_CONN)
