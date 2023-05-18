@@ -129,7 +129,10 @@ class App:
 
     def write(self, reason, value):
         """Write value in objects and database."""
-        if not reason.endswith('-SP') and not reason.endswith('-Sel'):
+        pv_is_writable = reason.endswith('-SP') \
+            or reason.endswith('-Sel') \
+            or reason.endswith('-Cmd')
+        if not pv_is_writable:
             self._log_warning(f'PV {reason} is not writable!')
             return False
 
@@ -152,6 +155,11 @@ class App:
         res = self._write_use_svd4theta(reason, value)
         if res is not None:
             return res
+
+        res = self._write_dvf_acquire(reason, value)
+        if res is not None:
+            return res
+
         return True
 
     def init_driver(self):
@@ -228,7 +236,6 @@ class App:
             msgfmt_nok = 'DVF Image update timeout!'
             self._log_warning(msgfmt_nok)
             self._write_pv_log(msgfmt_nok)
-            self.meas.set_acquire()
             self._timestamp_last_update = _time.time()
 
     def _check_invalid_fit(self, pvname, value):
@@ -356,6 +363,24 @@ class App:
             return True
         else:
             msg = '{}: could not write value {}'.format(reason, value)
+            self._log_warning(msg)
+            self._driver.setParam('ImgLog-Mon', msg)
+            self._driver.updatePV('ImgLog-Mon')
+            return False
+
+    def _write_dvf_acquire(self, reason, value):
+        """."""
+        if reason != 'ImgDVFAcquire-Cmd':
+            return None
+
+        # set acquire
+        if self.meas.set_acquire():
+            value = self._driver.getParam(reason)
+            self._driver.setParam(reason, value + 1)
+            self._driver.updatePV(reason)
+            return True
+        else:
+            msg = '{}: could not execute'.format(reason)
             self._log_warning(msg)
             self._driver.setParam('ImgLog-Mon', msg)
             self._driver.updatePV('ImgLog-Mon')

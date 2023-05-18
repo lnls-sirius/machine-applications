@@ -54,7 +54,10 @@ class Measurement():
     @property
     def status_dvf(self):
         """."""
-        return 0 if self.dvf.connected else 1
+        status = 0b00000000
+        status |= ((1 if not self.dvf.connected else 0) << 0)
+        status |= ((1 if not self.dvf.acquisition_status else 0) << 1)
+        return status
 
     @property
     def image2dfit(self):
@@ -134,8 +137,11 @@ class Measurement():
 
     def set_acquire(self):
         """."""
-        self.dvf.cmd_acquire_off()
-        self.dvf.cmd_acquire_on()
+        if self.dvf.connected:
+            self.dvf.cmd_acquire_off()
+            self.dvf.cmd_acquire_on()
+            return True
+        return False
 
     def set_roix(self, value):
         """."""
