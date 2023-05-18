@@ -175,6 +175,12 @@ class Constants(_csdev.Const):
             'ImgFitAngle' + mon_: {
                 'type': 'float', 'unit': 'deg', 'prec': 3,
             },
+            'ImgFitSigma1' + mon_: {
+                'type': 'float', 'unit': 'px', 'prec': 3,
+            },
+            'ImgFitSigma2' + mon_: {
+                'type': 'float', 'unit': 'px', 'prec': 3,
+            },
             'ImgFitProcTime' + mon_: {
                 'type': 'float', 'unit': 'ms', 'prec': 3,
             },

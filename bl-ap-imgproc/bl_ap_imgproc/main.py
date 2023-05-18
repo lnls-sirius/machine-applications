@@ -18,8 +18,6 @@ class App:
 
     _MON_PVS_2_IMGFIT = {
             # These PVs are updated at evry image processing
-            # --- devices status ---
-            'ImgDVFStatus-Mon': 'status_dvf',
             # --- image intensity ---
             'ImgSizeX-Mon': ('fitx', 'size'),
             'ImgSizeY-Mon': ('fity', 'size'),
@@ -48,13 +46,13 @@ class App:
             'ImgROIYFitError-Mon': ('fity', 'roi_fit_error'),
             # --- gauss2d fit ---
             'ImgFitAngle-Mon': 'angle',
+            'ImgFitSigma1-Mon': 'sigma1',
+            'ImgFitSigma2-Mon': 'sigma2',
         }
 
     _INIT_PVS_2_IMGFIT = {
             # These are either constant PVs or readback PVs whose
             # initializations need external input
-            'ImgDVFSizeX-Cte': 'dvf_sizex',
-            'ImgDVFSizeY-Cte': 'dvf_sizey',
             'ImgROIX-RB': ('fitx', 'roi'),
             'ImgROIY-RB': ('fity', 'roi'),
             'ImgROIX-SP': ('fitx', 'roi'),
@@ -68,6 +66,7 @@ class App:
         self._database = const.get_database()
         self._heartbeat = 0
         self._timestamp_last_update = _time.time()
+        self._init_driver_flag = False
 
         # create measurement object
         self._meas = self._create_meas()
@@ -154,6 +153,10 @@ class App:
 
     def init_driver(self):
         """Initialize PVs at startup."""
+        self._init_driver_flag = True
+        self._write_pv('ImgDVFSizeX-Cte', self.meas.dvf_sizex)
+        self._write_pv('ImgDVFSizeY-Cte', self.meas.dvf_sizey)
+
         msgfmt_nok = 'PV {} could not be initialized!'
         msgfmt_ok = 'PV {} initialized.'
         for pvname, attr in App._INIT_PVS_2_IMGFIT.items():
@@ -163,16 +166,21 @@ class App:
                 if value is None:
                     self._log_warning(msgfmt_nok.format(pvname))
                     self._write_pv_failed(pvname)
+                    self._init_driver_flag = False
                 else:
                     _log.info(msgfmt_ok.format(pvname))
                     self._write_pv(pvname, value)
             else:
                 self._log_warning(msgfmt_nok.format(pvname))
                 self._write_pv_failed(pvname)
+                self._init_driver_flag = False
 
     def update_driver(self):
         """Update all parameters at every image PV callback."""
         self._timestamp_last_update = _time.time()
+
+        if not self._init_driver_flag:
+            self.init_driver()
 
         if not self.meas.image2dfit.is_with_image:
             self._write_pv('ImgIsWithBeam-Mon', 0)
@@ -218,6 +226,7 @@ class App:
         else:
             if self.meas.proc_time is not None:
                 self._write_pv('ImgFitProcTime-Mon', self.meas.proc_time)
+            self._write_pv('ImgDVFStatus-Mon', self.meas.status_dvf)
 
     def _check_acquisition_timeout(self):
         """."""
