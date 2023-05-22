@@ -15,7 +15,7 @@ class ETypes(_csdev.ETypes):
     """Local enumerate types."""
 
     NO_YES = ('No', 'Yes')
-    STS_LBLS_DVF = ('Connected', )
+    STS_LBLS_DVF = ('Not Connected', 'Acquisition Off')
 
 
 _et = ETypes  # syntactic sugar
@@ -214,8 +214,11 @@ class Constants(_csdev.Const):
                 'type': 'float',
                 'prec': 7, 'unit': 'timestamp',
             },
+            'ImgDVFAcquire-Cmd': {
+                'type': 'int', 'value': 0,
+            },
             'ImgDVFStatus-Mon': {
-                'type': 'int', 'value': 0b00000001,
+                'type': 'int', 'value': 0b11111111,
             },
             'ImgDVFStatusLabels-Cte': {
                 'type': 'string', 'count': len(self.StsLblsDVF._fields),
