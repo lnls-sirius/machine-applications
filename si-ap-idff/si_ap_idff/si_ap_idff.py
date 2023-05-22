@@ -49,7 +49,10 @@ class _PCASDriver(_pcaspy.Driver):
 
     def write(self, reason, value):
         """Write IOC pvs acording to main application."""
-        if self.app.write(reason, value):
+        ret_val = self.app.write(reason, value)
+        if reason.endswith('-Cmd'):
+            value = self.getParam(reason) + 1
+        if ret_val:
             return super().write(reason, value)
         return False
 
