@@ -1,9 +1,9 @@
-"""."""
+"""IOC driver module."""
 
-import pcaspy
 import threading
 import traceback
 import time
+import pcaspy
 
 from . import constants as _cte
 from . import epu_db as _db
@@ -406,11 +406,11 @@ class EPUSupport(pcaspy.Driver):
                     )
             # check overall fault state
             if (
-                EPUSupport.isValid(driver.a_diag_code)
-                and EPUSupport.isValid(driver.b_diag_code)
-                and EPUSupport.isValid(driver.s_diag_code)
-                and EPUSupport.isValid(driver.i_diag_code)
-                ):
+                    EPUSupport.isValid(driver.a_diag_code)
+                    and EPUSupport.isValid(driver.b_diag_code)
+                    and EPUSupport.isValid(driver.s_diag_code)
+                    and EPUSupport.isValid(driver.i_diag_code)
+            ):
                 not_ok = not (
                     driver.a_diag_code == 'A211'
                     and driver.b_diag_code == 'A211'
@@ -425,19 +425,19 @@ class EPUSupport(pcaspy.Driver):
                 )
             # check if drives are powered on
             if (
-                EPUSupport.isValid(driver.a_diag_code)
-                and EPUSupport.isValid(driver.b_diag_code)
-                and (
-                    driver.a_diag_code == 'A012'
-                    or driver.a_diag_code == 'A010'
-                    or driver.a_diag_code == 'A211'
-                    )
-                and (
-                    driver.b_diag_code == 'A012'
-                    or driver.b_diag_code == 'A010'
-                    or driver.b_diag_code == 'A211'
-                    )
-                ):
+                    EPUSupport.isValid(driver.a_diag_code)
+                    and EPUSupport.isValid(driver.b_diag_code)
+                    and (
+                        driver.a_diag_code == 'A012'
+                        or driver.a_diag_code == 'A010'
+                        or driver.a_diag_code == 'A211'
+                        )
+                    and (
+                        driver.b_diag_code == 'A012'
+                        or driver.b_diag_code == 'A010'
+                        or driver.b_diag_code == 'A211'
+                        )
+            ):
                 self.setParam(
                     _db.pv_pwr_ab_mon,
                     _cte.bool_yes
@@ -448,19 +448,19 @@ class EPUSupport(pcaspy.Driver):
                     _cte.bool_no
                     )
             if (
-                EPUSupport.isValid(driver.s_diag_code)
-                and EPUSupport.isValid(driver.i_diag_code)
-                and (
-                    driver.s_diag_code == 'A012'
-                    or driver.s_diag_code == 'A010'
-                    or driver.s_diag_code == 'A211'
-                    )
-                and (
-                    driver.i_diag_code == 'A012'
-                    or driver.i_diag_code == 'A010'
-                    or driver.i_diag_code == 'A211'
-                    )
-                ):
+                    EPUSupport.isValid(driver.s_diag_code)
+                    and EPUSupport.isValid(driver.i_diag_code)
+                    and (
+                        driver.s_diag_code == 'A012'
+                        or driver.s_diag_code == 'A010'
+                        or driver.s_diag_code == 'A211'
+                        )
+                    and (
+                        driver.i_diag_code == 'A012'
+                        or driver.i_diag_code == 'A010'
+                        or driver.i_diag_code == 'A211'
+                        )
+            ):
                 self.setParam(
                     _db.pv_pwr_si_mon,
                     _cte.bool_yes
@@ -490,13 +490,10 @@ class EPUSupport(pcaspy.Driver):
                     driver.phase_is_moving
                     )
             if (
-                EPUSupport.isValid(driver.gap_is_moving)
-                and EPUSupport.isValid(driver.phase_is_moving)
-                ):
-                if (
-                    driver.gap_is_moving
-                    or driver.phase_is_moving
-                    ):
+                    EPUSupport.isValid(driver.gap_is_moving)
+                    and EPUSupport.isValid(driver.phase_is_moving)
+            ):
+                if driver.gap_is_moving or driver.phase_is_moving:
                     self.setParam(
                         _db.pv_is_moving_mon,
                         _cte.bool_yes
@@ -548,8 +545,7 @@ class EPUSupport(pcaspy.Driver):
         # change gap set point
         if EPUSupport.isPvName(reason, _db.pv_gap_sp):
             if (value >= _cte.minimum_gap
-                    and value <= _cte.maximum_gap
-                    ):
+                    and value <= _cte.maximum_gap):
                 status = self.asynExec(
                     reason, driver.gap_set, value)
                 if status:
@@ -561,8 +557,7 @@ class EPUSupport(pcaspy.Driver):
         # change phase set point
         elif EPUSupport.isPvName(reason, _db.pv_phase_sp):
             if (value >= _cte.minimum_phase
-                    and value <= _cte.maximum_phase
-                    ):
+                    and value <= _cte.maximum_phase):
                 status = self.asynExec(
                     reason, driver.phase_set, value)
                 if status:
@@ -574,8 +569,7 @@ class EPUSupport(pcaspy.Driver):
         # change gap maximum velocity set point
         elif EPUSupport.isPvName(reason, _db.pv_gap_max_velo_sp):
             if (value > _cte.minimum_velo_mm_per_sec
-                    and value <= _cte.maximum_velo_mm_per_sec
-                    ):
+                    and value <= _cte.maximum_velo_mm_per_sec):
                 self.setParam(_db.pv_gap_max_velo_sp, value)
                 self.setParam(_db.pv_gap_max_velo_rb, value)
                 if value < self.getParam(_db.pv_gap_velo_sp):
@@ -591,8 +585,7 @@ class EPUSupport(pcaspy.Driver):
         # change phase maximum velocity set point
         elif EPUSupport.isPvName(reason, _db.pv_phase_max_velo_sp):
             if (value > _cte.minimum_velo_mm_per_sec
-                    and value <= _cte.maximum_velo_mm_per_sec
-                    ):
+                    and value <= _cte.maximum_velo_mm_per_sec):
                 self.setParam(_db.pv_phase_max_velo_sp, value)
                 self.setParam(_db.pv_phase_max_velo_rb, value)
                 if value < self.getParam(_db.pv_phase_velo_sp):
@@ -610,8 +603,7 @@ class EPUSupport(pcaspy.Driver):
             soft_max_velo = self.getParam(_db.pv_gap_max_velo_sp)
             if (value > _cte.minimum_velo_mm_per_sec
                     and value <= _cte.maximum_velo_mm_per_sec
-                    and value <= soft_max_velo
-                    ):
+                    and value <= soft_max_velo):
                 # convert velocity to mm/min
                 _val_per_min = value * 60
                 status = self.asynExec(
@@ -627,8 +619,7 @@ class EPUSupport(pcaspy.Driver):
             soft_max_velo = self.getParam(_db.pv_phase_max_velo_sp)
             if (value > _cte.minimum_velo_mm_per_sec
                     and value <= _cte.maximum_velo_mm_per_sec
-                    and value <= soft_max_velo
-                    ):
+                    and value <= soft_max_velo):
                 # convert velocity to mm/min
                 _val_per_min = value * 60
                 status = self.asynExec(
@@ -641,10 +632,8 @@ class EPUSupport(pcaspy.Driver):
 
         # cmd to move and change gap
         elif EPUSupport.isPvName(reason, _db.pv_change_gap_cmd):
-            if (not driver.gap_is_moving
-                and self.getParam(
-                    _db.pv_allowed_change_gap_mon) == _cte.bool_yes
-                ):
+            if (not driver.gap_is_moving and
+                    self.getParam(_db.pv_allowed_change_gap_mon) == _cte.bool_yes):
                 status = self.asynExec(
                     reason, driver.gap_start, _cte.bool_yes
                     )
@@ -656,9 +645,8 @@ class EPUSupport(pcaspy.Driver):
 
         # cmd to move and change phase
         elif EPUSupport.isPvName(reason, _db.pv_change_phase_cmd):
-            if (not driver.phase_is_moving
-                and self.getParam(
-                    _db.pv_allowed_change_phase_mon) == _cte.bool_yes):
+            if (not driver.phase_is_moving and
+                    self.getParam(_db.pv_allowed_change_phase_mon) == _cte.bool_yes):
                 status = self.asynExec(
                     reason, driver.phase_start, _cte.bool_yes
                     )
@@ -886,15 +874,14 @@ class EPUSupport(pcaspy.Driver):
             value could represent a bool, i.e.,
             if it is 0 or 1
         """
-        return value == 0 or value == 1
+        return value in (0, 1)
 
     @staticmethod
     def isValid(value):
-        """ Checks if a given parameter is
-            valid as a PV value
-        """
-        return value != None
+        """Checks if a given parameter is valid as a PV value."""
+        return value is not None
 
     @staticmethod
     def inTolerance(value1, value2, tol):
+        """Check if given parameter is within tolerance."""
         return abs(value1 - value2) <= tol

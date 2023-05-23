@@ -15,6 +15,7 @@ develop-install:
 	cd li-ap-energy; make develop-install
 	cd li-ps-conv; make develop-install
 	cd si-ap-fofb; make develop-install
+	cd si-ap-idff; make develop-install
 	cd si-ap-stabinfo; make develop-install
 	cd si-id-conv; make develop-install
 	cd si-id-epu50; make develop-install
@@ -38,6 +39,7 @@ develop-uninstall:
 	cd li-ap-energy; make develop-uninstall
 	cd li-ps-conv; make develop-uninstall
 	cd si-ap-fofb; make develop-uninstall
+	cd si-ap-idff; make develop-uninstall
 	cd si-ap-stabinfo; make develop-uninstall
 	cd si-id-conv; make develop-uninstall
 	cd si-id-epu50; make develop-uninstall
@@ -61,6 +63,7 @@ install:
 	cd li-ap-energy; make install
 	cd li-ps-conv; make install
 	cd si-ap-fofb; make install
+	cd si-ap-idff; make install
 	cd si-ap-stabinfo; make install
 	cd si-id-conv; make install
 	cd si-id-epu50; make install
@@ -84,6 +87,7 @@ uninstall:
 	cd li-ap-energy; make uninstall
 	cd li-ps-conv; make uninstall
 	cd si-ap-fofb; make uninstall
+	cd si-ap-idff; make uninstall
 	cd si-ap-stabinfo; make uninstall
 	cd si-id-conv; make uninstall
 	cd si-id-epu50; make uninstall
@@ -107,6 +111,7 @@ clean:
 	cd li-ap-energy; make clean
 	cd li-ps-conv; make clean
 	cd si-ap-fofb; make clean
+	cd si-ap-idff; make clean
 	cd si-ap-stabinfo; make clean
 	cd si-id-conv; make clean
 	cd si-id-epu50; make clean

@@ -1,8 +1,11 @@
+"""Constants module."""
+
 import os as _os
-import toml, yaml
-from pydantic import BaseModel
 from typing import Optional
 import traceback
+import yaml
+import toml
+from pydantic import BaseModel
 
 ################# ETHERNET #####################
 GPIO_TCP_DEFAULT_PORT = 5050
@@ -34,6 +37,8 @@ AUTOSAVE_DEFAULT_REQUEST_FILE = _os.path.join(
 
 ## pydantic data validation
 class EpuConfig(BaseModel):
+    """EpuConfig."""
+
     A_DRIVE_ADDRESS: str
     B_DRIVE_ADDRESS: Optional[int] = None
     S_DRIVE_ADDRESS: Optional[int] = None
@@ -47,6 +52,7 @@ class EpuConfig(BaseModel):
     MAXIMUM_VELOCITY: float
     ECODRIVE_LOG_FILE_PATH: str
     EPU_LOG_FILE_PATH: str
+
 
 ## loads config data
 fname = _os.path.join(
@@ -65,10 +71,10 @@ minimum_gap = epu_config.MINIMUM_GAP
 maximum_gap = epu_config.MAXIMUM_GAP
 minimum_phase = epu_config.MINIMUM_PHASE
 maximum_phase = epu_config.MAXIMUM_PHASE
-minimum_velo_mm_per_min = epu_config.MINIMUM_VELOCITY # mm/min
-minimum_velo_mm_per_sec = minimum_velo_mm_per_min/ 60 # mm/sec
-maximum_velo_mm_per_min = epu_config.MAXIMUM_VELOCITY # mm/min
-maximum_velo_mm_per_sec = maximum_velo_mm_per_min/ 60 # mm/sec
+minimum_velo_mm_per_min = epu_config.MINIMUM_VELOCITY  # mm/min
+minimum_velo_mm_per_sec = minimum_velo_mm_per_min / 60  # mm/sec
+maximum_velo_mm_per_min = epu_config.MAXIMUM_VELOCITY  # mm/min
+maximum_velo_mm_per_sec = maximum_velo_mm_per_min / 60  # mm/sec
 ecodrive_log_file_path = epu_config.ECODRIVE_LOG_FILE_PATH
 epu_log_file_path = epu_config.EPU_LOG_FILE_PATH
 
@@ -83,19 +89,22 @@ with open(fname, "r") as f:
         print(traceback.format_exc())
 
 default_unknown_diag_msg = "? Unknown diagnostic code"
+
 ################## Autosave #####################
 autosave_update_rate = 10.0
 autosave_num_backup_files = 10
 
+
 # dummy function for debugging
 def dummy(val=0):
+    """Dummy function for debugging."""
     if val != 0:
         print('dummy {}'.format(val))
     else:
         print('dummy')
 
-# constants
 
+# constants
 ## Driver configuration
 driver_update_rate = 0.2
 

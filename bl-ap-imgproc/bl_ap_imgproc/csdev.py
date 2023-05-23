@@ -13,7 +13,9 @@ from siriuspy import csdev as _csdev
 
 class ETypes(_csdev.ETypes):
     """Local enumerate types."""
+
     NO_YES = ('No', 'Yes')
+    STS_LBLS_DVF = ('Not Connected', 'Acquisition Off')
 
 
 _et = ETypes  # syntactic sugar
@@ -21,11 +23,12 @@ _et = ETypes  # syntactic sugar
 class Constants(_csdev.Const):
     """."""
 
-    NoYes = _get_namedtuple('NoYes', _et.NO_YES)
     MAX_IMAGE_SIZE = {
         'X': 2 * 1280,
-        'Y': 2 * 1024
-    }
+        'Y': 2 * 1024,
+        }
+    NoYes = _get_namedtuple('NoYes', _et.NO_YES)
+    StsLblsDVF = _get_namedtuple('StsLblsDVF', _et.STS_LBLS_DVF)
 
     def __init__(self, devname):
         """."""
@@ -77,10 +80,16 @@ class Constants(_csdev.Const):
     def _get_image_db(self):
         sufix = '-Mon'
         dbase = {
-            'ImgSizeX-Cte': {
+            'ImgDVFSizeX-Cte': {
                 'type': 'int', 'unit': 'px'
             },
-            'ImgSizeY-Cte': {
+            'ImgDVFSizeY-Cte': {
+                'type': 'int', 'unit': 'px'
+            },
+            'ImgSizeX' + sufix: {
+                'type': 'int', 'unit': 'px'
+            },
+            'ImgSizeY' + sufix: {
                 'type': 'int', 'unit': 'px'
             },
             'ImgProjX' + sufix: {
@@ -102,7 +111,17 @@ class Constants(_csdev.Const):
                 'type': 'enum', 'enums': _et.NO_YES,
                 'value': self.NoYes.No,
             },
-        }
+            'ImgIsWithBeam' + sufix: {
+                'type': 'enum', 'enums': _et.NO_YES,
+                'value': self.NoYes.No,
+            },
+            'ImgIsWithBeamThreshold-SP': {
+                'type': 'int', 'unit': 'intensity', 'value': 10,
+            },
+            'ImgIsWithBeamThreshold-RB': {
+                'type': 'int', 'unit': 'intensity', 'value': 10,
+            },
+            }
         return dbase
 
     def _get_roi_db(self):
@@ -113,7 +132,7 @@ class Constants(_csdev.Const):
         for axis in ['X', 'Y']:
             db.update({
                 'ImgROI' + axis + sp_: {
-                    'type': 'int', 'count': 2, 'unit': 'px'
+                    'type': 'int', 'count': 2, 'unit': 'px',
                 },
                 'ImgROI' + axis + rb_: {
                     'type': 'int', 'count': 2, 'unit': 'px'
@@ -123,6 +142,14 @@ class Constants(_csdev.Const):
                 },
                 'ImgROI' + axis + 'FWHM' + mon_: {
                     'type': 'int', 'unit': 'px'
+                },
+                'ImgROI' + axis + 'UpdateWithFWHMFactor-SP': {
+                    'type': 'float', 'value': 2.0, 'unit': 'fwhm_factor',
+                    'prec': 3, 'lolim': 0, 'hilim': 2000,
+                },
+                'ImgROI' + axis + 'UpdateWithFWHMFactor-RB': {
+                    'type': 'float', 'value': 2.0, 'unit': 'fwhm_factor',
+                    'prec': 3, 'lolim': 0, 'hilim': 2000,
                 },
             })
         return db
@@ -144,14 +171,6 @@ class Constants(_csdev.Const):
                 'ImgROI' + axis + 'FitError' + mon_: {
                     'type': 'float', 'unit': '%', 'prec': 3,
                 },
-                'ImgROI' + axis + 'UpdateWithFWHMFactor-SP': {
-                    'type': 'float', 'value': 2.0, 'unit': 'fwhm_factor',
-                    'prec': 3, 'lolim': 0.0
-                },
-                'ImgROI' + axis + 'UpdateWithFWHMFactor-RB': {
-                    'type': 'float', 'value': 2.0, 'unit': 'fwhm_factor',
-                    'prec': 3,
-                },
             })
         db.update({
             'ImgROIUpdateWithFWHM-Sel': {
@@ -163,7 +182,24 @@ class Constants(_csdev.Const):
                 'value': self.DsblEnbl.Dsbl,
             },
             'ImgFitAngle' + mon_: {
-                'type': 'float', 'unit': 'deg'
+                'type': 'float', 'unit': 'deg', 'prec': 3,
+            },
+            'ImgFitSigma1' + mon_: {
+                'type': 'float', 'unit': 'px', 'prec': 3,
+            },
+            'ImgFitSigma2' + mon_: {
+                'type': 'float', 'unit': 'px', 'prec': 3,
+            },
+            'ImgFitProcTime' + mon_: {
+                'type': 'float', 'unit': 'ms', 'prec': 3,
+            },
+            'ImgFitAngleUseCMomSVD-Sel': {
+                'type': 'enum', 'enums': _et.NO_YES,
+                'value': self.NoYes.No,
+            },
+            'ImgFitAngleUseCMomSVD-Sts': {
+                'type': 'enum', 'enums': _et.NO_YES,
+                'value': self.NoYes.No,
             },
             })
         return db
@@ -180,16 +216,25 @@ class Constants(_csdev.Const):
             },
             'ImgTimestampBoot-Cte': {
                 'type': 'float', 'value': _time.time(),
-                'prec': 7, 'unit': 'timestamp'
+                'prec': 7, 'unit': 'timestamp',
             },
             'ImgTimestampUpdate-Mon': {
                 'type': 'float',
-                'prec': 7, 'unit': 'timestamp'
+                'prec': 7, 'unit': 'timestamp',
             },
-            'ImgReset-Cmd': {
-                'type': 'int', 'value': 0
+            'ImgDVFReset-Cmd': {
+                'type': 'int', 'value': 0,
             },
-            'ImgReset-Sts': {
-                'type': 'int', 'value': 0
-            }})
+            'ImgDVFAcquire-Cmd': {
+                'type': 'int', 'value': 0,
+            },
+            'ImgDVFStatus-Mon': {
+                'type': 'int', 'value': 0b11111111,
+            },
+            'ImgDVFStatusLabels-Cte': {
+                'type': 'string', 'count': len(self.StsLblsDVF._fields),
+                'value': self.StsLblsDVF._fields,
+            },
+            })
+
         return db

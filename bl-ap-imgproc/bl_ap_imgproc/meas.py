@@ -1,5 +1,8 @@
 """."""
 
+import time as _time
+import logging as _log
+
 from siriuspy.devices import DVF as _DVF
 from mathphys import imgproc as _imgproc
 
@@ -10,23 +13,23 @@ class Measurement():
     STATUS_SUCCESS = ''
     DVF_IMAGE_PROPTY = 'image1:ArrayData'
     MIN_ROI_SIZE = 5  # [pixels]
-    TIMEOUT_CONN = 5  # [s]
 
     def __init__(
-            self, devname, fwhmx_factor, fwhmy_factor,
-            roi_with_fwhm, callback=None):
+            self, devname, fwhmx_factor, fwhmy_factor, roi_with_fwhm,
+            intensity_threshold, use_svd4theta, callback=None):
         """."""
         self._devname = devname
         self._callback = callback
         self._status = Measurement.STATUS_SUCCESS
         self._dvf = None
-        self._fitgauss = _imgproc.FitGaussianScipy()
+        self._fitgauss = _imgproc.FitGaussianScipy()  # needs scipy
         self._image2dfit = None
-        self._sizex = None
-        self._sizey = None
         self._fwhmx_factor = fwhmx_factor
         self._fwhmy_factor = fwhmy_factor
+        self._intensity_threshold = intensity_threshold
+        self._use_svd4theta = use_svd4theta
         self._roi_with_fwhm = roi_with_fwhm
+        self._proc_time = None
 
         # create DVF device
         self._create_dvf()
@@ -49,19 +52,27 @@ class Measurement():
         return self._dvf
 
     @property
+    def status_dvf(self):
+        """."""
+        status = 0b00000000
+        status |= ((1 if not self.dvf.connected else 0) << 0)
+        status |= ((1 if not self.dvf.acquisition_status else 0) << 1)
+        return status
+
+    @property
     def image2dfit(self):
         """."""
         return self._image2dfit
 
     @property
-    def sizex(self):
+    def dvf_sizex(self):
         """."""
-        return self._sizex
+        return self._dvf.parameters.IMAGE_SIZE_X
 
     @property
-    def sizey(self):
+    def dvf_sizey(self):
         """."""
-        return self._sizey
+        return self._dvf.parameters.IMAGE_SIZE_Y
 
     @property
     def fwhmx_factor(self):
@@ -82,6 +93,11 @@ class Measurement():
     def fwhmy_factor(self, value):
         """."""
         self._fwhmy_factor = value
+
+    @property
+    def intensity_threshold(self):
+        """."""
+        return self._intensity_threshold
 
     @property
     def status(self):
@@ -108,16 +124,32 @@ class Measurement():
         """."""
         self._callback = value
 
+    @property
+    def proc_time(self):
+        """."""
+        return self._proc_time
+
     def acquisition_timeout(self, interval):
         """Check if given interval defines an image update timeout."""
         if self.dvf.acquisition_time:
             return interval > 10 * self.dvf.acquisition_time
         return False
 
+    def reset_dvf(self):
+        if self.dvf.connected:
+            return self._dvf.cmd_reset()
+        else:
+            return False
+
     def set_acquire(self):
         """."""
-        self.dvf.cmd_acquire_off()
-        self.dvf.cmd_acquire_on()
+        if self.dvf.connected:
+            if not self.dvf.cmd_acquire_off():
+                return False
+            if not self.dvf.cmd_acquire_on():
+                return False
+            return True
+        return False
 
     def set_roix(self, value):
         """."""
@@ -137,11 +169,29 @@ class Measurement():
         except Exception:
             self._status = 'Unable to set ROIY'
 
-    def reset_dvf(self):
-        return self._dvf.cmd_reset()
+    def set_intensity_threshold(self, value):
+        """."""
+        try:
+            self._image2dfit.intensity_threshold = int(value)
+            self._status = Measurement.STATUS_SUCCESS
+            self._intensity_threshold = self._image2dfit.intensity_threshold
+        except Exception:
+            self._status = 'Unable to set intensity threshold'
+
+    def set_use_svd4theta(self, value):
+        """."""
+        try:
+            self._image2dfit.use_svd4theta = value
+            self._status = Measurement.STATUS_SUCCESS
+            self._use_svd4theta = self._image2dfit.use_svd4theta
+        except Exception:
+            self._status = 'Unable to set angle fit method'
 
     def process_image(self, **kwargs):
         """Process image."""
+        # assume image can be processed for the time being
+        self._status = Measurement.STATUS_SUCCESS
+
         # check if DVF is connected
         if not self._dvf.connected:
             self._status = 'DVF not connecetd'
@@ -171,14 +221,21 @@ class Measurement():
 
         # get image data and process fitting
         try:
+            t0_ = _time.time()
             data = self._dvf.image
+            saturation_threshold = self._dvf.intensity_saturation_value
+            use_svd4theta = self._use_svd4theta
             self._image2dfit = _imgproc.Image2D_Fit(
                 data=data, fitgauss=self._fitgauss,
-                roix=roix, roiy=roiy)
-            self._status = Measurement.STATUS_SUCCESS
-        except Exception:
+                saturation_threshold=saturation_threshold,
+                intensity_threshold=self._intensity_threshold,
+                roix=roix, roiy=roiy, use_svd4theta=use_svd4theta)
+            self._proc_time = 1000 * (_time.time() - t0_)
+        except Exception as err:
+            message = str(err)
+            _log.warning(message)
             self._status = \
-                f'Unable to process image shape'
+                f'Unable to process image'
 
         # run registered driver callback
         if self._callback:
@@ -187,6 +244,3 @@ class Measurement():
     def _create_dvf(self):
         """Create DVF object and add process_image callback."""
         self._dvf = _DVF(self._devname)
-        self._sizey = self._dvf.parameters.IMAGE_SIZE_Y
-        self._sizex = self._dvf.parameters.IMAGE_SIZE_X
-        self._dvf.wait_for_connection(timeout=Measurement.TIMEOUT_CONN)
