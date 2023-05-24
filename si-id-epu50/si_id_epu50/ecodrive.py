@@ -220,7 +220,7 @@ class EcoDrive:
         byte_message = self.tcp_read_parameter('S-0-0013,7,R')
         str_message = byte_message.decode()
 
-        if 'S-0-0342' not in str_message:
+        if 'S-0-0013' not in str_message:
             logger.error(f'Parameter reading error: Drive address {self.ADDRESS}; answer: {str_message}')
             raise RuntimeError('Parameter reading error.')
 
