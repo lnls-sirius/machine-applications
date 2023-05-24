@@ -75,7 +75,7 @@ class Constants(_csdev.Const):
         return database
 
     def _get_image_db(self):
-        dvf_params = _DVF.conv_devname2parameters[self.devname]
+        dvf_params = _DVF.conv_devname2parameters(self.devname)
         sufix = '-Mon'
         dbase = {
             'ImgDVFSizeX-Cte': {
