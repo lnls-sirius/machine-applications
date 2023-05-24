@@ -136,6 +136,7 @@ class Measurement():
         return False
 
     def reset_dvf(self):
+        """."""
         if self.dvf.connected:
             return self._dvf.cmd_reset()
         else:

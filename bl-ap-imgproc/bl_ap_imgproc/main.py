@@ -2,6 +2,7 @@
 
 import time as _time
 import logging as _log
+import numpy as _np
 
 from pcaspy import Alarm as _Alarm
 from pcaspy import Severity as _Severity
@@ -274,15 +275,15 @@ class App:
     def _create_meas(self):
         # build arguments
         fwhmx_factor = \
-            self._database['ImgROIXUpdateWithFWHMFactor-RB']['value']
+            float(self._database['ImgROIXUpdateWithFWHMFactor-RB']['value'])
         fwhmy_factor = \
-            self._database['ImgROIYUpdateWithFWHMFactor-RB']['value']
+            float(self._database['ImgROIYUpdateWithFWHMFactor-RB']['value'])
         roi_with_fwhm = \
-            self._database['ImgROIUpdateWithFWHM-Sts']['value']
+            float(self._database['ImgROIUpdateWithFWHM-Sts']['value'])
         intensity_threshold = \
-            self._database['ImgIsWithBeamThreshold-RB']['value']
+            int(self._database['ImgIsWithBeamThreshold-RB']['value'])
         use_svd4theta = \
-            self._database['ImgFitAngleUseCMomSVD-Sts']['value']
+            int(self._database['ImgFitAngleUseCMomSVD-Sts']['value'])
 
         # create object
         meas = Measurement(
@@ -297,8 +298,8 @@ class App:
     def _write_pv(self, pvname, value=None, success=True):
         """."""
         if success:
-            if isinstance(value, bool):
-                value =1 if value else 0
+            if isinstance(value, (bool, _np.bool, _np.bool_)):
+                value = 1 if value else 0
             try:
                 self._driver.setParam(pvname, value)
                 self._driver.updatePV(pvname)
