@@ -26,8 +26,8 @@ class App:
             'ImgIntensitySum-Mon': 'intensity_sum',
             'ImgIsSaturated-Mon': 'is_saturated',
             # --- image projection ---
-            'ImgProjX-Mon': ('imagex', 'data'),
-            'ImgProjY-Mon': ('imagey', 'data'),
+            'ImgProjX-Mon': ('fitx', 'data'),
+            'ImgProjY-Mon': ('fity', 'data'),
             'ImgIsWithBeam-Mon': 'is_with_image',
             # --- roix ---
             'ImgROIX-RB': ('fitx', 'roi'),
@@ -297,8 +297,8 @@ class App:
     def _write_pv(self, pvname, value=None, success=True):
         """."""
         if success:
-            if value in (True, False):
-                value = 1 if value else 0
+            if isinstance(value, bool):
+                value =1 if value else 0
             try:
                 self._driver.setParam(pvname, value)
                 self._driver.updatePV(pvname)
