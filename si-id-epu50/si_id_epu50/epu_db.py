@@ -10,6 +10,8 @@ pv_beamline_enbl_sel = 'BeamLineCtrlEnbl-Sel'
 pv_beamline_enbl_sts = 'BeamLineCtrlEnbl-Sts'
 pv_beamline_enbl_mon = 'BeamLineCtrl-Mon'
 pv_status_mon = 'Status-Mon'
+pv_gap_status_mon = 'GapStatus-Mon'
+pv_phase_status_mon = 'PhaseStatus-Mon'
 pv_is_busy_mon = 'IsBusy-Mon'
 pv_ioc_msg_mon = 'Log-Mon'
 pv_clear_log_cmd = 'ClearLog-Cmd'
@@ -122,6 +124,24 @@ pvdb = {
         'asg' : 'readonly',
     },
     pv_status_mon : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : _cte.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'scan' : _cte.scan_rate,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_gap_status_mon : {
+        'type' : 'enum',
+        'count' : 1,
+        'enums' : _cte.bool_enums,
+        'states' : [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        'scan' : _cte.scan_rate,
+        'asyn' : False,
+        'asg' : 'readonly',
+    },
+    pv_phase_status_mon : {
         'type' : 'enum',
         'count' : 1,
         'enums' : _cte.bool_enums,
