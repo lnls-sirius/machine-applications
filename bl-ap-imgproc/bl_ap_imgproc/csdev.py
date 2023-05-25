@@ -7,6 +7,7 @@ from mathphys.functions import get_namedtuple as _get_namedtuple
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from siriuspy import util as _util
 from siriuspy import csdev as _csdev
+from siriuspy.devices import DVF as _DVF
 
 
 # TODO: move this module to siriuspy
@@ -19,7 +20,6 @@ class ETypes(_csdev.ETypes):
 
 
 _et = ETypes  # syntactic sugar
-
 
 class Constants(_csdev.Const):
     """."""
@@ -75,6 +75,7 @@ class Constants(_csdev.Const):
         return database
 
     def _get_image_db(self):
+        dvf_params = _DVF.conv_devname2parameters(self.devname)
         sufix = '-Mon'
         dbase = {
             'ImgDVFSizeX-Cte': {
@@ -88,6 +89,12 @@ class Constants(_csdev.Const):
             },
             'ImgSizeY' + sufix: {
                 'type': 'int', 'unit': 'px'
+            },
+            'ImgProjX' + sufix: {
+                'type': 'int', 'count': dvf_params.IMAGE_SIZE_X, 'unit': 'px'
+            },
+            'ImgProjY' + sufix: {
+                'type': 'int', 'count': dvf_params.IMAGE_SIZE_Y, 'unit': 'px'
             },
             'ImgIntensityMin' + sufix: {
                 'type': 'int', 'unit': 'intensity'
@@ -197,13 +204,12 @@ class Constants(_csdev.Const):
 
     def _get_others_db(self):
         db = {}
-        mon_ = '-Mon'
         db.update({
             'ImgVersion-Cte': {
                 'type': 'string',
                 'value': _util.get_last_commit_hash()
             },
-            'ImgLog' + mon_: {
+            'ImgLog-Mon': {
                 'type': 'string', 'value': 'Starting...',
             },
             'ImgTimestampBoot-Cte': {
@@ -213,6 +219,9 @@ class Constants(_csdev.Const):
             'ImgTimestampUpdate-Mon': {
                 'type': 'float',
                 'prec': 7, 'unit': 'timestamp',
+            },
+            'ImgDVFReset-Cmd': {
+                'type': 'int', 'value': 0,
             },
             'ImgDVFAcquire-Cmd': {
                 'type': 'int', 'value': 0,

@@ -135,11 +135,20 @@ class Measurement():
             return interval > 10 * self.dvf.acquisition_time
         return False
 
+    def reset_dvf(self):
+        """."""
+        if self.dvf.connected:
+            return self._dvf.cmd_reset()
+        else:
+            return False
+
     def set_acquire(self):
         """."""
         if self.dvf.connected:
-            self.dvf.cmd_acquire_off()
-            self.dvf.cmd_acquire_on()
+            if not self.dvf.cmd_acquire_off():
+                return False
+            if not self.dvf.cmd_acquire_on():
+                return False
             return True
         return False
 
