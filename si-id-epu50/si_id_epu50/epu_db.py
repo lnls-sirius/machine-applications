@@ -6,6 +6,11 @@ from . import constants as _cte
 #############################################
 # Map variable -> pv name
 ## general
+pv_polarization_sel = 'Polarization-Sel'
+pv_polarization_sts = 'Polarization-Sts'
+pv_kparameter_sp = 'KParameter-SP'
+pv_kparameter_rb = 'KParameter-RB'
+pv_kparameter_mon = 'KParameter-Mon'
 pv_beamline_enbl_sel = 'BeamLineCtrlEnbl-Sel'
 pv_beamline_enbl_sts = 'BeamLineCtrlEnbl-Sts'
 pv_beamline_enbl_mon = 'BeamLineCtrl-Mon'
@@ -98,6 +103,42 @@ pv_drive_i_connected_mon = 'DriveIConnected-Mon'
 pvdb = {
     #############################################
     # General
+    pv_polarization_sel : {
+        'type' : 'enum',
+        'enums' : _cte.polarization_states,
+        'value' : 0,
+        'asg' : 'default',
+    },
+    pv_polarization_sts : {
+        'type' : 'enum',
+        'enums' : _cte.polarization_states,
+        'value' : 0,
+        'asg' : 'default',
+    },
+    pv_kparameter_sp : {
+        'type' : 'float',
+        'prec' : 5,
+        'unit' : 'kparameter',
+        'asg' : 'default',
+        'lolim': 0.0,
+        'hilim': 1.0,
+    },
+    pv_kparameter_rb : {
+        'type' : 'float',
+        'prec' : 5,
+        'unit' : 'kparameter',
+        'asg' : 'default',
+        'lolim': 0.0,
+        'hilim': 1.0,
+    },
+    pv_kparameter_mon : {
+        'type' : 'float',
+        'prec' : 5,
+        'unit' : 'kparameter',
+        'asg' : 'default',
+        'lolim': 0.0,
+        'hilim': 1.0,
+    },
     pv_beamline_enbl_sel : {
         'type' : 'enum',
         'count' : 1,

@@ -4,15 +4,13 @@ import os as _os
 from typing import Optional
 import traceback
 import yaml
-import toml
-from pydantic import BaseModel
+
 
 ################# ETHERNET #####################
 GPIO_TCP_DEFAULT_PORT = 5050
 RS485_TCP_DEFAULT_PORT = 5052
 
 ############### GPIO COMMANDS ##################
-
 BSMP_WRITE = 0x20
 BSMP_READ = 0x10
 
@@ -28,55 +26,46 @@ RESET_CH_AB = 0x40
 RESET_CH_SI = 0x41
 
 ############### EPU constants ################
-
 DEFAULT_PATH = '/home/sirius/iocs-log/si-id-epu50/'
 AUTOSAVE_DEFAULT_SAVE_LOCATION = DEFAULT_PATH
 AUTOSAVE_DEFAULT_REQUEST_FILE = _os.path.join(
     _os.path.dirname(__file__), 'config', 'autosave_epu.req')
 
 
-## pydantic data validation
-class EpuConfig(BaseModel):
+class EpuConfig:
     """EpuConfig."""
 
-    A_DRIVE_ADDRESS: str
-    B_DRIVE_ADDRESS: Optional[int] = None
-    S_DRIVE_ADDRESS: Optional[int] = None
-    I_DRIVE_ADDRESS: Optional[int] = None
-    BAUD_RATE: int
-    MINIMUM_GAP: float
-    MAXIMUM_GAP: float
-    MINIMUM_PHASE: float
-    MAXIMUM_PHASE: float
-    MINIMUM_VELOCITY: float
-    MAXIMUM_VELOCITY: float
-    ECODRIVE_LOG_FILE_PATH: str
-    EPU_LOG_FILE_PATH: str
+    A_DRIVE_ADDRESS: str = 21
+    B_DRIVE_ADDRESS: Optional[int] = 22
+    S_DRIVE_ADDRESS: Optional[int] = 12
+    I_DRIVE_ADDRESS: Optional[int] = 11
+    BAUD_RATE: int = 19200
+    MINIMUM_GAP: float = +22  # [mm]
+    MAXIMUM_GAP: float = +300  # [mm]
+    MINIMUM_PHASE: float = -25  # [mm]
+    MAXIMUM_PHASE: float = +25  # [mm]
+    MINIMUM_VELOCITY: float = +0.6  # [mm/min]
+    MAXIMUM_VELOCITY: float = +500  # [mm/min]
+    ECODRIVE_LOG_FILE_PATH: str = 'ecodrive_control.log'
+    EPU_LOG_FILE_PATH: str = 'epu_control.log'
 
-
-## loads config data
-fname = _os.path.join(
-        _os.path.dirname(__file__), 'config', 'config.toml')
-config = toml.load(fname)
-
-epu_config = EpuConfig(**config['EPU'])
 
 ## config
-a_drive_address = epu_config.A_DRIVE_ADDRESS
-b_drive_address = epu_config.B_DRIVE_ADDRESS
-s_drive_address = epu_config.S_DRIVE_ADDRESS
-i_drive_address = epu_config.I_DRIVE_ADDRESS
-baud_rate = epu_config.BAUD_RATE
-minimum_gap = epu_config.MINIMUM_GAP
-maximum_gap = epu_config.MAXIMUM_GAP
-minimum_phase = epu_config.MINIMUM_PHASE
-maximum_phase = epu_config.MAXIMUM_PHASE
-minimum_velo_mm_per_min = epu_config.MINIMUM_VELOCITY  # mm/min
-minimum_velo_mm_per_sec = minimum_velo_mm_per_min / 60  # mm/sec
-maximum_velo_mm_per_min = epu_config.MAXIMUM_VELOCITY  # mm/min
-maximum_velo_mm_per_sec = maximum_velo_mm_per_min / 60  # mm/sec
-ecodrive_log_file_path = epu_config.ECODRIVE_LOG_FILE_PATH
-epu_log_file_path = epu_config.EPU_LOG_FILE_PATH
+a_drive_address = EpuConfig.A_DRIVE_ADDRESS
+b_drive_address = EpuConfig.B_DRIVE_ADDRESS
+s_drive_address = EpuConfig.S_DRIVE_ADDRESS
+i_drive_address = EpuConfig.I_DRIVE_ADDRESS
+baud_rate = EpuConfig.BAUD_RATE
+minimum_gap = EpuConfig.MINIMUM_GAP
+maximum_gap = EpuConfig.MAXIMUM_GAP
+minimum_phase = EpuConfig.MINIMUM_PHASE
+maximum_phase = EpuConfig.MAXIMUM_PHASE
+minimum_velo_mm_per_min = EpuConfig.MINIMUM_VELOCITY  # [mm/min]
+minimum_velo_mm_per_sec = minimum_velo_mm_per_min / 60  # [mm/s]
+maximum_velo_mm_per_min = EpuConfig.MAXIMUM_VELOCITY  # [mm/min]
+maximum_velo_mm_per_sec = maximum_velo_mm_per_min / 60  # [mm/s]
+ecodrive_log_file_path = EpuConfig.ECODRIVE_LOG_FILE_PATH
+epu_log_file_path = EpuConfig.EPU_LOG_FILE_PATH
 
 ######## Drive error codes and messages #########
 fname = _os.path.join(
@@ -98,16 +87,6 @@ powered_on_diag_codes = ['A012', 'A010', 'A211']
 ################## Autosave #####################
 autosave_update_rate = 10.0
 autosave_num_backup_files = 10
-
-
-# dummy function for debugging
-def dummy(val=0):
-    """Dummy function for debugging."""
-    if val != 0:
-        print('dummy {}'.format(val))
-    else:
-        print('dummy')
-
 
 # constants
 ## Driver configuration
@@ -135,6 +114,8 @@ max_long_msg_size = 2000
 ### rec enums
 bool_enums = ['No', 'Yes']
 bool_dsbl_enbl = ['Dsbl', 'Enbl']
+polarization_states = [
+    'none', 'circularn', 'horizontal', 'circularp', 'vertical']
 ### bool constants
 bool_no = 0
 bool_yes = 1
