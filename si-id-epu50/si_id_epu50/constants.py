@@ -89,6 +89,11 @@ autosave_update_rate = 10.0
 autosave_num_backup_files = 10
 
 # constants
+
+id_period_length = 50  # [mm]
+id_parked_gap = 300  # [mm]
+id_parked_phase = 0  # [mm]
+
 ## Driver configuration
 driver_update_rate = 0.2
 
