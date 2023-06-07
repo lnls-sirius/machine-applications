@@ -52,7 +52,7 @@ class _PCASDriver(_pcaspy.Driver):
         ret_val = self.app.write(reason, value)
         oldval = self.getParam(reason)
         if reason.endswith('-Cmd'):
-            value = oldval + 1
+            value = oldval
         if isinstance(value, (_np.ndarray, list, tuple)):
             pval = f'{value[0]}...{value[-1]}'
         else:
@@ -72,7 +72,11 @@ class _PCASDriver(_pcaspy.Driver):
         return True
 
     def update_pv(self, pvname, value, **kwargs):
-        self.setParam(pvname, value)
+        if pvname.endswith('-Cmd'):
+            oldval = self.getParam(pvname)
+            self.setParam(pvname, oldval + 1)
+        else:
+            self.setParam(pvname, value)
         if kwargs:
             self.setParamInfo(pvname, kwargs)
         self.updatePV(pvname)
