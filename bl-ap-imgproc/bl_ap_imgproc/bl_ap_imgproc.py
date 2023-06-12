@@ -9,9 +9,8 @@ import pcaspy as _pcaspy
 from pcaspy.tools import ServerThread
 
 from siriuspy import util as _util
-
-from .csdev import Constants
-from .main import App
+from siriuspy.dvfimgproc.csdev import Constants
+from siriuspy.dvfimgproc.main import App
 
 
 stop_event = _Event()
