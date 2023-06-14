@@ -10,7 +10,7 @@ from pcaspy import Severity as _Severity
 import siriuspy as _siriuspy
 import siriuspy.util as _util
 
-from siriuspy.thread import DequeThread as _DequeThread
+from siriuspy.thread import QueueThreads as _QueueThreads
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 
 from siriuspy.devices import PSProperty as _PSProperty
@@ -40,7 +40,7 @@ class App:
         self._driver = driver
 
         # write operation queue
-        self._dequethread = _DequeThread() if _USE_WRITE_QUEUE else None
+        self._queuethread = _QueueThreads() if _USE_WRITE_QUEUE else None
 
         # mapping device to bbb
         self._psnames = psnames
@@ -89,12 +89,12 @@ class App:
     def process(self):
         """Process all write requests in queue and does a BBB scan."""
         t0_ = _time.time()
-        if self._dequethread:  # Not None and not empty
-            status = self._dequethread.process()
+        if self._queuethread is not None and self._queuethread.qsize():
+            status = self._queuethread.process()
             if status:
                 txt = ("[{:.2s}] - new thread started for write queue item. "
                        "items left: {}")
-                logmsg = txt.format('Q ', len(self._dequethread))
+                logmsg = txt.format('Q ', self._queuethread.qsize())
                 _log.info(logmsg)
             for psname in self.psnames:
                 self.scan_device(psname)
@@ -125,8 +125,8 @@ class App:
                 self.driver.setParam(reason, value)
                 self.driver.updatePV(reason)
                 operation = (self._write_operation, (pvname, value))
-                self._dequethread.append(operation)
-                self._dequethread.process()
+                self._queuethread.put(operation, block=False)
+                self._queuethread.process()
         else:
             self.driver.setParam(reason, value)
             self.driver.updatePV(reason)

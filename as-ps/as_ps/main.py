@@ -9,7 +9,7 @@ from pcaspy import Severity as _Severity
 
 from siriuspy.util import print_ioc_banner as _print_ioc_banner
 from siriuspy.util import get_last_commit_hash as _get_last_commit_hash
-from siriuspy.thread import DequeThread as _DequeThread
+from siriuspy.thread import QueueThreads as _QueueThreads
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 from siriuspy.pwrsupply.csdev import PSSOFB_MAX_NR_UDC as _PSSOFB_MAX_NR_UDC
 from siriuspy.pwrsupply.bsmp.constants import UDC_MAX_NR_DEV as _UDC_MAX_NR_DEV
@@ -35,7 +35,7 @@ class App:
         self._sofb_processing = False
 
         # write operation queue
-        self._dequethread = _DequeThread()
+        self._queuethread = _QueueThreads()
 
         # counter of SOFBUpdate-Cmd write events
         self._counter_sofbupdate_cmd = 0
@@ -83,12 +83,12 @@ class App:
         t0_ = _time.time()
 
         # first process write requests, if any in queue
-        if self._dequethread:
-            status = self._dequethread.process()
+        if self._queuethread.qsize():
+            status = self._queuethread.process()
             if status:
                 txt = ("[{:.2s}] - new thread started for write queue item. "
                        "items left: {}")
-                logmsg = txt.format('Q ', len(self._dequethread))
+                logmsg = txt.format('Q ', self._queuethread.qsize())
                 _log.info(logmsg)
             # TODO: this sleep seems unnecessary now.
             # test commenting it out!
@@ -149,9 +149,9 @@ class App:
 
         bbb = self._dev2bbb[pvname.device_name]
         operation = (self._write_operation, (bbb, pvname, value))
-        self._dequethread.append(operation)
+        self._queuethread.put(operation, block=False)
 
-        self._dequethread.process()
+        self._queuethread.process()
 
     def scan_bbb(self, bbb):
         """Scan BBB devices and update ioc epics DB."""
@@ -263,7 +263,8 @@ class App:
                     self.driver.setParamInfo(reason, kwargs)
                     self.driver.updatePV(reason)
 
-            if self._dequethread and App._regexp_setpoint.match(reason):
+            if self._queuethread.qsize() and \
+                    App._regexp_setpoint.match(reason):
                 # While there are pending write operations in the queue we
                 # cannot update setpoint variables or we will spoil the
                 # accepted value in the write method.
