@@ -90,7 +90,7 @@ class App:
         """Process all write requests in queue and does a BBB scan."""
         t0_ = _time.time()
         if self._queuethread is not None and self._queuethread.qsize():
-            status = self._queuethread.process()
+            status = self._queuethread.process(block=False)
             if status:
                 txt = ("[{:.2s}] - new thread started for write queue item. "
                        "items left: {}")

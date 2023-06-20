@@ -84,7 +84,7 @@ class App:
 
         # first process write requests, if any in queue
         if self._queuethread.qsize():
-            status = self._queuethread.process()
+            status = self._queuethread.process(block=False)
             if status:
                 txt = ("[{:.2s}] - new thread started for write queue item. "
                        "items left: {}")
