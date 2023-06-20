@@ -151,7 +151,7 @@ class App:
         operation = (self._write_operation, (bbb, pvname, value))
         self._queuethread.put(operation, block=False)
 
-        self._queuethread.process()
+        self._queuethread.process(block=False)
 
     def scan_bbb(self, bbb):
         """Scan BBB devices and update ioc epics DB."""

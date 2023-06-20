@@ -125,7 +125,7 @@ class App:
                 self.driver.updatePV(reason)
                 operation = (self._write_operation, (pvname, value))
                 self._queuethread.put(operation, block=False)
-                self._queuethread.process()
+                self._queuethread.process(block=False)
         else:
             self.driver.setParam(reason, value)
             self.driver.updatePV(reason)
