@@ -83,6 +83,11 @@ class App:
         """Process all write requests in queue and does a BBB scan."""
         t0_ = _time.time()
 
+        qsize = self._queue.qsize()
+        if qsize > 2:
+            logmsg = f'[Q] - write queue size is large: {qsize}'
+            _log.warning(logmsg)
+
         # then scan bbb state for updates.
         for bbb in self.bbblist:
             self.scan_bbb(bbb)

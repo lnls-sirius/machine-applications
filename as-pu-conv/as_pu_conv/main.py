@@ -82,8 +82,15 @@ class App:
     def process(self):
         """Process all write requests in queue and does a BBB scan."""
         t0_ = _time.time()
+
         for psname in self.psnames:
             self._queue.put((self.scan_device, (psname, )), block=False)
+
+        qsize = self._queue.qsize()
+        if qsize > 2:
+            logmsg = f'[Q] - write queue size is large: {qsize}'
+            _log.warning(logmsg)
+
         dt_ = self._interval - (_time.time() - t0_)
         _time.sleep(max(dt_, 0))
 
