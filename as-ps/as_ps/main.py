@@ -9,7 +9,7 @@ from pcaspy import Severity as _Severity
 
 from siriuspy.util import print_ioc_banner as _print_ioc_banner
 from siriuspy.util import get_last_commit_hash as _get_last_commit_hash
-from siriuspy.thread import QueueThreads as _QueueThreads
+from siriuspy.thread import LoopQueueThread as _LoopQueueThread
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 from siriuspy.pwrsupply.csdev import PSSOFB_MAX_NR_UDC as _PSSOFB_MAX_NR_UDC
 from siriuspy.pwrsupply.bsmp.constants import UDC_MAX_NR_DEV as _UDC_MAX_NR_DEV
@@ -35,7 +35,8 @@ class App:
         self._sofb_processing = False
 
         # write operation queue
-        self._queuethread = _QueueThreads()
+        self._queue = _LoopQueueThread()
+        self._queue.start()
 
         # counter of SOFBUpdate-Cmd write events
         self._counter_sofbupdate_cmd = 0
@@ -82,26 +83,13 @@ class App:
         """Process all write requests in queue and does a BBB scan."""
         t0_ = _time.time()
 
-        # first process write requests, if any in queue
-        if self._queuethread.qsize():
-            status = self._queuethread.process(block=False)
-            if status:
-                txt = ("[{:.2s}] - new thread started for write queue item. "
-                       "items left: {}")
-                logmsg = txt.format('Q ', self._queuethread.qsize())
-                _log.info(logmsg)
-            # TODO: this sleep seems unnecessary now.
-            # test commenting it out!
-            _time.sleep(self._sleep_scan)
-
         # then scan bbb state for updates.
         for bbb in self.bbblist:
             self.scan_bbb(bbb)
 
         # sleep, if necessary
-        t1_ = _time.time()
-        if t1_ - t0_ < self._interval:
-            _time.sleep(self._interval - (t1_ - t0_))
+        dt_ = self._interval - (_time.time() - t0_)
+        _time.sleep(max(dt_, 0))
 
         # NOTE: measure this interval for various BBBs...
         # _log.info("process.... {:.3f} ms".format(1000*(t1_-t0_)))
@@ -148,10 +136,8 @@ class App:
             self.driver.updatePV(reason)
 
         bbb = self._dev2bbb[pvname.device_name]
-        operation = (self._write_operation, (bbb, pvname, value))
-        self._queuethread.put(operation, block=False)
-
-        self._queuethread.process(block=False)
+        self._queue.put(
+            (self._write_operation, (bbb, pvname, value)), block=False)
 
     def scan_bbb(self, bbb):
         """Scan BBB devices and update ioc epics DB."""
@@ -226,9 +212,8 @@ class App:
             isinstance(value, (tuple, list, _np.ndarray)) else len(value)
         return value_len == App._sofb_value_length
 
-    def _update_ioc_database(self, bbb, devname,
-                             dev_connected=True,
-                             force_update=False):
+    def _update_ioc_database(
+            self, bbb, devname, dev_connected=True, force_update=False):
 
         # connection state changed?
         if dev_connected == self._dev2conn[devname]:
@@ -263,8 +248,7 @@ class App:
                     self.driver.setParamInfo(reason, kwargs)
                     self.driver.updatePV(reason)
 
-            if self._queuethread.qsize() and \
-                    App._regexp_setpoint.match(reason):
+            if not self._queue.empty() and App._regexp_setpoint.match(reason):
                 # While there are pending write operations in the queue we
                 # cannot update setpoint variables or we will spoil the
                 # accepted value in the write method.
