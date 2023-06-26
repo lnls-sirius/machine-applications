@@ -10,7 +10,7 @@ from pcaspy import Severity as _Severity
 import siriuspy as _siriuspy
 import siriuspy.util as _util
 
-from siriuspy.thread import DequeThread as _DequeThread
+from siriuspy.thread import LoopQueueThread as _LoopQueueThread
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 
 from siriuspy.devices import PSProperty as _PSProperty
@@ -33,14 +33,13 @@ class App:
     Update values and parameters such as alarms.
     """
 
-    _regexp_setpoint = _re.compile('^.*-(SP)$')
-
     def __init__(self, driver, psnames, dbset, prefix):
         """Create Power Supply controllers."""
         self._driver = driver
 
         # write operation queue
-        self._dequethread = _DequeThread() if _USE_WRITE_QUEUE else None
+        self._queue = _LoopQueueThread()
+        self._queue.start()
 
         # mapping device to bbb
         self._psnames = psnames
@@ -89,22 +88,17 @@ class App:
     def process(self):
         """Process all write requests in queue and does a BBB scan."""
         t0_ = _time.time()
-        if self._dequethread:  # Not None and not empty
-            status = self._dequethread.process()
-            if status:
-                txt = ("[{:.2s}] - new thread started for write queue item. "
-                       "items left: {}")
-                logmsg = txt.format('Q ', len(self._dequethread))
-                _log.info(logmsg)
-            for psname in self.psnames:
-                self.scan_device(psname)
-            _time.sleep(0.050)
-        else:
-            for psname in self.psnames:
-                self.scan_device(psname)
-            t1_ = _time.time()
-            if t1_ - t0_ < self._interval:
-                _time.sleep(self._interval - (t1_ - t0_))
+
+        for psname in self.psnames:
+            self._queue.put((self.scan_device, (psname, )), block=False)
+
+        qsize = self._queue.qsize()
+        if qsize > 2:
+            logmsg = f'[Q] - write queue size is large: {qsize}'
+            _log.warning(logmsg)
+
+        dt_ = self._interval - (_time.time() - t0_)
+        _time.sleep(max(dt_, 0))
 
     def read(self, reason):
         """Read from database."""
@@ -116,25 +110,9 @@ class App:
         _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
             'W ', reason, str(value)))
         pvname = _SiriusPVName(reason)
-        if _USE_WRITE_QUEUE:
-            # NOTE: This modified behaviour is to allow loading
-            # global_config to complete without artificial warning
-            # messages or unnecessary delays. Whether we should extend
-            # it to all power supplies remains to be checked.
-            if App._regexp_setpoint.match(reason):
-                self.driver.setParam(reason, value)
-                self.driver.updatePV(reason)
-                operation = (self._write_operation, (pvname, value))
-                self._dequethread.append(operation)
-                self._dequethread.process()
-        else:
-            self.driver.setParam(reason, value)
-            self.driver.updatePV(reason)
-            t0_ = _time.time()
-            self._write_operation(pvname, value)
-            t1_ = _time.time()
-            _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
-                'T ', reason, '{:.3f} ms'.format((t1_-t0_)*1000)))
+        self.driver.setParam(reason, value)
+        self.driver.updatePV(reason)
+        self._queue.put((self._write_operation, (pvname, value)), block=False)
 
     def scan_device(self, psname):
         """Scan device and update ioc epics DB."""
