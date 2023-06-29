@@ -20,7 +20,7 @@ __version__ = _util.get_last_commit_hash()
 
 
 # update frequency of strength PVs
-UPDATE_FREQUECY = 2.0  # [Hz]
+UPDATE_FREQ = 10.0  # [Hz]
 
 
 class App:
@@ -45,7 +45,7 @@ class App:
         self._psnames = psnames
 
         # define update interval
-        self._interval = 1 / UPDATE_FREQUECY
+        self._interval = 1 / UPDATE_FREQ
 
         # strength string
         self._strenname = self._get_strennames(dbset)
@@ -181,16 +181,17 @@ class App:
     # --- private methods ---
 
     def _create_connectors_and_streconv(self):
-        connectors = dict()
+        conns = dict()
         streconv = dict()
+        opts = {'auto_monitor_mon': True}
         for psn in self.psnames:
-            connectors[psn] = dict()
-            connectors[psn]['-SP'] = _PSProperty(psn, 'Current-SP')
-            connectors[psn]['-RB'] = _PSProperty(psn, 'Current-RB')
-            connectors[psn]['Ref-Mon'] = _PSProperty(psn, 'CurrentRef-Mon')
-            connectors[psn]['-Mon'] = _PSProperty(psn, 'Current-Mon')
-            streconv[psn] = _StrengthConv(psn, proptype='Ref-Mon')
-        return connectors, streconv
+            conns[psn] = dict()
+            conns[psn]['-SP'] = _PSProperty(psn, 'Current-SP', **opts)
+            conns[psn]['-RB'] = _PSProperty(psn, 'Current-RB', **opts)
+            conns[psn]['Ref-Mon'] = _PSProperty(psn, 'CurrentRef-Mon', **opts)
+            conns[psn]['-Mon'] = _PSProperty(psn, 'Current-Mon', **opts)
+            streconv[psn] = _StrengthConv(psn, proptype='Ref-Mon', **opts)
+        return conns, streconv
 
     def _write_operation(self, pvname, value):
         t0_ = _time.time()
