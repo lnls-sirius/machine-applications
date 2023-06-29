@@ -34,8 +34,12 @@ class App:
         self._driver = driver
 
         # write operation queue
-        self._queue = _LoopQueueThread()
-        self._queue.start()
+        self._queue_write = _LoopQueueThread()
+        self._queue_write.start()
+
+        # scan queue
+        self._queue_scan = _LoopQueueThread()
+        self._queue_scan.start()
 
         # mapping device to bbb
         self._psnames = psnames
@@ -85,10 +89,16 @@ class App:
         """Process all write requests in queue and does a BBB scan."""
         t0_ = _time.time()
 
+        # scan tasks
+        qsize = self._queue_scan.qsize()
+        if qsize > 2:
+            logmsg = f'[Q] - scan queue size is large: {qsize}'
+            _log.warning(logmsg)
         for psname in self.psnames:
-            self._queue.put((self.scan_device, (psname, )), block=False)
+            self._queue_scan.put((self.scan_device, (psname, )), block=False)
 
-        qsize = self._queue.qsize()
+        # log write queue size
+        qsize = self._queue_write.qsize()
         if qsize > 2:
             logmsg = f'[Q] - write queue size is large: {qsize}'
             _log.warning(logmsg)
@@ -108,7 +118,8 @@ class App:
         pvname = _SiriusPVName(reason)
         self.driver.setParam(reason, value)
         self.driver.updatePV(reason)
-        self._queue.put((self._write_operation, (pvname, value)), block=False)
+        self._queue_write.put(
+            (self._write_operation, (pvname, value)), block=False)
 
     def scan_device(self, psname):
         """Scan device and update ioc epics DB."""
