@@ -2,7 +2,6 @@
 
 import time as _time
 import logging as _log
-import re as _re
 
 from pcaspy import Alarm as _Alarm
 from pcaspy import Severity as _Severity
@@ -19,9 +18,6 @@ from siriuspy.devices import StrengthConv as _StrengthConv
 
 __version__ = _util.get_last_commit_hash()
 
-
-# Select whether to queue write requests or process them right away.
-_USE_WRITE_QUEUE = True
 
 # update frequency of strength PVs
 UPDATE_FREQUECY = 2.0  # [Hz]
