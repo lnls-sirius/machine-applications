@@ -197,10 +197,10 @@ class App:
         t0_ = _time.time()
         psname = pvname.device_name
         streconv = self._streconvs[psname]
-        voltage = streconv.conv_strength_2_current(value)
+        current = streconv.conv_strength_2_current(value)
         conn = self._connectors[psname]['-SP']
         if conn.connected:
-            self._connectors[psname]['-SP'].value = voltage
+            self._connectors[psname]['-SP'].value = current
         t1_ = _time.time()
         _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
             'T ', pvname,
