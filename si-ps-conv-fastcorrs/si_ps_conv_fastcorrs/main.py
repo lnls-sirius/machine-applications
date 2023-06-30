@@ -9,7 +9,8 @@ from pcaspy import Severity as _Severity
 import siriuspy as _siriuspy
 import siriuspy.util as _util
 
-from siriuspy.thread import LoopQueueThread as _LoopQueueThread
+from siriuspy.thread import LoopQueueThread as _LoopQueueThread, \
+    RepeaterThread as _RepeaterThread
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 
 from siriuspy.devices import PSProperty as _PSProperty
@@ -37,15 +38,8 @@ class App:
         self._queue_write = _LoopQueueThread()
         self._queue_write.start()
 
-        # scan queue
-        self._queue_scan = _LoopQueueThread()
-        self._queue_scan.start()
-
         # mapping device to bbb
         self._psnames = psnames
-
-        # define update interval
-        self._interval = 1 / UPDATE_FREQ
 
         # strength string
         self._strenname = self._get_strennames(dbset)
@@ -61,6 +55,12 @@ class App:
         # build connectors and streconv dicts
         self._connectors, self._streconvs = \
             self._create_connectors_and_streconv()
+
+        # scan thread
+        self._interval = 1 / UPDATE_FREQ
+        self._thread_scan = _RepeaterThread(
+            self._interval, self.scan, niter=0)
+        self._thread_scan.start()
 
     # --- public interface ---
 
@@ -89,14 +89,6 @@ class App:
         """Process all write requests in queue and does a BBB scan."""
         t0_ = _time.time()
 
-        # scan tasks
-        qsize = self._queue_scan.qsize()
-        if qsize > 2:
-            logmsg = f'[Q] - scan queue size is large: {qsize}'
-            _log.warning(logmsg)
-        for psname in self.psnames:
-            self._queue_scan.put((self.scan_device, (psname, )), block=False)
-
         # log write queue size
         qsize = self._queue_write.qsize()
         if qsize > 2:
@@ -120,6 +112,11 @@ class App:
         self.driver.updatePV(reason)
         self._queue_write.put(
             (self._write_operation, (pvname, value)), block=False)
+
+    def scan(self):
+        """Scan all devices"""
+        for psname in self.psnames:
+            self.scan_device(psname)
 
     def scan_device(self, psname):
         """Scan device and update ioc epics DB."""
