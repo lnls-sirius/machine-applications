@@ -35,7 +35,7 @@ class App:
         self._driver = driver
 
         # write operation queue
-        self._queue_write = _LoopQueueThread()
+        self._queue_write = _LoopQueueThread(is_cathread=True)
         self._queue_write.start()
 
         # mapping device to bbb
@@ -59,7 +59,7 @@ class App:
         # scan thread
         self._interval = 1 / UPDATE_FREQ
         self._thread_scan = _RepeaterThread(
-            self._interval, self.scan, niter=0)
+            self._interval, self.scan, niter=0, is_cathread=True)
         self._thread_scan.start()
 
     # --- public interface ---
