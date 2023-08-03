@@ -6,11 +6,13 @@ from . import constants as _cte
 #############################################
 # Map variable -> pv name
 ## general
-# pv_polarization_sel = 'Polarization-Sel'
-# pv_polarization_sts = 'Polarization-Sts'
-# pv_kparameter_sp = 'KParameter-SP'
-# pv_kparameter_rb = 'KParameter-RB'
-# pv_kparameter_mon = 'KParameter-Mon'
+pv_polarization_sel = 'Pol-Sel'
+pv_polarization_sts = 'Pol-Sts'
+pv_polarization_mon = 'Pol-Mon'
+pv_polarization_cmd = 'ChangePol-Cmd'
+pv_kparameter_sp = 'KParameter-SP'
+pv_kparameter_rb = 'KParameter-RB'
+pv_kparameter_mon = 'KParameter-Mon'
 pv_id_period_length_cte = 'PeriodLength-Cte'
 pv_id_parked_gap_cte = 'ParkedGap-Cte'
 pv_id_parked_phase_cte = 'ParkedPhase-Cte'
@@ -106,43 +108,49 @@ pv_drive_i_connected_mon = 'DriveIConnected-Mon'
 pvdb = {
     #############################################
     # General
-    # pv_polarization_sel : {
-    #     'type' : 'enum',
-    #     'enums' : _cte.polarization_states,
-    #     'value' : 0,
-    #     'asg' : 'default',
-    # },
-    # pv_polarization_sts : {
-    #     'type' : 'enum',
-    #     'enums' : _cte.polarization_states,
-    #     'value' : 0,
-    #     'asg' : 'default',
-    # },
-    # pv_kparameter_sp : {
-    #     'type' : 'float',
-    #     'prec' : 5,
-    #     'unit' : 'kparameter',
-    #     'asg' : 'default',
-    #     'lolim': 0.0,
-    #     'hilim': 1.0,
-    # },
-    # pv_kparameter_rb : {
-    #     'type' : 'float',
-    #     'prec' : 5,
-    #     'unit' : 'kparameter',
-    #     'asg' : 'default',
-    #     'lolim': 0.0,
-    #     'hilim': 1.0,
-    # },
-    # pv_kparameter_mon : {
-    #     'type' : 'float',
-    #     'prec' : 5,
-    #     'unit' : 'kparameter',
-    #     'asg' : 'default',
-    #     'lolim': 0.0,
-    #     'hilim': 1.0,
-    # },
-    pv_id_period_length_cte: {
+    pv_polarization_sel : {
+        'type' : 'enum',
+        'enums' : _cte.polarization_states_sel_sts,
+        'value' : 0,
+        'asg' : 'default',
+    },
+    pv_polarization_sts : {
+        'type' : 'enum',
+        'enums' : _cte.polarization_states_sel_sts,
+        'value' : 0,
+        'asg' : 'default',
+    },
+    pv_polarization_mon : {
+        'type': 'enum',
+        'enums' : _cte.polarization_states_mon,
+        'value' : _cte.polarization_states_mon.index('undefined'),
+        'asg' : 'default',
+    },
+    pv_kparameter_sp : {
+        'type' : 'float',
+        'prec' : 5,
+        'unit' : 'kparameter',
+        'asg' : 'default',
+        'lolim': 0.0,
+        'hilim': _cte.id_kparam_max,
+    },
+    pv_kparameter_rb : {
+        'type' : 'float',
+        'prec' : 5,
+        'unit' : 'kparameter',
+        'asg' : 'default',
+        'lolim': 0.0,
+        'hilim': _cte.id_kparam_max,
+    },
+    pv_kparameter_mon : {
+        'type' : 'float',
+        'prec' : 5,
+        'unit' : 'kparameter',
+        'asg' : 'default',
+        'lolim': 0.0,
+        'hilim': _cte.id_kparam_max,
+    },
+    pv_id_period_length_cte : {
         'type': 'float',
         'value': _cte.id_period_length,
         'unit': 'mm'

@@ -93,6 +93,7 @@ autosave_num_backup_files = 10
 id_period_length = 50  # [mm]
 id_parked_gap = 300  # [mm]
 id_parked_phase = 0  # [mm]
+id_kparam_max = 3.0  # NOTE: to be updated later
 
 ## Driver configuration
 driver_update_rate = 0.2
@@ -119,8 +120,10 @@ max_long_msg_size = 2000
 ### rec enums
 bool_enums = ['No', 'Yes']
 bool_dsbl_enbl = ['Dsbl', 'Enbl']
-polarization_states = [
-    'none', 'circularn', 'horizontal', 'circularp', 'vertical']
+polarization_states_sel_sts = [
+    'circular_neg', 'linear_horiz', 'circular_pos', 'linear_vert']
+polarization_states_mon = polarization_states_sel_sts + ['none', 'undefined']
+
 ### bool constants
 bool_no = 0
 bool_yes = 1
