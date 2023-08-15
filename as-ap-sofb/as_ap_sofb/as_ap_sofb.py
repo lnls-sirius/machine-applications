@@ -12,10 +12,9 @@ import pcaspy.tools as _pcaspy_tools
 import siriuspy.util as _util
 from siriuspy import csdev as _csdev
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
-from siriuspy.sofb.main import SOFB as _SOFB
-from siriuspy.sofb.matrix import EpicsMatrix as _EpicsMatrix
-from siriuspy.sofb.orbit import EpicsOrbit as _EpicsOrbit
-from siriuspy.sofb.correctors import EpicsCorrectors as _EpicsCorrectors
+from siriuspy.thread import LoopQueueThread as _LoopQueueThread
+from siriuspy.sofb import SOFB as _SOFB, EpicsMatrix as _EpicsMatrix, \
+    EpicsOrbit as _EpicsOrbit, EpicsCorrectors as _EpicsCorrectors
 
 stop_event = False
 __version__ = _util.get_last_commit_hash()
@@ -39,6 +38,8 @@ class _PCASDriver(_pcaspy.Driver):
 
     def __init__(self, app):
         super().__init__()
+        self._write_queue = _LoopQueueThread(is_cathread=True)
+        self._write_queue.start()
         self.app = app
         self.app.add_callback(self.update_pv)
 
@@ -49,10 +50,15 @@ class _PCASDriver(_pcaspy.Driver):
     def write(self, reason, value):
         if not self._isValid(reason, value):
             return False
+        self._write_queue.put(self._write, (reason, value))
+        return True
+
+    def _write(self, reason, value):
         ret_val = self.app.write(reason, value)
         oldval = self.getParam(reason)
         if reason.endswith('-Cmd'):
             value = oldval + 1
+
         if isinstance(value, (_np.ndarray, list, tuple)):
             pval = f'{value[0]}...{value[-1]}'
         else:
@@ -61,6 +67,7 @@ class _PCASDriver(_pcaspy.Driver):
             opval = f'{oldval[0]}...{oldval[-1]}'
         else:
             opval = f'{oldval}'
+
         if ret_val:
             _log.info('YES Write %s: %s', reason, pval)
         else:
@@ -69,7 +76,6 @@ class _PCASDriver(_pcaspy.Driver):
             value = oldval
         self.setParam(reason, value)
         self.updatePV(reason)
-        return True
 
     def update_pv(self, pvname, value, **kwargs):
         self.setParam(pvname, value)

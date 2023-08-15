@@ -4,13 +4,18 @@ import os as _os
 import logging as _log
 import signal as _signal
 from threading import Event as _Event
+
 import pcaspy as _pcaspy
 from pcaspy.tools import ServerThread
-from as_ti_control import App
+
 from siriuspy import util as _util
 from siriuspy import csdev as _csdev
+from siriuspy.thread import LoopQueueThread as _LoopQueueThread
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from siriuspy.search import HLTimeSearch as _HLTimeSearch
+
+from .main import App
+
 
 __version__ = _util.get_last_commit_hash()
 INTERVAL = 0.5
@@ -64,6 +69,8 @@ class _Driver(_pcaspy.Driver):
 
     def __init__(self, app):
         super().__init__()
+        self._write_queue = _LoopQueueThread(is_cathread=True)
+        self._write_queue.start()
         self.app = app
         self.app.driver = self
 
@@ -74,6 +81,10 @@ class _Driver(_pcaspy.Driver):
     def write(self, reason, value):
         if not self._isValid(reason, value):
             return False
+        self._write_queue.put(self._write, (reason, value))
+        return True
+
+    def _write(self, reason, value):
         ret_val = self.app.write(reason, value)
         oldval = self.getParam(reason)
         if reason.endswith('-Cmd'):
@@ -85,7 +96,8 @@ class _Driver(_pcaspy.Driver):
                 'NO write %s: %s current value is %s',
                 reason, str(oldval), str(value))
             value = oldval
-        return True
+        self.setParam(reason, value)
+        self.updatePV(reason)
 
     def _isValid(self, reason, val):
         if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
