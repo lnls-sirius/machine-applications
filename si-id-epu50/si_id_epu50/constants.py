@@ -26,10 +26,11 @@ RESET_CH_AB = 0x40
 RESET_CH_SI = 0x41
 
 ############### EPU constants ################
-DEFAULT_PATH = '/home/sirius/iocs-log/si-id-epu50/'
+DEFAULT_PATH = "/home/sirius/iocs-log/si-id-epu50/"
 AUTOSAVE_DEFAULT_SAVE_LOCATION = DEFAULT_PATH
 AUTOSAVE_DEFAULT_REQUEST_FILE = _os.path.join(
-    _os.path.dirname(__file__), 'config', 'autosave_epu.req')
+    _os.path.dirname(__file__), "config", "autosave_epu.req"
+)
 
 
 class EpuConfig:
@@ -46,8 +47,8 @@ class EpuConfig:
     MAXIMUM_PHASE: float = +25  # [mm]
     MINIMUM_VELOCITY: float = +0.6  # [mm/min]
     MAXIMUM_VELOCITY: float = +500  # [mm/min]
-    ECODRIVE_LOG_FILE_PATH: str = 'ecodrive_control.log'
-    EPU_LOG_FILE_PATH: str = 'epu_control.log'
+    ECODRIVE_LOG_FILE_PATH: str = "ecodrive_control.log"
+    EPU_LOG_FILE_PATH: str = "epu_control.log"
 
 
 ## config
@@ -68,12 +69,11 @@ ecodrive_log_file_path = EpuConfig.ECODRIVE_LOG_FILE_PATH
 epu_log_file_path = EpuConfig.EPU_LOG_FILE_PATH
 
 ######## Drive error codes and messages #########
-fname = _os.path.join(
-        _os.path.dirname(__file__), 'config', 'drive_messages.yaml')
+fname = _os.path.join(_os.path.dirname(__file__), "config", "drive_messages.yaml")
 with open(fname, "r") as f:
     try:
         drive_code_dict = yaml.safe_load(f)
-        drive_diag_msgs = drive_code_dict['diagnostic_messages']
+        drive_diag_msgs = drive_code_dict["diagnostic_messages"]
     except Exception:
         print(traceback.format_exc())
 
@@ -81,8 +81,8 @@ default_unknown_diag_msg = "? Unknown diagnostic code"
 
 ######### Key diagnostic codes meaning ##########
 
-operational_diag_codes = ['A211']
-powered_on_diag_codes = ['A012', 'A010', 'A211']
+operational_diag_codes = ["A211"]
+powered_on_diag_codes = ["A012", "A010", "A211"]
 
 ################## Autosave #####################
 autosave_update_rate = 10.0
@@ -106,21 +106,20 @@ poll_interval = 0.1
 speed_tol = 0.0
 ### IOC messages
 msg_clear = ""
-msg_device_busy = 'Cmd failed: Device is busy'
+msg_device_busy = "Cmd failed: Device is busy"
 
 ## EPICS record fields
 ### rec units string
-no_units = ''
-position_units = 'mm'
-velo_units = 'mm/s'
+no_units = ""
+position_units = "mm"
+velo_units = "mm/s"
 # array size limits
 max_msg_size = 200
 max_long_msg_size = 2000
 ### rec enums
-bool_enums = ['No', 'Yes']
-bool_dsbl_enbl = ['Dsbl', 'Enbl']
-polarization_states = [
-    'none', 'circularn', 'horizontal', 'circularp', 'vertical']
+bool_enums = ["No", "Yes"]
+bool_dsbl_enbl = ["Dsbl", "Enbl"]
+polarization_states = ["none", "circularn", "horizontal", "circularp", "vertical"]
 ### bool constants
 bool_no = 0
 bool_yes = 1
@@ -130,8 +129,7 @@ position_precision = 3
 scan_rate = 0.1
 
 ## EPICS access security
-access_security_filename = _os.path.join(
-        _os.path.dirname(__file__), 'access_rules.as')
+access_security_filename = _os.path.join(_os.path.dirname(__file__), "access_rules.as")
 
 ## CA server
 ### transaction update rate
