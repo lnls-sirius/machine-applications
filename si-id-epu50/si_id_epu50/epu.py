@@ -1098,18 +1098,18 @@ class Epu:
 
     def polarization_motion(self, start: bool = False) -> None:
         """Open gap to 300 mm, goes to <phase>."""
-
         if not start:
             return
 
         self.pol_is_moving = True
         self.gap_set(300)
+        self.phase_set(_cte.pol_phases[self.polarization_mode])
+        time.sleep(2)
         self.gap_start(True)
 
         while self.gap_is_moving:
             time.sleep(1)
 
-        self.phase_set(_cte.pol_phases[self.polarization_mode])
         self.phase_start(True)
         self.pol_is_moving = False
 
