@@ -239,6 +239,7 @@ class Epu:
             self.rs485_connected = self._gpio_socket.connected
             self.gpio_connected = self._serial_socket.connected
             self.tcp_connected = self.rs485_connected and self.gpio_connected
+            self.polarization_mode = 0
 
             self.a_drive = EcoDrive(
                 tcp_client=self._serial_socket,
@@ -1073,11 +1074,33 @@ class Epu:
         self.gap_stop()
         self.phase_stop()
 
-    def custom_motion(self, mode: int) -> None:
+    def set_polarization(self, mode: int) -> None:
+        """
+        Set polarization to linear horizontal (mode=1), linear vertical (mode=2),
+        circular left (mode=3), circular right (mode=4).
+        """
+        if mode not in range(0, 5):
+            logger.error("Invalid polarization mode.")
+            return
+        self.polarization_mode = mode
+        return
+
+    def polarization_table(self) -> float:
+        """
+        Return the phase value for the selected polarization mode.
+        """
+
+        phases = {1: -16.39, 2: 0, 3: 15.39, 4: 25}
+
+        return phases[self.polarization_mode]
+
+    def custom_motion(self, start: bool = False) -> None:
         """
         Open gap to 300 mm, goes to <phase>.
         """
-        phases = {1: -16.39, 2: 0, 3: 16.39, 4: 25}
+
+        if not start:
+            return
 
         self.gap_set(300)
         self.gap_start(True)
@@ -1085,7 +1108,7 @@ class Epu:
         while self.gap_is_moving:
             time.sleep(3)
 
-        self.phase_set(phases[mode])
+        self.phase_set(self.polarization_table())
         self.phase_start(True)
 
 

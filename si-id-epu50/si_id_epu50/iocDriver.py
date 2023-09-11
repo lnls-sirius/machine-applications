@@ -339,8 +339,11 @@ class EPUSupport(pcaspy.Driver):
         # set polarity
         if EPUSupport.isPvName(reason, _db.pv_polarization_sel):
             if value >= 0 and value <= 4:
-                self.setParam(_db.pv_polarization_sel, value)
-                self.updatePVs()
+                status = self.asynExec(reason, driver.set_polarization, value)
+                if status:
+                    self.setParam(_db.pv_polarization_sel, value)
+                    self.setParam(_db.pv_polarization_sts, value)
+                    self.updatePVs()
 
         # enable control from beamlines
         if EPUSupport.isPvName(reason, _db.pv_beamline_enbl_sel):
@@ -486,7 +489,7 @@ class EPUSupport(pcaspy.Driver):
             ):
                 status = self.asynExec(reason, driver.custom_motion, value)
                 # increment cmd pv
-                self.setParam(_db.pv_change_polarization_cmd, value)
+                self.incParam(_db.pv_change_polarization_cmd)
                 self.updatePVs()
             else:
                 status = False
