@@ -1102,7 +1102,7 @@ class Epu:
 
         self.gap_set(300)
         self.phase_set(_cte.pol_phases[self.polarization_mode])
-        time.sleep(0.5)
+        time.sleep(2)
         self.gap_start(True)
 
         while self.gap_is_moving:

@@ -488,9 +488,14 @@ class EPUSupport(pcaspy.Driver):
                 and self.getParam(_db.pv_allowed_change_phase_mon) == _cte.bool_yes
             ):
                 phase = _cte.pol_phases[self.getParam(_db.pv_polarization_sel)]
-                driver.phase_set(phase)
-                #self.asynExec(reason, driver.set_phase, phase)
+                self.setParam(_db.pv_gap_sp, 300)
+                driver.gap_set(300)
+                time.sleep(1)
+                time.sleep(0.5)
                 self.setParam(_db.pv_phase_sp, phase)
+                driver.phase_set(phase)
+                time.sleep(0.5)
+                #self.asynExec(reason, driver.set_phase, phase)
                 status = self.asynExec(reason, driver.custom_motion, value)
                 # increment cmd pv
                 self.incParam(_db.pv_change_polarization_cmd)
