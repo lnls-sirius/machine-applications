@@ -5,12 +5,12 @@ from . import constants as _cte
 
 #############################################
 # Map variable -> pv name
-## general
-# pv_polarization_sel = 'Polarization-Sel'
-# pv_polarization_sts = 'Polarization-Sts'
-# pv_kparameter_sp = 'KParameter-SP'
-# pv_kparameter_rb = 'KParameter-RB'
-# pv_kparameter_mon = 'KParameter-Mon'
+pv_change_polarization_cmd = "ChangePolarization-Cmd"
+pv_polarization_sel = "Polarization-Sel"
+pv_polarization_sts = "Polarization-Sts"
+pv_kparameter_sp = "KParameter-SP"
+pv_kparameter_rb = "KParameter-RB"
+pv_kparameter_mon = "KParameter-Mon"
 pv_id_period_length_cte = "PeriodLength-Cte"
 pv_id_parked_gap_cte = "ParkedGap-Cte"
 pv_id_parked_phase_cte = "ParkedPhase-Cte"
@@ -68,7 +68,7 @@ pv_pwr_si_mon = "PwrPhase-Mon"
 pv_tcp_connected_mon = "TCPConnected-Mon"
 pv_gpio_connected_mon = "GPIOConnected-Mon"
 pv_epu_connected_mon = "EPUConnected-Mon"
-## drive A
+# drive A
 pv_drive_a_resolver_pos_mon = "DriveAResolverPos-Mon"
 pv_drive_a_encoder_pos_mon = "DriveAEncoderPos-Mon"
 pv_a_target_velo_mon = "DriveATargetSpeed-Mon"
@@ -76,7 +76,7 @@ pv_drive_a_diag_code_mon = "DriveADiagCode-Mon"
 pv_drive_a_diag_msg_mon = "DriveADiagMsg-Mon"
 pv_drive_a_is_moving_mon = "DriveAMoving-Mon"
 pv_drive_a_connected_mon = "DriveAConnected-Mon"
-## drive B
+# drive B
 pv_drive_b_resolver_pos_mon = "DriveBResolverPos-Mon"
 pv_drive_b_encoder_pos_mon = "DriveBEncoderPos-Mon"
 pv_b_target_velo_mon = "DriveBTargetSpeed-Mon"
@@ -84,7 +84,7 @@ pv_drive_b_diag_code_mon = "DriveBDiagCode-Mon"
 pv_drive_b_diag_msg_mon = "DriveBDiagMsg-Mon"
 pv_drive_b_is_moving_mon = "DriveBMoving-Mon"
 pv_drive_b_connected_mon = "DriveBConnected-Mon"
-## drive S
+# drive S
 pv_drive_s_resolver_pos_mon = "DriveSResolverPos-Mon"
 pv_drive_s_encoder_pos_mon = "DriveSEncoderPos-Mon"
 pv_s_target_velo_mon = "DriveSTargetSpeed-Mon"
@@ -92,7 +92,7 @@ pv_drive_s_diag_code_mon = "DriveSDiagCode-Mon"
 pv_drive_s_diag_msg_mon = "DriveSDiagMsg-Mon"
 pv_drive_s_is_moving_mon = "DriveSMoving-Mon"
 pv_drive_s_connected_mon = "DriveSConnected-Mon"
-## drive I
+# drive I
 pv_drive_i_resolver_pos_mon = "DriveIResolverPos-Mon"
 pv_drive_i_encoder_pos_mon = "DriveIEncoderPos-Mon"
 pv_i_target_velo_mon = "DriveITargetSpeed-Mon"
@@ -104,44 +104,44 @@ pv_drive_i_connected_mon = "DriveIConnected-Mon"
 #############################################
 # Database
 pvdb = {
-    #############################################
-    # General
-    # pv_polarization_sel : {
-    #     'type' : 'enum',
-    #     'enums' : _cte.polarization_states,
-    #     'value' : 0,
-    #     'asg' : 'default',
-    # },
-    # pv_polarization_sts : {
-    #     'type' : 'enum',
-    #     'enums' : _cte.polarization_states,
-    #     'value' : 0,
-    #     'asg' : 'default',
-    # },
-    # pv_kparameter_sp : {
-    #     'type' : 'float',
-    #     'prec' : 5,
-    #     'unit' : 'kparameter',
-    #     'asg' : 'default',
-    #     'lolim': 0.0,
-    #     'hilim': 1.0,
-    # },
-    # pv_kparameter_rb : {
-    #     'type' : 'float',
-    #     'prec' : 5,
-    #     'unit' : 'kparameter',
-    #     'asg' : 'default',
-    #     'lolim': 0.0,
-    #     'hilim': 1.0,
-    # },
-    # pv_kparameter_mon : {
-    #     'type' : 'float',
-    #     'prec' : 5,
-    #     'unit' : 'kparameter',
-    #     'asg' : 'default',
-    #     'lolim': 0.0,
-    #     'hilim': 1.0,
-    # },
+    pv_polarization_sel: {
+        "type": "enum",
+        "enums": _cte.polarization_states,
+        "states": [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        "value": 0,
+        "asg": "default",
+    },
+    pv_polarization_sts: {
+        "type": "enum",
+        "enums": _cte.polarization_states,
+        "states": [_Severity.NO_ALARM, _Severity.NO_ALARM],
+        "value": 0,
+        "asg": "default",
+    },
+    pv_kparameter_sp: {
+        "type": "float",
+        "prec": 5,
+        "unit": "kparameter",
+        "asg": "default",
+        "lolim": 0.0,
+        "hilim": 1.0,
+    },
+    pv_kparameter_rb: {
+        "type": "float",
+        "prec": 5,
+        "unit": "kparameter",
+        "asg": "default",
+        "lolim": 0.0,
+        "hilim": 1.0,
+    },
+    pv_kparameter_mon: {
+        "type": "float",
+        "prec": 5,
+        "unit": "kparameter",
+        "asg": "default",
+        "lolim": 0.0,
+        "hilim": 1.0,
+    },
     pv_id_period_length_cte: {
         "type": "float",
         "value": _cte.id_period_length,

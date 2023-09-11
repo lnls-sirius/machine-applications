@@ -1073,6 +1073,21 @@ class Epu:
         self.gap_stop()
         self.phase_stop()
 
+    def custom_motion(self, mode: int) -> None:
+        """
+        Open gap to 300 mm, goes to <phase>.
+        """
+        phases = {1: -16.39, 2: 0, 3: 16.39, 4: 25}
+
+        self.gap_set(300)
+        self.gap_start(True)
+
+        while self.gap_is_moving:
+            time.sleep(3)
+
+        self.phase_set(phases[mode])
+        self.phase_start(True)
+
 
 def get_file_handler(file: str):
     # logger.handlers.clear()

@@ -1,5 +1,6 @@
 """IOC driver module."""
 
+
 import threading
 import traceback
 import time
@@ -335,6 +336,12 @@ class EPUSupport(pcaspy.Driver):
 
         # ---take action according to PV name
 
+        # set polarity
+        if EPUSupport.isPvName(reason, _db.pv_polarization_sel):
+            if value >= 0 and value <= 4:
+                self.setParam(_db.pv_polarization_sel, value)
+                self.updatePVs()
+
         # enable control from beamlines
         if EPUSupport.isPvName(reason, _db.pv_beamline_enbl_sel):
             if EPUSupport.isBoolNum(value):
@@ -470,6 +477,20 @@ class EPUSupport(pcaspy.Driver):
                 status = False
 
         # cmd to change polarization
+        elif EPUSupport.isPvName(reason, _db.pv_change_polarization_cmd):
+            if (
+                not driver.gap_is_moving
+                and not driver.phase_is_moving
+                and self.getParam(_db.pv_allowed_change_gap_mon) == _cte.bool_yes
+                and self.getParam(_db.pv_allowed_change_phase_mon) == _cte.bool_yes
+            ):
+                status = self.asynExec(reason, driver.custom_motion, value)
+                # increment cmd pv
+                self.setParam(_db.pv_change_polarization_cmd, value)
+                self.updatePVs()
+            else:
+                status = False
+
         # cmd to move and change phase
         elif EPUSupport.isPvName(reason, _db.pv_change_phase_cmd):
             if (
