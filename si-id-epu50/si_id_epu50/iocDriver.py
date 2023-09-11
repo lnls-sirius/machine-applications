@@ -322,7 +322,8 @@ class EPUSupport(pcaspy.Driver):
             if EPUSupport.isValid(driver.gap_is_moving) and EPUSupport.isValid(
                 driver.phase_is_moving
             ):
-                if driver.gap_is_moving or driver.phase_is_moving:
+                if driver.gap_is_moving or driver.phase_is_moving or \
+                        driver.pol_is_moving:
                     self.setParam(_db.pv_is_moving_mon, _cte.bool_yes)
                 else:
                     self.setParam(_db.pv_is_moving_mon, _cte.bool_no)

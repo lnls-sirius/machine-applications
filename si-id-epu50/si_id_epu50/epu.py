@@ -210,19 +210,22 @@ def read_digital_status(tcp_client, bsmp_id: int) -> bytes:
 
 
 class Epu:
-    """
-    Creates a singleton instance of the EPU class. This class is used to communicate with the EPU.
-    Four EcoDrive objects are created, one for each drive in the EPU. The EPU class also creates a
-    TCPClient object, that is passed to the EcoDrive objects, to communicate with beaglebone RS485
-    server. The server receives the messages, converts them to RS485 and sends them to the drives.
+    """Create a singleton instance of the EPU class.
+
+    This class is used to communicate with the EPU.
+    Four EcoDrive objects are created, one for each drive in the EPU.
+    The EPU class also creates a
+    TCPClient object, that is passed to the EcoDrive objects, to communicate
+    with beaglebone RS485 server. The server receives the messages, converts
+    them to RS485 and sends them to the drives.
     This docstring is being written yet.
 
     Returns:
         Epu object that can be used to communicate with the EPU.
 
     Note:
-        target velocity or position values None indicates that the drives have different values,
-        need to be checked.
+        target velocity or position values None indicates that the drives have
+        different values, need to be checked.
     """
 
     _instance = None
@@ -348,12 +351,14 @@ class Epu:
         self.phase_change_allowed = self.allowed_to_change_phase()
         self.gap_is_moving = False
         self.phase_is_moving = False
+        self.pol_is_moving = False
         self.is_moving = False
         # undulator gap control variables
         self.gap_target = self.a_target_position
         self.gap_target_velocity = self.a_target_velocity
         self.gap = self.a_encoder_gap
-        self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
+        self.gap_enable_and_halt_released = \
+            self.gap_enable and self.gap_halt_released
         # undulator phase control variables
         self.phase_target = self.i_target_position
         self.phase_target_velocity = self.i_target_velocity
@@ -447,9 +452,7 @@ class Epu:
 
     @utils.run_periodically_in_detached_thread(interval=2)
     def _standstill_monitoring(self):
-        """
-        Read sensor data and monitor the communications.
-        """
+        """Read sensor data and monitor the communications."""
         self._check_allowed_to_change()
         self._reconnect_io_serial()
 
@@ -462,7 +465,8 @@ class Epu:
         # get gap and phase info from respective encoders and drives
         self.gap_target = self.a_target_position
         self.gap = self.a_encoder_gap
-        self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
+        self.gap_enable_and_halt_released = \
+            self.gap_enable and self.gap_halt_released
 
         self.phase_target = self.i_target_position
         self.phase = self.i_encoder_phase
@@ -1093,13 +1097,12 @@ class Epu:
         return True
 
     def custom_motion(self, start: bool = False) -> None:
-        """
-        Open gap to 300 mm, goes to <phase>.
-        """
+        """Open gap to 300 mm, goes to <phase>."""
 
         if not start:
             return
 
+        self.pol_is_moving = True
         self.gap_set(300)
         self.phase_set(_cte.pol_phases[self.polarization_mode])
         time.sleep(2)
@@ -1109,6 +1112,7 @@ class Epu:
             time.sleep(1)
 
         self.phase_start(True)
+        self.pol_is_moving = False
 
 
 def get_file_handler(file: str):
