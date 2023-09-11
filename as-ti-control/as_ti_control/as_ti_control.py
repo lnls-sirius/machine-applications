@@ -81,7 +81,8 @@ class _Driver(_pcaspy.Driver):
     def write(self, reason, value):
         if not self._isValid(reason, value):
             return False
-        self._write_queue.put(self._write, (reason, value))
+        self._write_queue.put(
+            (self._write, (reason, value)), block=False)
         return True
 
     def _write(self, reason, value):
