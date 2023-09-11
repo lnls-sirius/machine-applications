@@ -116,14 +116,12 @@ pvdb = {
     pv_polarization_sel: {
         "type": "enum",
         "enums": _cte.polarization_states,
-        "states": [_Severity.NO_ALARM, _Severity.NO_ALARM],
         "value": 0,
         "asg": "default",
     },
     pv_polarization_sts: {
         "type": "enum",
         "enums": _cte.polarization_states,
-        "states": [_Severity.NO_ALARM, _Severity.NO_ALARM],
         "value": 0,
         "asg": "default",
     },
