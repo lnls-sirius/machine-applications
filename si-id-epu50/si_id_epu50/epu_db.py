@@ -104,6 +104,15 @@ pv_drive_i_connected_mon = "DriveIConnected-Mon"
 #############################################
 # Database
 pvdb = {
+    pv_change_polarization_cmd: {
+        "type": "int",
+        "count": 1,
+        "mdel": -1,
+        "adel": -1,
+        "asyn": True,
+        "asg": "default",
+        "value": 0,
+    },
     pv_polarization_sel: {
         "type": "enum",
         "enums": _cte.polarization_states,

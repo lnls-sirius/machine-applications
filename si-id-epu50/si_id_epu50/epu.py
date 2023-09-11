@@ -31,8 +31,8 @@ default_args = Namespace(
 
 # TODO: Check the case where the drives are not in the same state
 def get_setpoint(drive_1, drive_2) -> float:
-    """
-    Returns the target position of the drives of a given operation.
+    """Return the target position of the drives of a given operation.
+
     If the target positions are equal, return the target position for drive A.
     Otherwise, set the target position of drive B to the target position of
     drive A and return the new target position.
@@ -58,12 +58,11 @@ def get_setpoint(drive_1, drive_2) -> float:
 
 
 def send_bsmp_message(bsmp_enable_message, tcp_client: TCPClient) -> bytes:
-    """
-    Sends a BSMPmessage to the specified host and port and receives response.
+    """Send a BSMPmessage to the specified host and port and receives response.
 
-    This function establishes a socket connection to the specified host and port,
-    sends the provided BSMP message, and waits for a response. It retries the
-    connection and handles various socket-related exceptions.
+    This function establishes a socket connection to the specified host
+    and port, sends the provided BSMP message, and waits for a response.
+    It retries the connection and handles various socket-related exceptions.
 
     Args:
         bsmp_enable_message (bytes): The BSMP enable message to send.
@@ -81,7 +80,8 @@ def send_bsmp_message(bsmp_enable_message, tcp_client: TCPClient) -> bytes:
         OSError: If a general connection error occurs.
 
     Note:
-        The function uses a 16-byte buffer to receive response data from the host.
+        The function uses a 16-byte buffer to receive response data
+            from the host.
         If the response data is longer
         than 16 bytes, only the first 16 bytes will be returned.
     """
@@ -100,13 +100,19 @@ def set_digital_signal(
     right_diagnostic_code: str,
     tcp_client: TCPClient,
 ) -> bool:
-    """
-    Sets a digital signal by sending a BSMP message to the specified host and port.
+    """Set a digital signal.
 
-    This function sets a digital signal by sending a BSMP message to the specified host and port.
-    It checks the diagnostic codes of two EcoDrive objects (drive1 and drive2) against a given
-    right_diagnostic_code, and if they match, the BSMP message is sent. The response from the host
-    is logged and the function returns True if the message is sent successfully, otherwise False.
+    Set a digital siganl by sending a BSMP message to the specified
+    host and port.
+
+    This function sets a digital signal by sending a BSMP message to
+        the specified host and port.
+    It checks the diagnostic codes of two EcoDrive objects (drive1 and
+        drive2) against a given
+    right_diagnostic_code, and if they match, the BSMP message is sent.
+        The response from the host
+    is logged and the function returns True if the message is sent
+        successfully, otherwise False.
 
     Args:
         val (bool): The value of the digital signal to set (True or False).
@@ -1074,25 +1080,16 @@ class Epu:
         self.gap_stop()
         self.phase_stop()
 
-    def set_polarization(self, mode: int) -> None:
+    def set_polarization(self, mode: int) -> bool:
         """
         Set polarization to linear horizontal (mode=1), linear vertical (mode=2),
         circular left (mode=3), circular right (mode=4).
         """
-        if mode not in range(0, 5):
+        if mode not in range(0, 4):
             logger.error("Invalid polarization mode.")
-            return
+            return False
         self.polarization_mode = mode
-        return
-
-    def polarization_table(self) -> float:
-        """
-        Return the phase value for the selected polarization mode.
-        """
-
-        phases = {1: -16.39, 2: 0, 3: 15.39, 4: 25}
-
-        return phases[self.polarization_mode]
+        return True
 
     def custom_motion(self, start: bool = False) -> None:
         """
@@ -1106,9 +1103,9 @@ class Epu:
         self.gap_start(True)
 
         while self.gap_is_moving:
-            time.sleep(3)
+            time.sleep(1)
 
-        self.phase_set(self.polarization_table())
+        self.phase_set(_cte.pol_phases[self.polarization_mode])
         self.phase_start(True)
 
 
