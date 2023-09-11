@@ -1096,7 +1096,7 @@ class Epu:
         self.polarization_mode = mode
         return True
 
-    def custom_motion(self, start: bool = False) -> None:
+    def polarization_motion(self, start: bool = False) -> None:
         """Open gap to 300 mm, goes to <phase>."""
 
         if not start:
