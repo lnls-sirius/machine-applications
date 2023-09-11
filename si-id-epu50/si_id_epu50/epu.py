@@ -1004,10 +1004,11 @@ class Epu:
                 return bool(response)
 
     def phase_enable_and_release_halt(self, val) -> None:
-        """_summary_
+        """Enable and realease phase.
 
         Args:
             val (_type_): _description_
+
         """
         if val:
             self.phase_set_enable(val)
