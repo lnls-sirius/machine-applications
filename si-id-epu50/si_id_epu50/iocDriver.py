@@ -469,6 +469,7 @@ class EPUSupport(pcaspy.Driver):
             else:
                 status = False
 
+        # cmd to change polarization
         # cmd to move and change phase
         elif EPUSupport.isPvName(reason, _db.pv_change_phase_cmd):
             if (
