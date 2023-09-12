@@ -2,7 +2,6 @@
 
 import time as _time
 import logging as _log
-import re as _re
 
 from pcaspy import Alarm as _Alarm
 from pcaspy import Severity as _Severity
@@ -10,7 +9,8 @@ from pcaspy import Severity as _Severity
 import siriuspy as _siriuspy
 import siriuspy.util as _util
 
-from siriuspy.thread import LoopQueueThread as _LoopQueueThread
+from siriuspy.thread import LoopQueueThread as _LoopQueueThread, \
+    RepeaterThread as _RepeaterThread
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 
 from siriuspy.devices import PSProperty as _PSProperty
@@ -21,7 +21,7 @@ __version__ = _util.get_last_commit_hash()
 
 
 # update frequency of strength PVs
-UPDATE_FREQUECY = 2.0  # [Hz]
+UPDATE_FREQ = 2.0  # [Hz]
 
 
 class App:
@@ -35,14 +35,11 @@ class App:
         self._driver = driver
 
         # write operation queue
-        self._queue = _LoopQueueThread()
-        self._queue.start()
+        self._queue_write = _LoopQueueThread()
+        self._queue_write.start()
 
         # mapping device to bbb
         self._psnames = psnames
-
-        # define update interval
-        self._interval = 1 / UPDATE_FREQUECY
 
         # strength string
         self._strenname = self._get_strennames(dbset)
@@ -58,6 +55,12 @@ class App:
         # build connectors and streconv dicts
         self._connectors, self._streconvs = \
             self._create_connectors_and_streconv()
+
+        # scan thread
+        self._interval = 1 / UPDATE_FREQ
+        self._thread_scan = _RepeaterThread(
+            self._interval, self.scan, niter=0, is_cathread=True)
+        self._thread_scan.start()
 
     # --- public interface ---
 
@@ -86,10 +89,7 @@ class App:
         """Process all write requests in queue and does a BBB scan."""
         t0_ = _time.time()
 
-        for psname in self.psnames:
-            self._queue.put((self.scan_device, (psname, )), block=False)
-
-        qsize = self._queue.qsize()
+        qsize = self._queue_write.qsize()
         if qsize > 2:
             logmsg = f'[Q] - write queue size is large: {qsize}'
             _log.warning(logmsg)
@@ -109,7 +109,13 @@ class App:
         pvname = _SiriusPVName(reason)
         self.driver.setParam(reason, value)
         self.driver.updatePV(reason)
-        self._queue.put((self._write_operation, (pvname, value)), block=False)
+        self._queue_write.put(
+            (self._write_operation, (pvname, value)), block=False)
+
+    def scan(self):
+        """Scan all devices"""
+        for psname in self.psnames:
+            self.scan_device(psname)
 
     def scan_device(self, psname):
         """Scan BBB device and update ioc epics DB."""
