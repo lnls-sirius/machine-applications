@@ -18,9 +18,7 @@ def run(args):
     server = pcaspy.SimpleServer()
 
     # config access security
-    server.initAccessSecurityFile(
-        _cte.access_security_filename, PREFIX=args.pv_prefix
-        )
+    server.initAccessSecurityFile(_cte.access_security_filename, PREFIX=args.pv_prefix)
 
     # instantiate PV database
     server.createPV(args.pv_prefix, epu_db.pvdb)
@@ -36,9 +34,9 @@ def run(args):
             args.pv_prefix,  # pv prefix
             args.autosave_dir,  # save directory
             5.0,  # delay before restoring
-            ),
-        daemon=True
-        )
+        ),
+        daemon=True,
+    )
     restore.start()
 
     # start autosave
@@ -51,9 +49,9 @@ def run(args):
             _cte.autosave_update_rate,  # save update period
             _cte.autosave_num_backup_files,  # max number of backup files
             10.0,  # delay before monitoring start
-            ),
+        ),
         daemon=True,
-        )
+    )
     autosave.start()
 
     while True:

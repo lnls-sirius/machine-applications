@@ -29,8 +29,7 @@ class TCPClient:
                 self.sock.settimeout(5)
                 self.sock.connect((self.server_ip, self.server_port))
                 self.connected = True
-                logger.info("Connected to %s:%s.", self.server_ip,
-                            self.server_port)
+                logger.info("Connected to %s:%s.", self.server_ip, self.server_port)
             except ConnectionRefusedError:
                 logger.error(
                     "Connection with %s:%s \
@@ -57,8 +56,7 @@ class TCPClient:
         attempts = 0
 
         if not self.connected:
-            logger.error(
-                "Not connected to server. Call connect() method first.")
+            logger.error("Not connected to server. Call connect() method first.")
             return
 
         try:
@@ -78,8 +76,7 @@ class TCPClient:
     def receive_data(self, conn="serial"):
         """Receive data from the server."""
         if not self.connected:
-            logger.error(
-                "Not connected to server. Call connect() method first.")
+            logger.error("Not connected to server. Call connect() method first.")
             return
 
         try:

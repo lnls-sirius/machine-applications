@@ -31,8 +31,8 @@ default_args = Namespace(
 
 # TODO: Check the case where the drives are not in the same state
 def get_setpoint(drive_1, drive_2) -> float:
-    """
-    Returns the target position of the drives of a given operation.
+    """Return the target position of the drives of a given operation.
+
     If the target positions are equal, return the target position for drive A.
     Otherwise, set the target position of drive B to the target position of
     drive A and return the new target position.
@@ -58,12 +58,11 @@ def get_setpoint(drive_1, drive_2) -> float:
 
 
 def send_bsmp_message(bsmp_enable_message, tcp_client: TCPClient) -> bytes:
-    """
-    Sends a BSMPmessage to the specified host and port and receives response.
+    """Send a BSMPmessage to the specified host and port and receives response.
 
-    This function establishes a socket connection to the specified host and port,
-    sends the provided BSMP message, and waits for a response. It retries the
-    connection and handles various socket-related exceptions.
+    This function establishes a socket connection to the specified host
+    and port, sends the provided BSMP message, and waits for a response.
+    It retries the connection and handles various socket-related exceptions.
 
     Args:
         bsmp_enable_message (bytes): The BSMP enable message to send.
@@ -81,7 +80,8 @@ def send_bsmp_message(bsmp_enable_message, tcp_client: TCPClient) -> bytes:
         OSError: If a general connection error occurs.
 
     Note:
-        The function uses a 16-byte buffer to receive response data from the host.
+        The function uses a 16-byte buffer to receive response data
+            from the host.
         If the response data is longer
         than 16 bytes, only the first 16 bytes will be returned.
     """
@@ -100,13 +100,19 @@ def set_digital_signal(
     right_diagnostic_code: str,
     tcp_client: TCPClient,
 ) -> bool:
-    """
-    Sets a digital signal by sending a BSMP message to the specified host and port.
+    """Set a digital signal.
 
-    This function sets a digital signal by sending a BSMP message to the specified host and port.
-    It checks the diagnostic codes of two EcoDrive objects (drive1 and drive2) against a given
-    right_diagnostic_code, and if they match, the BSMP message is sent. The response from the host
-    is logged and the function returns True if the message is sent successfully, otherwise False.
+    Set a digital siganl by sending a BSMP message to the specified
+    host and port.
+
+    This function sets a digital signal by sending a BSMP message to
+        the specified host and port.
+    It checks the diagnostic codes of two EcoDrive objects (drive1 and
+        drive2) against a given
+    right_diagnostic_code, and if they match, the BSMP message is sent.
+        The response from the host
+    is logged and the function returns True if the message is sent
+        successfully, otherwise False.
 
     Args:
         val (bool): The value of the digital signal to set (True or False).
@@ -204,19 +210,22 @@ def read_digital_status(tcp_client, bsmp_id: int) -> bytes:
 
 
 class Epu:
-    """
-    Creates a singleton instance of the EPU class. This class is used to communicate with the EPU.
-    Four EcoDrive objects are created, one for each drive in the EPU. The EPU class also creates a
-    TCPClient object, that is passed to the EcoDrive objects, to communicate with beaglebone RS485
-    server. The server receives the messages, converts them to RS485 and sends them to the drives.
+    """Create a singleton instance of the EPU class.
+
+    This class is used to communicate with the EPU.
+    Four EcoDrive objects are created, one for each drive in the EPU.
+    The EPU class also creates a
+    TCPClient object, that is passed to the EcoDrive objects, to communicate
+    with beaglebone RS485 server. The server receives the messages, converts
+    them to RS485 and sends them to the drives.
     This docstring is being written yet.
 
     Returns:
         Epu object that can be used to communicate with the EPU.
 
     Note:
-        target velocity or position values None indicates that the drives have different values,
-        need to be checked.
+        target velocity or position values None indicates that the drives have
+        different values, need to be checked.
     """
 
     _instance = None
@@ -239,6 +248,7 @@ class Epu:
             self.rs485_connected = self._gpio_socket.connected
             self.gpio_connected = self._serial_socket.connected
             self.tcp_connected = self.rs485_connected and self.gpio_connected
+            self.polarization_mode = 0
 
             self.a_drive = EcoDrive(
                 tcp_client=self._serial_socket,
@@ -341,12 +351,14 @@ class Epu:
         self.phase_change_allowed = self.allowed_to_change_phase()
         self.gap_is_moving = False
         self.phase_is_moving = False
+        self.pol_is_moving = False
         self.is_moving = False
         # undulator gap control variables
         self.gap_target = self.a_target_position
         self.gap_target_velocity = self.a_target_velocity
         self.gap = self.a_encoder_gap
-        self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
+        self.gap_enable_and_halt_released = \
+            self.gap_enable and self.gap_halt_released
         # undulator phase control variables
         self.phase_target = self.i_target_position
         self.phase_target_velocity = self.i_target_velocity
@@ -440,9 +452,7 @@ class Epu:
 
     @utils.run_periodically_in_detached_thread(interval=2)
     def _standstill_monitoring(self):
-        """
-        Read sensor data and monitor the communications.
-        """
+        """Read sensor data and monitor the communications."""
         self._check_allowed_to_change()
         self._reconnect_io_serial()
 
@@ -455,7 +465,8 @@ class Epu:
         # get gap and phase info from respective encoders and drives
         self.gap_target = self.a_target_position
         self.gap = self.a_encoder_gap
-        self.gap_enable_and_halt_released = self.gap_enable and self.gap_halt_released
+        self.gap_enable_and_halt_released = \
+            self.gap_enable and self.gap_halt_released
 
         self.phase_target = self.i_target_position
         self.phase = self.i_encoder_phase
@@ -997,10 +1008,11 @@ class Epu:
                 return bool(response)
 
     def phase_enable_and_release_halt(self, val) -> None:
-        """_summary_
+        """Enable and realease phase.
 
         Args:
             val (_type_): _description_
+
         """
         if val:
             self.phase_set_enable(val)
@@ -1072,6 +1084,34 @@ class Epu:
     def stop_all(self):
         self.gap_stop()
         self.phase_stop()
+
+    def set_polarization(self, mode: int) -> bool:
+        """
+        Set polarization to linear horizontal (mode=1), linear vertical (mode=2),
+        circular left (mode=3), circular right (mode=4).
+        """
+        if mode not in range(0, 4):
+            logger.error("Invalid polarization mode.")
+            return False
+        self.polarization_mode = mode
+        return True
+
+    def polarization_motion(self, start: bool = False) -> None:
+        """Open gap to 300 mm, goes to <phase>."""
+        if not start:
+            return
+
+        self.pol_is_moving = True
+        self.gap_set(300)
+        self.phase_set(_cte.pol_phases[self.polarization_mode])
+        time.sleep(2)
+        self.gap_start(True)
+
+        while self.gap_is_moving:
+            time.sleep(1)
+
+        self.phase_start(True)
+        self.pol_is_moving = False
 
 
 def get_file_handler(file: str):
