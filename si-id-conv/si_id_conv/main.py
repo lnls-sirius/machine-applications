@@ -2,7 +2,6 @@
 
 import time as _time
 import logging as _log
-import re as _re
 
 from pcaspy import Alarm as _Alarm
 from pcaspy import Severity as _Severity
@@ -10,7 +9,8 @@ from pcaspy import Severity as _Severity
 import siriuspy as _siriuspy
 import siriuspy.util as _util
 
-from siriuspy.thread import LoopQueueThread as _LoopQueueThread
+from siriuspy.thread import LoopQueueThread as _LoopQueueThread, \
+    RepeaterThread as _RepeaterThread
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 
 from siriuspy.devices import PSProperty as _PSProperty
@@ -21,7 +21,7 @@ __version__ = _util.get_last_commit_hash()
 
 
 # update frequency of strength PVs
-UPDATE_FREQUECY = 10.0  # [Hz]
+UPDATE_FREQ = 10.0  # [Hz]
 
 
 class App:
@@ -35,16 +35,13 @@ class App:
         self._driver = driver
 
         # write operation queue
-        self._queue = _LoopQueueThread()
-        self._queue.start()
+        self._queue_write = _LoopQueueThread()
+        self._queue_write.start()
 
         # mapping device to bbb
         self._psnames = psnames
         self._dbset = dbset
         self._prefix = prefix
-
-        # define update interval
-        self._interval = 1 / UPDATE_FREQUECY
 
         # print info about the IOC
         _siriuspy.util.print_ioc_banner(
@@ -57,6 +54,12 @@ class App:
         # build connectors and streconv dicts
         self._connectors, self._streconvs = \
             self._create_connectors_and_streconv()
+
+        # define update interval
+        self._interval = 1 / UPDATE_FREQ
+        self._thread_scan = _RepeaterThread(
+            self._interval, self.scan, niter=0, is_cathread=True)
+        self._thread_scan.start()
 
     # --- public interface ---
 
@@ -85,10 +88,7 @@ class App:
         """Process all write requests in queue and does a BBB scan."""
         t0_ = _time.time()
 
-        for psname in self.psnames:
-            self._queue.put((self.scan_device, (psname, )), block=False)
-
-        qsize = self._queue.qsize()
+        qsize = self._queue_write.qsize()
         if qsize > 2:
             logmsg = f'[Q] - write queue size is large: {qsize}'
             _log.warning(logmsg)
@@ -108,7 +108,13 @@ class App:
         pvname = _SiriusPVName(reason)
         self.driver.setParam(reason, value)
         self.driver.updatePV(reason)
-        self._queue.put((self._write_operation, (pvname, value)), block=False)
+        self._queue_write.put(
+            (self._write_operation, (pvname, value)), block=False)
+
+    def scan(self):
+        """Scan all devices"""
+        for psname in self.psnames:
+            self.scan_device(psname)
 
     def scan_device(self, psname):
         """Scan BBB device and update ioc epics DB."""
@@ -132,26 +138,10 @@ class App:
         curr3 = max(limits)
 
         values = (curr0, curr1, curr2, curr3)
-        # NOTE: investigate!
-        #
-        # usr/local/lib/python3.6/site-packages/epics/ca.py:1507:
-        # UserWarning: ca.get('SI-01SA:PU-InjNLKckr:Voltage-Mon') timed out
-        # after 1.00 seconds.
-        # sirius-ioc-as-pu-conv.py[11332]:   warnings.warn(msg %
-        # (name(chid), timeout))
-        # File "/usr/local/lib/python3.6/site-packages/siriuspy/magnet/excdata.py",
-        # line 173, in _calc_interp
-        # xvals, xtab, ytab, left=float('nan'), right=float('inf'))
-        # File "<__array_function__ internals>", line 6, in interp
-        # File "/usr/local/lib/python3.6/site-packages/numpy/lib/function_base.py",
-        # line 1403, in interp
-        # sirius-ioc-as-pu-conv.py[11332]: return interp_func(x, xp, fp, left, right)
-        # TypeError: Cannot cast array data from dtype('O') to dtype('float64')
-        # according to the rule 'safe'
         try:
             strengths = streconv.conv_current_2_strength(values)
         except TypeError:
-            print('Could not convert voltage to strength!')
+            _log.error('Could not convert phase to Kx!')
             strengths = None
 
         if strengths is None or None in strengths:
