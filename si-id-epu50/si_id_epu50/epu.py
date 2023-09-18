@@ -1102,6 +1102,7 @@ class Epu:
             return
 
         self.pol_is_moving = True
+        self.polarization = "none"
         self.gap_set(300)
         self.phase_set(_cte.pol_phases[self.polarization_mode])
         time.sleep(2)
@@ -1112,6 +1113,37 @@ class Epu:
 
         self.phase_start(True)
         self.pol_is_moving = False
+        self.update_polarization_status()
+
+    @staticmethod
+    def is_equal_with_tolerance(value: float, reference: float tolerance: float = 0):
+        """Check if two values are equals with a given tolerance"""
+        # 10 0,3 9,9 
+        return mod(value - reference) <= tolerance
+
+    @@property
+    def foo(self):
+        """The foo property."""
+        return self._foo
+    @foo.setter
+    def foo(self, value):
+        self._foo = value
+
+    def update_polarization_status(self) -> str:
+        """ Polarization property. """
+
+        tolerance: float = 0.05 
+
+        for polarization in pol_phases.keys():
+            if is_equal_with_tolerance(
+                self.phase,
+                pol_phases[polarization],
+                tolerance
+            ):
+                self.polarization = _cte.polarization_states[polarization]
+                return self.polatization
+
+        return "undefined"
 
 
 def get_file_handler(file: str):
