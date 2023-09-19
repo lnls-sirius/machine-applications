@@ -62,6 +62,7 @@ class EPUSupport(pcaspy.Driver):
             _db.pv_enbl_and_release_si_sel,
             self.epu_driver.phase_enable_and_halt_released,
         )
+        self.setParam(_db.pv_ioc_msg_mon, '')
         # update PVs
         self.updatePVs()
 
@@ -75,6 +76,7 @@ class EPUSupport(pcaspy.Driver):
         # update encoder readings
         self.setParam(_db.pv_gap_mon, self.epu_driver.gap)
         self.setParam(_db.pv_phase_mon, self.epu_driver.phase)
+        self.setParam(_db.pv_polarization_mon, self.epu_driver.polarization)
         # update PVs
         self.updatePVs()
 
@@ -364,9 +366,11 @@ class EPUSupport(pcaspy.Driver):
                     self.setParam(_db.pv_polarization_sel, value)
                     self.setParam(_db.pv_polarization_sts, value)
                     self.updatePVs()
+                else:
+                    status = False
 
         # enable control from beamlines
-        if EPUSupport.isPvName(reason, _db.pv_beamline_enbl_sel):
+        elif EPUSupport.isPvName(reason, _db.pv_beamline_enbl_sel):
             if EPUSupport.isBoolNum(value):
                 self.setParam(_db.pv_beamline_enbl_sel, value)
                 self.setParam(_db.pv_beamline_enbl_sts, value)
@@ -395,7 +399,7 @@ class EPUSupport(pcaspy.Driver):
             self.updatePVs()
 
         # change gap set point
-        if EPUSupport.isPvName(reason, _db.pv_gap_sp):
+        elif EPUSupport.isPvName(reason, _db.pv_gap_sp):
             if value >= _cte.minimum_gap and value <= _cte.maximum_gap:
                 status = self.asynExec(reason, driver.gap_set, value)
                 if status:
