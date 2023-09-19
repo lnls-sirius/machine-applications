@@ -1121,14 +1121,6 @@ class Epu:
         # 10 0,3 9,9 
         return mod(value - reference) <= tolerance
 
-    @@property
-    def foo(self):
-        """The foo property."""
-        return self._foo
-    @foo.setter
-    def foo(self, value):
-        self._foo = value
-
     def update_polarization_status(self) -> str:
         """ Polarization property. """
 

@@ -135,6 +135,10 @@ class EPUSupport(pcaspy.Driver):
             else:
                 self.setParam(_db.pv_epu_connected_mon, _cte.bool_no)
 
+            # update polarization monitor
+            if EPUSupport.isValid(driver.polarization):
+                self.setParam(_db.pv_polarization_mon, driver.polarization)
+
             # update allowed to move status
             if (
                 EPUSupport.isValid(driver.gap_change_allowed)
