@@ -230,6 +230,10 @@ class Epu:
 
     _instance = None
 
+    # Same class constants as in siriuspy.idff.config.IDFFConfig
+    PPARAM_TOL: float = 0.5  # [mm]
+    KPARAM_TOL: float = 0.1  # [mm]
+
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
             cls._instance = super(Epu, cls).__new__(cls)
@@ -248,7 +252,7 @@ class Epu:
             self.rs485_connected = self._gpio_socket.connected
             self.gpio_connected = self._serial_socket.connected
             self.tcp_connected = self.rs485_connected and self.gpio_connected
-            self.polarization_mode = 0
+            self.polarization_mode = _cte.polarization_mon.index('undef')
 
             self.a_drive = EcoDrive(
                 tcp_client=self._serial_socket,
@@ -473,6 +477,8 @@ class Epu:
         self.phase_enable_and_halt_released = (
             self.phase_enable and self.phase_halt_released
         )
+
+        self.update_polarization_status()
 
     def _check_allowed_to_change(self):
         """
@@ -1086,56 +1092,72 @@ class Epu:
         self.phase_stop()
 
     def set_polarization(self, mode: int) -> bool:
+        """Set polarization.
+            circular negative (mode=0),
+            linear horizontal (mode=1),
+            circular positive (mode=2),
+            linear vertical (mode=3).
         """
-        Set polarization to linear horizontal (mode=1), linear vertical (mode=2),
-        circular left (mode=3), circular right (mode=4).
-        """
-        if mode not in range(0, 4):
+        if mode not in range(0, len(_cte.polarization_sel)):
             logger.error("Invalid polarization mode.")
             return False
         self.polarization_mode = mode
         return True
 
     def polarization_motion(self, start: bool = False) -> None:
-        """Open gap to 300 mm, goes to <phase>."""
+        """Open gap to parked gap and go to <phase>."""
         if not start:
             return
 
         self.pol_is_moving = True
-        self.polarization = "none"
-        self.gap_set(300)
-        self.phase_set(_cte.pol_phases[self.polarization_mode])
-        time.sleep(2)
+
+        # set references
+        target_gap = _cte.id_parked_gap
+        target_phase = _cte.pol_phases[self.polarization_mode]
+        self.gap_set(target_gap)
+        self.phase_set(target_phase)
+        time.sleep(2)  # TODO: implement checking RB
+
+        # gap movement
         self.gap_start(True)
-
         while self.gap_is_moving:
-            time.sleep(1)
+            time.sleep(0.2)
 
+        # phase movement
         self.phase_start(True)
+        self.polarization = "none"
+        while self.phase_is_moving:
+            time.sleep(0.2)
+
+        # finalize polarization movement
         self.pol_is_moving = False
-        self.update_polarization_status()
 
     @staticmethod
-    def is_equal_with_tolerance(value: float, reference: float tolerance: float = 0):
+    def is_equal_with_tolerance(
+            value: float, reference: float, tolerance: float = 0):
         """Check if two values are equals with a given tolerance"""
-        # 10 0,3 9,9 
-        return mod(value - reference) <= tolerance
+        return abs(value - reference) <= tolerance
 
-    def update_polarization_status(self) -> str:
+    def update_polarization_status(self) -> int:
         """ Polarization property. """
+        # check if polarization is defined
+        pol_phases = _cte.pol_phases
+        for pol_idx in pol_phases.keys():
+            if self.is_equal_with_tolerance(
+                    self.phase, pol_phases[pol_idx], Epu.PPARAM_TOL):
+                self.polarization = pol_idx
+                return pol_idx
 
-        tolerance: float = 0.05 
+        # checking if changing polarization
+        if self.is_equal_with_tolerance(
+                    self.gap, _cte.id_parked_gap, Epu.KPARAM_TOL):
+                pol_idx = _cte.polarization_mon.index('none')
+                self.polarization = pol_idx
+                return pol_idx
 
-        for polarization in pol_phases.keys():
-            if is_equal_with_tolerance(
-                self.phase,
-                pol_phases[polarization],
-                tolerance
-            ):
-                self.polarization = _cte.polarization_states[polarization]
-                return self.polatization
-
-        return "undefined"
+        # at this point the configuration must be undefined
+        pol_idx = _cte.polarization_mon.index('undef')
+        return pol_idx
 
 
 def get_file_handler(file: str):

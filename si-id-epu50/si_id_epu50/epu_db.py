@@ -106,9 +106,11 @@ pv_drive_i_connected_mon = "DriveIConnected-Mon"
 # Database
 pvdb = {
     pv_polarization_mon: {
-        "type": "string",
+        "type": "enum",
         "unit": "polarization",
+        "enums": _cte.polarization_mon,
         "asg": "default",
+        "value": _cte.polarization_mon.index('undef'),
     },
     pv_change_polarization_cmd: {
         "type": "int",
@@ -121,13 +123,15 @@ pvdb = {
     },
     pv_polarization_sel: {
         "type": "enum",
-        "enums": _cte.polarization_states,
+        "unit": "polarization",
+        "enums": _cte.polarization_sel,
         "value": 0,
         "asg": "default",
     },
     pv_polarization_sts: {
         "type": "enum",
-        "enums": _cte.polarization_states,
+        "unit": "polarization",
+        "enums": _cte.polarization_sel,
         "value": 0,
         "asg": "default",
     },
