@@ -105,7 +105,7 @@ pv_drive_i_connected_mon = "DriveIConnected-Mon"
 #############################################
 # Database
 pvdb = {
-    pv_polarization_mon {
+    pv_polarization_mon: {
         "type": "string",
         "unit": "polarization",
         "asg": "default",
