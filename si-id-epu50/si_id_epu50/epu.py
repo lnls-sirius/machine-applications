@@ -17,7 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 class Namespace:
+    """."""
+
     def __init__(self, **kwargs):
+        """."""
         self.__dict__.update(kwargs)
 
 
@@ -26,7 +29,7 @@ default_args = Namespace(
     msg_port=5052,
     io_port=5050,
     beaglebone_addr="10.128.110.160",
-)
+    )
 
 
 # TODO: Check the case where the drives are not in the same state
@@ -203,6 +206,7 @@ def gpio_server_connection_test(addr, port) -> bool:
 
 
 def read_digital_status(tcp_client, bsmp_id: int) -> bytes:
+    """."""
     bsmp_enable_message = utils.bsmp_send(
         _cte.BSMP_READ, variableID=bsmp_id, size=0
     ).encode()
@@ -226,6 +230,7 @@ class Epu:
     Note:
         target velocity or position values None indicates that the drives have
         different values, need to be checked.
+
     """
 
     _instance = None
@@ -235,11 +240,13 @@ class Epu:
     KPARAM_TOL: float = 0.1  # [mm]
 
     def __new__(cls, *args, **kwargs):
+        """."""
         if cls._instance is None:
             cls._instance = super(Epu, cls).__new__(cls)
         return cls._instance
 
     def __init__(self, args, callback_update=lambda: 1):
+        """."""
         # Ensure that the instance has not been initialized before
         if not hasattr(self, "initialized"):
             self.args = args
@@ -667,6 +674,7 @@ class Epu:
                         return False
 
     def gap_set(self, target: float) -> bool:
+        """."""
         if _cte.minimum_gap <= target <= _cte.maximum_gap:
             self._set_undulator_property("position", target, "gap")
         else:
@@ -674,7 +682,10 @@ class Epu:
             return False
 
     def gap_set_velocity(self, target: float) -> bool:
-        if _cte.minimum_velo_mm_per_min <= target <= _cte.maximum_velo_mm_per_min:
+        """."""
+        min_vel = _cte.minimum_velo_mm_per_min
+        max_vel = _cte.maximum_velo_mm_per_min
+        if min_vel <= target <= max_vel:
             self._set_undulator_property("velocity", target, "gap")
         else:
             logger.error(
@@ -1164,6 +1175,7 @@ class Epu:
 
 
 def get_file_handler(file: str):
+    """."""
     # logger.handlers.clear()
     file_handler = logging.handlers.RotatingFileHandler(
         file, maxBytes=10000000, backupCount=10
@@ -1178,6 +1190,7 @@ def get_file_handler(file: str):
 
 
 def get_logger(file_handler):
+    """."""
     lg = logging.getLogger()
     lg.setLevel(logging.DEBUG)
     lg.addHandler(file_handler)
@@ -1187,30 +1200,3 @@ def get_logger(file_handler):
 logger.handlers.clear()
 fh = get_file_handler("testing.log")
 root = get_logger(fh)
-
-
-def cycling_test():
-    my_epu = Epu(default_args)
-    my_epu.turn_on_all()
-    my_epu.gap_enable_and_release_halt(True)
-    with open("cycling.log", "w") as f:
-        for i in range(10):
-            set_and_start_gap(my_epu, 245)
-            while my_epu.gap_is_moving:
-                time.sleep(1)
-            f.write(str(my_epu.gap))
-
-            set_and_start_gap(my_epu, 250)
-            time.sleep(0.1)
-            while my_epu.gap_is_moving:
-                time.sleep(1)
-            f.write(str(my_epu.gap))
-
-
-def set_and_start_gap(epu, value):
-    epu.gap_set(value)
-    epu.gap_start(True)
-
-
-if __name__ == "__main__":
-    pass
