@@ -306,6 +306,7 @@ class Epu:
             self.monitor_phase_movement_thread.start()
             self.monitor_gap_movement_thread.start()
 
+            self.update_polarization_status()
             self.initialized = True
 
     # Motion monitoring
@@ -401,6 +402,7 @@ class Epu:
                             setattr(self, f"i_encoder_{attribute}", value)
                         self.callback_update()
                         logger.info("%s: %s", attribute, value)
+                        self.update_polarization_status()
                         update_count += 1
 
                     if abs(getattr(self, attribute) - target) < 0.001:
@@ -478,6 +480,7 @@ class Epu:
             self.phase_enable and self.phase_halt_released
         )
 
+        # update polarization status
         self.update_polarization_status()
 
     def _check_allowed_to_change(self):
@@ -1135,29 +1138,28 @@ class Epu:
     @staticmethod
     def is_equal_with_tolerance(
             value: float, reference: float, tolerance: float = 0):
-        """Check if two values are equals with a given tolerance"""
+        """Check if two values are equals with a given tolerance."""
         return abs(value - reference) <= tolerance
 
-    def update_polarization_status(self) -> int:
-        """ Polarization property. """
+    def update_polarization_status(self):
+        """Update polarization property."""
         # check if polarization is defined
         pol_phases = _cte.pol_phases
         for pol_idx in pol_phases.keys():
             if self.is_equal_with_tolerance(
                     self.phase, pol_phases[pol_idx], Epu.PPARAM_TOL):
                 self.polarization = pol_idx
-                return pol_idx
+                return
 
         # checking if changing polarization
         if self.is_equal_with_tolerance(
                     self.gap, _cte.id_parked_gap, Epu.KPARAM_TOL):
                 pol_idx = _cte.polarization_mon.index('none')
                 self.polarization = pol_idx
-                return pol_idx
+                return
 
         # at this point the configuration must be undefined
         pol_idx = _cte.polarization_mon.index('undef')
-        return pol_idx
 
 
 def get_file_handler(file: str):
