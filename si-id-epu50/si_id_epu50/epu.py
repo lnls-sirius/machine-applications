@@ -1160,6 +1160,7 @@ class Epu:
 
         # at this point the configuration must be undefined
         pol_idx = _cte.polarization_mon.index('undef')
+        self.polarization = pol_idx
 
 
 def get_file_handler(file: str):
