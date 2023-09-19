@@ -1128,7 +1128,7 @@ class Epu:
 
         # phase movement
         self.phase_start(True)
-        self.polarization = "none"
+        self.polarization = _cte.polarization_mon.index('none')
         while self.phase_is_moving:
             time.sleep(0.2)
 
