@@ -1147,31 +1147,41 @@ class Epu:
         self.pol_is_moving = False
 
     @staticmethod
-    def is_equal_with_tolerance(
-            value: float, reference: float, tolerance: float = 0):
-        """Check if two values are equals with a given tolerance."""
-        return abs(value - reference) <= tolerance
+    def get_polarization_state(pparameter, kparameter):
+        """Return polarization state."""
+        phase = pparameter
+        gap = kparameter
 
-    def update_polarization_status(self):
-        """Update polarization property."""
         # check if polarization is defined
         pol_phases = _cte.pol_phases
         for pol_idx in pol_phases.keys():
-            if self.is_equal_with_tolerance(
-                    self.phase, pol_phases[pol_idx], Epu.PPARAM_TOL):
-                self.polarization = pol_idx
-                return
-
+            if Epu._is_equal_with_tolerance(
+                    phase, pol_phases[pol_idx], Epu.PPARAM_TOL):
+                return pol_idx
+        
         # checking if changing polarization
-        if self.is_equal_with_tolerance(
-                    self.gap, _cte.id_parked_gap, Epu.KPARAM_TOL):
+        if Epu._is_equal_with_tolerance(
+                    gap, _cte.id_parked_gap, Epu.KPARAM_TOL):
                 pol_idx = _cte.polarization_mon.index('none')
-                self.polarization = pol_idx
-                return
+                return pol_idx
 
         # at this point the configuration must be undefined
         pol_idx = _cte.polarization_mon.index('undef')
-        self.polarization = pol_idx
+        return pol_idx
+
+    def update_polarization_status(self) -> int:
+        """ Polarization property. """
+        pol_idx = Epu.get_polarization_state(
+            pparameter=self.phase, kparameter=self.gap)
+        if pol_idx != _cte.polarization_mon.index('undef'):
+            self.polarization = pol_idx
+        return pol_idx
+
+    @staticmethod
+    def _is_equal_with_tolerance(
+            value: float, reference: float, tolerance: float = 0):
+        """Check if two values are equals with a given tolerance"""
+        return abs(value - reference) <= tolerance
 
 
 def get_file_handler(file: str):
