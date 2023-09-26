@@ -17,7 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 class Namespace:
+    """."""
+
     def __init__(self, **kwargs):
+        """."""
         self.__dict__.update(kwargs)
 
 
@@ -26,7 +29,7 @@ default_args = Namespace(
     msg_port=5052,
     io_port=5050,
     beaglebone_addr="10.128.110.160",
-)
+    )
 
 
 # TODO: Check the case where the drives are not in the same state
@@ -203,6 +206,7 @@ def gpio_server_connection_test(addr, port) -> bool:
 
 
 def read_digital_status(tcp_client, bsmp_id: int) -> bytes:
+    """."""
     bsmp_enable_message = utils.bsmp_send(
         _cte.BSMP_READ, variableID=bsmp_id, size=0
     ).encode()
@@ -226,16 +230,23 @@ class Epu:
     Note:
         target velocity or position values None indicates that the drives have
         different values, need to be checked.
+
     """
 
     _instance = None
 
+    # Same class constants as in siriuspy.idff.config.IDFFConfig
+    PPARAM_TOL: float = 0.5  # [mm]
+    KPARAM_TOL: float = 0.1  # [mm]
+
     def __new__(cls, *args, **kwargs):
+        """."""
         if cls._instance is None:
             cls._instance = super(Epu, cls).__new__(cls)
         return cls._instance
 
     def __init__(self, args, callback_update=lambda: 1):
+        """."""
         # Ensure that the instance has not been initialized before
         if not hasattr(self, "initialized"):
             self.args = args
@@ -248,7 +259,7 @@ class Epu:
             self.rs485_connected = self._gpio_socket.connected
             self.gpio_connected = self._serial_socket.connected
             self.tcp_connected = self.rs485_connected and self.gpio_connected
-            self.polarization_mode = 0
+            self.polarization_mode = _cte.polarization_mon.index('undef')
 
             self.a_drive = EcoDrive(
                 tcp_client=self._serial_socket,
@@ -302,6 +313,7 @@ class Epu:
             self.monitor_phase_movement_thread.start()
             self.monitor_gap_movement_thread.start()
 
+            self.update_polarization_status()
             self.initialized = True
 
     # Motion monitoring
@@ -397,6 +409,7 @@ class Epu:
                             setattr(self, f"i_encoder_{attribute}", value)
                         self.callback_update()
                         logger.info("%s: %s", attribute, value)
+                        self.update_polarization_status()
                         update_count += 1
 
                     if abs(getattr(self, attribute) - target) < 0.001:
@@ -473,6 +486,9 @@ class Epu:
         self.phase_enable_and_halt_released = (
             self.phase_enable and self.phase_halt_released
         )
+
+        # update polarization status
+        self.update_polarization_status()
 
     def _check_allowed_to_change(self):
         """
@@ -658,6 +674,7 @@ class Epu:
                         return False
 
     def gap_set(self, target: float) -> bool:
+        """."""
         if _cte.minimum_gap <= target <= _cte.maximum_gap:
             self._set_undulator_property("position", target, "gap")
         else:
@@ -665,7 +682,10 @@ class Epu:
             return False
 
     def gap_set_velocity(self, target: float) -> bool:
-        if _cte.minimum_velo_mm_per_min <= target <= _cte.maximum_velo_mm_per_min:
+        """."""
+        min_vel = _cte.minimum_velo_mm_per_min
+        max_vel = _cte.maximum_velo_mm_per_min
+        if min_vel <= target <= max_vel:
             self._set_undulator_property("velocity", target, "gap")
         else:
             logger.error(
@@ -1086,35 +1106,76 @@ class Epu:
         self.phase_stop()
 
     def set_polarization(self, mode: int) -> bool:
+        """Set polarization.
+            circular negative (mode=0),
+            linear horizontal (mode=1),
+            circular positive (mode=2),
+            linear vertical (mode=3).
         """
-        Set polarization to linear horizontal (mode=1), linear vertical (mode=2),
-        circular left (mode=3), circular right (mode=4).
-        """
-        if mode not in range(0, 4):
+        if mode not in range(0, len(_cte.polarization_sel)):
             logger.error("Invalid polarization mode.")
             return False
         self.polarization_mode = mode
         return True
 
     def polarization_motion(self, start: bool = False) -> None:
-        """Open gap to 300 mm, goes to <phase>."""
+        """Open gap to parked gap and go to <phase>."""
         if not start:
             return
 
         self.pol_is_moving = True
-        self.gap_set(300)
-        self.phase_set(_cte.pol_phases[self.polarization_mode])
-        time.sleep(2)
+
+        # set references
+        target_gap = _cte.id_parked_gap
+        target_phase = _cte.pol_phases[self.polarization_mode]
+        self.gap_set(target_gap)
+        self.phase_set(target_phase)
+        time.sleep(2)  # TODO: implement checking RB
+
+        # gap movement
         self.gap_start(True)
-
         while self.gap_is_moving:
-            time.sleep(1)
+            time.sleep(0.2)
 
+        # phase movement
         self.phase_start(True)
+        self.polarization = _cte.polarization_mon.index('none')
+        while self.phase_is_moving:
+            time.sleep(0.2)
+
+        # finalize polarization movement
         self.pol_is_moving = False
+
+    @staticmethod
+    def is_equal_with_tolerance(
+            value: float, reference: float, tolerance: float = 0):
+        """Check if two values are equals with a given tolerance."""
+        return abs(value - reference) <= tolerance
+
+    def update_polarization_status(self):
+        """Update polarization property."""
+        # check if polarization is defined
+        pol_phases = _cte.pol_phases
+        for pol_idx in pol_phases.keys():
+            if self.is_equal_with_tolerance(
+                    self.phase, pol_phases[pol_idx], Epu.PPARAM_TOL):
+                self.polarization = pol_idx
+                return
+
+        # checking if changing polarization
+        if self.is_equal_with_tolerance(
+                    self.gap, _cte.id_parked_gap, Epu.KPARAM_TOL):
+                pol_idx = _cte.polarization_mon.index('none')
+                self.polarization = pol_idx
+                return
+
+        # at this point the configuration must be undefined
+        pol_idx = _cte.polarization_mon.index('undef')
+        self.polarization = pol_idx
 
 
 def get_file_handler(file: str):
+    """."""
     # logger.handlers.clear()
     file_handler = logging.handlers.RotatingFileHandler(
         file, maxBytes=10000000, backupCount=10
@@ -1129,6 +1190,7 @@ def get_file_handler(file: str):
 
 
 def get_logger(file_handler):
+    """."""
     lg = logging.getLogger()
     lg.setLevel(logging.DEBUG)
     lg.addHandler(file_handler)
@@ -1138,30 +1200,3 @@ def get_logger(file_handler):
 logger.handlers.clear()
 fh = get_file_handler("testing.log")
 root = get_logger(fh)
-
-
-def cycling_test():
-    my_epu = Epu(default_args)
-    my_epu.turn_on_all()
-    my_epu.gap_enable_and_release_halt(True)
-    with open("cycling.log", "w") as f:
-        for i in range(10):
-            set_and_start_gap(my_epu, 245)
-            while my_epu.gap_is_moving:
-                time.sleep(1)
-            f.write(str(my_epu.gap))
-
-            set_and_start_gap(my_epu, 250)
-            time.sleep(0.1)
-            while my_epu.gap_is_moving:
-                time.sleep(1)
-            f.write(str(my_epu.gap))
-
-
-def set_and_start_gap(epu, value):
-    epu.gap_set(value)
-    epu.gap_start(True)
-
-
-if __name__ == "__main__":
-    pass

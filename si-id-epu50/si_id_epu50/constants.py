@@ -120,7 +120,8 @@ max_long_msg_size = 2000
 ### rec enums
 bool_enums = ["No", "Yes"]
 bool_dsbl_enbl = ["Dsbl", "Enbl"]
-polarization_states = ["circularn", "horizontal", "circularp", "vertical"]
+polarization_sel = ["circularn", "horizontal", "circularp", "vertical"]
+polarization_mon = polarization_sel + ["none", "undef"]
 ### bool constants
 bool_no = 0
 bool_yes = 1

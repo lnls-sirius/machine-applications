@@ -8,9 +8,7 @@ from . import constants as _cte
 pv_change_polarization_cmd = "ChangePolarization-Cmd"
 pv_polarization_sel = "Polarization-Sel"
 pv_polarization_sts = "Polarization-Sts"
-pv_kparameter_sp = "KParameter-SP"
-pv_kparameter_rb = "KParameter-RB"
-pv_kparameter_mon = "KParameter-Mon"
+pv_polarization_mon = "Polarization-Mon"
 pv_id_period_length_cte = "PeriodLength-Cte"
 pv_id_parked_gap_cte = "ParkedGap-Cte"
 pv_id_parked_phase_cte = "ParkedPhase-Cte"
@@ -104,6 +102,13 @@ pv_drive_i_connected_mon = "DriveIConnected-Mon"
 #############################################
 # Database
 pvdb = {
+    pv_polarization_mon: {
+        "type": "enum",
+        "unit": "polarization",
+        "enums": _cte.polarization_mon,
+        "asg": "default",
+        "value": _cte.polarization_mon.index('undef'),
+    },
     pv_change_polarization_cmd: {
         "type": "int",
         "count": 1,
@@ -115,39 +120,17 @@ pvdb = {
     },
     pv_polarization_sel: {
         "type": "enum",
-        "enums": _cte.polarization_states,
+        "unit": "polarization",
+        "enums": _cte.polarization_sel,
         "value": 0,
         "asg": "default",
     },
     pv_polarization_sts: {
         "type": "enum",
-        "enums": _cte.polarization_states,
+        "unit": "polarization",
+        "enums": _cte.polarization_sel,
         "value": 0,
         "asg": "default",
-    },
-    pv_kparameter_sp: {
-        "type": "float",
-        "prec": 5,
-        "unit": "kparameter",
-        "asg": "default",
-        "lolim": 0.0,
-        "hilim": 1.0,
-    },
-    pv_kparameter_rb: {
-        "type": "float",
-        "prec": 5,
-        "unit": "kparameter",
-        "asg": "default",
-        "lolim": 0.0,
-        "hilim": 1.0,
-    },
-    pv_kparameter_mon: {
-        "type": "float",
-        "prec": 5,
-        "unit": "kparameter",
-        "asg": "default",
-        "lolim": 0.0,
-        "hilim": 1.0,
     },
     pv_id_period_length_cte: {
         "type": "float",

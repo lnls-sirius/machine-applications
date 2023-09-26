@@ -26,9 +26,11 @@ class EPUSupport(pcaspy.Driver):
         try:
             self.epu_driver = _epu.Epu(args=args, callback_update=self.priority_call)
             print("Epu driver initialized")
+
         except Exception:
             print("Could not init epu driver")
             raise
+
         # start periodic polling function
         self.eid = threading.Event()
         self.init_vars()
@@ -60,6 +62,7 @@ class EPUSupport(pcaspy.Driver):
             _db.pv_enbl_and_release_si_sel,
             self.epu_driver.phase_enable_and_halt_released,
         )
+        self.setParam(_db.pv_ioc_msg_mon, '')
         # update PVs
         self.updatePVs()
 
@@ -73,6 +76,7 @@ class EPUSupport(pcaspy.Driver):
         # update encoder readings
         self.setParam(_db.pv_gap_mon, self.epu_driver.gap)
         self.setParam(_db.pv_phase_mon, self.epu_driver.phase)
+        self.setParam(_db.pv_polarization_mon, self.epu_driver.polarization)
         # update PVs
         self.updatePVs()
 
@@ -84,24 +88,30 @@ class EPUSupport(pcaspy.Driver):
             # update connection status
             if EPUSupport.isValid(driver.tcp_connected):
                 self.setParam(_db.pv_tcp_connected_mon, driver.tcp_connected)
+
             if EPUSupport.isValid(driver.gpio_connected):
                 self.setParam(_db.pv_gpio_connected_mon, driver.gpio_connected)
+
             if EPUSupport.isValid(driver.a_drive.rs485_connected):
                 self.setParam(
                     _db.pv_drive_a_connected_mon, driver.a_drive.rs485_connected
                 )
+
             if EPUSupport.isValid(driver.b_drive.rs485_connected):
                 self.setParam(
                     _db.pv_drive_b_connected_mon, driver.b_drive.rs485_connected
                 )
+
             if EPUSupport.isValid(driver.s_drive.rs485_connected):
                 self.setParam(
                     _db.pv_drive_s_connected_mon, driver.s_drive.rs485_connected
                 )
+
             if EPUSupport.isValid(driver.i_drive.rs485_connected):
                 self.setParam(
                     _db.pv_drive_i_connected_mon, driver.i_drive.rs485_connected
                 )
+
             if (
                 EPUSupport.isValid(driver.tcp_connected)
                 and EPUSupport.isValid(driver.gpio_connected)
@@ -110,6 +120,7 @@ class EPUSupport(pcaspy.Driver):
                 and EPUSupport.isValid(driver.s_drive.rs485_connected)
                 and EPUSupport.isValid(driver.i_drive.rs485_connected)
             ):
+
                 if (
                     driver.tcp_connected
                     and driver.gpio_connected
@@ -119,23 +130,33 @@ class EPUSupport(pcaspy.Driver):
                     and driver.i_drive.rs485_connected
                 ):
                     self.setParam(_db.pv_epu_connected_mon, _cte.bool_yes)
+
                 else:
                     self.setParam(_db.pv_epu_connected_mon, _cte.bool_no)
+
             else:
                 self.setParam(_db.pv_epu_connected_mon, _cte.bool_no)
+
+            # update polarization monitor
+            if EPUSupport.isValid(driver.polarization):
+                self.setParam(_db.pv_polarization_mon, driver.polarization)
+
             # update allowed to move status
             if (
                 EPUSupport.isValid(driver.gap_change_allowed)
                 and driver.gap_change_allowed
             ):
                 self.setParam(_db.pv_allowed_change_gap_mon, _cte.bool_yes)
+
             else:
                 self.setParam(_db.pv_allowed_change_gap_mon, _cte.bool_no)
+
             if (
                 EPUSupport.isValid(driver.phase_change_allowed)
                 and driver.phase_change_allowed
             ):
                 self.setParam(_db.pv_allowed_change_phase_mon, _cte.bool_yes)
+
             else:
                 self.setParam(_db.pv_allowed_change_phase_mon, _cte.bool_no)
 
@@ -345,9 +366,11 @@ class EPUSupport(pcaspy.Driver):
                     self.setParam(_db.pv_polarization_sel, value)
                     self.setParam(_db.pv_polarization_sts, value)
                     self.updatePVs()
+                else:
+                    status = False
 
         # enable control from beamlines
-        if EPUSupport.isPvName(reason, _db.pv_beamline_enbl_sel):
+        elif EPUSupport.isPvName(reason, _db.pv_beamline_enbl_sel):
             if EPUSupport.isBoolNum(value):
                 self.setParam(_db.pv_beamline_enbl_sel, value)
                 self.setParam(_db.pv_beamline_enbl_sts, value)
@@ -376,7 +399,7 @@ class EPUSupport(pcaspy.Driver):
             self.updatePVs()
 
         # change gap set point
-        if EPUSupport.isPvName(reason, _db.pv_gap_sp):
+        elif EPUSupport.isPvName(reason, _db.pv_gap_sp):
             if value >= _cte.minimum_gap and value <= _cte.maximum_gap:
                 status = self.asynExec(reason, driver.gap_set, value)
                 if status:
