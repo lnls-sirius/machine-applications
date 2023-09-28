@@ -5,6 +5,8 @@ from typing import Optional
 import traceback
 import yaml
 
+from siriuspy.id import IDConfigEPU50 as _IDConfig
+
 
 ################# ETHERNET #####################
 GPIO_TCP_DEFAULT_PORT = 5050
@@ -41,35 +43,35 @@ class EpuConfig:
     S_DRIVE_ADDRESS: Optional[int] = 12
     I_DRIVE_ADDRESS: Optional[int] = 11
     BAUD_RATE: int = 19200
-    MINIMUM_GAP: float = +22  # [mm]
-    MAXIMUM_GAP: float = +300  # [mm]
-    MINIMUM_PHASE: float = -25  # [mm]
-    MAXIMUM_PHASE: float = +25  # [mm]
+
     MINIMUM_VELOCITY: float = +0.6  # [mm/min]
     MAXIMUM_VELOCITY: float = +500  # [mm/min]
     ECODRIVE_LOG_FILE_PATH: str = "ecodrive_control.log"
     EPU_LOG_FILE_PATH: str = "epu_control.log"
 
-
 ## config
+
+minimum_gap = _IDConfig.MINIMUM_GAP
+maximum_gap = _IDConfig.MAXIMUM_GAP
+minimum_phase = _IDConfig.MINIMUM_PHASE
+maximum_phase = _IDConfig.MAXIMUM_PHASE
+
 a_drive_address = EpuConfig.A_DRIVE_ADDRESS
 b_drive_address = EpuConfig.B_DRIVE_ADDRESS
 s_drive_address = EpuConfig.S_DRIVE_ADDRESS
 i_drive_address = EpuConfig.I_DRIVE_ADDRESS
 baud_rate = EpuConfig.BAUD_RATE
-minimum_gap = EpuConfig.MINIMUM_GAP
-maximum_gap = EpuConfig.MAXIMUM_GAP
-minimum_phase = EpuConfig.MINIMUM_PHASE
-maximum_phase = EpuConfig.MAXIMUM_PHASE
 minimum_velo_mm_per_min = EpuConfig.MINIMUM_VELOCITY  # [mm/min]
-minimum_velo_mm_per_sec = minimum_velo_mm_per_min / 60  # [mm/s]
 maximum_velo_mm_per_min = EpuConfig.MAXIMUM_VELOCITY  # [mm/min]
+minimum_velo_mm_per_sec = minimum_velo_mm_per_min / 60  # [mm/s]
 maximum_velo_mm_per_sec = maximum_velo_mm_per_min / 60  # [mm/s]
 ecodrive_log_file_path = EpuConfig.ECODRIVE_LOG_FILE_PATH
 epu_log_file_path = EpuConfig.EPU_LOG_FILE_PATH
 
+
 ######## Drive error codes and messages #########
-fname = _os.path.join(_os.path.dirname(__file__), "config", "drive_messages.yaml")
+fname = _os.path.join(
+    _os.path.dirname(__file__), "config", "drive_messages.yaml")
 with open(fname, "r") as f:
     try:
         drive_code_dict = yaml.safe_load(f)
@@ -87,13 +89,6 @@ powered_on_diag_codes = ["A012", "A010", "A211"]
 ################## Autosave #####################
 autosave_update_rate = 10.0
 autosave_num_backup_files = 10
-
-# constants
-
-id_period_length = 50  # [mm]
-id_parked_gap = 300  # [mm]
-id_parked_phase = 0  # [mm]
-pol_phases = {0: -16.39, 1: 0, 2: 16.39, 3: 25}  # [mm]
 
 ## Driver configuration
 driver_update_rate = 0.2
@@ -120,8 +115,7 @@ max_long_msg_size = 2000
 ### rec enums
 bool_enums = ["No", "Yes"]
 bool_dsbl_enbl = ["Dsbl", "Enbl"]
-polarization_sel = ["circularn", "horizontal", "circularp", "vertical"]
-polarization_mon = polarization_sel + ["none", "undef"]
+
 ### bool constants
 bool_no = 0
 bool_yes = 1
@@ -131,7 +125,8 @@ position_precision = 3
 scan_rate = 0.1
 
 ## EPICS access security
-access_security_filename = _os.path.join(_os.path.dirname(__file__), "access_rules.as")
+access_security_filename = _os.path.join(
+    _os.path.dirname(__file__), "access_rules.as")
 
 ## CA server
 ### transaction update rate

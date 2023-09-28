@@ -7,11 +7,12 @@ from threading import Thread
 import time
 import socket
 
+from siriuspy.id import IDConfigEPU50 as _IDConfig
+
 from . import constants as _cte
 from . import utils
 from .connection_handler import TCPClient
 from .ecodrive import EcoDrive
-from .utils import DriveCOMError
 
 logger = logging.getLogger(__name__)
 
@@ -234,10 +235,10 @@ class Epu:
     """
 
     _instance = None
-
-    # Same class constants as in siriuspy.idff.config.IDFFConfig
-    PPARAM_TOL: float = 0.5  # [mm]
-    KPARAM_TOL: float = 0.1  # [mm]
+    _pol_state_sel_str = _IDConfig.get_polarization_state_sel_str()
+    _pol_state_mon_str = _IDConfig.get_polarization_state_mon_str()
+    _pol_none = _pol_state_mon_str.index(_IDConfig.POL_NONE_PHASE[0])
+    _pol_undef = _pol_state_mon_str.index(_IDConfig.POL_UNDEF_PHASE[0])
 
     def __new__(cls, *args, **kwargs):
         """."""
@@ -259,7 +260,7 @@ class Epu:
             self.rs485_connected = self._gpio_socket.connected
             self.gpio_connected = self._serial_socket.connected
             self.tcp_connected = self.rs485_connected and self.gpio_connected
-            self.polarization_mode = _cte.polarization_mon.index('undef')
+            self.polarization_mode = self._pol_undef
 
             self.a_drive = EcoDrive(
                 tcp_client=self._serial_socket,
@@ -624,7 +625,7 @@ class Epu:
             with self._epu_lock:
                 try:
                     return func(value)
-                except (DriveCOMError, ValueError):
+                except (utils.DriveCOMError, ValueError):
                     logger.error("Could not set drive value.")
                     time.sleep(0.5)
                     attempts += 1
@@ -658,13 +659,13 @@ class Epu:
             if func1 is not None:
                 try:
                     self._set_drive_values(value, func1)
-                except (DriveCOMError, ValueError):
+                except (utils.DriveCOMError, ValueError):
                     logger.error("Could not set drive value.")
                     return False
                 else:
                     try:
                         self._set_drive_values(value, func2)
-                    except (DriveCOMError, ValueError):
+                    except (utils.DriveCOMError, ValueError):
                         logger.warning(
                             f"Could not set {undulator_property} {movement_property} on drive B. \
                             {undulator_property} {movement_property} drives may have different target values."
@@ -1112,7 +1113,7 @@ class Epu:
             circular positive (mode=2),
             linear vertical (mode=3).
         """
-        if mode not in range(0, len(_cte.polarization_sel)):
+        if mode not in range(0, len(self._pol_state_sel_str)):
             logger.error("Invalid polarization mode.")
             return False
         self.polarization_mode = mode
@@ -1126,8 +1127,8 @@ class Epu:
         self.pol_is_moving = True
 
         # set references
-        target_gap = _cte.id_parked_gap
-        target_phase = _cte.pol_phases[self.polarization_mode]
+        target_gap = _IDConfig.PARKED_GAP
+        target_phase = _IDConfig.get_polarization_phase(self.polarization_mode)
         self.gap_set(target_gap)
         self.phase_set(target_phase)
         time.sleep(2)  # TODO: implement checking RB
@@ -1139,49 +1140,20 @@ class Epu:
 
         # phase movement
         self.phase_start(True)
-        self.polarization = _cte.polarization_mon.index('none')
+        self.polarization = self._pol_none
         while self.phase_is_moving:
             time.sleep(0.2)
 
         # finalize polarization movement
         self.pol_is_moving = False
 
-    @staticmethod
-    def get_polarization_state(pparameter, kparameter):
-        """Return polarization state."""
-        phase = pparameter
-        gap = kparameter
-
-        # check if polarization is defined
-        pol_phases = _cte.pol_phases
-        for pol_idx in pol_phases.keys():
-            if Epu._is_equal_with_tolerance(
-                    phase, pol_phases[pol_idx], Epu.PPARAM_TOL):
-                return pol_idx
-        
-        # checking if changing polarization
-        if Epu._is_equal_with_tolerance(
-                    gap, _cte.id_parked_gap, Epu.KPARAM_TOL):
-                pol_idx = _cte.polarization_mon.index('none')
-                return pol_idx
-
-        # at this point the configuration must be undefined
-        pol_idx = _cte.polarization_mon.index('undef')
-        return pol_idx
-
     def update_polarization_status(self) -> int:
         """ Polarization property. """
-        pol_idx = Epu.get_polarization_state(
+        pol_idx = _IDConfig.get_polarization_state(
             pparameter=self.phase, kparameter=self.gap)
-        if pol_idx != _cte.polarization_mon.index('undef'):
+        if pol_idx != self._pol_undef:
             self.polarization = pol_idx
         return pol_idx
-
-    @staticmethod
-    def _is_equal_with_tolerance(
-            value: float, reference: float, tolerance: float = 0):
-        """Check if two values are equals with a given tolerance"""
-        return abs(value - reference) <= tolerance
 
 
 def get_file_handler(file: str):

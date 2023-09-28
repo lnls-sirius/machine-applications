@@ -7,9 +7,9 @@ from threading import Thread as _Thread
 import pcaspy
 
 from . import constants as _cte
-from . import iocDriver
-from . import epu_db
-from . import save_restore
+from . import iocDriver as _iocDriver
+from . import csdev as _csdev
+from . import save_restore as _save_restore
 
 
 def run(args):
@@ -18,17 +18,18 @@ def run(args):
     server = pcaspy.SimpleServer()
 
     # config access security
-    server.initAccessSecurityFile(_cte.access_security_filename, PREFIX=args.pv_prefix)
+    server.initAccessSecurityFile(
+        _cte.access_security_filename, PREFIX=args.pv_prefix)
 
     # instantiate PV database
-    server.createPV(args.pv_prefix, epu_db.pvdb)
+    server.createPV(args.pv_prefix, _csdev.pvdb)
 
     # create pcaspy driver
-    driver = iocDriver.EPUSupport(args)
+    driver = _iocDriver.EPUSupport(args)
 
     # restore saved PV values
     restore = _Thread(
-        target=save_restore.restore_after_delay,
+        target=_save_restore.restore_after_delay,
         args=(
             args.autosave_request_file,  # request file name
             args.pv_prefix,  # pv prefix
@@ -41,7 +42,7 @@ def run(args):
 
     # start autosave
     autosave = _Thread(
-        target=save_restore.save_monitor_with_delay,
+        target=_save_restore.save_monitor_with_delay,
         args=(
             args.autosave_request_file,  # request file name
             args.pv_prefix,  # pv prefix

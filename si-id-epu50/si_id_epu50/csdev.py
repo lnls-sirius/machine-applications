@@ -1,5 +1,6 @@
 from pcaspy import Severity as _Severity
 
+from siriuspy.id import IDConfigEPU50 as _idc
 from . import constants as _cte
 
 
@@ -99,15 +100,18 @@ pv_drive_i_diag_msg_mon = "DriveIDiagMsg-Mon"
 pv_drive_i_is_moving_mon = "DriveIMoving-Mon"
 pv_drive_i_connected_mon = "DriveIConnected-Mon"
 
+_pol_state_sel_str = _idc.get_polarization_state_sel_str()
+_pol_state_mon_str = _idc.get_polarization_state_mon_str()
+
 #############################################
 # Database
 pvdb = {
     pv_polarization_mon: {
         "type": "enum",
         "unit": "polarization",
-        "enums": _cte.polarization_mon,
+        "enums": _pol_state_mon_str,
         "asg": "default",
-        "value": _cte.polarization_mon.index('undef'),
+        "value": _pol_state_mon_str.index(_idc.POL_UNDEF_PHASE[0]),
     },
     pv_change_polarization_cmd: {
         "type": "int",
@@ -121,26 +125,29 @@ pvdb = {
     pv_polarization_sel: {
         "type": "enum",
         "unit": "polarization",
-        "enums": _cte.polarization_sel,
+        "enums": _pol_state_sel_str,
         "value": 0,
         "asg": "default",
     },
     pv_polarization_sts: {
         "type": "enum",
         "unit": "polarization",
-        "enums": _cte.polarization_sel,
+        "enums": _pol_state_sel_str,
         "value": 0,
         "asg": "default",
     },
     pv_id_period_length_cte: {
         "type": "float",
-        "value": _cte.id_period_length,
+        "value": _idc.PERIOD_LENGTH,
         "unit": "mm",
     },
-    pv_id_parked_gap_cte: {"type": "float", "value": _cte.id_parked_gap, "unit": "mm"},
+    pv_id_parked_gap_cte: {
+        "type": "float",
+        "value": _idc.PARKED_GAP,
+        "unit": "mm"},
     pv_id_parked_phase_cte: {
         "type": "float",
-        "value": _cte.id_parked_phase,
+        "value": _idc.PARKED_PHASE,
         "unit": "mm",
     },
     pv_beamline_enbl_sel: {
