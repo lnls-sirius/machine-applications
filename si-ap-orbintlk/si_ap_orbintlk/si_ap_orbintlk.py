@@ -103,12 +103,10 @@ def run():
     server_thread.start()
 
     # main loop
-    driver.app.scanning = True
+    driver.app.thread_check_configs.unpause()
     while not STOP_EVENT:
         driver.app.process(INTERVAL)
-
-    driver.app.scanning = False
-    driver.app.quit = True
+    driver.app.thread_check_configs.stop()
 
     # sends stop signal to server thread
     server_thread.stop()
