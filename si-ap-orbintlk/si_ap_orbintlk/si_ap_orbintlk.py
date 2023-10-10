@@ -10,6 +10,7 @@ from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 
 from siriuspy.orbintlk.main import App as _App
+from siriuspy.orbintlk.csdev import Const as _Const
 
 INTERVAL = 1/10  # [s]
 STOP_EVENT = False
@@ -73,7 +74,7 @@ def run():
     # define IOC, init pvs database and create app object
     _version = '0.1.0'
     _ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
-    _ioc_prefix += 'SI-Glob:AP-OrbIntlk:'
+    _ioc_prefix += _Const.IOC_PREFIX + ':'
     app = _App()
     dbase = app.pvs_database
     dbase['Version-Cte']['value'] = _version
