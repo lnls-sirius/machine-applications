@@ -6,7 +6,7 @@ import traceback
 import time
 import pcaspy
 
-from siriuspy.id import IDConfigEPU50 as _IDConfig
+from siriuspy.search import IDSearch as _IDSearch
 
 from . import constants as _cte
 from . import csdev as _db
@@ -373,6 +373,7 @@ class EPUSupport(pcaspy.Driver):
         """EPICS write."""
         status = True
         driver = self.epu_driver
+        idparams = driver.idparams
 
         # ---take action according to PV name
 
@@ -418,7 +419,7 @@ class EPUSupport(pcaspy.Driver):
 
         # change gap set point
         elif EPUSupport.isPvName(reason, _db.pv_gap_sp):
-            if value >= _cte.minimum_gap and value <= _cte.maximum_gap:
+            if value >= idparams.KPARAM_MIN and value <= idparams.KPARAM_MAX:
                 status = self.asynExec(reason, driver.gap_set, value)
                 if status:
                     self.setParam(_db.pv_gap_sp, value)
@@ -428,7 +429,7 @@ class EPUSupport(pcaspy.Driver):
 
         # change phase set point
         elif EPUSupport.isPvName(reason, _db.pv_phase_sp):
-            if value >= _cte.minimum_phase and value <= _cte.maximum_phase:
+            if value >= idparams.PPARAM_MIN and value <= idparams.PPARM_MAX:
                 status = self.asynExec(reason, driver.phase_set, value)
                 if status:
                     self.setParam(_db.pv_phase_sp, value)
@@ -531,9 +532,12 @@ class EPUSupport(pcaspy.Driver):
                 and self.getParam(_db.pv_allowed_change_gap_mon) == _cte.bool_yes
                 and self.getParam(_db.pv_allowed_change_phase_mon) == _cte.bool_yes
             ):
-                pol_change_gap = _IDConfig.POL_CHANGE_GAP
+                idname = self.args.prefix_pv
+                idparams = _IDSearch.conv_idname_2_parameters(idname)
+                pol_change_gap = idparams.KPARAM_POL_CHANGE
                 pol_idx = self.getParam(_db.pv_polarization_sel)
-                phase = _IDConfig.get_polarization_phase(pol_idx)
+                phase = _IDSearch.conv_idname_2_polarization_pparameter(
+                    idname, pol_idx)
                 self.setParam(_db.pv_gap_sp, pol_change_gap)
                 driver.gap_set(pol_change_gap)
                 self.setParam(_db.pv_phase_sp, phase)

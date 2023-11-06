@@ -5,7 +5,7 @@ from typing import Optional
 import traceback
 import yaml
 
-from siriuspy.id import IDConfigEPU50 as _IDConfig
+from siriuspy.search import IDSearch as _IDSearch
 
 
 ################# ETHERNET #####################
@@ -50,12 +50,6 @@ class EpuConfig:
     EPU_LOG_FILE_PATH: str = "epu_control.log"
 
 ## config
-
-minimum_gap = _IDConfig.MINIMUM_GAP
-maximum_gap = _IDConfig.MAXIMUM_GAP
-minimum_phase = _IDConfig.MINIMUM_PHASE
-maximum_phase = _IDConfig.MAXIMUM_PHASE
-
 a_drive_address = EpuConfig.A_DRIVE_ADDRESS
 b_drive_address = EpuConfig.B_DRIVE_ADDRESS
 s_drive_address = EpuConfig.S_DRIVE_ADDRESS

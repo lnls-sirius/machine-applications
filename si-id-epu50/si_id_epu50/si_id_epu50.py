@@ -22,7 +22,9 @@ def run(args):
         _cte.access_security_filename, PREFIX=args.pv_prefix)
 
     # instantiate PV database
-    server.createPV(args.pv_prefix, _csdev.pvdb)
+    idname = args.pv_prefix
+    pvdb = _csdev.get_pvdb(idname)
+    server.createPV(idname, pvdb)
 
     # create pcaspy driver
     driver = _iocDriver.EPUSupport(args)

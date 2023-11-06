@@ -7,7 +7,7 @@ from threading import Thread
 import time
 import socket
 
-from siriuspy.id import IDConfigEPU50 as _IDConfig
+from siriuspy.search import IDSearch as _IDSearch
 
 from . import constants as _cte
 from . import utils
@@ -235,10 +235,6 @@ class Epu:
     """
 
     _instance = None
-    _pol_state_sel_str = _IDConfig.get_polarization_state_sel_str()
-    _pol_state_mon_str = _IDConfig.get_polarization_state_mon_str()
-    _pol_none = _pol_state_mon_str.index(_IDConfig.POL_NONE_PHASE[0])
-    _pol_undef = _pol_state_mon_str.index(_IDConfig.POL_UNDEF_PHASE[0])
 
     def __new__(cls, *args, **kwargs):
         """."""
@@ -262,35 +258,46 @@ class Epu:
             self.tcp_connected = self.rs485_connected and self.gpio_connected
             self.polarization_mode = self._pol_undef
 
+            idname = self.args.pv_prefix
+            self.idparams = _IDSearch.conv_idname_2_parameters(idname)
+            self._pol_state_sel_str = \
+                _IDSearch.conv_idname_2_polarizations(idname)
+            self._pol_state_mon_str = \
+                _IDSearch.conv_idname_2_polarizations_sts(idname)
+            self._pol_none = \
+                self._pol_state_mon_str.index(_IDSearch.POL_NONE_STR)
+            self._pol_undef = \
+                self._pol_state_mon_str.index(_IDSearch.POL_NONE_STR)
+
             self.a_drive = EcoDrive(
                 tcp_client=self._serial_socket,
                 address=_cte.a_drive_address,
-                min_limit=_cte.minimum_gap,
-                max_limit=_cte.maximum_gap,
+                min_limit=self.idparams.KPARAM_MIN,
+                max_limit=self.idparams.KPARAM_MAX,
                 drive_name="A",
             )
 
             self.b_drive = EcoDrive(
                 tcp_client=self._serial_socket,
                 address=_cte.b_drive_address,
-                min_limit=_cte.minimum_gap,
-                max_limit=_cte.maximum_gap,
+                min_limit=self.idparams.KPARAM_MIN,
+                max_limit=self.idparams.KPARAM_MAX,
                 drive_name="B",
             )
 
             self.i_drive = EcoDrive(
                 tcp_client=self._serial_socket,
                 address=_cte.i_drive_address,
-                min_limit=_cte.minimum_phase,
-                max_limit=_cte.maximum_phase,
+                min_limit=self.idparams.PPARAM_MIN,
+                max_limit=self.idparams.PPARAM_MAX,
                 drive_name="I",
             )
 
             self.s_drive = EcoDrive(
                 tcp_client=self._serial_socket,
                 address=_cte.s_drive_address,
-                min_limit=_cte.minimum_phase,
-                max_limit=_cte.maximum_phase,
+                min_limit=self.idparams.PPARAM_MIN,
+                max_limit=self.idparams.PPARAM_MAX,
                 drive_name="S",
             )
 
@@ -676,7 +683,7 @@ class Epu:
 
     def gap_set(self, target: float) -> bool:
         """."""
-        if _cte.minimum_gap <= target <= _cte.maximum_gap:
+        if self.idparams.KPARAM_MIN <= target <= self.idparams.KPARAM_MAX:
             self._set_undulator_property("position", target, "gap")
         else:
             logger.error(f"Gap value given, ({target}), is out of range.")
@@ -696,7 +703,7 @@ class Epu:
             return False
 
     def phase_set(self, target: float) -> bool:
-        if _cte.minimum_phase <= target <= _cte.maximum_phase:
+        if self.idparams.PPARM_MIN <= target <= self.idparams.PPARM_MAX:
             self._set_undulator_property("position", target, "phase")
         else:
             logger.error(f"Phase value given, ({target}), is out of range.")
@@ -1127,8 +1134,11 @@ class Epu:
         self.pol_is_moving = True
 
         # set references
-        target_gap = _IDConfig.PARKED_GAP
-        target_phase = _IDConfig.get_polarization_phase(self.polarization_mode)
+        idname = self.args.pv_prefix
+        idparams = _IDSearch.conv_idname_2_parameters(idname)
+        target_gap = idparams.KPARAM_PARKED
+        target_phase = _IDSearch.conv_idname_2_polarization_pparameter(
+            idname, self.polarization_mode)
         self.gap_set(target_gap)
         self.phase_set(target_phase)
         time.sleep(2)  # TODO: implement checking RB
@@ -1149,8 +1159,9 @@ class Epu:
 
     def update_polarization_status(self) -> int:
         """ Polarization property. """
-        pol_idx = _IDConfig.get_polarization_state(
-            pparameter=self.phase, kparameter=self.gap)
+        idname = self.args.pv_prefix
+        pol_idx = _IDSearch.conv_idname_2_polarization_state(
+            idname, pparameter=self.phase, kparameter=self.gap)
         if pol_idx != self._pol_undef:
             self.polarization = pol_idx
         return pol_idx
