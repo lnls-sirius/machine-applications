@@ -1158,13 +1158,12 @@ class Epu:
         self.pol_is_moving = False
 
     def update_polarization_status(self) -> int:
-        """ Polarization property. """
+        """Update polarization status."""
         idname = self.args.pv_prefix
         pol_idx = _IDSearch.conv_idname_2_polarization_state(
             idname, pparameter=self.phase, kparameter=self.gap)
         if pol_idx != self._pol_undef:
             self.polarization = pol_idx
-        return pol_idx
 
 
 def get_file_handler(file: str):
