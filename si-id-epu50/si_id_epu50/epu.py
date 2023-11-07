@@ -267,7 +267,7 @@ class Epu:
             self._pol_none = \
                 self._pol_state_mon_str.index(_IDSearch.POL_NONE_STR)
             self._pol_undef = \
-                self._pol_state_mon_str.index(_IDSearch.POL_NONE_STR)
+                self._pol_state_mon_str.index(_IDSearch.POL_UNDEF_STR)
 
             self.a_drive = EcoDrive(
                 tcp_client=self._serial_socket,
@@ -703,7 +703,7 @@ class Epu:
             return False
 
     def phase_set(self, target: float) -> bool:
-        if self.idparams.PPARM_MIN <= target <= self.idparams.PPARM_MAX:
+        if self.idparams.PPARAM_MIN <= target <= self.idparams.PPARAM_MAX:
             self._set_undulator_property("position", target, "phase")
         else:
             logger.error(f"Phase value given, ({target}), is out of range.")

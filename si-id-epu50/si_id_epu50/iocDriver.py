@@ -429,7 +429,7 @@ class EPUSupport(pcaspy.Driver):
 
         # change phase set point
         elif EPUSupport.isPvName(reason, _db.pv_phase_sp):
-            if value >= idparams.PPARAM_MIN and value <= idparams.PPARM_MAX:
+            if value >= idparams.PPARAM_MIN and value <= idparams.PPARAM_MAX:
                 status = self.asynExec(reason, driver.phase_set, value)
                 if status:
                     self.setParam(_db.pv_phase_sp, value)
