@@ -1159,13 +1159,10 @@ class Epu:
 
     def update_polarization_status(self) -> int:
         """Update polarization status."""
-        # NOTE: not sure if self.polarization is necessary! It seems that
-        # self.polarization_mode is the one really being used.
         idname = self.args.pv_prefix
         pol_idx = _IDSearch.conv_idname_2_polarization_state(
             idname, pparameter=self.phase, kparameter=self.gap)
-        if pol_idx != self._pol_undef:
-            self.polarization = pol_idx
+        self.polarization = pol_idx
 
 
 def get_file_handler(file: str):
