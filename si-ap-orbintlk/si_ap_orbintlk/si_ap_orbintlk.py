@@ -1,4 +1,4 @@
-"""SI-AP-FOFB Soft IOC."""
+"""SI-AP-OrbIntlk Soft IOC."""
 
 import os as _os
 import sys as _sys
