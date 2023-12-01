@@ -8,6 +8,7 @@ import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 
 from siriuspy import util as _util
+from siriuspy.logging import get_logger, LogMonHandler, configure_logging
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 
 from siriuspy.injctrl.main import App as _App
@@ -18,7 +19,8 @@ STOP_EVENT = False
 
 def _stop_now(signum, frame):
     _ = frame
-    print(_signal.Signals(signum).name+' received at '+_util.get_timestamp())
+    get_logger(_stop_now).warning(
+        _signal.Signals(signum).name+' received at '+_util.get_timestamp())
     _sys.stdout.flush()
     _sys.stderr.flush()
     global STOP_EVENT
@@ -69,7 +71,7 @@ def run():
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # configure log file
-    _util.configure_log_file()
+    configure_logging()
 
     # define IOC, init pvs database and create app object
     _version = _util.get_last_commit_hash()
@@ -86,11 +88,9 @@ def run():
 
     # check if another IOC is running
     _util.print_ioc_banner(
-        ioc_name='AS-AP-InjCtrl',
-        db=dbase,
-        description='AS-AP-InjCtrl Soft IOC',
-        version=_version,
-        prefix=_ioc_prefix)
+        ioc_name='AS-AP-InjCtrl', db=dbase,
+        description='AS-AP-InjCtrl Soft IOC', version=_version,
+        prefix=_ioc_prefix, logger=get_logger(run))
 
     # create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
@@ -98,6 +98,8 @@ def run():
     server.createPV(_ioc_prefix, dbase)
     driver = _PCASDriver(app)
     app.init_database()
+    # Add handler to update 'Log-Mon' PV to the root logger:
+    get_logger().addHandler(LogMonHandler(app.update_log))
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
