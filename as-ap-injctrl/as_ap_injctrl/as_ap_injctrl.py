@@ -13,7 +13,7 @@ from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 
 from siriuspy.injctrl.main import App as _App
 
-INTERVAL = 0.1
+INTERVAL = 1/10  # [s]
 STOP_EVENT = False
 
 
