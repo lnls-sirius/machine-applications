@@ -9,7 +9,8 @@ import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 
 from siriuspy import util as _util
-from siriuspy.envars import VACA_PREFIX as _vaca_prefix
+from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
+from siriuspy.logging import configure_logging, get_logger
 
 from siriuspy.currinfo import SILifetimeApp as _SILifetimeApp
 
@@ -20,7 +21,8 @@ STOP_EVENT = False
 
 def _stop_now(signum, frame):
     _ = frame
-    print(_signal.Signals(signum).name+' received at '+_util.get_timestamp())
+    get_logger(_stop_now).warning(
+        _signal.Signals(signum).name+' received at '+_util.get_timestamp())
     _sys.stdout.flush()
     _sys.stderr.flush()
     global STOP_EVENT
@@ -69,17 +71,20 @@ class _PCASDriver(_pcaspy.Driver):
 
 def run():
     """Main module function."""
+    logger = get_logger(run)
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # configure log file
-    _util.configure_log_file()
+    configure_logging()
+    logger.info("Starting...")
 
     # define IOC, init pvs database and create app object
     _version = _util.get_last_commit_hash()
-    _ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
+    _ioc_prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
     _ioc_prefix += 'SI-Glob:AP-CurrInfo:'
+    logger.debug("Creating App Object.")
     app = _SILifetimeApp()
     dbase = app.pvs_database
     dbase['VersionLifetime-Cte']['value'] = _version
@@ -98,23 +103,27 @@ def run():
         prefix=_ioc_prefix)
 
     # create a new simple pcaspy server and driver to respond client's requests
-    _log.info('Creating Server.')
+    logger.info('Creating Server.')
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, dbase)
-    _log.info('Setting Server Database.')
+    logger.info('Setting Server Database.')
     server.createPV(_ioc_prefix, dbase)
-    _log.info('Creating Driver.')
+    logger.info('Creating Driver.')
     pcas_driver = _PCASDriver(app)
     app.init_database()
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
+    logger.info("Starting Server Thread.")
     server_thread.start()
 
     # main loop
     while not STOP_EVENT:
         pcas_driver.app.process(INTERVAL)
+    logger.info("Stoping Server Thread...")
 
     # sends stop signal to server thread
     server_thread.stop()
     server_thread.join()
+    logger.info("Server Thread stopped.")
+    logger.info("Good Bye.")
