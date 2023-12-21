@@ -17,6 +17,7 @@ from siriuspy.search import PSSearch as _PSSearch
 from siriuspy.diagsys.psdiag.csdev import get_ps_diag_propty_database as \
     _get_database
 from siriuspy.diagsys.psdiag.main import PSDiagApp as _App
+from siriuspy.logging import configure_logging, get_logger
 
 
 _COMMIT_HASH = _util.get_last_commit_hash()
@@ -27,8 +28,9 @@ STOP_EVENT = False
 
 def _stop_now(signum, frame):
     global STOP_EVENT
-    _log.warning(_signal.Signals(signum).name +
-                 ' received at ' + _util.get_timestamp())
+    get_logger(_stop_now).warning(
+        _signal.Signals(signum).name + ' received at ' + _util.get_timestamp()
+    )
     _sys.stdout.flush()
     _sys.stderr.flush()
     STOP_EVENT = True
@@ -77,17 +79,20 @@ class _PSDiagDriver(_Driver):
 
 def run(section='', sub_section='', device='', debug=False):
     """Run IOC."""
+    logger = get_logger(run)
+
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # configure log
-    _util.configure_log_file(debug=debug)
+    configure_logging(debug=debug)
+    logger.info("Starting...")
 
-    _log.info("Loading power supplies")
-    _log.info("{:12s}: {}".format('\tSection', section or 'None'))
-    _log.info("{:12s}: {}".format('\tSub Section', sub_section or 'None'))
-    _log.info("{:12s}: {}".format('\tDevice', device or 'None'))
+    logger.info("Loading power supplies")
+    logger.info("%12s: %s", '\tSection', section or 'None')
+    logger.info("%12s: %s", '\tSub Section', sub_section or 'None')
+    logger.info("%12s: %s", '\tDevice', device or 'None')
 
     # create PV database
     device_filter = dict()
@@ -101,14 +106,14 @@ def run(section='', sub_section='', device='', debug=False):
     psnames = _PSSearch.get_psnames(device_filter)
 
     if not psnames:
-        _log.warning('No devices found. Aborting.')
+        logger.warning('No devices found. Aborting.')
         _sys.exit(0)
 
     _version = _util.get_last_commit_hash()
     prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
     pvdb = dict()
     for psname in psnames:
-        _log.debug('{:32s}'.format(psname))
+        logger.debug('%32s', psname)
         dbase = _get_database(psname)
         for key, value in dbase.items():
             if key == 'DiagVersion-Cte':
@@ -125,33 +130,41 @@ def run(section='', sub_section='', device='', debug=False):
     app = _App(psnames)
 
     # create a new simple pcaspy server
-    _log.info("Creating server with %d devices and '%s' prefix",
-              len(psnames), prefix)
+    logger.info(
+        "Creating server with %d devices and '%s' prefix",
+        len(psnames),
+        prefix
+    )
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, pvdb)
+    logger.info("Setting Server Database.")
     server.createPV(prefix, pvdb)
 
     # create driver
-    _log.info('Creating driver')
+    logger.info('Creating driver')
     try:
         driver = _PSDiagDriver(app)
     except Exception:
-        _log.error('Failed to create driver. Aborting', exc_info=True)
+        logger.exception('Failed to create driver. Aborting')
         _sys.exit(1)
 
     _util.print_ioc_banner(
-        'AS PS Diagnostic', pvdb,
+        'AS PS Diagnostic',
+        pvdb,
         'IOC that provides power supplies diagnostics.',
-        _version, prefix)
+        _version,
+        prefix)
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
+    logger.info("Starting Server Thread.")
     server_thread.start()
 
     # main loop
     driver.app.scanning = True
     while not STOP_EVENT:
         driver.app.process(INTERVAL)
+    logger.info("Stoping Server Thread...")
 
     driver.app.scanning = False
     driver.app.quit = True
@@ -159,3 +172,5 @@ def run(section='', sub_section='', device='', debug=False):
     # sends stop signal to server thread
     server_thread.stop()
     server_thread.join()
+    logger.info("Server Thread stopped.")
+    logger.info("Good Bye.")
