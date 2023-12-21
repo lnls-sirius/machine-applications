@@ -86,6 +86,7 @@ class _PCASDriver(_pcaspy.Driver):
 
 def run(acc):
     """Main module function."""
+    logger = get_logger(run)
     acc = acc.upper()
 
     # define abort function
@@ -94,14 +95,14 @@ def run(acc):
 
     # configure log file
     configure_logging()
-    _log.info("Starting...")
+    logger.info("Starting...")
 
     # define IOC, init pvs database and create app object
     _version = _util.get_last_commit_hash()
     _ioc_prefix = _VACA_PREFIX + ("-" if _VACA_PREFIX else "")
     if acc == "BO":
         _ioc_prefix += acc + "-Glob:AP-CurrInfo:"
-    _log.debug("Creating App Object.")
+    logger.debug("Creating App Object.")
     app = _get_app(acc)
     dbase = app.pvs_database
     if acc == "BO":
