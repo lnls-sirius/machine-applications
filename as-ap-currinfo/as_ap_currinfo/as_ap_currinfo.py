@@ -9,6 +9,7 @@ import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 
 from siriuspy import util as _util
+from siriuspy.logging import get_logger, LogMonHandler, configure_logging
 from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from siriuspy.currinfo import BOCurrInfoApp as _BOCurrInfoApp, \
     SICurrInfoApp as _SICurrInfoApp, LICurrInfoApp as _LICurrInfoApp, \
@@ -21,7 +22,8 @@ STOP_EVENT = False
 
 def _stop_now(signum, frame):
     _ = frame
-    print(_signal.Signals(signum).name+' received at '+_util.get_timestamp())
+    get_logger(_stop_now).warning(
+        _signal.Signals(signum).name+' received at '+_util.get_timestamp())
     _sys.stdout.flush()
     _sys.stderr.flush()
     global STOP_EVENT
@@ -91,7 +93,7 @@ def run(acc):
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # configure log file
-    _util.configure_log_file()
+    configure_logging()
     _log.info('Starting...')
 
     # define IOC, init pvs database and create app object
@@ -121,18 +123,19 @@ def run(acc):
         prefix=_ioc_prefix)
 
     # create a new simple pcaspy server and driver to respond client's requests
-    _log.info('Creating Server.')
+    logger = get_logger(run)
+    logger.info('Creating Server.')
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, dbase)
-    _log.info('Setting Server Database.')
+    logger.info('Setting Server Database.')
     server.createPV(_ioc_prefix, dbase)
-    _log.info('Creating Driver.')
+    logger.info('Creating Driver.')
     _PCASDriver(app)
     app.init_database()
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
-    _log.info('Starting Server Thread.')
+    logger.info('Starting Server Thread.')
     server_thread.start()
 
     # main loop
@@ -140,9 +143,9 @@ def run(acc):
         app.process(INTERVAL)
 
     app.close()
-    _log.info('Stoping Server Thread...')
+    logger.info('Stoping Server Thread...')
     # send stop signal to server thread
     server_thread.stop()
     server_thread.join()
-    _log.info('Server Thread stopped.')
-    _log.info('Good Bye.')
+    logger.info('Server Thread stopped.')
+    logger.info('Good Bye.')
