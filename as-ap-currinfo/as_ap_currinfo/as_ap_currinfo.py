@@ -1,6 +1,5 @@
 """CurrInfo Soft IOC."""
 
-import logging as _log
 import os as _os
 import signal as _signal
 import sys as _sys
