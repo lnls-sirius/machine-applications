@@ -60,6 +60,7 @@ class _PCASDriver(_pcaspy.Driver):
 
     def update_pv(self, pvname, value, **kwargs):
         """Update PV."""
+        _ = kwargs
         self.setParam(pvname, value)
         self.updatePV(pvname)
 
@@ -93,26 +94,34 @@ def run():
         prefix=_ioc_prefix, logger=get_logger(run))
 
     # create a new simple pcaspy server and driver to respond client's requests
+    logger = get_logger(run)
+    logger.info('Creating Server.')
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, dbase)
+    logger.info('Setting Server Database.')
     server.createPV(_ioc_prefix, dbase)
-    driver = _PCASDriver(app)
+    logger.info('Creating Driver.')
+    _PCASDriver(app)
     app.init_database()
     # Add handler to update 'Log-Mon' PV to the root logger:
     get_logger().addHandler(LogMonHandler(app.update_log))
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
+    logger.info('Starting Server Thread.')
     server_thread.start()
 
     # main loop
-    driver.app.scanning = True
+    app.scanning = True
     while not STOP_EVENT:
-        driver.app.process(INTERVAL)
+        app.process(INTERVAL)
 
-    driver.app.scanning = False
-    driver.app.quit = True
+    logger.info('Stoping Server Thread...')
+    app.scanning = False
+    app.quit = True
 
     # sends stop signal to server thread
     server_thread.stop()
     server_thread.join()
+    logger.info('Server Thread stopped.')
+    logger.info('Good Bye.')
