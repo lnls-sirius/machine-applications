@@ -7,7 +7,7 @@ import sys as _sys
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 from siriuspy import util as _util
-from siriuspy.envars import VACA_PREFIX as _vaca_prefix
+from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 from siriuspy.injctrl.main import App as _App
 from siriuspy.logging import configure_logging, get_logger, LogMonHandler
 
@@ -74,7 +74,7 @@ def run():
 
     # define IOC, init pvs database and create app object
     _version = _util.get_last_commit_hash()
-    _ioc_prefix = _vaca_prefix + ("-" if _vaca_prefix else "")
+    _ioc_prefix = _VACA_PREFIX + ("-" if _VACA_PREFIX else "")
     _ioc_prefix += "AS-Glob:AP-InjCtrl:"
     app = _App()
     dbase = app.pvs_database
