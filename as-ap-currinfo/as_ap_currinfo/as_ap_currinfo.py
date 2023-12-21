@@ -1,20 +1,18 @@
 """CurrInfo Soft IOC."""
 
-import os as _os
-import sys as _sys
-import signal as _signal
 import logging as _log
+import os as _os
+import signal as _signal
+import sys as _sys
 
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-
 from siriuspy import util as _util
-from siriuspy.logging import get_logger, LogMonHandler, configure_logging
-from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from siriuspy.currinfo import BOCurrInfoApp as _BOCurrInfoApp, \
-    SICurrInfoApp as _SICurrInfoApp, LICurrInfoApp as _LICurrInfoApp, \
+    LICurrInfoApp as _LICurrInfoApp, SICurrInfoApp as _SICurrInfoApp, \
     TSCurrInfoApp as _TSCurrInfoApp
-
+from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
+from siriuspy.logging import configure_logging, get_logger
 
 INTERVAL = 0.5
 STOP_EVENT = False
@@ -23,7 +21,8 @@ STOP_EVENT = False
 def _stop_now(signum, frame):
     _ = frame
     get_logger(_stop_now).warning(
-        _signal.Signals(signum).name+' received at '+_util.get_timestamp())
+        _signal.Signals(signum).name + " received at " + _util.get_timestamp()
+    )
     _sys.stdout.flush()
     _sys.stderr.flush()
     global STOP_EVENT
@@ -32,28 +31,29 @@ def _stop_now(signum, frame):
 
 def _attribute_access_security_group(server, dbase):
     for k, val in dbase.items():
-        if k.endswith(('-RB', '-Sts', '-Cte', '-Mon')):
-            val.update({'asg': 'rbpv'})
+        if k.endswith(("-RB", "-Sts", "-Cte", "-Mon")):
+            val.update({"asg": "rbpv"})
     path_ = _os.path.abspath(_os.path.dirname(__file__))
-    server.initAccessSecurityFile(path_ + '/access_rules.as')
+    server.initAccessSecurityFile(path_ + "/access_rules.as")
 
 
 def _get_app(acc):
     acc = acc.lower()
-    if acc == 'bo':
+    if acc == "bo":
         return _BOCurrInfoApp()
-    elif acc == 'si':
+    elif acc == "si":
         return _SICurrInfoApp()
-    elif acc == 'li':
+    elif acc == "li":
         return _LICurrInfoApp()
-    elif acc == 'ts':
+    elif acc == "ts":
         return _TSCurrInfoApp()
     else:
-        raise ValueError('There is no App defined for accelarator '+acc+'.')
+        raise ValueError(
+            "There is no App defined for accelarator " + acc + "."
+        )
 
 
 class _PCASDriver(_pcaspy.Driver):
-
     def __init__(self, app):
         """Initialize driver."""
         super().__init__()
@@ -71,7 +71,7 @@ class _PCASDriver(_pcaspy.Driver):
     def write(self, reason, value):
         """Write IOC pvs according to main application."""
         ret_val = self.app.write(reason, value)
-        if reason.endswith('-Cmd'):
+        if reason.endswith("-Cmd"):
             value = self.getParam(reason) + 1
         if ret_val:
             return super().write(reason, value)
@@ -94,48 +94,49 @@ def run(acc):
 
     # configure log file
     configure_logging()
-    _log.info('Starting...')
+    _log.info("Starting...")
 
     # define IOC, init pvs database and create app object
     _version = _util.get_last_commit_hash()
-    _ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
-    if acc == 'BO':
-        _ioc_prefix += acc + '-Glob:AP-CurrInfo:'
-    _log.debug('Creating App Object.')
+    _ioc_prefix = _VACA_PREFIX + ("-" if _VACA_PREFIX else "")
+    if acc == "BO":
+        _ioc_prefix += acc + "-Glob:AP-CurrInfo:"
+    _log.debug("Creating App Object.")
     app = _get_app(acc)
     dbase = app.pvs_database
-    if acc == 'BO':
-        dbase['Version-Cte']['value'] = _version
+    if acc == "BO":
+        dbase["Version-Cte"]["value"] = _version
     else:
-        dbase[acc+'-Glob:AP-CurrInfo:Version-Cte']['value'] = _version
+        dbase[acc + "-Glob:AP-CurrInfo:Version-Cte"]["value"] = _version
 
     # check if another IOC is running
     pvname = _ioc_prefix + next(iter(dbase))
     if _util.check_pv_online(pvname, use_prefix=False):
-        raise ValueError('Another instance of this IOC is already running!')
+        raise ValueError("Another instance of this IOC is already running!")
 
     # check if another IOC is running
     _util.print_ioc_banner(
-        ioc_name=acc.lower()+'-ap-currinfo',
+        ioc_name=acc.lower() + "-ap-currinfo",
         db=dbase,
-        description=acc.upper()+'-AP-CurrInfo Soft IOC',
+        description=acc.upper() + "-AP-CurrInfo Soft IOC",
         version=_version,
-        prefix=_ioc_prefix)
+        prefix=_ioc_prefix,
+    )
 
     # create a new simple pcaspy server and driver to respond client's requests
     logger = get_logger(run)
-    logger.info('Creating Server.')
+    logger.info("Creating Server.")
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, dbase)
-    logger.info('Setting Server Database.')
+    logger.info("Setting Server Database.")
     server.createPV(_ioc_prefix, dbase)
-    logger.info('Creating Driver.')
+    logger.info("Creating Driver.")
     _PCASDriver(app)
     app.init_database()
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
-    logger.info('Starting Server Thread.')
+    logger.info("Starting Server Thread.")
     server_thread.start()
 
     # main loop
@@ -143,9 +144,9 @@ def run(acc):
         app.process(INTERVAL)
 
     app.close()
-    logger.info('Stoping Server Thread...')
+    logger.info("Stoping Server Thread...")
     # send stop signal to server thread
     server_thread.stop()
     server_thread.join()
-    logger.info('Server Thread stopped.')
-    logger.info('Good Bye.')
+    logger.info("Server Thread stopped.")
+    logger.info("Good Bye.")
