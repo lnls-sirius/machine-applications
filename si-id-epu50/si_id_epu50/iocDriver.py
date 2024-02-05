@@ -6,8 +6,10 @@ import traceback
 import time
 import pcaspy
 
+from siriuspy.search import IDSearch as _IDSearch
+
 from . import constants as _cte
-from . import epu_db as _db
+from . import csdev as _db
 from . import epu as _epu
 
 
@@ -24,7 +26,8 @@ class EPUSupport(pcaspy.Driver):
         # EPU driver will manage and control
         # main features of device operation
         try:
-            self.epu_driver = _epu.Epu(args=args, callback_update=self.priority_call)
+            self.epu_driver = _epu.Epu(
+                args=args, callback_update=self.priority_call)
             print("Epu driver initialized")
 
         except Exception:
@@ -49,19 +52,19 @@ class EPUSupport(pcaspy.Driver):
         # init set point pv values
         self.setParam(_db.pv_gap_sp, self.epu_driver.gap_target)
         self.setParam(_db.pv_phase_sp, self.epu_driver.phase_target)
-        self.setParam(_db.pv_gap_velo_sp, self.epu_driver.gap_target_velocity / 60)
-        self.setParam(_db.pv_phase_velo_sp, self.epu_driver.phase_target_velocity / 60)
+        self.setParam(_db.pv_gap_velo_sp,
+                      self.epu_driver.gap_target_velocity / 60)
+        self.setParam(_db.pv_phase_velo_sp,
+                      self.epu_driver.phase_target_velocity / 60)
         self.setParam(_db.pv_enbl_ab_sel, self.epu_driver.gap_enable)
         self.setParam(_db.pv_enbl_si_sel, self.epu_driver.phase_enable)
         self.setParam(_db.pv_release_ab_sel, self.epu_driver.gap_halt_released)
-        self.setParam(_db.pv_release_si_sel, self.epu_driver.phase_halt_released)
-        self.setParam(
-            _db.pv_enbl_and_release_ab_sel, self.epu_driver.gap_enable_and_halt_released
-        )
-        self.setParam(
-            _db.pv_enbl_and_release_si_sel,
-            self.epu_driver.phase_enable_and_halt_released,
-        )
+        self.setParam(_db.pv_release_si_sel,
+                      self.epu_driver.phase_halt_released)
+        self.setParam(_db.pv_enbl_and_release_ab_sel,
+            self.epu_driver.gap_enable_and_halt_released)
+        self.setParam(_db.pv_enbl_and_release_si_sel,
+            self.epu_driver.phase_enable_and_halt_released)
         self.setParam(_db.pv_ioc_msg_mon, '')
         # update PVs
         self.updatePVs()
@@ -93,24 +96,20 @@ class EPUSupport(pcaspy.Driver):
                 self.setParam(_db.pv_gpio_connected_mon, driver.gpio_connected)
 
             if EPUSupport.isValid(driver.a_drive.rs485_connected):
-                self.setParam(
-                    _db.pv_drive_a_connected_mon, driver.a_drive.rs485_connected
-                )
+                self.setParam(_db.pv_drive_a_connected_mon,
+                              driver.a_drive.rs485_connected)
 
             if EPUSupport.isValid(driver.b_drive.rs485_connected):
-                self.setParam(
-                    _db.pv_drive_b_connected_mon, driver.b_drive.rs485_connected
-                )
+                self.setParam(_db.pv_drive_b_connected_mon,
+                              driver.b_drive.rs485_connected)
 
             if EPUSupport.isValid(driver.s_drive.rs485_connected):
-                self.setParam(
-                    _db.pv_drive_s_connected_mon, driver.s_drive.rs485_connected
-                )
+                self.setParam(_db.pv_drive_s_connected_mon,
+                              driver.s_drive.rs485_connected)
 
             if EPUSupport.isValid(driver.i_drive.rs485_connected):
-                self.setParam(
-                    _db.pv_drive_i_connected_mon, driver.i_drive.rs485_connected
-                )
+                self.setParam(_db.pv_drive_i_connected_mon,
+                              driver.i_drive.rs485_connected)
 
             if (
                 EPUSupport.isValid(driver.tcp_connected)
@@ -184,19 +183,25 @@ class EPUSupport(pcaspy.Driver):
 
             # gap target speed
             if EPUSupport.isValid(driver.gap_target_velocity):
-                self.setParam(_db.pv_gap_velo_rb, driver.gap_target_velocity / 60)
+                self.setParam(_db.pv_gap_velo_rb,
+                              driver.gap_target_velocity / 60)
             # phase target speed
             if EPUSupport.isValid(driver.phase_target_velocity):
-                self.setParam(_db.pv_phase_velo_rb, driver.phase_target_velocity / 60)
+                self.setParam(_db.pv_phase_velo_rb,
+                              driver.phase_target_velocity / 60)
             # individual axes target speed
             if EPUSupport.isValid(driver.a_target_velocity):
-                self.setParam(_db.pv_a_target_velo_mon, driver.a_target_velocity / 60)
+                self.setParam(_db.pv_a_target_velo_mon,
+                              driver.a_target_velocity / 60)
             if EPUSupport.isValid(driver.b_target_velocity):
-                self.setParam(_db.pv_b_target_velo_mon, driver.b_target_velocity / 60)
+                self.setParam(_db.pv_b_target_velo_mon,
+                              driver.b_target_velocity / 60)
             if EPUSupport.isValid(driver.s_target_velocity):
-                self.setParam(_db.pv_s_target_velo_mon, driver.s_target_velocity / 60)
+                self.setParam(_db.pv_s_target_velo_mon,
+                              driver.s_target_velocity / 60)
             if EPUSupport.isValid(driver.i_target_velocity):
-                self.setParam(_db.pv_i_target_velo_mon, driver.i_target_velocity / 60)
+                self.setParam(_db.pv_i_target_velo_mon,
+                              driver.i_target_velocity / 60)
             # gap speed
             if EPUSupport.isValid(driver.gap):
                 _time_now = time.time()
@@ -221,40 +226,49 @@ class EPUSupport(pcaspy.Driver):
                 self.old_phase_sample_timestamp = _time_now
             # update resolver readings
             if EPUSupport.isValid(driver.a_resolver_gap):
-                self.setParam(_db.pv_drive_a_resolver_pos_mon, driver.a_resolver_gap)
+                self.setParam(_db.pv_drive_a_resolver_pos_mon,
+                              driver.a_resolver_gap)
             if EPUSupport.isValid(driver.b_resolver_gap):
-                self.setParam(_db.pv_drive_b_resolver_pos_mon, driver.b_resolver_gap)
+                self.setParam(_db.pv_drive_b_resolver_pos_mon,
+                              driver.b_resolver_gap)
             if EPUSupport.isValid(driver.s_resolver_phase):
-                self.setParam(_db.pv_drive_s_resolver_pos_mon, driver.s_resolver_phase)
+                self.setParam(_db.pv_drive_s_resolver_pos_mon,
+                              driver.s_resolver_phase)
             if EPUSupport.isValid(driver.i_resolver_phase):
-                self.setParam(_db.pv_drive_i_resolver_pos_mon, driver.i_resolver_phase)
+                self.setParam(_db.pv_drive_i_resolver_pos_mon,
+                              driver.i_resolver_phase)
             # update encoder readings
             if EPUSupport.isValid(driver.a_encoder_gap):
-                self.setParam(_db.pv_drive_a_encoder_pos_mon, driver.a_encoder_gap)
+                self.setParam(_db.pv_drive_a_encoder_pos_mon,
+                              driver.a_encoder_gap)
             if EPUSupport.isValid(driver.b_encoder_gap):
-                self.setParam(_db.pv_drive_b_encoder_pos_mon, driver.b_encoder_gap)
+                self.setParam(_db.pv_drive_b_encoder_pos_mon,
+                              driver.b_encoder_gap)
             if EPUSupport.isValid(driver.s_encoder_phase):
-                self.setParam(_db.pv_drive_s_encoder_pos_mon, driver.s_encoder_phase)
+                self.setParam(_db.pv_drive_s_encoder_pos_mon,
+                              driver.s_encoder_phase)
             if EPUSupport.isValid(driver.i_encoder_phase):
-                self.setParam(_db.pv_drive_i_encoder_pos_mon, driver.i_encoder_phase)
+                self.setParam(_db.pv_drive_i_encoder_pos_mon,
+                              driver.i_encoder_phase)
             # update enable and halt status
             if EPUSupport.isValid(driver.gap_enable):
-                self.setParam(_db.pv_enbl_ab_sts, driver.gap_enable)
+                self.setParam(_db.pv_enbl_ab_sts,
+                              driver.gap_enable)
             if EPUSupport.isValid(driver.phase_enable):
-                self.setParam(_db.pv_enbl_si_sts, driver.phase_enable)
+                self.setParam(_db.pv_enbl_si_sts,
+                              driver.phase_enable)
             if EPUSupport.isValid(driver.gap_halt_released):
-                self.setParam(_db.pv_release_ab_sts, driver.gap_halt_released)
+                self.setParam(_db.pv_release_ab_sts,
+                              driver.gap_halt_released)
             if EPUSupport.isValid(driver.phase_halt_released):
-                self.setParam(_db.pv_release_si_sts, driver.phase_halt_released)
+                self.setParam(_db.pv_release_si_sts,
+                              driver.phase_halt_released)
             if EPUSupport.isValid(driver.gap_enable_and_halt_released):
-                self.setParam(
-                    _db.pv_enbl_and_release_ab_sts, driver.gap_enable_and_halt_released
-                )
+                self.setParam(_db.pv_enbl_and_release_ab_sts,
+                              driver.gap_enable_and_halt_released)
             if EPUSupport.isValid(driver.phase_enable_and_halt_released):
-                self.setParam(
-                    _db.pv_enbl_and_release_si_sts,
-                    driver.phase_enable_and_halt_released,
-                )
+                self.setParam(_db.pv_enbl_and_release_si_sts,
+                              driver.phase_enable_and_halt_released)
             # update diagnostic codes and messages
             if EPUSupport.isValid(driver.a_diag_code):
                 self.setParam(_db.pv_drive_a_diag_code_mon, driver.a_diag_code)
@@ -335,11 +349,15 @@ class EPUSupport(pcaspy.Driver):
                 self.setParam(_db.pv_pwr_si_mon, _cte.bool_no)
             # update moving status
             if EPUSupport.isValid(driver.gap_is_moving):
-                self.setParam(_db.pv_drive_a_is_moving_mon, driver.gap_is_moving)
-                self.setParam(_db.pv_drive_b_is_moving_mon, driver.gap_is_moving)
+                self.setParam(_db.pv_drive_a_is_moving_mon,
+                              driver.gap_is_moving)
+                self.setParam(_db.pv_drive_b_is_moving_mon,
+                              driver.gap_is_moving)
             if EPUSupport.isValid(driver.phase_is_moving):
-                self.setParam(_db.pv_drive_s_is_moving_mon, driver.phase_is_moving)
-                self.setParam(_db.pv_drive_i_is_moving_mon, driver.phase_is_moving)
+                self.setParam(_db.pv_drive_s_is_moving_mon,
+                              driver.phase_is_moving)
+                self.setParam(_db.pv_drive_i_is_moving_mon,
+                              driver.phase_is_moving)
             if EPUSupport.isValid(driver.gap_is_moving) and EPUSupport.isValid(
                 driver.phase_is_moving
             ):
@@ -355,6 +373,7 @@ class EPUSupport(pcaspy.Driver):
         """EPICS write."""
         status = True
         driver = self.epu_driver
+        idparams = driver.idparams
 
         # ---take action according to PV name
 
@@ -400,7 +419,7 @@ class EPUSupport(pcaspy.Driver):
 
         # change gap set point
         elif EPUSupport.isPvName(reason, _db.pv_gap_sp):
-            if value >= _cte.minimum_gap and value <= _cte.maximum_gap:
+            if value >= idparams.KPARAM_MIN and value <= idparams.KPARAM_MAX:
                 status = self.asynExec(reason, driver.gap_set, value)
                 if status:
                     self.setParam(_db.pv_gap_sp, value)
@@ -410,7 +429,7 @@ class EPUSupport(pcaspy.Driver):
 
         # change phase set point
         elif EPUSupport.isPvName(reason, _db.pv_phase_sp):
-            if value >= _cte.minimum_phase and value <= _cte.maximum_phase:
+            if value >= idparams.PPARAM_MIN and value <= idparams.PPARAM_MAX:
                 status = self.asynExec(reason, driver.phase_set, value)
                 if status:
                     self.setParam(_db.pv_phase_sp, value)
@@ -466,7 +485,8 @@ class EPUSupport(pcaspy.Driver):
             ):
                 # convert velocity to mm/min
                 _val_per_min = value * 60
-                status = self.asynExec(reason, driver.gap_set_velocity, _val_per_min)
+                status = self.asynExec(reason, driver.gap_set_velocity,
+                                       _val_per_min)
                 if status:
                     self.setParam(_db.pv_gap_velo_sp, value)
                     self.updatePVs()
@@ -483,7 +503,8 @@ class EPUSupport(pcaspy.Driver):
             ):
                 # convert velocity to mm/min
                 _val_per_min = value * 60
-                status = self.asynExec(reason, driver.phase_set_velocity, _val_per_min)
+                status = self.asynExec(reason, driver.phase_set_velocity,
+                                       _val_per_min)
                 if status:
                     self.setParam(_db.pv_phase_velo_sp, value)
                     self.updatePVs()
@@ -511,9 +532,14 @@ class EPUSupport(pcaspy.Driver):
                 and self.getParam(_db.pv_allowed_change_gap_mon) == _cte.bool_yes
                 and self.getParam(_db.pv_allowed_change_phase_mon) == _cte.bool_yes
             ):
-                phase = _cte.pol_phases[self.getParam(_db.pv_polarization_sel)]
-                self.setParam(_db.pv_gap_sp, 300)
-                driver.gap_set(300)
+                idname = self.args.prefix_pv
+                idparams = _IDSearch.conv_idname_2_parameters(idname)
+                pol_change_gap = idparams.KPARAM_POL_CHANGE
+                pol_idx = self.getParam(_db.pv_polarization_sel)
+                phase = _IDSearch.conv_idname_2_polarization_pparameter(
+                    idname, pol_idx)
+                self.setParam(_db.pv_gap_sp, pol_change_gap)
+                driver.gap_set(pol_change_gap)
                 self.setParam(_db.pv_phase_sp, phase)
                 driver.phase_set(phase)
                 status = self.asynExec(
@@ -530,7 +556,8 @@ class EPUSupport(pcaspy.Driver):
                 not driver.phase_is_moving
                 and self.getParam(_db.pv_allowed_change_phase_mon) == _cte.bool_yes
             ):
-                status = self.asynExec(reason, driver.phase_start, _cte.bool_yes)
+                status = self.asynExec(reason, driver.phase_start,
+                                       _cte.bool_yes)
                 # increment cmd pv
                 self.incParam(_db.pv_change_phase_cmd)
                 self.updatePVs()
@@ -540,7 +567,8 @@ class EPUSupport(pcaspy.Driver):
         # select to enable/disable A and B drives
         elif EPUSupport.isPvName(reason, _db.pv_enbl_ab_sel):
             if EPUSupport.isBoolNum(value):
-                status = self.asynExec(reason, driver.gap_set_enable, bool(value))
+                status = self.asynExec(reason, driver.gap_set_enable,
+                                       bool(value))
                 if status:
                     self.setParam(_db.pv_enbl_ab_sel, value)
                     self.updatePVs()
@@ -550,7 +578,8 @@ class EPUSupport(pcaspy.Driver):
         # select to enable/disable S and I drives
         elif EPUSupport.isPvName(reason, _db.pv_enbl_si_sel):
             if EPUSupport.isBoolNum(value):
-                status = self.asynExec(reason, driver.phase_set_enable, bool(value))
+                status = self.asynExec(reason, driver.phase_set_enable,
+                                       bool(value))
                 if status:
                     self.setParam(_db.pv_enbl_si_sel, value)
                     self.updatePVs()
@@ -560,7 +589,8 @@ class EPUSupport(pcaspy.Driver):
         # select to release/halt A and B drives
         elif EPUSupport.isPvName(reason, _db.pv_release_ab_sel):
             if EPUSupport.isBoolNum(value):
-                status = self.asynExec(reason, driver.gap_release_halt, bool(value))
+                status = self.asynExec(reason, driver.gap_release_halt,
+                                       bool(value))
                 if status:
                     self.setParam(_db.pv_release_ab_sel, value)
                     self.updatePVs()
@@ -570,7 +600,8 @@ class EPUSupport(pcaspy.Driver):
         # select to release/halt S and I drives
         elif EPUSupport.isPvName(reason, _db.pv_release_si_sel):
             if EPUSupport.isBoolNum(value):
-                status = self.asynExec(reason, driver.phase_release_halt, bool(value))
+                status = self.asynExec(reason, driver.phase_release_halt,
+                                       bool(value))
                 if status:
                     self.setParam(_db.pv_release_si_sel, value)
                     self.updatePVs()
@@ -665,7 +696,7 @@ class EPUSupport(pcaspy.Driver):
         return status
 
     def asynExec(self, reason, func, *args, **kwargs):
-        """Call function in new thread and send callback for pv specified by reason."""
+        """Call function in new thread and send callback for reason pv."""
 
         def execAndNotify(reason, func, *args, **kwargs):
             """Call function and then callback after completion"""
@@ -686,7 +717,8 @@ class EPUSupport(pcaspy.Driver):
             self.updatePVs()
 
         tid = threading.Thread(
-            target=execAndNotify, args=(reason, func, *args), kwargs=kwargs, daemon=True
+            target=execAndNotify, args=(reason, func, *args),
+            kwargs=kwargs, daemon=True
         )
         tid.start()
         return True
