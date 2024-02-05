@@ -25,7 +25,7 @@ SPECIAL_TRIGS = {
     'si-bpms': 'SI-Fam:TI-BPM', 'si-skews': 'SI-Glob:TI-Mags-Skews',
     'si-corrs': 'SI-Glob:TI-Mags-Corrs', 'si-qtrims': 'SI-Glob:TI-Mags-QTrims',
     'bo-corrs': 'BO-Glob:TI-Mags-Corrs', 'bo-bpms': 'BO-Fam:TI-BPM'}
-TRIG_TYPES = {'as', 'tb', 'ts', 'li', 'si', 'bo'}
+TRIG_TYPES = {'as', 'tb', 'ts', 'li', 'si', 'bo', 'ba'}
 TRIG_TYPES |= set(SPECIAL_TRIGS.keys())
 
 
