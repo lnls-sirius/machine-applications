@@ -234,7 +234,7 @@ class App:
             return
 
         # get name of strength
-        strength_name = bbb.strength_name(devname)
+        strength_names = bbb.strength_names(devname)
 
         for reason, new_value in data.items():
 
@@ -243,7 +243,7 @@ class App:
                 return
 
             # set strength limits
-            if strength_name is not None and strength_name in reason:
+            if strength_names is not None and reason in strength_names:
                 lims = bbb.strength_limits(devname)
                 if None not in lims:
                     kwargs = self.driver.getParamInfo(reason)
