@@ -1,7 +1,7 @@
 """IOC Module."""
 
 import os as _os
-import logging as _log
+import sys as _sys
 import signal as _signal
 from threading import Event as _Event
 
@@ -9,6 +9,7 @@ import pcaspy as _pcaspy
 from pcaspy.tools import ServerThread
 
 from siriuspy import util as _util
+from siriuspy.logging import get_logger, LogMonHandler, configure_logging
 from siriuspy.dvfimgproc.csdev import Constants
 from siriuspy.dvfimgproc.main import App
 
@@ -17,7 +18,11 @@ stop_event = _Event()
 
 
 def _stop_now(signum, frame):
-    _log.info('SIGINT received')
+    _ = frame
+    get_logger(_stop_now).warning(
+        _signal.Signals(signum).name+' received at '+_util.get_timestamp())
+    _sys.stdout.flush()
+    _sys.stderr.flush()
     global stop_event
     stop_event.set()
 
@@ -34,12 +39,13 @@ class _Driver(_pcaspy.Driver):
 
     def __init__(self, app):
         super().__init__()
+        self._logger = get_logger(self)
         self.app = app
         self.app.driver = self
         self.app.init_driver()
 
     def read(self, reason):
-        _log.debug("Reading {0:s}.".format(reason))
+        self._logger.debug("Reading {0:s}.".format(reason))
         return super().read(reason)
 
     def write(self, reason, value):
@@ -49,22 +55,21 @@ class _Driver(_pcaspy.Driver):
         # NOTE: app.write should update driver pv values in database
         ret_val = self.app.write(reason, value)
         if ret_val:
-            _log.info('YES Write %s: %s', reason, str(value))
+            self._logger.info('YES Write %s: %s', reason, str(value))
         else:
             value = self.getParam(reason)
-            _log.warning('NO Write %s: %s', reason, str(value))
+            self._logger.warning('NO Write %s: %s', reason, str(value))
         return True
 
     def check_read_only(self, reason):
         is_read_only = reason.endswith(('-Sts', '-RB', '-Mon', '-Cte'))
         if is_read_only:
-            _log.debug('PV {0:s} is read only.'.format(reason))
+            self._logger.debug(f'PV {reason:s} is read only.')
         return is_read_only
 
     def check_value_none(self, val):
         if val is None:
-            msg = 'client tried to set None value. refusing...'
-            _log.error(msg)
+            self._logger.error('client tried to set None value. refusing...')
             return True
         return False
 
@@ -106,14 +111,14 @@ def ioc_is_running(const):
 
 def create_server(const):
     """."""
-    _log.info('Creating Server.')
+    get_logger(create_server).info('Creating Server.')
     ioc_prefix = const.get_prefix()
     db = const.get_database()
 
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, db)
 
-    _log.info('Setting Server Database.')
+    get_logger(create_server).info('Setting Server Database.')
     server.createPV(ioc_prefix, db)
     return server
 
@@ -122,34 +127,47 @@ def initialize_server_thread(server):
     """."""
     server_thread = ServerThread(server)
     server_thread.daemon = True
-    _log.info('Starting Server Thread.')
+    get_logger(initialize_server_thread).info('Starting Server Thread.')
     server_thread.start()
     return server_thread
 
 
 def stop_server_thread(server_thread):
     """."""
-    _log.info('Stoping Server Thread...')
+    get_logger(stop_server_thread).info('Stoping Server Thread...')
     # send stop signal to server thread
     server_thread.stop()
     server_thread.join()
-    _log.info('Server Thread stopped.')
+    get_logger(stop_server_thread).info('Server Thread stopped.')
     return server_thread
 
 
 def create_driver_app(const):
     """."""
-    _log.info('Creating Driver.')
+    logger = get_logger(create_driver_app)
+    logger.info('Creating Driver.')
     app = App(const=const)
     _Driver(app)  # a handle to Drive object is set within the app object.
+
+    dbase = app._database
+    _util.print_ioc_banner(
+        ioc_name='BL ImgProc IOC',
+        db=dbase,
+        description='Image Processing IOC (FAC)',
+        version=dbase['ImgVersion-Cte']['value'],
+        prefix=const.devname,
+        logger=logger)
+
+    # Add handler to update 'Log-Mon' PV to the root logger:
+    get_logger().addHandler(LogMonHandler(app.update_log))
     return app
 
 
 def run(devname, debug=False):
     """Start the IOC."""
     # initial configurations
-    _util.configure_log_file(debug=debug)
-    _log.info('Starting...')
+    configure_logging(debug=debug)
+    get_logger(run).info('Starting...')
     define_abort_function()
 
     # application constants with database

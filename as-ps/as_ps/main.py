@@ -1,21 +1,16 @@
 """Main application."""
 
 import time as _time
-import logging as _log
 import re as _re
 import numpy as _np
 from pcaspy import Alarm as _Alarm
 from pcaspy import Severity as _Severity
 
-from siriuspy.util import print_ioc_banner as _print_ioc_banner
-from siriuspy.util import get_last_commit_hash as _get_last_commit_hash
 from siriuspy.thread import LoopQueueThread as _LoopQueueThread
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 from siriuspy.pwrsupply.csdev import PSSOFB_MAX_NR_UDC as _PSSOFB_MAX_NR_UDC
 from siriuspy.pwrsupply.bsmp.constants import UDC_MAX_NR_DEV as _UDC_MAX_NR_DEV
-
-
-__version__ = _get_last_commit_hash()
+from siriuspy.logging import get_logger as _get_logger
 
 
 class App:
@@ -25,11 +20,12 @@ class App:
     _regexp_setpoint = _re.compile('^.*-(SP|Sel)$')
     _sofb_value_length = _PSSOFB_MAX_NR_UDC * _UDC_MAX_NR_DEV
 
-    def __init__(self, driver, bbblist, dbset, prefix):
+    def __init__(self, driver, bbblist, dbset):
         """Init application."""
         # --- init begin
 
         self._driver = driver
+        self._logger = _get_logger(self)
 
         # flag to indicate sofb processing is taking place
         self._sofb_processing = False
@@ -45,7 +41,7 @@ class App:
         self._bbblist = bbblist
         # NOTE: change IOC to accept only one BBB
         sofbmode_pvname = self.bbblist[0].psnames[0] + ':SOFBMode-Sts'
-        if sofbmode_pvname in dbset[prefix]:
+        if sofbmode_pvname in dbset:
             self._sofbmode_sts_pvname = sofbmode_pvname
         else:
             self._sofbmode_sts_pvname = None
@@ -57,17 +53,6 @@ class App:
         # initializes beaglebones
         for bbb in bbblist:
             bbb.init()
-
-        # -- init end
-        print('---\n')
-
-        # print info about the IOC
-        _print_ioc_banner(
-            ioc_name='PS IOC',
-            db=dbset[prefix],
-            description='Power Supply IOC (FAC)',
-            version=__version__,
-            prefix=prefix)
 
     @property
     def driver(self):
@@ -86,7 +71,7 @@ class App:
         qsize = self._queue.qsize()
         if qsize > 2:
             logmsg = f'[Q] - write queue size is large: {qsize}'
-            _log.warning(logmsg)
+            self._logger.warning(logmsg)
 
         # then scan bbb state for updates.
         for bbb in self.bbblist:
@@ -97,11 +82,12 @@ class App:
         _time.sleep(max(dt_, 0))
 
         # NOTE: measure this interval for various BBBs...
-        # _log.info("process.... {:.3f} ms".format(1000*(t1_-t0_)))
+        # self._logger.info("process.... {:.3f} ms".format(1000*(t1_-t0_)))
 
     def read(self, reason):
         """Read from database."""
-        # _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
+        _ = reason
+        # self._logger.info("[{:.2s}] - {:.32s} = {:.50s}".format(
         #     'R ', reason, str(self.driver.getParam(reason))))
 
     def write(self, reason, value):
@@ -124,13 +110,18 @@ class App:
             if self._counter_sofbupdate_cmd == 1000:
                 # prints SOFBUpdate-Cmd after 1000 events
                 ignorestr = ' (1000 events)'
-                _log.info("[{:.2s}] - {:.32s} = {:.50s}{}".format(
-                    wstr, reason, str(value), ignorestr))
+                self._logger.info(
+                    "[%2s] - %32s = %50s %d",
+                    wstr,
+                    reason,
+                    str(value),
+                    ignorestr
+                )
                 self._counter_sofbupdate_cmd = 0
         else:
             # print all other write events
-            _log.info("[{:.2s}] - {:.32s} = {:.50s}{}".format(
-                wstr, reason, str(value), ignorestr))
+            self._logger.info(
+                "[%2s] - %32s = %50s %s", wstr, reason, str(value), ignorestr)
 
         # NOTE: This modified behaviour is to allow loading
         # global_config to complete without artificial warning
@@ -181,8 +172,8 @@ class App:
             #  signal SOFB processing
             status = self._check_write_sofb(pvname, value)
             if not status:
-                _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
-                    'W!', pvname, 'Invalid length!'))
+                self._logger.info(
+                    "[%2s] - %32s = %50s", 'W!', pvname, 'Invalid length!')
                 return
             self._sofb_processing = True
 
@@ -315,11 +306,10 @@ class App:
                 # simple type comparison
                 return new_value != old_value
         except Exception as exception:
-            print()
-            print('--- debug ---')
-            print('exception : {}'.format(type(exception)))
-            print('reason    : {}'.format(reason))
-            print('old_value : {}'.format(str(old_value)[:1000]))
-            print('new_value : {}'.format(str(new_value)[:1000]))
-            print(' !!!')
+            self._logger.warning('--- debug ---')
+            self._logger.warning('exception : %s', str(type(exception)))
+            self._logger.warning('reason    : %s', reason)
+            self._logger.warning('old_value : %s', str(old_value)[:1000])
+            self._logger.warning('new_value : %s', str(new_value)[:1000])
+            self._logger.warning(' !!!')
             return True
