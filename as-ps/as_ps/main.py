@@ -243,15 +243,16 @@ class App:
                 return
 
             # set strength limits
-            if strength_names is not None and reason in strength_names:
-                lims = bbb.strength_limits(devname)
-                if None not in lims:
-                    kwargs = self.driver.getParamInfo(reason)
-                    kwargs.update({
-                        'hihi': lims[1], 'high': lims[1], 'hilim': lims[1],
-                        'lolim': lims[0], 'low': lims[0], 'lolo': lims[0]})
-                    self.driver.setParamInfo(reason, kwargs)
-                    self.driver.updatePV(reason)
+            for strename in strength_names:
+                if strename is not None and strename in reason:
+                    lims = bbb.strength_limits(devname)
+                    if None not in lims:
+                        kwargs = self.driver.getParamInfo(reason)
+                        kwargs.update({
+                            'hihi': lims[1], 'high': lims[1], 'hilim': lims[1],
+                            'lolim': lims[0], 'low': lims[0], 'lolo': lims[0]})
+                        self.driver.setParamInfo(reason, kwargs)
+                        self.driver.updatePV(reason)
 
             if not self._queue.empty() and App._regexp_setpoint.match(reason):
                 # While there are pending write operations in the queue we
