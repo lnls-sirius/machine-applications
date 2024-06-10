@@ -235,6 +235,8 @@ class App:
 
         # get name of strength
         strength_names = bbb.strength_names(devname)
+        if strength_names is None:
+            strength_names = tuple()
 
         for reason, new_value in data.items():
 
