@@ -145,8 +145,7 @@ def run(acc='SI', debug=False, tests=False):
     app.orbit = _EpicsOrbit(
         acc=app.acc, prefix=app.prefix, callback=driver.update_pv)
     app.correctors = _EpicsCorrectors(
-        acc=app.acc, prefix=app.prefix, callback=driver.update_pv,
-        dipoleoff=tests)
+        acc=app.acc, prefix=app.prefix, callback=driver.update_pv)
     app.matrix = _EpicsMatrix(
         acc=app.acc, prefix=app.prefix, callback=driver.update_pv)
 
