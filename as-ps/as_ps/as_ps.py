@@ -1,22 +1,19 @@
 """IOC for power supplies."""
 
-import os as _os
-import sys as _sys
-import signal as _signal
 import logging as _log
+import os as _os
+import signal as _signal
+import sys as _sys
 import traceback as _traceback
 
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-
 from PRUserial485 import EthBridgeClient as _EthBridgeClient
-
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 from siriuspy.pwrsupply.factory import BBBFactory
 
-from .main import App, __version__
-
+from .main import __version__, App
 
 STOP_EVENT = False  # _multiprocessing.Event()
 PCAS_DRIVER = None
@@ -73,6 +70,8 @@ def run(bbbnames):
     5. Starts a thread (thread_server) that listens to client connections
     """
     global PCAS_DRIVER
+
+    # NOTE: change IOC to accept only one BBB !!!
 
     # Define abort function
     _signal.signal(_signal.SIGINT, _stop_now)

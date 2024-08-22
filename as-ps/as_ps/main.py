@@ -1,19 +1,17 @@
 """Main application."""
 
-import time as _time
 import logging as _log
 import re as _re
+import time as _time
+
 import numpy as _np
-from pcaspy import Alarm as _Alarm
-from pcaspy import Severity as _Severity
-
-from siriuspy.util import print_ioc_banner as _print_ioc_banner
-from siriuspy.util import get_last_commit_hash as _get_last_commit_hash
-from siriuspy.thread import LoopQueueThread as _LoopQueueThread
+from pcaspy import Alarm as _Alarm, Severity as _Severity
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
-from siriuspy.pwrsupply.csdev import PSSOFB_MAX_NR_UDC as _PSSOFB_MAX_NR_UDC
 from siriuspy.pwrsupply.bsmp.constants import UDC_MAX_NR_DEV as _UDC_MAX_NR_DEV
-
+from siriuspy.pwrsupply.csdev import PSSOFB_MAX_NR_UDC as _PSSOFB_MAX_NR_UDC
+from siriuspy.thread import LoopQueueThread as _LoopQueueThread
+from siriuspy.util import get_last_commit_hash as _get_last_commit_hash, \
+    print_ioc_banner as _print_ioc_banner
 
 __version__ = _get_last_commit_hash()
 
@@ -34,6 +32,9 @@ class App:
         # flag to indicate sofb processing is taking place
         self._sofb_processing = False
 
+        # flag to indicate idff processing is taking place
+        self._idff_processing = False
+
         # write operation queue
         self._queue = _LoopQueueThread()
         self._queue.start()
@@ -43,12 +44,19 @@ class App:
 
         # mapping device to bbb
         self._bbblist = bbblist
-        # NOTE: change IOC to accept only one BBB
+        # NOTE: change IOC to accept only one BBB !!!
+
         sofbmode_pvname = self.bbblist[0].psnames[0] + ':SOFBMode-Sts'
         if sofbmode_pvname in dbset[prefix]:
             self._sofbmode_sts_pvname = sofbmode_pvname
         else:
             self._sofbmode_sts_pvname = None
+
+        idffmode_pvname = self.bbblist[0].psnames[0] + ':IDFFMode-Sts'
+        if idffmode_pvname in dbset[prefix]:
+            self._idffmode_sts_pvname = sofbmode_pvname
+        else:
+            self._idffmode_sts_pvname = None
 
         # build dictionaries
         self._dev2bbb, self._dev2conn, self._interval = \
@@ -114,23 +122,37 @@ class App:
             sofb_state = self.driver.getParam(self._sofbmode_sts_pvname)
         else:
             sofb_state = False
+        if self._idffmode_sts_pvname:
+            idff_state = self.driver.getParam(self._idffmode_sts_pvname)
+        else:
+            idff_state = False
 
-        ignorestr, wstr = \
-            (' (SOFBMode On)', 'W!') if sofb_state and 'SOFB' not in reason \
-            else ('', 'W ')
+        # In IDFFMode only accept specific writes
+        strf = "[{:.2s}] - {:.32s} = {:.50s}{}"
+        if idff_state and reason not in (
+                'IDFFMode-Sel',
+                'OpMode-Sel', 'PwrState-Sel'):
+            ignorestr, wstr = (' (IDFFMode On)', 'W!')
+            _log.info(strf.format(wstr, reason, str(value), ignorestr))
+            return
+
+        idff_or_sofb_state = sofb_state or idff_state
+        idff_nor_sofb_reason = 'SOFB' not in reason and 'IDFF' not in reason
+        if idff_or_sofb_state and idff_nor_sofb_reason:
+            ignorestr, wstr = (' (SOFB/IDFF Mode On)', 'W!')
+        else:
+            ignorestr, wstr = ('', 'W ')
 
         if 'SOFBUpdate-Cmd' in reason:
             self._counter_sofbupdate_cmd += 1
             if self._counter_sofbupdate_cmd == 1000:
                 # prints SOFBUpdate-Cmd after 1000 events
                 ignorestr = ' (1000 events)'
-                _log.info("[{:.2s}] - {:.32s} = {:.50s}{}".format(
-                    wstr, reason, str(value), ignorestr))
+                _log.info(strf.format(wstr, reason, str(value), ignorestr))
                 self._counter_sofbupdate_cmd = 0
         else:
             # print all other write events
-            _log.info("[{:.2s}] - {:.32s} = {:.50s}{}".format(
-                wstr, reason, str(value), ignorestr))
+            _log.info(strf.format(wstr, reason, str(value), ignorestr))
 
         # NOTE: This modified behaviour is to allow loading
         # global_config to complete without artificial warning
@@ -181,8 +203,8 @@ class App:
             #  signal SOFB processing
             status = self._check_write_sofb(pvname, value)
             if not status:
-                _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
-                    'W!', pvname, 'Invalid length!'))
+                strf = "[{:.2s}] - {:.32s} = {:.50s}"
+                _log.info(strf.format('W!', pvname, 'Invalid length!'))
                 return
             self._sofb_processing = True
 
@@ -210,8 +232,7 @@ class App:
         return self._check_write_sofb(reason, value)
 
     def _check_write_sofb(self, reason, value):
-        # NOTE: check if using SiriusPVName subs alters efficiency
-        if not reason.endswith('SOFBCurrent-SP'):
+        if not reason.endswith('SOFBCurrent-SP'):  # Use SiriusPVName ?
             return True
         value_len = 1 if not \
             isinstance(value, (tuple, list, _np.ndarray)) else len(value)
