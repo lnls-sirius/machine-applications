@@ -1,10 +1,11 @@
 """Module with main IOC Class."""
 
-import time as _time
 import logging as _log
+import time as _time
+
 from siriuspy.epics import PV as _PV
-from siriuspy.meas.lienergy.csdev import Const as _csenergy
 from siriuspy.meas.lienergy import MeasEnergy
+from siriuspy.meas.lienergy.csdev import Const as _CEnergy
 
 _TIMEOUT = 0.05
 
@@ -19,7 +20,7 @@ class App:
         triggers_list: is the list of the high level triggers to be managed;
         """
         self.driver = driver
-        self._database = _csenergy.get_database()
+        self._database = _CEnergy.get_database()
         self.meas = MeasEnergy(callback=self._update_driver)
         self._map2writepvs = self.get_map2writepvs()
         self._map2readpvs = self.get_map2readpvs()
@@ -36,9 +37,11 @@ class App:
         if dt > 0:
             _time.sleep(dt)
         else:
-            _log.warning('process took {0:f}ms.'.format((tf-t0)*1000))
+            strf = 'process took {0:f}ms.'.format((tf-t0)*1000)
+            _log.warning(strf)
 
     def turnoff_if_no_beam(self):
+        """."""
         stt = None
         if self.meas.measuring:
             if not self.should_measure():
@@ -53,6 +56,7 @@ class App:
             self._update_driver('MeasureCtrl-Sts', stt)
 
     def should_measure(self):
+        """."""
         return self._egun_pv.value and self._spect_pv.value > 10
 
     def write(self, reason, value):
@@ -95,9 +99,11 @@ class App:
         if alarm is not None and severity is not None:
             self.driver.setParamStatus(pvname, alarm=alarm, severity=severity)
             if alarm:
-                _log.debug('{0:40s}: alarm'.format(pvname))
+                strf = '{0:40s}: alarm'.format(pvname)
+                _log.debug(strf)
         if value is not None:
             self.driver.setParam(pvname, value)
-            _log.debug('{0:40s}: updated'.format(pvname))
+            strf = '{0:40s}: updated'.format(pvname)
+            _log.debug(strf)
 
         self.driver.updatePV(pvname)

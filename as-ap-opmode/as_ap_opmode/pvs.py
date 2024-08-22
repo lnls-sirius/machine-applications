@@ -1,6 +1,6 @@
+"""PVs DB."""
 
 from pcaspy import Severity
-
 
 pvdb = {
     'SHIFT-TYPE': {

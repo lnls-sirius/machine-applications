@@ -1,9 +1,10 @@
 #!/usr/bin/env python-sirius
 """AS PU Current-Strength Converter IOC Launcher."""
-import sys
-import os
-from as_pu_conv import as_pu_conv as ioc_module
 
+import os
+import sys
+
+from as_pu_conv import as_pu_conv as ioc_module
 
 # NOTE: maximum epics array size
 os.environ['EPICS_CA_MAX_ARRAY_BYTES'] = '100000'

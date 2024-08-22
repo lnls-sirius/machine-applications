@@ -1,26 +1,26 @@
 #!/usr/bin/env python-sirius
 """IOC Module."""
 
-import os as _os
 import logging as _log
+import os as _os
 import signal as _signal
 
 import numpy as _np
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-
 import siriuspy.util as _util
 from siriuspy import csdev as _csdev
-from siriuspy.envars import VACA_PREFIX as _vaca_prefix
+from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
+from siriuspy.sofb import EpicsCorrectors as _EpicsCorrectors, \
+    EpicsMatrix as _EpicsMatrix, EpicsOrbit as _EpicsOrbit, SOFB as _SOFB
 from siriuspy.thread import LoopQueueThread as _LoopQueueThread
-from siriuspy.sofb import SOFB as _SOFB, EpicsMatrix as _EpicsMatrix, \
-    EpicsOrbit as _EpicsOrbit, EpicsCorrectors as _EpicsCorrectors
 
 stop_event = False
 __version__ = _util.get_last_commit_hash()
 
 
 def _stop_now(signum, frame):
+    _, _ = signum, frame
     _log.info('SIGNAL received')
     global stop_event
     stop_event = True
@@ -44,11 +44,12 @@ class _PCASDriver(_pcaspy.Driver):
         self.app.add_callback(self.update_pv)
 
     def read(self, reason):
-        _log.debug("Reading {0:s}.".format(reason))
+        strf = f"Reading {reason:s}."
+        _log.debug(strf)
         return super().read(reason)
 
     def write(self, reason, value):
-        if not self._isValid(reason, value):
+        if not self._is_valid(reason, value):
             return False
         self._write_queue.put(
             (self._write, (reason, value)), block=False)
@@ -84,9 +85,10 @@ class _PCASDriver(_pcaspy.Driver):
             self.setParamInfo(pvname, kwargs)
         self.updatePV(pvname)
 
-    def _isValid(self, reason, val):
+    def _is_valid(self, reason, val):
         if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
-            _log.debug('PV {0:s} is read only.'.format(reason))
+            strf = f'PV {reason:s} is read only.'
+            _log.debug(strf)
             return False
         if val is None:
             msg = 'client tried to set None value. refusing...'
@@ -113,7 +115,7 @@ def run(acc='SI', debug=False, tests=False):
     app = _SOFB(acc=acc, tests=tests)
     db = app.csorb.get_ioc_database()
     db.update({'Version-Cte': {'type': 'string', 'value': __version__}})
-    ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
+    ioc_prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
     ioc_prefix += acc.upper() + '-Glob:AP-SOFB:'
     ioc_name = acc.lower() + '-ap-sofb'
     # check if IOC is already running
@@ -123,7 +125,8 @@ def run(acc='SI', debug=False, tests=False):
     # add PV Properties-Cte with list of all IOC PVs:
     db = _csdev.add_pvslist_cte(db)
     if running:
-        _log.error('Another ' + ioc_name + ' is already running!')
+        strf = f'Another {ioc_name} is already running!'
+        _log.error(strf)
         return
     _util.print_ioc_banner(
         ioc_name, db, 'SOFB for ' + acc, __version__, ioc_prefix)
