@@ -1,11 +1,10 @@
 #!/usr/bin/env python-sirius
 """SI EPU ID IOC Launcher."""
 
-import os as os
 import argparse
+import os as os
 
-from si_id_epu50 import constants as cte
-from si_id_epu50 import si_id_epu50 as ioc_module
+from si_id_epu50 import constants as cte, si_id_epu50 as ioc_module
 from si_id_epu50.utils import get_file_handler, get_logger
 
 # NOTE: maximum epics array size
@@ -16,9 +15,9 @@ DEFAULT_PV_PREFIX = 'SI-10SB:ID-EPU50:'
 BBB_DEFAULT_ADDR = '10.128.110.160'
 LOG_FILE = "si_id_epu50.log"
 
-def getArgs():
-    """ Return command line arguments
-    """
+
+def getArgs():  # noqa: N802
+    """Return command line arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--pv-prefix', dest='pv_prefix', type=str, required=False,
@@ -39,7 +38,8 @@ def getArgs():
         )
     parser.add_argument(
         '--autosave-dir', dest='autosave_dir', type=str, required=False,
-        default=cte.AUTOSAVE_DEFAULT_SAVE_LOCATION, help="Autosave save directory"
+        default=cte.AUTOSAVE_DEFAULT_SAVE_LOCATION,
+        help="Autosave save directory"
         )
     parser.add_argument(
         '--autosave-request-file', dest='autosave_request_file',
@@ -52,10 +52,12 @@ def getArgs():
 
 
 def config_logging():
+    """."""
     file_handler = get_file_handler('epu_class.log')
     epu_logger = get_logger('si_id_epu50.epu', file_handler)
     file_handler = get_file_handler('ecodrives.log')
     ecodrive_logger = get_logger('si_id_epu50.ecodrive', file_handler)
+    _, _ = epu_logger, ecodrive_logger
 
 
 def main():

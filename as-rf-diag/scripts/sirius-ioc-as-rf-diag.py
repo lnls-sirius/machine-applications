@@ -3,6 +3,5 @@
 
 from as_rf_diag import as_rf_diag
 
-
 if __name__ == '__main__':
     as_rf_diag.run(False)

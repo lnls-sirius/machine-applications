@@ -1,23 +1,20 @@
 #!/usr/local/bin/python-sirius
 """AS PS Diagnostic."""
 
-import os as _os
-import sys as _sys
-import signal as _signal
 import logging as _log
+import os as _os
+import signal as _signal
+import sys as _sys
 
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 from pcaspy import Driver as _Driver
-
 from siriuspy import util as _util
-from siriuspy.envars import VACA_PREFIX as _vaca_prefix
-from siriuspy.search import PSSearch as _PSSearch
-
-from siriuspy.diagsys.psdiag.csdev import get_ps_diag_propty_database as \
-    _get_database
+from siriuspy.diagsys.psdiag.csdev import \
+    get_ps_diag_propty_database as _get_database
 from siriuspy.diagsys.psdiag.main import PSDiagApp as _App
-
+from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
+from siriuspy.search import PSSearch as _PSSearch
 
 _COMMIT_HASH = _util.get_last_commit_hash()
 
@@ -26,9 +23,12 @@ STOP_EVENT = False
 
 
 def _stop_now(signum, frame):
+    _ = frame
     global STOP_EVENT
-    _log.warning(_signal.Signals(signum).name +
-                 ' received at ' + _util.get_timestamp())
+    sname = _signal.Signals(signum).name
+    tstamp = _util.get_timestamp()
+    strf = f'{sname} received at {tstamp}'
+    _log.warning(strf)
     _sys.stdout.flush()
     _sys.stderr.flush()
     STOP_EVENT = True
@@ -85,9 +85,12 @@ def run(section='', sub_section='', device='', debug=False):
     _util.configure_log_file(debug=debug)
 
     _log.info("Loading power supplies")
-    _log.info("{:12s}: {}".format('\tSection', section or 'None'))
-    _log.info("{:12s}: {}".format('\tSub Section', sub_section or 'None'))
-    _log.info("{:12s}: {}".format('\tDevice', device or 'None'))
+    strf1 = "{:12s}: {}".format('\tSection', section or 'None')
+    strf2 = "{:12s}: {}".format('\tSub Section', sub_section or 'None')
+    strf3 = "{:12s}: {}".format('\tDevice', device or 'None')
+    _log.info(strf1)
+    _log.info(strf2)
+    _log.info(strf3)
 
     # create PV database
     device_filter = dict()
@@ -105,10 +108,11 @@ def run(section='', sub_section='', device='', debug=False):
         _sys.exit(0)
 
     _version = _util.get_last_commit_hash()
-    prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
+    prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
     pvdb = dict()
     for psname in psnames:
-        _log.debug('{:32s}'.format(psname))
+        strf = f'{psname:32s}'
+        _log.debug(strf)
         dbase = _get_database(psname)
         for key, value in dbase.items():
             if key == 'DiagVersion-Cte':
@@ -136,7 +140,8 @@ def run(section='', sub_section='', device='', debug=False):
     try:
         driver = _PSDiagDriver(app)
     except Exception:
-        _log.error('Failed to create driver. Aborting', exc_info=True)
+        strf = 'Failed to create driver. Aborting'
+        _log.error(strf, exc_info=True)  # noqa: G201
         _sys.exit(1)
 
     _util.print_ioc_banner(

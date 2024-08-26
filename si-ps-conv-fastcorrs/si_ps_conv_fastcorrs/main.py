@@ -1,21 +1,16 @@
 """Main application."""
 
-import time as _time
 import logging as _log
-
-from pcaspy import Alarm as _Alarm
-from pcaspy import Severity as _Severity
+import time as _time
 
 import siriuspy as _siriuspy
 import siriuspy.util as _util
-
+from pcaspy import Alarm as _Alarm, Severity as _Severity
+from siriuspy.devices import PSProperty as _PSProperty, \
+    StrengthConv as _StrengthConv
+from siriuspy.namesys import SiriusPVName as _SiriusPVName
 from siriuspy.thread import LoopQueueThread as _LoopQueueThread, \
     RepeaterThread as _RepeaterThread
-from siriuspy.namesys import SiriusPVName as _SiriusPVName
-
-from siriuspy.devices import PSProperty as _PSProperty
-from siriuspy.devices import StrengthConv as _StrengthConv
-
 
 __version__ = _util.get_last_commit_hash()
 
@@ -105,8 +100,8 @@ class App:
 
     def write(self, reason, value):
         """Enqueue write request."""
-        _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
-            'W ', reason, str(value)))
+        strf = "[{:.2s}] - {:.32s} = {:.50s}"
+        _log.info(strf.format('W ', reason, str(value)))
         pvname = _SiriusPVName(reason)
         self.driver.setParam(reason, value)
         self.driver.updatePV(reason)
@@ -114,7 +109,7 @@ class App:
             (self._write_operation, (pvname, value)), block=False)
 
     def scan(self):
-        """Scan all devices"""
+        """Scan all devices."""
         for psname in self.psnames:
             self.scan_device(psname)
 
@@ -201,9 +196,9 @@ class App:
         if conn.connected:
             self._connectors[psname]['-SP'].value = current
         t1_ = _time.time()
-        _log.info("[{:.2s}] - {:.32s} : {:.50s}".format(
-            'T ', pvname,
-            'write operation took {:.3f} ms'.format((t1_-t0_)*1000)))
+        strf1 = "[{:.2s}] - {:.32s} : {:.50s}"
+        strf2 = 'write operation took {:.3f} ms'.format((t1_-t0_)*1000)
+        _log.info(strf1.format('T ', pvname, strf2))
 
     def _get_strennames(self, dbset):
         strennames = dict()

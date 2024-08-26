@@ -1,8 +1,9 @@
 #!/usr/bin/env python-sirius
+"""TB SOFB IOC executable."""
 
 import argparse as _argparse
-from as_ap_sofb import run
 
+from as_ap_sofb import run
 
 if __name__ == '__main__':
     parser = _argparse.ArgumentParser(description="Run TB SOFB IOC.")

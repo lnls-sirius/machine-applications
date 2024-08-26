@@ -1,9 +1,9 @@
 #!/usr/bin/env python-sirius
 
-import os
 import argparse as _argparse
-from li_ap_energy import run
+import os
 
+from li_ap_energy import run
 
 # Linac image is very large! (2448 X 2050)
 os.environ['EPICS_CA_MAX_ARRAY_BYTES'] = '21000000'
