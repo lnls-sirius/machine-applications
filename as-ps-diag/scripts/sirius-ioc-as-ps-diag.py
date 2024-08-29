@@ -2,8 +2,8 @@
 """Script for the AS PS Diagnostics IOC."""
 
 import argparse
-from as_ps_diag import as_ps_diag
 
+from as_ps_diag import as_ps_diag
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

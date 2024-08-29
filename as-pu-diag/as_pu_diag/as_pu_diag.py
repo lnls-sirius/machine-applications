@@ -1,23 +1,20 @@
 #!/usr/local/bin/python-sirius
 """AS PU Diagnostic."""
 
-import os as _os
-import sys as _sys
-import signal as _signal
 import logging as _log
+import os as _os
+import signal as _signal
+import sys as _sys
 
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 from pcaspy import Driver as _Driver
-
 from siriuspy import util as _util
-from siriuspy.envars import VACA_PREFIX as _vaca_prefix
-from siriuspy.search import PSSearch as _PSSearch
-
-from siriuspy.diagsys.pudiag.csdev import get_pu_diag_propty_database as \
-    _get_database
+from siriuspy.diagsys.pudiag.csdev import \
+    get_pu_diag_propty_database as _get_database
 from siriuspy.diagsys.pudiag.main import PUDiagApp as _App
-
+from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
+from siriuspy.search import PSSearch as _PSSearch
 
 _COMMIT_HASH = _util.get_last_commit_hash()
 
@@ -26,9 +23,12 @@ STOP_EVENT = False
 
 
 def _stop_now(signum, frame):
+    _ = frame
     global STOP_EVENT
-    _log.warning(_signal.Signals(signum).name +
-                 ' received at ' + _util.get_timestamp())
+    sname = _signal.Signals(signum).name
+    tstamp = _util.get_timestamp()
+    strf = f'{sname} received at {tstamp}'
+    _log.warning(strf)
     _sys.stdout.flush()
     _sys.stderr.flush()
     STOP_EVENT = True
@@ -96,10 +96,11 @@ def run(debug=False):
         _log.warning('No devices found. Aborting.')
         _sys.exit(0)
 
-    prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
+    prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
     pvdb = dict()
     for puname in punames:
-        _log.debug('{:32s}'.format(puname))
+        strf = '{:32s}'.format(puname)
+        _log.debug(strf)
         dbase = _get_database(puname)
         for key, value in dbase.items():
             if key == 'DiagVersion-Cte':
@@ -127,7 +128,8 @@ def run(debug=False):
     try:
         driver = _PUDiagDriver(app)
     except Exception:
-        _log.error('Failed to create driver. Aborting', exc_info=True)
+        strf = 'Failed to create driver. Aborting'
+        _log.error(strf, exc_info=True)  # noqa: G201
         _sys.exit(1)
 
     _util.print_ioc_banner(

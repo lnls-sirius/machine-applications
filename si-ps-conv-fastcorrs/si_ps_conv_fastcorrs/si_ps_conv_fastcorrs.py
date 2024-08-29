@@ -1,22 +1,19 @@
 """IOC for fast corrector current-strength convertion."""
 
-import os as _os
-import sys as _sys
-import signal as _signal
 import logging as _log
+import os as _os
+import signal as _signal
+import sys as _sys
 import traceback as _traceback
 
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-
+from si_ps_conv_fastcorrs.main import App
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
-from siriuspy.search import PSSearch as _PSSearch
 from siriuspy.pwrsupply.csdev import \
     get_conv_propty_database as _get_conv_propty_database
-
-
-from si_ps_conv_fastcorrs.main import App
+from siriuspy.search import PSSearch as _PSSearch
 
 STOP_EVENT = False  # _multiprocessing.Event()
 PCAS_DRIVER = None
@@ -26,9 +23,12 @@ _COMMIT_HASH = _util.get_last_commit_hash()
 
 
 def _stop_now(signum, frame):
+    _ = frame
     global STOP_EVENT
-    print(_signal.Signals(signum).name + ' received at ' +
-          _util.get_timestamp())
+    sname = _signal.Signals(signum).name
+    tstamp = _util.get_timestamp()
+    strf = f'{sname} received at {tstamp}'
+    _log.warning(strf)
     _sys.stdout.flush()
     _sys.stderr.flush()
     STOP_EVENT = True

@@ -1,19 +1,17 @@
 """CurrInfo Soft IOC."""
 
-import os as _os
-import sys as _sys
-import signal as _signal
 import logging as _log
+import os as _os
+import signal as _signal
+import sys as _sys
 
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-
 from siriuspy import util as _util
-from siriuspy.envars import VACA_PREFIX as _vaca_prefix
 from siriuspy.currinfo import BOCurrInfoApp as _BOCurrInfoApp, \
-    SICurrInfoApp as _SICurrInfoApp, LICurrInfoApp as _LICurrInfoApp, \
+    LICurrInfoApp as _LICurrInfoApp, SICurrInfoApp as _SICurrInfoApp, \
     TSCurrInfoApp as _TSCurrInfoApp
-
+from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 
 INTERVAL = 0.5
 STOP_EVENT = False
@@ -21,7 +19,10 @@ STOP_EVENT = False
 
 def _stop_now(signum, frame):
     _ = frame
-    print(_signal.Signals(signum).name+' received at '+_util.get_timestamp())
+    sname = _signal.Signals(signum).name
+    tstamp = _util.get_timestamp()
+    strf = f'{sname} received at {tstamp}'
+    _log.warning(strf)
     _sys.stdout.flush()
     _sys.stderr.flush()
     global STOP_EVENT
@@ -96,7 +97,7 @@ def run(acc):
 
     # define IOC, init pvs database and create app object
     _version = _util.get_last_commit_hash()
-    _ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
+    _ioc_prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
     if acc == 'BO':
         _ioc_prefix += acc + '-Glob:AP-CurrInfo:'
     _log.debug('Creating App Object.')

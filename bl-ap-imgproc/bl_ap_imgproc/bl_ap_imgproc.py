@@ -39,11 +39,12 @@ class _Driver(_pcaspy.Driver):
         self.app.init_driver()
 
     def read(self, reason):
-        _log.debug("Reading {0:s}.".format(reason))
+        strf = "Reading {0:s}.".format(reason)
+        _log.debug(strf)
         return super().read(reason)
 
     def write(self, reason, value):
-        if not self._isValid(reason, value):
+        if not self._is_valid(reason, value):
             return False
 
         # NOTE: app.write should update driver pv values in database
@@ -58,7 +59,8 @@ class _Driver(_pcaspy.Driver):
     def check_read_only(self, reason):
         is_read_only = reason.endswith(('-Sts', '-RB', '-Mon', '-Cte'))
         if is_read_only:
-            _log.debug('PV {0:s} is read only.'.format(reason))
+            strf = 'PV {0:s} is read only.'.format(reason)
+            _log.debug(strf)
         return is_read_only
 
     def check_value_none(self, val):
@@ -77,7 +79,7 @@ class _Driver(_pcaspy.Driver):
         else:
             return True  # enum index out of range
 
-    def _isValid(self, reason, value):
+    def _is_valid(self, reason, value):
         if self.check_read_only(reason):
             return False
         elif self.check_value_none(value):

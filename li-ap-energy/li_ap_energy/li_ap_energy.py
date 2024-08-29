@@ -1,17 +1,17 @@
 """IOC Module."""
 
-import os as _os
 import logging as _log
+import os as _os
 import signal as _signal
 from threading import Event as _Event
+
 import pcaspy as _pcaspy
 from pcaspy.tools import ServerThread
-from siriuspy import util as _util
-from siriuspy import csdev as _csdev
+from siriuspy import csdev as _csdev, util as _util
+from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 from siriuspy.meas.lienergy.csdev import Const as _csenergy
-from siriuspy.envars import VACA_PREFIX as _vaca_prefix
-from .main import App
 
+from .main import App
 
 __version__ = _util.get_last_commit_hash()
 INTERVAL = 0.5
@@ -19,6 +19,7 @@ stop_event = _Event()
 
 
 def _stop_now(signum, frame):
+    _, _ = signum, frame
     _log.info('SIGINT received')
     global stop_event
     stop_event.set()
@@ -40,11 +41,12 @@ class _Driver(_pcaspy.Driver):
         self.app.driver = self
 
     def read(self, reason):
-        _log.debug("Reading {0:s}.".format(reason))
+        strf = "Reading {0:s}.".format(reason)
+        _log.debug(strf)
         return super().read(reason)
 
     def write(self, reason, value):
-        if not self._isValid(reason, value):
+        if not self._is_valid(reason, value):
             return False
         ret_val = self.app.write(reason, value)
         if ret_val:
@@ -56,9 +58,10 @@ class _Driver(_pcaspy.Driver):
         self.updatePV(reason)
         return True
 
-    def _isValid(self, reason, val):
+    def _is_valid(self, reason, val):
         if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
-            _log.debug('PV {0:s} is read only.'.format(reason))
+            strf = 'PV {0:s} is read only.'.format(reason)
+            _log.debug(strf)
             return False
         if val is None:
             msg = 'client tried to set None value. refusing...'
@@ -75,7 +78,7 @@ def run(debug=False):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
-    ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
+    ioc_prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
     ioc_prefix += 'LI-Glob:AP-MeasEnergy:'
 
     # define abort function
@@ -92,7 +95,8 @@ def run(debug=False):
         pvname=ioc_prefix + sorted(db.keys())[0],
         use_prefix=False, timeout=0.5)
     if running:
-        _log.error('Another ' + ioc_prefix + ' is already running!')
+        strf = 'Another ' + ioc_prefix + ' is already running!'
+        _log.error(strf)
         return
     _util.print_ioc_banner(
             '', db, 'LI Energy IOC.', __version__, ioc_prefix)
