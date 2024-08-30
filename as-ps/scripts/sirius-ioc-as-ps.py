@@ -1,9 +1,9 @@
 #!/usr/bin/env python-sirius
 """BeagleBone Black IOCs Launcher."""
-import sys
 import os
-from as_ps import as_ps as ioc_module
+import sys
 
+from as_ps import as_ps as ioc_module
 
 # NOTE: maximum epics array size
 os.environ['EPICS_CA_MAX_ARRAY_BYTES'] = '100000'

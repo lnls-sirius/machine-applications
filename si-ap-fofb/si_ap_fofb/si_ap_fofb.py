@@ -1,14 +1,14 @@
 """SI-AP-FOFB Soft IOC."""
 
+import logging as _log
 import os as _os
-import sys as _sys
 import signal as _signal
+import sys as _sys
+
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-
 from siriuspy import util as _util
-from siriuspy.envars import VACA_PREFIX as _vaca_prefix
-
+from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 from siriuspy.fofb.main import App as _App
 
 INTERVAL = 1/10  # [s]
@@ -17,7 +17,10 @@ STOP_EVENT = False
 
 def _stop_now(signum, frame):
     _ = frame
-    print(_signal.Signals(signum).name+' received at '+_util.get_timestamp())
+    sname = _signal.Signals(signum).name
+    tstamp = _util.get_timestamp()
+    strf = f'{sname} received at {tstamp}'
+    _log.warning(strf)
     _sys.stdout.flush()
     _sys.stderr.flush()
     global STOP_EVENT
@@ -57,6 +60,7 @@ class _PCASDriver(_pcaspy.Driver):
 
     def update_pv(self, pvname, value, **kwargs):
         """Update PV."""
+        _ = kwargs
         self.setParam(pvname, value)
         self.updatePV(pvname)
 
@@ -72,7 +76,7 @@ def run():
 
     # define IOC, init pvs database and create app object
     _version = _util.get_last_commit_hash()
-    _ioc_prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
+    _ioc_prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
     _ioc_prefix += 'SI-Glob:AP-FOFB:'
     app = _App()
     dbase = app.pvs_database

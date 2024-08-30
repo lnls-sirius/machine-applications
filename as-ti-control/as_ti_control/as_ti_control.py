@@ -1,21 +1,18 @@
 """IOC Module."""
 
-import os as _os
 import logging as _log
+import os as _os
 import signal as _signal
 from threading import Event as _Event
 
 import pcaspy as _pcaspy
 from pcaspy.tools import ServerThread
-
-from siriuspy import util as _util
-from siriuspy import csdev as _csdev
-from siriuspy.thread import LoopQueueThread as _LoopQueueThread
-from siriuspy.envars import VACA_PREFIX as _vaca_prefix
+from siriuspy import csdev as _csdev, util as _util
+from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 from siriuspy.search import HLTimeSearch as _HLTimeSearch
+from siriuspy.thread import LoopQueueThread as _LoopQueueThread
 
 from .main import App
-
 
 __version__ = _util.get_last_commit_hash()
 INTERVAL = 0.5
@@ -30,6 +27,7 @@ TRIG_TYPES |= set(SPECIAL_TRIGS.keys())
 
 
 def _stop_now(signum, frame):
+    _, _ = signum, frame
     _log.info('SIGINT received')
     global stop_event
     stop_event.set()
@@ -75,11 +73,12 @@ class _Driver(_pcaspy.Driver):
         self.app.driver = self
 
     def read(self, reason):
-        _log.debug("Reading {0:s}.".format(reason))
+        strf = "Reading {0:s}.".format(reason)
+        _log.debug(strf)
         return super().read(reason)
 
     def write(self, reason, value):
-        if not self._isValid(reason, value):
+        if not self._is_valid(reason, value):
             return False
         self._write_queue.put(
             (self._write, (reason, value)), block=False)
@@ -100,9 +99,10 @@ class _Driver(_pcaspy.Driver):
         self.setParam(reason, value)
         self.updatePV(reason)
 
-    def _isValid(self, reason, val):
+    def _is_valid(self, reason, val):
         if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
-            _log.debug('PV {0:s} is read only.'.format(reason))
+            strf = 'PV {0:s} is read only.'.format(reason)
+            _log.debug(strf)
             return False
         if val is None:
             msg = 'client tried to set None value. refusing...'
@@ -138,14 +138,15 @@ def run(section='as', wait=5, debug=False):
     db[ioc_prefix + 'Version-Cte'] = {'type': 'string', 'value': __version__}
     # add PV Properties-Cte with list of all IOC PVs:
     db = _csdev.add_pvslist_cte(db, prefix=ioc_prefix)
-    prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
+    prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
 
     # check if IOC is already running
     running = _util.check_pv_online(
         pvname=prefix + sorted(db.keys())[0],
         use_prefix=False, timeout=0.5)
     if running:
-        _log.error('Another ' + ioc_name + ' is already running!')
+        strf = 'Another ' + ioc_name + ' is already running!'
+        _log.error(strf)
         return
     _util.print_ioc_banner(
         ioc_name, db, 'High Level Timing IOC.', __version__, prefix)
@@ -168,8 +169,8 @@ def run(section='as', wait=5, debug=False):
     server_thread.start()
 
     tm = max(2, wait)
-    _log.info(
-        'Waiting ' + str(tm) + ' seconds to start locking Low Level.')
+    strf = 'Waiting ' + str(tm) + ' seconds to start locking Low Level.'
+    _log.info(strf)
     stop_event.wait(tm)
     _log.info('Start locking now.')
     if not stop_event.is_set():

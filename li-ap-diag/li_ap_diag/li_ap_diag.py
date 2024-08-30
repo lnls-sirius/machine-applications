@@ -1,22 +1,19 @@
 #!/usr/local/bin/python-sirius
 """LI AP Diagnostic."""
 
-import os as _os
-import sys as _sys
-import signal as _signal
 import logging as _log
+import os as _os
+import signal as _signal
+import sys as _sys
 
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 from pcaspy import Driver as _Driver
-
 from siriuspy import util as _util
-from siriuspy.envars import VACA_PREFIX as _vaca_prefix
-
-from siriuspy.diagsys.lidiag.csdev import get_li_diag_propty_database as \
-    _get_database, Const as _Const
+from siriuspy.diagsys.lidiag.csdev import Const as _Const, \
+    get_li_diag_propty_database as _get_database
 from siriuspy.diagsys.lidiag.main import LIDiagApp as _App
-
+from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 
 _COMMIT_HASH = _util.get_last_commit_hash()
 
@@ -25,9 +22,12 @@ STOP_EVENT = False
 
 
 def _stop_now(signum, frame):
+    _ = frame
     global STOP_EVENT
-    _log.warning(_signal.Signals(signum).name +
-                 ' received at ' + _util.get_timestamp())
+    sname = _signal.Signals(signum).name
+    tstamp = _util.get_timestamp()
+    strf = f'{sname} received at {tstamp}'
+    _log.warning(strf)
     _sys.stdout.flush()
     _sys.stderr.flush()
     STOP_EVENT = True
@@ -87,10 +87,11 @@ def run(debug=False):
     # create PV database
     devices = _Const.ALL_DEVICES
 
-    prefix = _vaca_prefix + ('-' if _vaca_prefix else '')
+    prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
     pvdb = dict()
     for dev in devices:
-        _log.debug('{:32s}'.format(dev))
+        strf = '{:32s}'.format(dev)
+        _log.debug(strf)
         dbase = _get_database(dev)
         for key, value in dbase.items():
             if key == 'DiagVersion-Cte':

@@ -144,6 +144,7 @@ class App:
         else:
             ignorestr, wstr = ('', 'W ')
 
+        strf = "[{:.2s}] - {:.32s} = {:.50s}{}"
         if 'SOFBUpdate-Cmd' in reason:
             self._counter_sofbupdate_cmd += 1
             if self._counter_sofbupdate_cmd == 1000:

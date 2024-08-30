@@ -25,8 +25,10 @@ _COMMIT_HASH = __version__
 def _stop_now(signum, frame):
     global STOP_EVENT
     _ = frame
-    print(_signal.Signals(signum).name + ' received at ' +
-          _util.get_timestamp())
+    sname = _signal.Signals(signum).name
+    tstamp = _util.get_timestamp()
+    strf = f'{sname} received at {tstamp}'
+    _log.warning(strf)
     _sys.stdout.flush()
     _sys.stderr.flush()
     STOP_EVENT = True
