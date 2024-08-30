@@ -54,9 +54,9 @@ class App:
 
         idffmode_pvname = self.bbblist[0].psnames[0] + ':IDFFMode-Sts'
         if idffmode_pvname in dbset[prefix]:
-            self._idffmode_sts_pvname = sofbmode_pvname
+            self._has_idffmode = True
         else:
-            self._idffmode_sts_pvname = None
+            self._has_idffmode = False
 
         # build dictionaries
         self._dev2bbb, self._dev2conn, self._interval = \
@@ -122,14 +122,15 @@ class App:
             sofb_state = self.driver.getParam(self._sofbmode_sts_pvname)
         else:
             sofb_state = False
-        if self._idffmode_sts_pvname:
-            idff_state = self.driver.getParam(self._idffmode_sts_pvname)
+        if self._has_idffmode:
+            pvname_idffmode_sts = pvname.substitute(propty='IDFFMode-Sts')
+            idff_state = self.driver.getParam(pvname_idffmode_sts)
         else:
             idff_state = False
 
         # In IDFFMode only accept specific writes
         strf = "[{:.2s}] - {:.32s} = {:.50s}{}"
-        if idff_state and reason not in (
+        if idff_state and pvname.propty not in (
                 'IDFFMode-Sel',
                 'OpMode-Sel', 'PwrState-Sel'):
             ignorestr, wstr = (' (IDFFMode On)', 'W!')
