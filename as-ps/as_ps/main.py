@@ -32,6 +32,9 @@ class App:
         # flag to indicate sofb processing is taking place
         self._sofb_processing = False
 
+        # flag to indicate idff processing is taking place
+        self._idff_processing = False
+
         # write operation queue
         self._queue = _LoopQueueThread()
         self._queue.start()
@@ -41,12 +44,19 @@ class App:
 
         # mapping device to bbb
         self._bbblist = bbblist
-        # NOTE: change IOC to accept only one BBB
+        # NOTE: change IOC to accept only one BBB !!!
+
         sofbmode_pvname = self.bbblist[0].psnames[0] + ':SOFBMode-Sts'
         if sofbmode_pvname in dbset[prefix]:
             self._sofbmode_sts_pvname = sofbmode_pvname
         else:
             self._sofbmode_sts_pvname = None
+
+        idffmode_pvname = self.bbblist[0].psnames[0] + ':IDFFMode-Sts'
+        if idffmode_pvname in dbset[prefix]:
+            self._has_idffmode = True
+        else:
+            self._has_idffmode = False
 
         # build dictionaries
         self._dev2bbb, self._dev2conn, self._interval = \
@@ -112,10 +122,27 @@ class App:
             sofb_state = self.driver.getParam(self._sofbmode_sts_pvname)
         else:
             sofb_state = False
+        if self._has_idffmode:
+            pvname_idffmode_sts = pvname.substitute(propty='IDFFMode-Sts')
+            idff_state = self.driver.getParam(pvname_idffmode_sts)
+        else:
+            idff_state = False
 
-        ignorestr, wstr = \
-            (' (SOFBMode On)', 'W!') if sofb_state and 'SOFB' not in reason \
-            else ('', 'W ')
+        # In IDFFMode only accept specific writes
+        strf = "[{:.2s}] - {:.32s} = {:.50s}{}"
+        if idff_state and pvname.propty not in (
+                'IDFFMode-Sel',
+                'OpMode-Sel', 'PwrState-Sel'):
+            ignorestr, wstr = (' (IDFFMode On)', 'W!')
+            _log.info(strf.format(wstr, reason, str(value), ignorestr))
+            return
+
+        idff_or_sofb_state = sofb_state or idff_state
+        idff_nor_sofb_reason = 'SOFB' not in reason and 'IDFF' not in reason
+        if idff_or_sofb_state and idff_nor_sofb_reason:
+            ignorestr, wstr = (' (SOFB/IDFF Mode On)', 'W!')
+        else:
+            ignorestr, wstr = ('', 'W ')
 
         strf = "[{:.2s}] - {:.32s} = {:.50s}{}"
         if 'SOFBUpdate-Cmd' in reason:
@@ -207,8 +234,7 @@ class App:
         return self._check_write_sofb(reason, value)
 
     def _check_write_sofb(self, reason, value):
-        # NOTE: check if using SiriusPVName subs alters efficiency
-        if not reason.endswith('SOFBCurrent-SP'):
+        if not reason.endswith('SOFBCurrent-SP'):  # Use SiriusPVName ?
             return True
         value_len = 1 if not \
             isinstance(value, (tuple, list, _np.ndarray)) else len(value)
