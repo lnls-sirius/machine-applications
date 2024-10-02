@@ -4,7 +4,7 @@ import os
 import argparse as _argparse
 from bl_ap_imgproc import run
 
-os.environ['EPICS_CA_MAX_ARRAY_BYTES'] = '21000000'
+os.environ['EPICS_CA_MAX_ARRAY_BYTES'] = '26000000'
 
 DEVNAME = 'CAX:A:BASLER01'
 
