@@ -131,7 +131,7 @@ class App:
         # In IDFFMode only accept specific writes
         strf = "[{:.2s}] - {:.32s} = {:.50s}{}"
         if idff_state and pvname.propty not in (
-                'IDFFMode-Sel',
+                'IDFFMode-Sel', 'Reset-Cmd',
                 'OpMode-Sel', 'PwrState-Sel'):
             ignorestr, wstr = (' (IDFFMode On)', 'W!')
             _log.info(strf.format(wstr, reason, str(value), ignorestr))
