@@ -8,8 +8,8 @@ import sys as _sys
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 from siriuspy import util as _util
-from siriuspy.fpmosc import FPMOscApp
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
+from siriuspy.fpmosc import FPMOscApp
 
 INTERVAL = 0.5
 STOP_EVENT = False
