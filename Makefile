@@ -18,6 +18,7 @@ develop-install:
 	cd si-ap-idff; make develop-install
 	cd si-ap-orbintlk; make develop-install
 	cd si-ap-stabinfo; make develop-install
+	cd si-di-fpmosc; make develop-install
 	cd si-id-conv; make develop-install
 	cd si-id-epu50; make develop-install
 	cd si-ps-conv-fastcorrs; make develop-install
@@ -43,6 +44,7 @@ develop-uninstall:
 	cd si-ap-idff; make develop-uninstall
 	cd si-ap-orbintlk; make develop-uninstall
 	cd si-ap-stabinfo; make develop-uninstall
+	cd si-di-fpmosc; make develop-uninstall
 	cd si-id-conv; make develop-uninstall
 	cd si-id-epu50; make develop-uninstall
 	cd si-ps-conv-fastcorrs; make develop-uninstall
@@ -68,6 +70,7 @@ install:
 	cd si-ap-idff; make install
 	cd si-ap-orbintlk; make install
 	cd si-ap-stabinfo; make install
+	cd si-di-fpmosc; make install
 	cd si-id-conv; make install
 	cd si-id-epu50; make install
 	cd si-ps-conv-fastcorrs; make install
@@ -93,6 +96,7 @@ uninstall:
 	cd si-ap-idff; make uninstall
 	cd si-ap-orbintlk; make uninstall
 	cd si-ap-stabinfo; make uninstall
+	cd si-di-fpmosc; make uninstall
 	cd si-id-conv; make uninstall
 	cd si-id-epu50; make uninstall
 	cd si-ps-conv-fastcorrs; make uninstall
@@ -118,6 +122,7 @@ clean:
 	cd si-ap-idff; make clean
 	cd si-ap-orbintlk; make clean
 	cd si-ap-stabinfo; make clean
+	cd si-di-fpmosc; make clean
 	cd si-id-conv; make clean
 	cd si-id-epu50; make clean
 	cd si-ps-conv-fastcorrs; make clean
