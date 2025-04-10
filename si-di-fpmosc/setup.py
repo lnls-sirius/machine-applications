@@ -7,7 +7,7 @@ with open('VERSION', 'r') as _f:
     __version__ = _f.read().strip()
 
 setup(
-    name='si-di-currinfo',
+    name='si-di-fpmosc',
     version=__version__,
     author='lnls-sirius',
     description='Soft IOC for Electron Beam Filling Pattern Informations.',
