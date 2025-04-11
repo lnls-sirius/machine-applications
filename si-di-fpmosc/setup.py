@@ -1,7 +1,7 @@
 #!/usr/bin/env python-sirius
 """Package installer."""
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 with open('VERSION', 'r') as _f:
     __version__ = _f.read().strip()
