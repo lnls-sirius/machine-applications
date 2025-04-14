@@ -14,7 +14,7 @@ def main():
     kwargs = dict(
         enbl_chcorrs=False, enbl_cvcorrs=False,
         enbl_qscorrs=False, enbl_lccorrs=False,
-        enbl_qncorrs=False)
+        enbl_qncorrs=False, enbl_cccorrs=False)
     if idname in ('SI-08SB:ID-IVU18', 'SI-14SB:ID-IVU18'):
         kwargs.update(
             dict(enbl_qncorrs=True))
