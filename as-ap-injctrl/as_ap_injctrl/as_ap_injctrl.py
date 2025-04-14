@@ -4,6 +4,7 @@ import logging as _log
 import os as _os
 import signal as _signal
 import sys as _sys
+import time as _time
 
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
@@ -81,6 +82,7 @@ def run():
     app = _App()
     dbase = app.pvs_database
     dbase['Version-Cte']['value'] = _version
+    dbase['TimestampBoot-Cte']['value'] = _time.time()
 
     # check if another IOC is running
     pvname = _ioc_prefix + next(iter(dbase))
