@@ -153,6 +153,7 @@ class App:
                 _log.info(strf.format(wstr, reason, str(value), ignorestr))
                 self._counter_sofbupdate_cmd = 0
         elif reason == 'WfmOffset-SP':
+            # suppress printing WfmOfffset setpoints (specially from SOFB)
             pass
         else:
             # print all other write events
