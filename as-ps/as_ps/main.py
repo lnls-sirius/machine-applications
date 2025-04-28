@@ -42,6 +42,9 @@ class App:
         # counter of SOFBUpdate-Cmd write events
         self._counter_sofbupdate_cmd = 0
 
+	# counter of WfmOffsetKick-SP write events
+	self._counter_wfmoffsetkick_sp = 0
+
         # mapping device to bbb
         self._bbblist = bbblist
         # NOTE: change IOC to accept only one BBB !!!
@@ -153,6 +156,11 @@ class App:
                 _log.info(strf.format(wstr, reason, str(value), ignorestr))
                 self._counter_sofbupdate_cmd = 0
         elif 'WfmOffsetKick-SP' in reason:
+            self._counter_wfmoffsetkick_sp += 1
+            if self._counter_wfmoffsetkick_sp == 100:
+                ignorestr = ' (100 events)'
+                _log.info(strf.format(wstr, reason, str(value), ignorestr))
+                self._counter_wfmoffsetkick_sp = 0
             # suppress printing WfmOfffset setpoints (specially from SOFB)
             pass
         #  elif reason == 'IDFFMode-Sel' and value == 1:
