@@ -33,6 +33,9 @@ class App:
         self._queue = _LoopQueueThread()
         self._queue.start()
 
+        # counter of WfmOffsetKick-SP write events
+        self._counter_wfmoffsetkick_sp = 0
+
         # mapping device to bbb
         self._bbblist = bbblist
         # NOTE: change IOC to accept only one BBB !!!
@@ -109,8 +112,9 @@ class App:
         else:
             idff_state = False
 
-        # In IDFFMode only accept specific writes
         strf = "[{:.2s}] - {:.32s} = {:.50s}{}"
+
+        # In IDFFMode only accept specific writes
         if idff_state and pvname.propty not in (
                 'IDFFMode-Sel',
                 'OpMode-Sel', 'PwrState-Sel'):
@@ -123,8 +127,15 @@ class App:
         else:
             ignorestr, wstr = ('', 'W ')
 
-        # print write events
-        _log.info(strf.format(wstr, reason, str(value), ignorestr))
+        if 'WfmOffsetKick-SP' in reason:
+            self._counter_wfmoffsetkick_sp += 1
+            if self._counter_wfmoffsetkick_sp == 100:
+                ignorestr = ' (100 events)'
+                _log.info(strf.format(wstr, reason, str(value), ignorestr))
+                self._counter_wfmoffsetkick_sp = 0
+        else:
+            # print all other write events
+            _log.info(strf.format(wstr, reason, str(value), ignorestr))
 
         # NOTE: This modified behaviour is to allow loading
         # global_config to complete without artificial warning

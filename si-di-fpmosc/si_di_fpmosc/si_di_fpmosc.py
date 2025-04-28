@@ -1,18 +1,17 @@
-"""AS-AP-InjCtrl Soft IOC."""
+"""CurrInfo Soft IOC."""
 
 import logging as _log
 import os as _os
 import signal as _signal
 import sys as _sys
-import time as _time
 
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
-from siriuspy.injctrl.main import App as _App
+from siriuspy.fpmosc import FPMOscApp
 
-INTERVAL = 0.1
+INTERVAL = 0.5
 STOP_EVENT = False
 
 
@@ -45,10 +44,12 @@ class _PCASDriver(_pcaspy.Driver):
         self.app.add_callback(self.update_pv)
 
     def read(self, reason):
+        """Read IOC pvs according to main application."""
         value = self.app.read(reason)
         if value is None:
             return super().read(reason)
-        return value
+        else:
+            return value
 
     def write(self, reason, value):
         """Write IOC pvs according to main application."""
@@ -67,22 +68,23 @@ class _PCASDriver(_pcaspy.Driver):
 
 
 def run():
-    """Run main module function."""
+    """Main module function."""
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
     # configure log file
     _util.configure_log_file()
+    _log.info('Starting...')
 
     # define IOC, init pvs database and create app object
     _version = _util.get_last_commit_hash()
     _ioc_prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
-    _ioc_prefix += 'AS-Glob:AP-InjCtrl:'
-    app = _App()
+    _ioc_prefix += FPMOscApp.Const.DEVNAME + ':'
+    _log.debug('Creating App Object.')
+    app = FPMOscApp()
     dbase = app.pvs_database
     dbase['Version-Cte']['value'] = _version
-    dbase['TimestampBoot-Cte']['value'] = _time.time()
 
     # check if another IOC is running
     pvname = _ioc_prefix + next(iter(dbase))
@@ -91,31 +93,35 @@ def run():
 
     # check if another IOC is running
     _util.print_ioc_banner(
-        ioc_name='AS-AP-InjCtrl',
+        ioc_name='si-di-fpmosc',
         db=dbase,
-        description='AS-AP-InjCtrl Soft IOC',
+        description='SI-DI-FPMOsc Soft IOC',
         version=_version,
-        prefix=_ioc_prefix)
+        prefix=_ioc_prefix
+    )
 
     # create a new simple pcaspy server and driver to respond client's requests
+    _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
     _attribute_access_security_group(server, dbase)
+    _log.info('Setting Server Database.')
     server.createPV(_ioc_prefix, dbase)
-    driver = _PCASDriver(app)
+    _log.info('Creating Driver.')
+    _PCASDriver(app)
     app.init_database()
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
+    _log.info('Starting Server Thread.')
     server_thread.start()
 
     # main loop
-    driver.app.scanning = True
     while not STOP_EVENT:
-        driver.app.process(INTERVAL)
+        app.process(INTERVAL)
 
-    driver.app.scanning = False
-    driver.app.quit = True
-
-    # sends stop signal to server thread
+    _log.info('Stoping Server Thread...')
+    # send stop signal to server thread
     server_thread.stop()
     server_thread.join()
+    _log.info('Server Thread stopped.')
+    _log.info('Good Bye.')

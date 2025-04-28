@@ -65,7 +65,7 @@ class _PCASDriver(_pcaspy.Driver):
         self.updatePV(pvname)
 
 
-def run(idname):
+def run(idname, **kwargs):
     """Run main module function."""
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
@@ -76,7 +76,7 @@ def run(idname):
 
     # define IOC, init pvs database and create app object
     _version = '1.0.0'
-    app = _App(idname)
+    app = _App(idname, **kwargs)
     dbase = app.pvs_database
     dbase['Version-Cte']['value'] = _version
     _ioc_prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
