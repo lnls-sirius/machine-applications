@@ -152,7 +152,7 @@ class App:
                 ignorestr = ' (1000 events)'
                 _log.info(strf.format(wstr, reason, str(value), ignorestr))
                 self._counter_sofbupdate_cmd = 0
-        elif reason == 'WfmOffsetKick-SP':
+        elif 'WfmOffsetKick-SP' in reason:
             # suppress printing WfmOfffset setpoints (specially from SOFB)
             pass
         #  elif reason == 'IDFFMode-Sel' and value == 1:
