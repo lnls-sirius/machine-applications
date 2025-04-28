@@ -42,8 +42,8 @@ class App:
         # counter of SOFBUpdate-Cmd write events
         self._counter_sofbupdate_cmd = 0
 
-	# counter of WfmOffsetKick-SP write events
-	self._counter_wfmoffsetkick_sp = 0
+        # counter of WfmOffsetKick-SP write events
+        self._counter_wfmoffsetkick_sp = 0
 
         # mapping device to bbb
         self._bbblist = bbblist
