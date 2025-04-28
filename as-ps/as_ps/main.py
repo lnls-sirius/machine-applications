@@ -161,11 +161,6 @@ class App:
                 ignorestr = ' (100 events)'
                 _log.info(strf.format(wstr, reason, str(value), ignorestr))
                 self._counter_wfmoffsetkick_sp = 0
-            # suppress printing WfmOfffset setpoints (specially from SOFB)
-            pass
-        #  elif reason == 'IDFFMode-Sel' and value == 1:
-        #      # suppress printing IDFFMode setpoints from de IDFF low-level IOC
-        #      pass
         else:
             # print all other write events
             _log.info(strf.format(wstr, reason, str(value), ignorestr))
