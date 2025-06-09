@@ -1,5 +1,5 @@
 #  IOC
-This IOC checks Linac Egun and LLRF status.
+This IOC does some stuff.
 
 ## Installation
 `make install`
