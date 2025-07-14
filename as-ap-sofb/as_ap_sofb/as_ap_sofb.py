@@ -141,7 +141,7 @@ def run(acc='SI', debug=False, tests=False):
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
-    server_thread.setDaemon(True)
+    server_thread.daemon = True
     _log.info('Starting Server Thread.')
     server_thread.start()
 
@@ -152,6 +152,12 @@ def run(acc='SI', debug=False, tests=False):
     app.matrix = _EpicsMatrix(
         acc=app.acc, prefix=app.prefix, callback=driver.update_pv)
 
+    _log.info('Waiting for PVs to connect.')
+    app.wait_for_connection(timeout=20)
+    _log.info('All PVs connected.')
+    _log.info('Configuring Orbit Mode.')
+    app.orbit.set_orbit_mode(app.orbit.mode)
+    _log.info('Done')
     # main loop
     while not stop_event:
         app.process()
