@@ -7,7 +7,7 @@
 # @liulin-lili
 
 # --- default owners of the repo
-* @xresende @anacso17 @fernandohds564 @murilobalves
+* @xresende @anacso17 @fernandohds564
 
 
 # -------- BASIC MODULES --------
@@ -19,25 +19,25 @@
 # -------- SUBPACKAGES --------
 
 # --- as-ap-currinfo
-/as-ap-currinfo/ @anacso17 @murilobalves
+/as-ap-currinfo/ @anacso17
 
 # --- as-ap-opmode
 /as-ap-opmode/ @xresende @anacso17
 
 # --- as-ap-opticscorr
-/as-ap-opticscorr/ @anacso17 @fernandohds564 @xresende @murilobalves
+/as-ap-opticscorr/ @anacso17 @fernandohds564 @xresende
 
 # --- as-ap-posang
-/as-ap-posang/ @anacso17 @fernandohds564 @xresende @murilobalves
+/as-ap-posang/ @anacso17 @fernandohds564 @xresende
 
 # --- as-ma
-/as-ma/ @xresende @anacso17 @murilobalves
+/as-ma/ @xresende @anacso17
 
 # --- as-ps
-/as-ps/ @xresende @anacso17 @murilobalves
+/as-ps/ @xresende @anacso17
 
 # --- as-ti-control
 /as-ti-control/ @fernandohds564 @xresende @anacso17
 
 # --- as-ap-sofb
-/as-ap-sofb/ @fernandohds564  @xresende @anacso17 @murilobalves
+/as-ap-sofb/ @fernandohds564 @xresende @anacso17
