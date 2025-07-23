@@ -115,7 +115,7 @@ class _Driver(_pcaspy.Driver):
         return True
 
 
-def run(section='as', wait=5, debug=False):
+def run(section='as', debug=False):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
@@ -171,7 +171,7 @@ def run(section='as', wait=5, debug=False):
     server_thread.daemon = True
     server_thread.start()
 
-    tm = max(2, wait)
+    tm = 5  # [s]
     strf = 'Waiting ' + str(tm) + ' seconds to start locking Low Level.'
     _log.info(strf)
     stop_event.wait(tm)

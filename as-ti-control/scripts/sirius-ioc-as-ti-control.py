@@ -1,6 +1,7 @@
 #!/usr/bin/env python-sirius
 
 import argparse as _argparse
+
 from as_ti_control import run, TRIG_TYPES
 
 parser = _argparse.ArgumentParser(description="Run Timing IOC.")
@@ -10,14 +11,9 @@ parser.add_argument(
     choices=sorted(TRIG_TYPES)
     )
 parser.add_argument(
-    '-w', '--wait', type=float, default=5,
-    help='In case -l is not given, this is the time to wait in [s]' +
-         'before start locking. (5s)'
-    )
-parser.add_argument(
     '-d', '--debug', action='store_true', default=False,
     help="Starts IOC in Debug Mode. (False)"
     )
 
 args = parser.parse_args()
-run(section=args.section, wait=args.wait, debug=args.debug)
+run(section=args.section, debug=args.debug)
