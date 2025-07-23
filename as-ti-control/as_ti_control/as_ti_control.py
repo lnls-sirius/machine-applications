@@ -158,7 +158,10 @@ def run(section='as', wait=5, debug=False):
     server.createPV(prefix, db)
 
     _log.info('Waiting 5s for PVs to connect...')
-    app.wait_for_connection(5)
+    if not app.wait_for_connection(15):
+        _log.warning(
+            'Some PVs did not connect within the 15s of waiting time.'
+        )
 
     _log.info('Creating Driver.')
     _Driver(app)
