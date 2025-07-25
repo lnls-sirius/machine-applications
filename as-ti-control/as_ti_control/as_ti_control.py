@@ -180,20 +180,26 @@ def run(section='as', debug=False):
     stop_event.wait(tm)
     _log.info('Start locking now.')
     if not stop_event.is_set():
-        # First Set the correct initial state
+        # First Set the correct initial state:
+        # We need to read everything first:
         db = app.get_database()
         m2w = app.get_map2writepvs()
+        vals = dict()
         for pv, fun in app.get_map2readpvs().items():
             val = fun()
             value = val.pop('value')
             if value is None:
                 continue
+            vals[pv] = value
+        # And only then we set the PVs. This is needed so that the information
+        # of the DeltaDelay is not lost when we initialize the Delay PVs.
+        for pv, value in vals.items():
             if pv.endswith(('-SP', '-Sel')) and not pv.endswith('LvlLock-Sel'):
                 m2w[pv](value)
             try:
                 app.driver.setParam(pv, value)
             except TypeError as err:
-                print(pv, value)
+                _log.error('%s: %s', pv, str(value))
                 raise err
             app.driver.setParamStatus(pv, **val)
             app.driver.updatePV(pv)
