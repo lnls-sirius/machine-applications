@@ -174,8 +174,8 @@ def run(section='as', debug=False):
     server_thread.daemon = True
     server_thread.start()
 
-    tm = 5  # [s]
-    strf = 'Waiting ' + str(tm) + ' seconds to start locking Low Level.'
+    tm = 2  # [s]
+    strf = 'Waiting ' + str(tm) + 's to start locking Low Level.'
     _log.info(strf)
     stop_event.wait(tm)
     _log.info('Start locking now.')
