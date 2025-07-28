@@ -115,7 +115,7 @@ class _Driver(_pcaspy.Driver):
         return True
 
 
-def run(section='as', wait=5, debug=False):
+def run(section='as', debug=False):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
@@ -157,8 +157,14 @@ def run(section='as', wait=5, debug=False):
     _log.info('Setting Server Database.')
     server.createPV(prefix, db)
 
-    _log.info('Waiting 5s for PVs to connect...')
-    app.wait_for_connection(5)
+    conn_tout = 15  # [s]
+    _log.info('Waiting %ds for PVs to connect...', conn_tout)
+    if not app.wait_for_connection(conn_tout):
+        _log.warning(
+            'Some PVs did not connect within the 15s of waiting time.'
+        )
+    else:
+        _log.info('All PVs connected in time.')
 
     _log.info('Creating Driver.')
     _Driver(app)
@@ -168,26 +174,32 @@ def run(section='as', wait=5, debug=False):
     server_thread.daemon = True
     server_thread.start()
 
-    tm = max(2, wait)
-    strf = 'Waiting ' + str(tm) + ' seconds to start locking Low Level.'
+    tm = 2  # [s]
+    strf = 'Waiting ' + str(tm) + 's to start locking Low Level.'
     _log.info(strf)
     stop_event.wait(tm)
     _log.info('Start locking now.')
     if not stop_event.is_set():
-        # First Set the correct initial state
+        # First Set the correct initial state:
+        # We need to read everything first:
         db = app.get_database()
         m2w = app.get_map2writepvs()
+        vals = dict()
         for pv, fun in app.get_map2readpvs().items():
             val = fun()
             value = val.pop('value')
             if value is None:
                 continue
+            vals[pv] = value
+        # And only then we set the PVs. This is needed so that the information
+        # of the DeltaDelay is not lost when we initialize the Delay PVs.
+        for pv, value in vals.items():
             if pv.endswith(('-SP', '-Sel')) and not pv.endswith('LvlLock-Sel'):
                 m2w[pv](value)
             try:
                 app.driver.setParam(pv, value)
             except TypeError as err:
-                print(pv, value)
+                _log.error('%s: %s', pv, str(value))
                 raise err
             app.driver.setParamStatus(pv, **val)
             app.driver.updatePV(pv)
