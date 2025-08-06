@@ -1,18 +1,16 @@
 """Main Module of the IOC Logic."""
 
+import logging as _log
 import time as _time
-from threading import Event as _Event
 from copy import deepcopy as _dcopy
+from threading import Event as _Event
 
 import numpy as _np
-
+from siriuspy.callbacks import Callback as _Callback
 from siriuspy.epics import PV as _PV, SiriusPVTimeSerie as _SiriusPVTimeSerie
 from siriuspy.thread import RepeaterThread as _Repeat
-from siriuspy.callbacks import Callback as _Callback
 
 from . import pvs as _pvs
-
-__version__ = _pvs.__version__
 
 
 class App(_Callback):
@@ -115,20 +113,20 @@ class App(_Callback):
 
     def read(self, reason):
         """Read PV from database."""
-        # implementation here
+        _ = reason
         # The default behavior is to return None and let the driver read
         # from the database.
         return None
 
     def write(self, reason, value):
         """Write PV in the model."""
-        # implementation here
-        if reason.endswith('CavTempRateTimeInterval-SP'):
-            self._time_window = max(
-                min(float(value), _pvs.MAX_TIME_WIN), _pvs.MIN_TIME_WIN
-            )
-            return True
-        return False
+        if not reason.endswith('CavTempRateTimeInterval-SP'):
+            return False
+
+        val = max(min(float(value), _pvs.MAX_TIME_WIN), _pvs.MIN_TIME_WIN)
+        self._time_window = val
+        self.run_callbacks('CavTempRateTimeInterval-RB', val)
+        return True
 
     def _calc_diff(self):
         while not self._evt_dif.wait(1):
@@ -172,6 +170,7 @@ class App(_Callback):
         idcs &= _np.logical_not(_np.isnan(vals))
 
         if idcs.sum() < 3:
+            _log.error('Did Not Fit. Size of buffer is too small.')
             return
 
         tim = tim[idcs]

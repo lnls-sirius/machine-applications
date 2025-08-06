@@ -8,6 +8,7 @@ import pcaspy.tools as _pcaspy_tools
 
 from siriuspy import util as _util
 from siriuspy import csdev as _csdev
+from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 
 from . import main as _main
 from . import pvs as _pvs
@@ -19,7 +20,8 @@ PREFIX = ''
 
 
 def _stop_now(signum, frame):
-    print(' - SIGNAL received.')
+    _, _ = signum, frame
+    _log.info('SIGNAL received')
     global stop_event
     stop_event = True
 
@@ -63,18 +65,20 @@ class _PCASDriver(_pcaspy.Driver):
 
 def run():
     """Run the IOC."""
+    _util.configure_log_file(debug=False)
+    _log.info('Starting...')
+
     # define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
-    _util.configure_log_file(debug=False)
-    _log.info('Starting...')
-
     # create the application model
+    _log.debug('Creating App object for IOC.')
     app = _main.App()
     db = app.get_database()
     db.update({'Version-Cte': {'type': 'string', 'value': __version__}})
 
+    ioc_prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
     ioc_prefix = _pvs.IOC_PREFIX
     ioc_name = 'si-rf-monitor'
 
@@ -82,25 +86,33 @@ def run():
     running = _util.check_pv_online(
         pvname=ioc_prefix + sorted(db.keys())[0],
         use_prefix=False, timeout=0.5)
-    # add PV Properties-Cte with list of all IOC PVs:
+
     db = _csdev.add_pvslist_cte(db)
+
+    # add PV Properties-Cte with list of all IOC PVs:
     if running:
         strf = f'Another {ioc_name} is already running!'
         _log.error(strf)
         return
+
     _util.print_ioc_banner(
         ioc_name, db, 'Monitor Criomodule Temps.', __version__, ioc_prefix
     )
 
     # create a new simple pcaspy server and driver to respond client's requests
+    _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()
+    _attribute_access_security_group(server, db)
+    _log.info('Setting Server Database.')
     server.createPV(ioc_prefix, db)
 
-    # create the driver
+    _log.info('Creating Driver.')
     pcas_driver = _PCASDriver(app)
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
+    server_thread.daemon = True
+    _log.info('Starting Server Thread.')
     server_thread.start()
 
     # main loop
@@ -108,10 +120,14 @@ def run():
     while not stop_event:
         pcas_driver.app.process(INTERVAL)
 
-    print('exiting...')
-    # send stop signal to server thread
+    _log.info('Stoping Server Thread...')
+    # sends stop signal to server thread
     server_thread.stop()
     server_thread.join()
+    _log.info('Server Thread stopped.')
+    app.orbit.shutdown()
+    app.correctors.shutdown()
+    _log.info('Good Bye.')
 
 
 if __name__ == '__main__':

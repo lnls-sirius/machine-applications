@@ -1,21 +1,16 @@
 """PVs definition for the IOC."""
 
-with open('VERSION', 'r') as _f:
-    __version__ = _f.read().strip()
-
-MAX_BUFFER_SIZE = 1800
+MAX_BUFFER_SIZE = 3600
 MIN_INTERVAL = 0.1  # [s]
 MAX_TEMP_DIFF = 50  # [K]
 MAX_TEMP_RATE = 0.5  # [K/min]
 DEF_TIME_WIN = 40  # [s]
-MIN_TIME_WIN = 2  # [s]
-MAX_TIME_WIN = 300  # [s]
+MIN_TIME_WIN = 3  # [s]
+MAX_TIME_WIN = 1800  # [s]
 
 IOC_PREFIX = 'SI-03SP:RF-CryoMod-2:'
 
 pvs_database = {
-    'Version-Cte': {'type': 'string', 'value': __version__},
-
     'CavTempRateTimeInterval-SP': {
         'type': 'float', 'value': DEF_TIME_WIN, 'prec': 3, 'unit': 's',
         'hilim': MIN_TIME_WIN, 'high': MIN_TIME_WIN, 'hihi': MIN_TIME_WIN,
