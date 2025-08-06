@@ -28,6 +28,6 @@ setup(
     packages=['si_rf_monitor'],
     install_requires=_requirements,
     package_data={'si_rf_monitor': ['VERSION']},
-    scripts=[],
+    scripts=["scripts/sirius-ioc-si-rf-monitor.py", ],
     zip_safe=False
 )
