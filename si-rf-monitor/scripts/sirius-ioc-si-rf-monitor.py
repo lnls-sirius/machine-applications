@@ -4,4 +4,4 @@
 from si_rf_monitor import si_rf_monitor
 
 if __name__ == '__main__':
-    si_rf_monitor.run(False)
+    si_rf_monitor.run()
