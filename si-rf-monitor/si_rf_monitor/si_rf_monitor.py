@@ -3,8 +3,8 @@
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 import signal as _signal
-import main as _main
-
+from . import main as _main
+from . import pvs as _pvs
 
 INTERVAL = 0.1
 stop_event = False
@@ -59,7 +59,7 @@ def run():
 
     # create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
-    server.createPV(PREFIX, db)
+    server.createPV(_pvs.IOC_PREFIX, db)
 
     # create the driver
     pcas_driver = _PCASDriver(app)
