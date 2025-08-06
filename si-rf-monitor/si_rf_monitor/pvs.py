@@ -4,8 +4,8 @@ MAX_BUFFER_SIZE = 3600
 MIN_INTERVAL = 0.1  # [s]
 MAX_TEMP_DIFF = 50  # [K]
 MAX_TEMP_RATE = 0.5  # [K/min]
-DEF_TIME_WIN = 40  # [s]
-MIN_TIME_WIN = 3  # [s]
+DEF_TIME_WIN = 60  # [s]
+MIN_TIME_WIN = 20  # [s]
 MAX_TIME_WIN = 1800  # [s]
 
 IOC_PREFIX = 'SI-03SP:RF-CryoMod-2:'
