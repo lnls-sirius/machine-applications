@@ -20,6 +20,7 @@ class App(_Callback):
 
     def __init__(self, driver=None):
         """Initialize the instance."""
+        super().__init__()
         self._driver = driver
         self._time_window = _pvs.DEF_TIME_WIN  # [s]
         # Temperatura no topo da cavidade
@@ -86,7 +87,7 @@ class App(_Callback):
         self._thread_dif = _Repeat(
             _pvs.MIN_INTERVAL,
             self._calc_diff,
-            args=('ves', ),
+            args=(),
             is_cathread=True
         )
         self._thread_top.start()
