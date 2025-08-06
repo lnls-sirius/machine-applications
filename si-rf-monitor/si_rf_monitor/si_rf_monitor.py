@@ -22,6 +22,7 @@ class _PCASDriver(_pcaspy.Driver):
     def __init__(self, app=None):
         super().__init__()
         self.app = app or _main.App()
+        self.app.add_callback(self.update_pv)
         self.app.driver = self
 
     def read(self, reason):
@@ -37,6 +38,12 @@ class _PCASDriver(_pcaspy.Driver):
             self.setParam(reason, value)
         self.updatePVs()
         return app_ret
+
+    def update_pv(self, pvname, value, **kwargs):
+        """Update PV."""
+        _ = kwargs
+        self.setParam(pvname, value)
+        self.updatePV(pvname)
 
 
 def run():
