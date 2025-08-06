@@ -125,8 +125,6 @@ def run():
     server_thread.stop()
     server_thread.join()
     _log.info('Server Thread stopped.')
-    app.orbit.shutdown()
-    app.correctors.shutdown()
     _log.info('Good Bye.')
 
 
