@@ -171,7 +171,7 @@ class App(_Callback):
         idcs &= _np.logical_not(_np.isnan(vals))
 
         if idcs.sum() < 3:
-            _log.error('Did Not Fit. Size of buffer is too small.')
+            _log.error('Did Not Fit "%s". Buffer too small.', which)
             return
 
         tim = tim[idcs]
