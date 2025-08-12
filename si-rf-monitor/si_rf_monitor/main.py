@@ -17,6 +17,8 @@ class App(_Callback):
     """Main Class of the IOC Logic."""
 
     pvs_database = _pvs.pvs_database
+    MIN_NUM_POINTS_2_FIT = 5
+    NUM_SECS_TO_WAIT_UPDATE = 4  # integer [s]
 
     def __init__(self, driver=None):
         """Initialize the instance."""
@@ -146,22 +148,31 @@ class App(_Callback):
 
     def _calc_rate(self, which):
         if which == 'top':
+            pvo = self._pv_top
             evt = self._evt_top
             buf = self._buffer_top
             pref = 'BT212_CavTopTemp'
         elif which == 'bot':
+            pvo = self._pv_bot
             evt = self._evt_bot
             buf = self._buffer_bot
             pref = 'BT211_CavBotTemp'
         elif which == 'ves':
+            pvo = self._pv_ves
             evt = self._evt_ves
             buf = self._buffer_ves
             pref = 'BT210_HeVesselHeaterTemp'
         else:
             raise ValueError('Wrong value for input "which".')
 
-        while not evt.wait(1):
-            pass
+        # NOTE: When temperature does not change whithin some range, the PV is
+        # not updated. Here, I wait five seconds and add some point to the
+        # serie to avoid fitting problems.
+        for _ in range(int(self.NUM_SECS_TO_WAIT_UPDATE)):
+            if evt.wait(1):
+                break
+        else:
+            self._update_buffer(pvo.pvname, pvo.value)
         evt.clear()
 
         # calculate lifetime
@@ -170,7 +181,7 @@ class App(_Callback):
         idcs = tim > _time.time() - self._time_window
         idcs &= _np.logical_not(_np.isnan(vals))
 
-        if idcs.sum() < 3:
+        if idcs.sum() < self.MIN_NUM_POINTS_2_FIT:
             _log.error('Did Not Fit "%s". Buffer too small.', which)
             return
 
