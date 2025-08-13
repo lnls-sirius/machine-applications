@@ -6,6 +6,7 @@ import time as _time
 
 import numpy as _np
 from pcaspy import Alarm as _Alarm, Severity as _Severity
+from siriuspy.callbacks import Callback as _Callback
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 from siriuspy.thread import LoopQueueThread as _LoopQueueThread
 from siriuspy.util import get_last_commit_hash as _get_last_commit_hash, \
@@ -14,7 +15,7 @@ from siriuspy.util import get_last_commit_hash as _get_last_commit_hash, \
 __version__ = _get_last_commit_hash()
 
 
-class App:
+class App(_Callback):
     """Power Supply IOC Application."""
 
     _sleep_scan = 0.050  # [s]
@@ -82,6 +83,7 @@ class App:
         qsize = self._queue.qsize()
         if qsize > 2:
             logmsg = f'[Q] - write queue size is large: {qsize}'
+            self.run_callbacks('Log-Mon', logmsg)
             _log.warning(logmsg)
 
         # then scan bbb state for updates.
@@ -119,7 +121,9 @@ class App:
                 'IDFFMode-Sel',
                 'OpMode-Sel', 'PwrState-Sel'):
             ignorestr, wstr = (' (IDFFMode On)', 'W!')
-            _log.info(strf.format(wstr, reason, str(value), ignorestr))
+            logmsg = strf.format(wstr, reason, str(value), ignorestr)
+            self.run_callbacks('Log-Mon', logmsg)
+            _log.info(logmsg)
             return
 
         if idff_state and 'IDFF' not in reason:
@@ -131,7 +135,9 @@ class App:
             self._counter_wfmoffsetkick_sp += 1
             if self._counter_wfmoffsetkick_sp == 100:
                 ignorestr = ' (100 events)'
-                _log.info(strf.format(wstr, reason, str(value), ignorestr))
+                logmsg = strf.format(wstr, reason, str(value), ignorestr)
+                self.run_callbacks('Log-Mon', logmsg)
+                _log.info(logmsg)
                 self._counter_wfmoffsetkick_sp = 0
         else:
             # print all other write events
@@ -142,8 +148,7 @@ class App:
         # messages or unnecessary delays. Whether we should extend
         # it to all power supplies remains to be checked.
         if self._check_write_immediately(reason, value):
-            self.driver.setParam(reason, value)
-            self.driver.updatePV(reason)
+            self.run_callbacks(reason, value)
 
         bbb = self._dev2bbb[pvname.device_name]
         self._queue.put(
@@ -184,11 +189,11 @@ class App:
         priority_pvs = bbb.write(pvname.device_name, pvname.propty, value)
         for reason, val in priority_pvs.items():
             if val is not None:
-                self.driver.setParam(reason, val)
+                self.run_callbacks(reason, val)
             else:
                 self.driver.setParamStatus(
                     reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
-            self.driver.updatePV(reason)
+                self.driver.updatePV(reason)
 
         # print('{:<30s} : {:>9.3f} ms'.format(
         #     'IOC.write (end)', 1e3*(_time.time() % 1)))
