@@ -195,7 +195,7 @@ class App(_Callback):
             else:
                 self.driver.setParamStatus(
                     reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
-                self.driver.updatePV(reason)
+            self.driver.updatePV(reason)
 
         # print('{:<30s} : {:>9.3f} ms'.format(
         #     'IOC.write (end)', 1e3*(_time.time() % 1)))
