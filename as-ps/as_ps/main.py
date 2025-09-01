@@ -123,7 +123,7 @@ class App(_Callback):
             ignorestr, wstr = (' (IDFFMode On)', 'W!')
             logmsg = strf.format(wstr, reason, str(value), ignorestr)
             self.run_callbacks('Log-Mon', logmsg)
-            _log.info(logmsg)
+            _log.warning(logmsg)
             return
 
         if idff_state and 'IDFF' not in reason:
@@ -137,11 +137,13 @@ class App(_Callback):
                 ignorestr = ' (100 events)'
                 logmsg = strf.format(wstr, reason, str(value), ignorestr)
                 self.run_callbacks('Log-Mon', logmsg)
-                _log.info(logmsg)
+                _log.warning(logmsg)
                 self._counter_wfmoffsetkick_sp = 0
         else:
             # print all other write events
-            _log.info(strf.format(wstr, reason, str(value), ignorestr))
+            logmsg = strf.format(wstr, reason, str(value), ignorestr)
+            self.run_callbacks('Log-Mon', logmsg)
+            _log.warning(logmsg)
 
         # NOTE: This modified behaviour is to allow loading
         # global_config to complete without artificial warning
@@ -208,7 +210,6 @@ class App(_Callback):
 
     def _update_ioc_database(
             self, bbb, devname, dev_connected=True, force_update=False):
-
         # connection state changed?
         if dev_connected == self._dev2conn[devname]:
             conn_changed = False
@@ -228,7 +229,6 @@ class App(_Callback):
             strength_names = tuple()
 
         for reason, new_value in data.items():
-
             # set strength limits
             for strename in strength_names:
                 if strename is not None and strename in reason:
@@ -303,11 +303,12 @@ class App(_Callback):
                 # simple type comparison
                 return new_value != old_value
         except Exception as exception:
-            print()
-            print('--- debug ---')
-            print('exception : {}'.format(type(exception)))
-            print('reason    : {}'.format(reason))
-            print('old_value : {}'.format(str(old_value)[:1000]))
-            print('new_value : {}'.format(str(new_value)[:1000]))
-            print(' !!!')
+            logmsg = '--- debug ---'
+            logmsg += '\nexception : {}'.format(type(exception))
+            logmsg += '\nreason    : {}'.format(reason)
+            logmsg += '\nold_value : {}'.format(str(old_value)[:1000])
+            logmsg += '\nnew_value : {}'.format(str(new_value)[:1000])
+            logmsg += '\n !!!'
+            self.run_callbacks('Log-Mon', logmsg)
+            _log.exception(logmsg)
             return True
