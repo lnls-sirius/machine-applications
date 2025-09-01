@@ -123,7 +123,7 @@ class App(_Callback):
             ignorestr, wstr = (' (IDFFMode On)', 'W!')
             logmsg = strf.format(wstr, reason, str(value), ignorestr)
             self.run_callbacks('Log-Mon', logmsg)
-            _log.warning(logmsg)
+            _log.info(logmsg)
             return
 
         if idff_state and 'IDFF' not in reason:
@@ -137,13 +137,13 @@ class App(_Callback):
                 ignorestr = ' (100 events)'
                 logmsg = strf.format(wstr, reason, str(value), ignorestr)
                 self.run_callbacks('Log-Mon', logmsg)
-                _log.warning(logmsg)
+                _log.info(logmsg)
                 self._counter_wfmoffsetkick_sp = 0
         else:
             # print all other write events
             logmsg = strf.format(wstr, reason, str(value), ignorestr)
             self.run_callbacks('Log-Mon', logmsg)
-            _log.warning(logmsg)
+            _log.info(logmsg)
 
         # NOTE: This modified behaviour is to allow loading
         # global_config to complete without artificial warning
