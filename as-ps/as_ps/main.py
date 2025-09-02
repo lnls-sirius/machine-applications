@@ -20,7 +20,7 @@ class App(_Callback):
     _sleep_scan = 0.050  # [s]
     _regexp_setpoint = _re.compile('^.*-(SP|Sel)$')
 
-    def __init__(self, driver, bbblist, dbset):
+    def __init__(self, driver, bbb, dbset):
         """Init application."""
         # --- init begin
 
@@ -38,10 +38,9 @@ class App(_Callback):
         self._counter_wfmoffsetkick_sp = 0
 
         # mapping device to bbb
-        self._bbblist = bbblist
-        # NOTE: change IOC to accept only one BBB !!!
+        self._bbb = bbb
 
-        idffmode_pvname = self.bbblist[0].psnames[0] + ':IDFFMode-Sts'
+        idffmode_pvname = self.bbb.psnames[0] + ':IDFFMode-Sts'
         if idffmode_pvname in dbset:
             self._has_idffmode = True
         else:
@@ -52,8 +51,7 @@ class App(_Callback):
             self._create_bbb_dev_dict()
 
         # initializes beaglebones
-        for bbb in bbblist:
-            bbb.init()
+        self._bbb.init()
 
     @property
     def driver(self):
@@ -61,9 +59,9 @@ class App(_Callback):
         return self._driver
 
     @property
-    def bbblist(self):
-        """Return list of beaglebone objects."""
-        return self._bbblist
+    def bbb(self):
+        """Return beaglebone object."""
+        return self._bbb
 
     def process(self):
         """Process all write requests in queue and does a BBB scan."""
@@ -76,8 +74,7 @@ class App(_Callback):
             self._logger.warning(logmsg)
 
         # then scan bbb state for updates.
-        for bbb in self.bbblist:
-            self.scan_bbb(bbb)
+        self.scan_bbb(self.bbb)
 
         # sleep, if necessary
         dt_ = self._interval - (_time.time() - t0_)
@@ -165,14 +162,11 @@ class App(_Callback):
         # build _bbb_devices dict
         dev2bbb = dict()
         dev2conn = dict()
-        interval = float('Inf')
-        for bbb in self.bbblist:
-            # get minimum time interval for BBB
-            interval = min(interval, bbb.update_interval())
-            # create bbb_device dict
-            for dev_name in bbb.psnames:
-                dev2conn[dev_name] = None
-                dev2bbb[dev_name] = bbb
+        interval = self.bbb.update_interval()
+        # create bbb_device dict
+        for dev_name in self.bbb.psnames:
+            dev2conn[dev_name] = None
+            dev2bbb[dev_name] = self.bbb
         return dev2bbb, dev2conn, interval
 
     def _write_operation(self, bbb, pvname, value):

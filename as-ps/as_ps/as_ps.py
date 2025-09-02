@@ -10,8 +10,8 @@ import pcaspy.tools as _pcaspy_tools
 from PRUserial485 import EthBridgeClient as _EthBridgeClient
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
-from siriuspy.pwrsupply.factory import BBBFactory
 from siriuspy.logging import get_logger
+from siriuspy.pwrsupply.factory import BBBFactory
 
 from .main import App
 
@@ -39,9 +39,9 @@ def _attribute_access_security_group(server, dbase):
 
 class _PCASDriver(_pcaspy.Driver):
 
-    def __init__(self, bbblist, dbset):
+    def __init__(self, bbb, dbset):
         super().__init__()
-        self.app = App(self, bbblist, dbset)
+        self.app = App(self, bbb, dbset)
         self.app.add_callback(self.update_pv)
 
     def read(self, reason):
@@ -61,7 +61,7 @@ class _PCASDriver(_pcaspy.Driver):
         self.updatePV(pvname)
 
 
-def run(bbbnames):
+def run(bbbname):
     """Run function.
 
     This is the main function of the IOC:
@@ -73,8 +73,6 @@ def run(bbbnames):
     """
     logger = get_logger(run)
 
-    # NOTE: change IOC to accept only one BBB !!!
-
     # Define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
@@ -84,14 +82,10 @@ def run(bbbnames):
     print('')
     print('--- PS IOC structures initialization ---\n')
 
-    # Create BBBs
-    bbblist = list()
+    # Create BBB
     dbset = dict()
-    for bbbname in bbbnames:
-        bbbname = bbbname.replace('--', ':')
-        bbb, dbase = BBBFactory.create(_EthBridgeClient, bbbname=bbbname)
-        bbblist.append(bbb)
-        dbset.update(dbase)
+    bbb, dbase = BBBFactory.create(_EthBridgeClient, bbbname=bbbname)
+    dbset.update(dbase)
 
     version = _util.get_last_commit_hash()
     ioc_prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
@@ -119,7 +113,7 @@ def run(bbbnames):
 
     # Create driver to handle requests
     logger.info("Creating Driver.")
-    driver = _PCASDriver(bbblist, dbset)
+    driver = _PCASDriver(bbb, dbset)
 
     # Create a new thread responsible for listening for client connections
     thread_server = _pcaspy_tools.ServerThread(server)
