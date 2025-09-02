@@ -1,6 +1,5 @@
 """Main application."""
 
-import logging as _log
 import re as _re
 import time as _time
 
@@ -9,8 +8,8 @@ from pcaspy import Alarm as _Alarm, Severity as _Severity
 from siriuspy.callbacks import Callback as _Callback
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 from siriuspy.thread import LoopQueueThread as _LoopQueueThread
-from siriuspy.util import get_last_commit_hash as _get_last_commit_hash, \
-    print_ioc_banner as _print_ioc_banner
+from siriuspy.util import get_last_commit_hash as _get_last_commit_hash
+from siriuspy.logging import get_logger as _get_logger
 
 __version__ = _get_last_commit_hash()
 
@@ -21,11 +20,12 @@ class App(_Callback):
     _sleep_scan = 0.050  # [s]
     _regexp_setpoint = _re.compile('^.*-(SP|Sel)$')
 
-    def __init__(self, driver, bbblist, dbset, prefix):
+    def __init__(self, driver, bbblist, dbset):
         """Init application."""
         # --- init begin
 
         self._driver = driver
+        self._logger = _get_logger(self)
 
         # flag to indicate idff processing is taking place
         self._idff_processing = False
@@ -42,7 +42,7 @@ class App(_Callback):
         # NOTE: change IOC to accept only one BBB !!!
 
         idffmode_pvname = self.bbblist[0].psnames[0] + ':IDFFMode-Sts'
-        if idffmode_pvname in dbset[prefix]:
+        if idffmode_pvname in dbset:
             self._has_idffmode = True
         else:
             self._has_idffmode = False
@@ -54,17 +54,6 @@ class App(_Callback):
         # initializes beaglebones
         for bbb in bbblist:
             bbb.init()
-
-        # -- init end
-        print('---\n')
-
-        # print info about the IOC
-        _print_ioc_banner(
-            ioc_name='PS IOC',
-            db=dbset[prefix],
-            description='Power Supply IOC (FAC)',
-            version=__version__,
-            prefix=prefix)
 
     @property
     def driver(self):
@@ -84,7 +73,7 @@ class App(_Callback):
         if qsize > 2:
             logmsg = f'[Q] - write queue size is large: {qsize}'
             self.run_callbacks('Log-Mon', logmsg)
-            _log.warning(logmsg)
+            self._logger.warning(logmsg)
 
         # then scan bbb state for updates.
         for bbb in self.bbblist:
@@ -95,11 +84,11 @@ class App(_Callback):
         _time.sleep(max(dt_, 0))
 
         # NOTE: measure this interval for various BBBs...
-        # _log.info("process.... {:.3f} ms".format(1000*(t1_-t0_)))
+        # self._logger.info("process.... {:.3f} ms".format(1000*(t1_-t0_)))
 
     def read(self, reason):
         """Read from database."""
-        # _log.info("[{:.2s}] - {:.32s} = {:.50s}".format(
+        # self._logger.info("[{:.2s}] - {:.32s} = {:.50s}".format(
         #     'R ', reason, str(self.driver.getParam(reason))))
 
     def write(self, reason, value):
@@ -123,7 +112,7 @@ class App(_Callback):
             ignorestr, wstr = (' (IDFFMode On)', 'W!')
             logmsg = strf.format(wstr, reason, str(value), ignorestr)
             self.run_callbacks('Log-Mon', logmsg)
-            _log.info(logmsg)
+            self._logger.info(logmsg)
             return
 
         if idff_state and 'IDFF' not in reason:
@@ -137,13 +126,13 @@ class App(_Callback):
                 ignorestr = ' (100 events)'
                 logmsg = strf.format(wstr, reason, str(value), ignorestr)
                 self.run_callbacks('Log-Mon', logmsg)
-                _log.info(logmsg)
+                self._logger.info(logmsg)
                 self._counter_wfmoffsetkick_sp = 0
         else:
             # print all other write events
             logmsg = strf.format(wstr, reason, str(value), ignorestr)
             self.run_callbacks('Log-Mon', logmsg)
-            _log.info(logmsg)
+            self._logger.info(logmsg)
 
         # NOTE: This modified behaviour is to allow loading
         # global_config to complete without artificial warning
@@ -303,12 +292,10 @@ class App(_Callback):
                 # simple type comparison
                 return new_value != old_value
         except Exception as exception:
-            logmsg = '--- debug ---'
-            logmsg += '\nexception : {}'.format(type(exception))
-            logmsg += '\nreason    : {}'.format(reason)
-            logmsg += '\nold_value : {}'.format(str(old_value)[:1000])
-            logmsg += '\nnew_value : {}'.format(str(new_value)[:1000])
-            logmsg += '\n !!!'
-            self.run_callbacks('Log-Mon', logmsg)
-            _log.exception(logmsg)
+            self._logger.exception('--- debug ---')
+            self._logger.exception('exception : %s', str(type(exception)))
+            self._logger.exception('reason    : %s', reason)
+            self._logger.exception('old_value : %s', str(old_value)[:1000])
+            self._logger.exception('new_value : %s', str(new_value)[:1000])
+            self._logger.exception(' !!!')
             return True
