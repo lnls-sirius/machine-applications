@@ -6,10 +6,10 @@ import time as _time
 import numpy as _np
 from pcaspy import Alarm as _Alarm, Severity as _Severity
 from siriuspy.callbacks import Callback as _Callback
+from siriuspy.logging import get_logger as _get_logger
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 from siriuspy.thread import LoopQueueThread as _LoopQueueThread
 from siriuspy.util import get_last_commit_hash as _get_last_commit_hash
-from siriuspy.logging import get_logger as _get_logger
 
 __version__ = _get_last_commit_hash()
 
