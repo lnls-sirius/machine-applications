@@ -6,7 +6,8 @@ import time as _time
 import numpy as _np
 from pcaspy import Alarm as _Alarm, Severity as _Severity
 from siriuspy.callbacks import Callback as _Callback
-from siriuspy.logging import get_logger as _get_logger
+from siriuspy.logging import get_logger as _get_logger, \
+    LogMonHandler as _LogMonHandler
 from siriuspy.namesys import SiriusPVName as _SiriusPVName
 from siriuspy.thread import LoopQueueThread as _LoopQueueThread
 from siriuspy.util import get_last_commit_hash as _get_last_commit_hash
@@ -26,6 +27,7 @@ class App(_Callback):
 
         self._driver = driver
         self._logger = _get_logger(self)
+        _get_logger().addHandler(_LogMonHandler(self.update_log))
 
         # flag to indicate idff processing is taking place
         self._idff_processing = False
@@ -47,8 +49,9 @@ class App(_Callback):
             self._has_idffmode = False
 
         # build dictionaries
-        self._dev2bbb, self._dev2conn, self._interval = \
+        self._dev2bbb, self._dev2conn, self._interval = (
             self._create_bbb_dev_dict()
+        )
 
         # initializes beaglebones
         self._bbb.init()
@@ -70,8 +73,7 @@ class App(_Callback):
         qsize = self._queue.qsize()
         if qsize > 2:
             logmsg = f'[Q] - write queue size is large: {qsize}'
-            self.run_callbacks('Log-Mon', logmsg)
-            self._logger.warning(logmsg)
+            self._logger.warning(logmsg, extra={'to_logmon': True})
 
         # then scan bbb state for updates.
         self.scan_bbb(self.bbb)
@@ -100,16 +102,17 @@ class App(_Callback):
         else:
             idff_state = False
 
-        strf = "[{:.2s}] - {:.32s} = {:.50s}{}"
+        strf = '[{:.2s}] - {:.32s} = {:.50s}{}'
 
         # In IDFFMode only accept specific writes
         if idff_state and pvname.propty not in (
-                'IDFFMode-Sel',
-                'OpMode-Sel', 'PwrState-Sel'):
+            'IDFFMode-Sel',
+            'OpMode-Sel',
+            'PwrState-Sel',
+        ):
             ignorestr, wstr = (' (IDFFMode On)', 'W!')
             logmsg = strf.format(wstr, reason, str(value), ignorestr)
-            self.run_callbacks('Log-Mon', logmsg)
-            self._logger.info(logmsg)
+            self._logger.info(logmsg, extra={'to_logmon': True})
             return
 
         if idff_state and 'IDFF' not in reason:
@@ -122,14 +125,12 @@ class App(_Callback):
             if self._counter_wfmoffsetkick_sp == 100:
                 ignorestr = ' (100 events)'
                 logmsg = strf.format(wstr, reason, str(value), ignorestr)
-                self.run_callbacks('Log-Mon', logmsg)
-                self._logger.info(logmsg)
+                self._logger.info(logmsg, extra={'to_logmon': True})
                 self._counter_wfmoffsetkick_sp = 0
         else:
             # print all other write events
             logmsg = strf.format(wstr, reason, str(value), ignorestr)
-            self.run_callbacks('Log-Mon', logmsg)
-            self._logger.info(logmsg)
+            self._logger.info(logmsg, extra={'to_logmon': True})
 
         # NOTE: This modified behaviour is to allow loading
         # global_config to complete without artificial warning
@@ -140,7 +141,12 @@ class App(_Callback):
 
         bbb = self._dev2bbb[pvname.device_name]
         self._queue.put(
-            (self._write_operation, (bbb, pvname, value)), block=False)
+            (self._write_operation, (bbb, pvname, value)), block=False
+        )
+
+    def update_log(self, msg):
+        """Method used by the IOC to update logs."""
+        self.run_callbacks('Log-Mon', msg)
 
     def scan_bbb(self, bbb):
         """Scan BBB devices and update ioc epics DB."""
@@ -150,11 +156,10 @@ class App(_Callback):
 
     def scan_device(self, bbb, devname, force_update=False):
         """Scan BBB device and update ioc epics DB."""
-        dev_connected = \
-            bbb.check_connected(devname) and \
-            bbb.check_connected_strength(devname)
-        self._update_ioc_database(bbb, devname, dev_connected,
-                                  force_update)
+        dev_connected = bbb.check_connected(
+            devname
+        ) and bbb.check_connected_strength(devname)
+        self._update_ioc_database(bbb, devname, dev_connected, force_update)
 
     # --- private methods ---
 
@@ -177,7 +182,8 @@ class App(_Callback):
                 self.run_callbacks(reason, val)
             else:
                 self.driver.setParamStatus(
-                    reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+                    reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM
+                )
             self.driver.updatePV(reason)
 
         # print('{:<30s} : {:>9.3f} ms'.format(
@@ -192,7 +198,8 @@ class App(_Callback):
         return True
 
     def _update_ioc_database(
-            self, bbb, devname, dev_connected=True, force_update=False):
+        self, bbb, devname, dev_connected=True, force_update=False
+    ):
         # connection state changed?
         if dev_connected == self._dev2conn[devname]:
             conn_changed = False
@@ -218,9 +225,16 @@ class App(_Callback):
                     lims = bbb.strength_limits(devname)
                     if None not in lims:
                         kwargs = self.driver.getParamInfo(reason)
-                        kwargs.update({
-                            'hihi': lims[1], 'high': lims[1], 'hilim': lims[1],
-                            'lolim': lims[0], 'low': lims[0], 'lolo': lims[0]})
+                        kwargs.update(
+                            {
+                                'hihi': lims[1],
+                                'high': lims[1],
+                                'hilim': lims[1],
+                                'lolim': lims[0],
+                                'low': lims[0],
+                                'lolo': lims[0],
+                            }
+                        )
                         self.driver.setParamInfo(reason, kwargs)
                         self.driver.updatePV(reason)
 
@@ -244,10 +258,12 @@ class App(_Callback):
             if conn_changed:
                 if dev_connected:
                     self.driver.setParamStatus(
-                        reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
+                        reason, _Alarm.NO_ALARM, _Severity.NO_ALARM
+                    )
                 else:
                     self.driver.setParamStatus(
-                        reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
+                        reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM
+                    )
 
             # if reason state was set, update its PV db entry
             if value_changed or conn_changed:
@@ -261,16 +277,18 @@ class App(_Callback):
             return False
         old_value = self.driver.getParam(reason)
         try:
-            if isinstance(old_value, (tuple, list, _np.ndarray)) or \
-                    isinstance(new_value, (tuple, list, _np.ndarray)):
+            if isinstance(old_value, (tuple, list, _np.ndarray)) or isinstance(
+                new_value, (tuple, list, _np.ndarray)
+            ):
                 # transform to numpy arrays
                 if not isinstance(old_value, _np.ndarray):
                     old_value = _np.array(old_value)
                 if not isinstance(new_value, _np.ndarray):
                     new_value = _np.array(new_value)
                 # compare
-                if len(old_value) != len(new_value) or \
-                        not _np.all(old_value == new_value):
+                if len(old_value) != len(new_value) or not _np.all(
+                    old_value == new_value
+                ):
                     # NOTE: for a 4000-element numpy array comparison in
                     # a standard intel CPU takes:
                     # 1) np.all(a == b) -> ~4 us
@@ -286,10 +304,24 @@ class App(_Callback):
                 # simple type comparison
                 return new_value != old_value
         except Exception as exception:
-            self._logger.exception('--- debug ---')
-            self._logger.exception('exception : %s', str(type(exception)))
-            self._logger.exception('reason    : %s', reason)
-            self._logger.exception('old_value : %s', str(old_value)[:1000])
-            self._logger.exception('new_value : %s', str(new_value)[:1000])
-            self._logger.exception(' !!!')
+            self._logger.exception('--- debug ---', extra={'to_logmon': True})
+            self._logger.exception(
+                'exception : %s',
+                str(type(exception)),
+                extra={'to_logmon': True},
+            )
+            self._logger.exception(
+                'reason    : %s', reason, extra={'to_logmon': True}
+            )
+            self._logger.exception(
+                'old_value : %s',
+                str(old_value)[:1000],
+                extra={'to_logmon': True},
+            )
+            self._logger.exception(
+                'new_value : %s',
+                str(new_value)[:1000],
+                extra={'to_logmon': True},
+            )
+            self._logger.exception(' !!!', extra={'to_logmon': True})
             return True

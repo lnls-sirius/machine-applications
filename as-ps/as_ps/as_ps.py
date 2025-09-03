@@ -10,7 +10,7 @@ import pcaspy.tools as _pcaspy_tools
 from PRUserial485 import EthBridgeClient as _EthBridgeClient
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
-from siriuspy.logging import get_logger
+from siriuspy.logging import configure_logging, get_logger
 from siriuspy.pwrsupply.factory import BBBFactory
 
 from .main import App
@@ -77,10 +77,8 @@ def run(bbbname):
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
-    _util.configure_log_file()
-
-    print('')
-    print('--- PS IOC structures initialization ---\n')
+    configure_logging()
+    logger.info('--- PS IOC structures initialization ---\n')
 
     # Create BBB
     dbset = dict()
@@ -101,7 +99,9 @@ def run(bbbname):
         db=dbset,
         description='Power Supply IOC (FAC)',
         version=version,
-        prefix=ioc_prefix)
+        prefix=ioc_prefix,
+        logger=logger
+        )
 
     # Create a new simple pcaspy server and driver to respond client's requests
     logger.info("Creating Server...")
