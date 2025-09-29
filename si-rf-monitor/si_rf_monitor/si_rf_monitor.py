@@ -36,21 +36,29 @@ def _attribute_access_security_group(server, db):
 
 class _PCASDriver(_pcaspy.Driver):
 
-    def __init__(self, app=None):
+    def __init__(self, apps):
         super().__init__()
-        self.app = app or _main.App()
-        self.app.add_callback(self.update_pv)
-        self.app.driver = self
+        self.apps = apps
+        self.apps[0].add_callback(self.update_pv)
+        self.apps[1].add_callback(self.update_pv)
+        self.apps[0].driver = self
+        self.apps[1].driver = self
 
     def read(self, reason):
-        value = self.app.read(reason)
+        if reason.startswith(self.apps[0].prefix):
+            value = self.apps[0].read(reason)
+        else:
+            value = self.apps[1].read(reason)
         if value is None:
             return super().read(reason)
         else:
             return value
 
     def write(self, reason, value):
-        app_ret = self.app.write(reason, value)
+        if reason.startswith(self.apps[0].prefix):
+            app_ret = self.apps[0].write(reason, value)
+        else:
+            app_ret = self.apps[1].write(reason, value)
         if app_ret:
             self.setParam(reason, value)
         self.updatePVs()
@@ -74,12 +82,15 @@ def run():
 
     # create the application model
     _log.debug('Creating App object for IOC.')
-    app = _main.App()
-    db = app.get_database()
-    db.update({'Version-Cte': {'type': 'string', 'value': __version__}})
+    app1 = _main.App(_pvs.IOCPrefixes.CRYO_1)
+    app2 = _main.App(_pvs.IOCPrefixes.CRYO_2)
+    db1 = app1.get_database()
+    db2 = app2.get_database()
+    db1.update({'Version-Cte': {'type': 'string', 'value': __version__}})
+    db2.update({'Version-Cte': {'type': 'string', 'value': __version__}})
+    db = db1 | db2
 
     ioc_prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
-    ioc_prefix = _pvs.IOC_PREFIX
     ioc_name = 'si-rf-monitor'
 
     # check if IOC is already running
@@ -87,7 +98,7 @@ def run():
         pvname=ioc_prefix + sorted(db.keys())[0],
         use_prefix=False, timeout=0.5)
 
-    db = _csdev.add_pvslist_cte(db)
+    db = _csdev.add_pvslist_cte(db, prefix=_pvs.IOCPrefixes.CRYO_1)
 
     # add PV Properties-Cte with list of all IOC PVs:
     if running:
@@ -96,7 +107,7 @@ def run():
         return
 
     _util.print_ioc_banner(
-        ioc_name, db, 'Monitor Criomodule Temps.', __version__, ioc_prefix
+        ioc_name, db, 'Monitor Criomodules Temps.', __version__, ioc_prefix
     )
 
     # create a new simple pcaspy server and driver to respond client's requests
@@ -107,7 +118,7 @@ def run():
     server.createPV(ioc_prefix, db)
 
     _log.info('Creating Driver.')
-    pcas_driver = _PCASDriver(app)
+    pcas_driver = _PCASDriver([app1, app2])
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)

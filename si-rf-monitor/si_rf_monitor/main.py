@@ -20,24 +20,25 @@ class App(_Callback):
     MIN_NUM_POINTS_2_FIT = 5
     NUM_SECS_TO_WAIT_UPDATE = 4  # integer [s]
 
-    def __init__(self, driver=None):
+    def __init__(self, prefix=None):
         """Initialize the instance."""
         super().__init__()
-        self._driver = driver
+        self.prefix = prefix or _pvs.IOCPrefixes.CRYO_1
+        self._driver = None
         self._time_window = _pvs.DEF_TIME_WIN  # [s]
         # Temperatura no topo da cavidade
         self._pv_top = _PV(
-            'SI-03SP:RF-CryoMod-2:BT212_CavTopTemp-Mon',
+            self.prefix + 'BT212_CavTopTemp-Mon',
             connection_timeout=0.05
         )
         # Temperatura na parte de baixo da cavidade
         self._pv_bot = _PV(
-            'SI-03SP:RF-CryoMod-2:BT211_CavBotTemp-Mon',
+            self.prefix + 'BT211_CavBotTemp-Mon',
             connection_timeout=0.05
             )
         # Temperatura na parte mais baixa do tanque de hélio
         self._pv_ves = _PV(
-            'SI-03SP:RF-CryoMod-2:BT210_HeVesselHeaterTemp-Mon',
+            self.prefix + 'BT210_HeVesselHeaterTemp-Mon',
             connection_timeout=0.05
         )
 
@@ -128,7 +129,7 @@ class App(_Callback):
 
         val = max(min(float(value), _pvs.MAX_TIME_WIN), _pvs.MIN_TIME_WIN)
         self._time_window = val
-        self.run_callbacks('CavTempRateTimeInterval-RB', val)
+        self.run_callbacks(self.prefix + 'CavTempRateTimeInterval-RB', val)
         return True
 
     def _calc_diff(self):
@@ -142,26 +143,33 @@ class App(_Callback):
             return
 
         dtemp = vtop - vbot
-        self.run_callbacks('CavTopBotTempDiff-Mon', dtemp)
-        self.run_callbacks('CavTopBotTempMaxDiff-Mon', _pvs.MAX_TEMP_DIFF)
-        self.run_callbacks('CavTopBotTempMinDiff-Mon', -_pvs.MAX_TEMP_DIFF)
+        self.run_callbacks(
+            self.prefix + 'CavTopBotTempDiff-Mon', dtemp
+        )
+        self.run_callbacks(
+            self.prefix + 'CavTopBotTempMaxDiff-Mon', _pvs.MAX_TEMP_DIFF
+        )
+        self.run_callbacks(
+            self.prefix + 'CavTopBotTempMinDiff-Mon', -_pvs.MAX_TEMP_DIFF
+        )
 
     def _calc_rate(self, which):
+        pref = self.prefix
         if which == 'top':
             pvo = self._pv_top
             evt = self._evt_top
             buf = self._buffer_top
-            pref = 'BT212_CavTopTemp'
+            pref += 'BT212_CavTopTemp'
         elif which == 'bot':
             pvo = self._pv_bot
             evt = self._evt_bot
             buf = self._buffer_bot
-            pref = 'BT211_CavBotTemp'
+            pref += 'BT211_CavBotTemp'
         elif which == 'ves':
             pvo = self._pv_ves
             evt = self._evt_ves
             buf = self._buffer_ves
-            pref = 'BT210_HeVesselHeaterTemp'
+            pref += 'BT210_HeVesselHeaterTemp'
         else:
             raise ValueError('Wrong value for input "which".')
 
