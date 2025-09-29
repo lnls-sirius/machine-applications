@@ -18,24 +18,24 @@ class App(_Callback):
     MIN_NUM_POINTS_2_FIT = 5
     NUM_SECS_TO_WAIT_UPDATE = 4  # integer [s]
 
-    def __init__(self, prefix=None):
+    def __init__(self, system=1):
         """Initialize the instance."""
         super().__init__()
-        self.prefix = prefix or _pvs.IOCPrefixes.CRYO_1
+        if system not in {1, 2}:
+            raise ValueError('system must be an integer value of 1 or 2')
+        self.system = system
+        self.prefix = _pvs.PREFIX_TEMPLATE(system)
+        self.prop_prefix = f'BT{system:d}'
         self._driver = None
         self._time_window = _pvs.DEF_TIME_WIN  # [s]
         # Temperatura no topo da cavidade
-        self._pv_top = _PV(
-            self.prefix + 'BT212_CavTopTemp-Mon', connection_timeout=0.05
-        )
+        pref = self.prefix + self.prop_prefix
+        self._pv_top = _PV(pref + '12_CavTopTemp-Mon', connection_timeout=0.05)
         # Temperatura na parte de baixo da cavidade
-        self._pv_bot = _PV(
-            self.prefix + 'BT211_CavBotTemp-Mon', connection_timeout=0.05
-        )
+        self._pv_bot = _PV(pref + '11_CavBotTemp-Mon', connection_timeout=0.05)
         # Temperatura na parte mais baixa do tanque de hélio
         self._pv_ves = _PV(
-            self.prefix + 'BT210_HeVesselHeaterTemp-Mon',
-            connection_timeout=0.05,
+            pref + '10_HeVesselHeaterTemp-Mon', connection_timeout=0.05
         )
 
         self._buffer_top = _SiriusPVTimeSerie(
@@ -84,7 +84,7 @@ class App(_Callback):
 
     def get_database(self):
         """Get the database."""
-        return _pvs.get_database(self.prefix)
+        return _pvs.get_database(self.prefix, system=self.system)
 
     @property
     def driver(self):
@@ -136,22 +136,22 @@ class App(_Callback):
         )
 
     def _calc_rate(self, which):
-        pref = self.prefix
+        pref = self.prefix + self.prop_prefix
         if which == 'top':
             pvo = self._pv_top
             evt = self._evt_top
             buf = self._buffer_top
-            pref += 'BT212_CavTopTemp'
+            pref += '12_CavTopTemp'
         elif which == 'bot':
             pvo = self._pv_bot
             evt = self._evt_bot
             buf = self._buffer_bot
-            pref += 'BT211_CavBotTemp'
+            pref += '11_CavBotTemp'
         elif which == 'ves':
             pvo = self._pv_ves
             evt = self._evt_ves
             buf = self._buffer_ves
-            pref += 'BT210_HeVesselHeaterTemp'
+            pref += '10_HeVesselHeaterTemp'
         else:
             raise ValueError('Wrong value for input "which".')
 

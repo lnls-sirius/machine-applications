@@ -8,12 +8,11 @@ import pcaspy.tools as _pcaspy_tools
 from siriuspy import csdev as _csdev, util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 
-from . import main as _main, pvs as _pvs
+from . import main as _main
 
 INTERVAL = 0.1
 stop_event = False
 __version__ = _util.get_last_commit_hash()
-PREFIX = ''
 
 
 def _stop_now(signum, frame):
@@ -78,8 +77,8 @@ def run():
 
     # create the application model
     _log.debug('Creating App object for IOC.')
-    app1 = _main.App(_pvs.IOCPrefixes.CRYO_1)
-    app2 = _main.App(_pvs.IOCPrefixes.CRYO_2)
+    app1 = _main.App(system=1)
+    app2 = _main.App(system=2)
     db1 = app1.get_database()
     db2 = app2.get_database()
     db1.update({
@@ -98,7 +97,7 @@ def run():
         pvname=ioc_prefix + sorted(db.keys())[0], use_prefix=False, timeout=0.5
     )
 
-    db = _csdev.add_pvslist_cte(db, prefix=_pvs.IOCPrefixes.CRYO_1)
+    db = _csdev.add_pvslist_cte(db, prefix=app1.prefix)
 
     # add PV Properties-Cte with list of all IOC PVs:
     if running:

@@ -9,15 +9,15 @@ MIN_TIME_WIN = 20  # [s]
 MAX_TIME_WIN = 1800  # [s]
 
 
-class IOCPrefixes:
+PREFIX_TEMPLATE = 'SI-03SP:RF-CryoMod-{0:d}:'.format
+
+
+def get_database(prefix='', system=1):
     """."""
+    if system not in {1, 2}:
+        raise ValueError('system must be an integer value of 1 or 2')
 
-    CRYO_1 = 'SI-03SP:RF-CryoMod-1:'
-    CRYO_2 = 'SI-03SP:RF-CryoMod-2:'
-
-
-def get_database(prefix=''):
-    """."""
+    prop_prefix = f'BT{system:d}'
     return {
         prefix + 'CavTempRateTimeInterval-SP': {
             'type': 'float',
@@ -43,7 +43,7 @@ def get_database(prefix=''):
             'low': MAX_TIME_WIN,
             'lolo': MAX_TIME_WIN,
         },
-        prefix + 'BT212_CavTopTempRate-Mon': {
+        prefix + prop_prefix + '12_CavTopTempRate-Mon': {
             'type': 'float',
             'value': 0,
             'prec': 3,
@@ -55,7 +55,7 @@ def get_database(prefix=''):
             'low': -MAX_TEMP_RATE,
             'lolo': -MAX_TEMP_RATE,
         },
-        prefix + 'BT211_CavBotTempRate-Mon': {
+        prefix + prop_prefix + '11_CavBotTempRate-Mon': {
             'type': 'float',
             'value': 0,
             'prec': 3,
@@ -67,7 +67,7 @@ def get_database(prefix=''):
             'low': -MAX_TEMP_RATE,
             'lolo': -MAX_TEMP_RATE,
         },
-        prefix + 'BT210_HeVesselHeaterTempRate-Mon': {
+        prefix + prop_prefix + '10_HeVesselHeaterTempRate-Mon': {
             'type': 'float',
             'value': 0,
             'prec': 3,
@@ -79,37 +79,37 @@ def get_database(prefix=''):
             'low': -MAX_TEMP_RATE,
             'lolo': -MAX_TEMP_RATE,
         },
-        prefix + 'BT212_CavTopTempMaxRate-Mon': {
+        prefix + prop_prefix + '12_CavTopTempMaxRate-Mon': {
             'type': 'float',
             'value': MAX_TEMP_RATE,
             'prec': 3,
             'unit': 'K/min',
         },
-        prefix + 'BT211_CavBotTempMaxRate-Mon': {
+        prefix + prop_prefix + '11_CavBotTempMaxRate-Mon': {
             'type': 'float',
             'value': MAX_TEMP_RATE,
             'prec': 3,
             'unit': 'K/min',
         },
-        prefix + 'BT210_HeVesselHeaterTempMaxRate-Mon': {
+        prefix + prop_prefix + '10_HeVesselHeaterTempMaxRate-Mon': {
             'type': 'float',
             'value': MAX_TEMP_RATE,
             'prec': 3,
             'unit': 'K/min',
         },
-        prefix + 'BT212_CavTopTempMinRate-Mon': {
+        prefix + prop_prefix + '12_CavTopTempMinRate-Mon': {
             'type': 'float',
             'value': -MAX_TEMP_RATE,
             'prec': 3,
             'unit': 'K/min',
         },
-        prefix + 'BT211_CavBotTempMinRate-Mon': {
+        prefix + prop_prefix + '11_CavBotTempMinRate-Mon': {
             'type': 'float',
             'value': -MAX_TEMP_RATE,
             'prec': 3,
             'unit': 'K/min',
         },
-        prefix + 'BT210_HeVesselHeaterTempMinRate-Mon': {
+        prefix + prop_prefix + '10_HeVesselHeaterTempMinRate-Mon': {
             'type': 'float',
             'value': -MAX_TEMP_RATE,
             'prec': 3,
