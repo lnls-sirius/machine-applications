@@ -15,7 +15,6 @@ from . import pvs as _pvs
 class App(_Callback):
     """Main Class of the IOC Logic."""
 
-    pvs_database = _pvs.pvs_database
     MIN_NUM_POINTS_2_FIT = 5
     NUM_SECS_TO_WAIT_UPDATE = 4  # integer [s]
 
