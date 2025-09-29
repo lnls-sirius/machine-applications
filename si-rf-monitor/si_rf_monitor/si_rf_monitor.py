@@ -129,7 +129,7 @@ def run():
     # main loop
     # while not stop_event.is_set():
     while not stop_event:
-        pcas_driver.app.process(INTERVAL)
+        pcas_driver.apps[0].process(INTERVAL)
 
     _log.info('Stoping Server Thread...')
     # sends stop signal to server thread
