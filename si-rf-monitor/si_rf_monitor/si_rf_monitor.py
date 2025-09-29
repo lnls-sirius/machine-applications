@@ -82,8 +82,12 @@ def run():
     app2 = _main.App(_pvs.IOCPrefixes.CRYO_2)
     db1 = app1.get_database()
     db2 = app2.get_database()
-    db1.update({'Version-Cte': {'type': 'string', 'value': __version__}})
-    db2.update({'Version-Cte': {'type': 'string', 'value': __version__}})
+    db1.update({
+        app1.prefix + 'Version-Cte': {'type': 'string', 'value': __version__}
+    })
+    db2.update({
+        app2.prefix + 'Version-Cte': {'type': 'string', 'value': __version__}
+    })
     db = db1 | db2
 
     ioc_prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
