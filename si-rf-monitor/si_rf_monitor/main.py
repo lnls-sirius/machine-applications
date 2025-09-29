@@ -2,7 +2,6 @@
 
 import logging as _log
 import time as _time
-from copy import deepcopy as _dcopy
 from threading import Event as _Event
 
 import numpy as _np
@@ -86,7 +85,7 @@ class App(_Callback):
 
     def get_database(self):
         """Get the database."""
-        return _dcopy(self.pvs_database)
+        return _pvs.get_database(self.prefix)
 
     @property
     def driver(self):
