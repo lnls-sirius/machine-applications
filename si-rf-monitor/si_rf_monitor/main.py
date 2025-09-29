@@ -28,37 +28,35 @@ class App(_Callback):
         self._time_window = _pvs.DEF_TIME_WIN  # [s]
         # Temperatura no topo da cavidade
         self._pv_top = _PV(
-            self.prefix + 'BT212_CavTopTemp-Mon',
-            connection_timeout=0.05
+            self.prefix + 'BT212_CavTopTemp-Mon', connection_timeout=0.05
         )
         # Temperatura na parte de baixo da cavidade
         self._pv_bot = _PV(
-            self.prefix + 'BT211_CavBotTemp-Mon',
-            connection_timeout=0.05
-            )
+            self.prefix + 'BT211_CavBotTemp-Mon', connection_timeout=0.05
+        )
         # Temperatura na parte mais baixa do tanque de hélio
         self._pv_ves = _PV(
             self.prefix + 'BT210_HeVesselHeaterTemp-Mon',
-            connection_timeout=0.05
+            connection_timeout=0.05,
         )
 
         self._buffer_top = _SiriusPVTimeSerie(
             pv=self._pv_top,
             mode=0,
             nr_max_points=_pvs.MAX_BUFFER_SIZE,
-            use_pv_timestamp=False
+            use_pv_timestamp=False,
         )
         self._buffer_bot = _SiriusPVTimeSerie(
             pv=self._pv_bot,
             mode=0,
             nr_max_points=_pvs.MAX_BUFFER_SIZE,
-            use_pv_timestamp=False
+            use_pv_timestamp=False,
         )
         self._buffer_ves = _SiriusPVTimeSerie(
             pv=self._pv_ves,
             mode=0,
             nr_max_points=_pvs.MAX_BUFFER_SIZE,
-            use_pv_timestamp=False
+            use_pv_timestamp=False,
         )
 
         self._evt_top = _Event()
@@ -70,28 +68,16 @@ class App(_Callback):
         self._pv_ves.add_callback(self._update_buffer)
 
         self._thread_top = _Repeat(
-            _pvs.MIN_INTERVAL,
-            self._calc_rate,
-            args=('top', ),
-            is_cathread=True
+            _pvs.MIN_INTERVAL, self._calc_rate, args=('top',), is_cathread=True
         )
         self._thread_bot = _Repeat(
-            _pvs.MIN_INTERVAL,
-            self._calc_rate,
-            args=('bot', ),
-            is_cathread=True
+            _pvs.MIN_INTERVAL, self._calc_rate, args=('bot',), is_cathread=True
         )
         self._thread_ves = _Repeat(
-            _pvs.MIN_INTERVAL,
-            self._calc_rate,
-            args=('ves', ),
-            is_cathread=True
+            _pvs.MIN_INTERVAL, self._calc_rate, args=('ves',), is_cathread=True
         )
         self._thread_dif = _Repeat(
-            _pvs.MIN_INTERVAL,
-            self._calc_diff,
-            args=(),
-            is_cathread=True
+            _pvs.MIN_INTERVAL, self._calc_diff, args=(), is_cathread=True
         )
         self._thread_top.start()
         self._thread_bot.start()
@@ -143,9 +129,7 @@ class App(_Callback):
             return
 
         dtemp = vtop - vbot
-        self.run_callbacks(
-            self.prefix + 'CavTopBotTempDiff-Mon', dtemp
-        )
+        self.run_callbacks(self.prefix + 'CavTopBotTempDiff-Mon', dtemp)
         self.run_callbacks(
             self.prefix + 'CavTopBotTempMaxDiff-Mon', _pvs.MAX_TEMP_DIFF
         )

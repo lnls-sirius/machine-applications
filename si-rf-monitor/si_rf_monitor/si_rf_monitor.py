@@ -5,13 +5,10 @@ import signal as _signal
 
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-
-from siriuspy import util as _util
-from siriuspy import csdev as _csdev
+from siriuspy import csdev as _csdev, util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 
-from . import main as _main
-from . import pvs as _pvs
+from . import main as _main, pvs as _pvs
 
 INTERVAL = 0.1
 stop_event = False
@@ -35,7 +32,6 @@ def _attribute_access_security_group(server, db):
 
 
 class _PCASDriver(_pcaspy.Driver):
-
     def __init__(self, apps):
         super().__init__()
         self.apps = apps
@@ -95,8 +91,8 @@ def run():
 
     # check if IOC is already running
     running = _util.check_pv_online(
-        pvname=ioc_prefix + sorted(db.keys())[0],
-        use_prefix=False, timeout=0.5)
+        pvname=ioc_prefix + sorted(db.keys())[0], use_prefix=False, timeout=0.5
+    )
 
     db = _csdev.add_pvslist_cte(db, prefix=_pvs.IOCPrefixes.CRYO_1)
 
