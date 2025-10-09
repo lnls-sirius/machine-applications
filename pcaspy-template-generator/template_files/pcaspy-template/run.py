@@ -1,28 +1,53 @@
 #!/usr/bin/env python-sirius
+"""."""
+
+import logging as _log
+import os as _os
+import signal as _signal
+import sys as _sys
+import time as _time
 
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-import signal as _signal
-import main as _main
+from siriuspy import util as _util
+from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 
+from .main import App as _App
 
 INTERVAL = 0.1
-stop_event = False
-PREFIX = ''
+STOP_EVENT = False
+
+IOC_PREFIX = 'AS-Glob:AP-DEVICE:'
+IOC_NAME = 'AS-AP-DEVICE'
 
 
 def _stop_now(signum, frame):
-    print(' - SIGNAL received.')
-    global stop_event
-    stop_event = True
+    _ = frame
+    sname = _signal.Signals(signum).name
+    tstamp = _util.get_timestamp()
+    strf = f'{sname} received at {tstamp}'
+    _log.warning(strf)
+    _sys.stdout.flush()
+    _sys.stderr.flush()
+    global STOP_EVENT
+    STOP_EVENT = True
+
+
+def _attribute_access_security_group(server, dbase):
+    for k, val in dbase.items():
+        if k.endswith(('-RB', '-Sts', '-Cte', '-Mon')):
+            val.update({'asg': 'rbpv'})
+    path_ = _os.path.abspath(_os.path.dirname(__file__))
+    server.initAccessSecurityFile(path_ + '/access_rules.as')
 
 
 class _PCASDriver(_pcaspy.Driver):
 
-    def __init__(self, app=None):
+    def __init__(self, app):
         super().__init__()
-        self.app = app or _main.App()
+        self.app = app
         self.app.driver = self
+        self.app.add_callback(self.update_pv)
 
     def read(self, reason):
         value = self.app.read(reason)
@@ -32,11 +57,18 @@ class _PCASDriver(_pcaspy.Driver):
             return value
 
     def write(self, reason, value):
-        app_ret = self.app.write(reason, value)
-        if app_ret:
-            self.setParam(reason, value)
-        self.updatePVs()
-        return app_ret
+        ret_val = self.app.write(reason, value)
+        if reason.endswith('-Cmd'):
+            value = self.getParam(reason) + 1
+        if ret_val:
+            return super().write(reason, value)
+        return False
+
+    def update_pv(self, pvname, value, **kwargs):
+        """Update PV."""
+        _ = kwargs
+        self.setParam(pvname, value)
+        self.updatePV(pvname)
 
 
 def run():
@@ -45,32 +77,50 @@ def run():
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
-    # create the application model
-    app = _main.App()
+    # configure log file
+    _util.configure_log_file()
 
-    db = app.get_database()
+    # define IOC, init pvs database and create app object
+    _version = _util.get_last_commit_hash()
+    _ioc_prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
+    _ioc_prefix += IOC_PREFIX
+    app = _App()
+    dbase = app.pvs_database
+    dbase['Version-Cte']['value'] = _version
+    dbase['TimestampBoot-Cte']['value'] = _time.time()
+
+    # check if another IOC is running
+    pvname = _ioc_prefix + next(iter(dbase))
+    if _util.check_pv_online(pvname, use_prefix=False):
+        raise ValueError('Another instance of this IOC is already running!')
+
+    # check if another IOC is running
+    _util.print_ioc_banner(
+        ioc_name=IOC_NAME,
+        db=dbase,
+        description=IOC_NAME + ' Soft IOC',
+        version=_version,
+        prefix=_ioc_prefix)
 
     # create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
-    server.createPV(PREFIX, db)
-
-    # create the driver
-    pcas_driver = _PCASDriver(app)
+    _attribute_access_security_group(server, dbase)
+    server.createPV(_ioc_prefix, dbase)
+    driver = _PCASDriver(app)
+    app.init_database()
 
     # initiate a new thread responsible for listening for client connections
     server_thread = _pcaspy_tools.ServerThread(server)
     server_thread.start()
 
     # main loop
-    # while not stop_event.is_set():
-    while not stop_event:
-        pcas_driver.app.process(INTERVAL)
+    driver.app.scanning = True
+    while not STOP_EVENT:
+        driver.app.process(INTERVAL)
 
-    print('exiting...')
-    # send stop signal to server thread
+    driver.app.scanning = False
+    driver.app.quit = True
+
+    # sends stop signal to server thread
     server_thread.stop()
     server_thread.join()
-
-
-if __name__ == '__main__':
-    run()
