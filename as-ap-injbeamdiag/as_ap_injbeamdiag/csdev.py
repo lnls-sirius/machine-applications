@@ -35,7 +35,7 @@ pvs_database = {
         'unit': 'DisconnConn',
     },
     'TBTrajNrPts-SP': {
-        'type': int,
+        'type': 'int',
         'value': Const.NRPTS_TB_TRAJ_DEF,
         'lolim': 1,
         'hilim': Const.NRPTS_TB_TRAJ_MAX,

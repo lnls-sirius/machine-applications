@@ -28,6 +28,7 @@ setup(
     packages=['as_ap_injbeamdiag'],
     install_requires=_requirements,
     package_data={'as_ap_injbeamdiag': ['VERSION']},
+    include_package_data=True,
     scripts=[
         'scripts/sirius-ioc-as-ap-injbeamdiag.py',
     ],

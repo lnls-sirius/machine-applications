@@ -12,7 +12,7 @@ import pcaspy.tools as _pcaspy_tools
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 
-from .main import App as _App
+from as_ap_injbeamdiag.main import App as _App
 
 INTERVAL = 0.1
 STOP_EVENT = False

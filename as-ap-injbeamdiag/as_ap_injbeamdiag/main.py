@@ -4,7 +4,7 @@ import logging as _log
 import time as _time
 
 import epics as _epics
-import numpy as _np
+# import numpy as _np
 
 from siriuspy.callbacks import Callback as _Callback
 from siriuspy.devices import (
@@ -13,29 +13,32 @@ from siriuspy.devices import (
     DCCT as _DCCT,
 )
 
-from . import csdev as _csdev
+from as_ap_injbeamdiag import csdev as _csdev
 
 
-class SOFTDevices(_DeviceSet):
+class Devices(_DeviceSet):
     """."""
 
     def __init__(self):
         """Initialize the instance."""
         props = ('RawReadings-Mon',)
         self.dcct_bo = _DCCT(_DCCT.DEVICES.BO, props2init=props)
+        pvobj = self.dcct_bo.pv_object('RawReadings-Mon')
+        pvobj.add_callback(self._update_tb_spass)
+        pvobj.auto_monitor = True
+
         props = ('SPassOrbX-Mon', 'SPassOrbY-Mon', 'SPassSum-Mon')
-        # self.trajx_tb = _np.
         self.sofb_tb = _SOFB(_SOFB.DEVICES.TB, props2init=props)
-        self.sofb_tb.pv_object('SPassSum-Mon').add_callback(
-            self._update_tb_spass
-        )
+
         props = ('MTurnOrbX-Mon', 'MTurnOrbY-Mon', 'MTurnSum-Mon')
         self.sofb_bo = _SOFB(_SOFB.DEVICES.BO, props2init=props)
         devs = (self.sofb_tb, self.sofb_bo)
         _DeviceSet.__init__(self, devices=devs)
 
-    def _update_tb_spass(self):
+    def _update_tb_spass(self, pvname, value, **kwargs):
         """."""
+        _time.sleep(0.2)  # wait for traj pvs to be updated
+        pass
 
 
 class App(_Callback):
@@ -48,7 +51,7 @@ class App(_Callback):
         _Callback.__init__(self)
 
         self.driver = driver
-        self.devices = SOFTDevices()
+        self.devices = Devices()
 
         self._pvs_database = _csdev.pvs_database
         # use pyepics recommendations for threading
