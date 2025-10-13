@@ -4,13 +4,41 @@ import logging as _log
 import time as _time
 
 import epics as _epics
+import numpy as _np
+
 from siriuspy.callbacks import Callback as _Callback
-from siriuspy.devices import DeviceSet as _DeviceSet, SOFB as _SOFB
+from siriuspy.devices import (
+    DeviceSet as _DeviceSet,
+    SOFB as _SOFB,
+    DCCT as _DCCT,
+)
 
 from . import csdev as _csdev
 
 
-class App(_DeviceSet, _Callback):
+class SOFTDevices(_DeviceSet):
+    """."""
+
+    def __init__(self):
+        """Initialize the instance."""
+        props = ('RawReadings-Mon',)
+        self.dcct_bo = _DCCT(_DCCT.DEVICES.BO, props2init=props)
+        props = ('SPassOrbX-Mon', 'SPassOrbY-Mon', 'SPassSum-Mon')
+        # self.trajx_tb = _np.
+        self.sofb_tb = _SOFB(_SOFB.DEVICES.TB, props2init=props)
+        self.sofb_tb.pv_object('SPassSum-Mon').add_callback(
+            self._update_tb_spass
+        )
+        props = ('MTurnOrbX-Mon', 'MTurnOrbY-Mon', 'MTurnSum-Mon')
+        self.sofb_bo = _SOFB(_SOFB.DEVICES.BO, props2init=props)
+        devs = (self.sofb_tb, self.sofb_bo)
+        _DeviceSet.__init__(self, devices=devs)
+
+    def _update_tb_spass(self):
+        """."""
+
+
+class App(_Callback):
     """Main Class of the IOC Logic."""
 
     SCAN_FREQUENCY = 1  # [Hz]
@@ -20,10 +48,7 @@ class App(_DeviceSet, _Callback):
         _Callback.__init__(self)
 
         self.driver = driver
-        self.tb_sofb = _SOFB(_SOFB.DEVICES.TB)
-        self.bo_sofb = _SOFB(_SOFB.DEVICES.BO)
-        devs = (self.tb_sofb, self.bo_sofb)
-        _DeviceSet.__init__(self, devices=devs)
+        self.devices = SOFTDevices()
 
         self._pvs_database = _csdev.pvs_database
         # use pyepics recommendations for threading
@@ -33,15 +58,13 @@ class App(_DeviceSet, _Callback):
         self.quit = False
         self.scanning = False
         self.thread_check_conns = _epics.ca.CAThread(
-            target=self._run_updates, daemon=True)
+            target=self._run_updates, daemon=True
+        )
         self.thread_check_conns.start()
 
     def init_database(self):
         """Set initial PV values."""
-        pvn2vals = {
-            'TimestampUpdate-Mon': _time.time(),
-            'Log-Mon': 'Started.',
-        }
+        pvn2vals = {'TimestampUpdate-Mon': _time.time(), 'Log-Mon': 'Started.'}
         for pvn, val in pvn2vals.items():
             self.run_callbacks(pvn, val)
 
@@ -78,9 +101,22 @@ class App(_DeviceSet, _Callback):
 
             _t0 = _time.time()
 
-            # update sections status
+            # update TimestampUpdate-Mon
             self.run_callbacks('TimestampUpdate-Mon', _time.time())
-            self.run_callbacks('SOFBConnStatus-Mon', self.connected)
+
+            # update DevsConnStatus-Mon
+            if self.devices.connected:
+                self.run_callbacks(
+                    'DevsConnStatus-Mon', _csdev.Const.DisconnConn.Connected
+                )
+            else:
+                self.run_callbacks(
+                    'DevsConnStatus-Mon', _csdev.Const.DisconnConn.Disconnected
+                )
+                logmsg = 'ERR: Disconnected PVs: ' + ' '.join(
+                    self.devices.disconnected_pvnames
+                )
+                self._update_log(logmsg)
 
             # time mgmnt
             ttook = _time.time() - _t0
@@ -93,3 +129,14 @@ class App(_DeviceSet, _Callback):
                     '{0:.3f}/{1:.3f} s'.format(ttook, tplanned)
                 )
                 _log.warning(logstr)
+
+    def _update_log(self, msg):
+        if 'ERR' in msg:
+            _log.error(msg[4:])
+        elif 'FATAL' in msg:
+            _log.error(msg[6:])
+        elif 'WARN' in msg:
+            _log.warning(msg[5:])
+        else:
+            _log.info(msg)
+        self.run_callbacks('Log-Mon', msg)
