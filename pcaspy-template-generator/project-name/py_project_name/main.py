@@ -24,13 +24,11 @@ class App(_DeviceSet, _Callback):
         _DeviceSet.__init__(self, devices=devs)
 
         self._pvs_database = _csdev.pvs_database
-        # use pyepics recommendations for threading
-        _epics.ca.use_initial_context()
 
         # status scanning
         self.quit = False
         self.scanning = False
-        self.thread_check_conns = _epics.ca.CAThread(
+        self.thread_check_conns = _epics.CAThread(
             target=self._run_updates, daemon=True)
         self.thread_check_conns.start()
 
