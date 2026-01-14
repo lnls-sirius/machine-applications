@@ -3,7 +3,7 @@
 import logging as _log
 import time as _time
 
-import epics as _epics
+from siriuspy import epics as _epics
 from siriuspy.callbacks import Callback as _Callback
 from siriuspy.devices import DeviceSet as _DeviceSet
 
