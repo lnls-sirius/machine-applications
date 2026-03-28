@@ -1,6 +1,5 @@
 """IOC for power supplies."""
 
-import logging as _log
 import os as _os
 import signal as _signal
 import sys as _sys
@@ -11,29 +10,23 @@ import pcaspy.tools as _pcaspy_tools
 from PRUserial485 import EthBridgeClient as _EthBridgeClient
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
+from siriuspy.logging import configure_logging, get_logger
 from siriuspy.pwrsupply.factory import BBBFactory
 
-from .main import __version__, App
+from .main import App
 
 STOP_EVENT = False  # _multiprocessing.Event()
-PCAS_DRIVER = None
-
-_PREFIX = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
-_COMMIT_HASH = __version__
 
 
 def _stop_now(signum, frame):
-    global STOP_EVENT
     _ = frame
-    sname = _signal.Signals(signum).name
-    tstamp = _util.get_timestamp()
-    strf = f'{sname} received at {tstamp}'
-    _log.warning(strf)
+    get_logger(_stop_now).warning(
+        _signal.Signals(signum).name + ' received at ' + _util.get_timestamp()
+    )
     _sys.stdout.flush()
     _sys.stderr.flush()
+    global STOP_EVENT
     STOP_EVENT = True
-    if PCAS_DRIVER is not None:
-        PCAS_DRIVER.app.scan = False
 
 
 def _attribute_access_security_group(server, dbase):
@@ -46,9 +39,10 @@ def _attribute_access_security_group(server, dbase):
 
 class _PCASDriver(_pcaspy.Driver):
 
-    def __init__(self, bbblist, dbset):
+    def __init__(self, bbb, dbset):
         super().__init__()
-        self.app = App(self, bbblist, dbset, _PREFIX)
+        self.app = App(self, bbb, dbset)
+        self.app.add_callback(self.update_pv)
 
     def read(self, reason):
         value = self.app.read(reason)
@@ -60,8 +54,14 @@ class _PCASDriver(_pcaspy.Driver):
     def write(self, reason, value):
         return self.app.write(reason, value)
 
+    def update_pv(self, pvname, value, **kwargs):
+        """Update PV."""
+        _ = kwargs
+        self.setParam(pvname, value)
+        self.updatePV(pvname)
 
-def run(bbbnames):
+
+def run(bbbname):
     """Run function.
 
     This is the main function of the IOC:
@@ -71,43 +71,49 @@ def run(bbbnames):
     4. Creates a Driver to handle requests
     5. Starts a thread (thread_server) that listens to client connections
     """
-    global PCAS_DRIVER
-
-    # NOTE: change IOC to accept only one BBB !!!
+    logger = get_logger(run)
 
     # Define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
     _signal.signal(_signal.SIGTERM, _stop_now)
 
-    _util.configure_log_file()
+    configure_logging()
+    logger.info('--- PS IOC structures initialization ---\n')
 
-    print('')
-    print('--- PS IOC structures initialization ---\n')
-
-    # Create BBBs
-    bbblist = list()
+    # Create BBB
     dbset = dict()
-    for bbbname in bbbnames:
-        bbbname = bbbname.replace('--', ':')
-        bbb, dbase = BBBFactory.create(_EthBridgeClient, bbbname=bbbname)
-        bbblist.append(bbb)
-        dbset.update(dbase)
-    dbset = {_PREFIX: dbset}
+    bbb, dbase = BBBFactory.create(_EthBridgeClient, bbbname=bbbname)
+    dbset.update(dbase)
+
+    version = _util.get_last_commit_hash()
+    ioc_prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
 
     # check if another instance of this IOC is already running
-    pvname = _PREFIX + next(iter(dbset[_PREFIX]))
+    pvname = ioc_prefix + next(iter(dbset))
     if _util.check_pv_online(pvname, use_prefix=False):
         raise ValueError('Another instance of this IOC is already running !')
 
+    # print info about the IOC
+    _util.print_ioc_banner(
+        ioc_name='PS IOC',
+        db=dbset,
+        description='Power Supply IOC (FAC)',
+        version=version,
+        prefix=ioc_prefix,
+        logger=logger
+        )
+
     # Create a new simple pcaspy server and driver to respond client's requests
+    logger.info("Creating Server...")
     server = _pcaspy.SimpleServer()
-    for prefix, dbase in dbset.items():
-        # Set security access
-        _attribute_access_security_group(server, dbase)
-        server.createPV(prefix, dbase)
+    # Set security access
+    _attribute_access_security_group(server, dbset)
+    logger.info("Setting Server Database.")
+    server.createPV(ioc_prefix, dbset)
 
     # Create driver to handle requests
-    PCAS_DRIVER = _PCASDriver(bbblist, dbset)
+    logger.info("Creating Driver.")
+    driver = _PCASDriver(bbb, dbset)
 
     # Create a new thread responsible for listening for client connections
     thread_server = _pcaspy_tools.ServerThread(server)
@@ -115,16 +121,20 @@ def run(bbbnames):
     # Start threads and processing
     thread_server.start()
 
-    # Main loop - run app.proccess
+    # Main loop - run app.process
     while not STOP_EVENT:
         try:
-            PCAS_DRIVER.app.process()
+            driver.app.process()
         except Exception:
-            _log.warning('[!!] - exception while processing main loop')
+            logger.exception('[!!] - exception while processing main loop')
             _traceback.print_exc()
             break
 
+    driver.app.scan = False
+    logger.info("Stoping Server Thread...")
+
     # Signal received, exit
-    print('exiting...')
     thread_server.stop()
     thread_server.join()
+    logger.info("Server Thread stopped.")
+    logger.info("Good Bye.")

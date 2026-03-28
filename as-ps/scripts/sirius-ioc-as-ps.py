@@ -3,6 +3,7 @@
 import os
 import sys
 
+
 from as_ps import as_ps as ioc_module
 
 # NOTE: maximum epics array size
@@ -39,7 +40,8 @@ def main():
         args.remove('--help')
         print_help()
     if args:
-        ioc_module.run(args)
+        bbbname = args[0]
+        ioc_module.run(bbbname)
 
 
 if __name__ == "__main__":
