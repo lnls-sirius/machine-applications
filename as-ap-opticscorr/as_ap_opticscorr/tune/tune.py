@@ -9,7 +9,8 @@ import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
-from siriuspy.opticscorr.tune import TuneCorrApp as _App
+from siriuspy.opticscorr.tune import TuneCorrApp as _App, \
+    SITuneCorrApp as _SIApp
 
 INTERVAL = 0.1
 STOP_EVENT = False
@@ -73,7 +74,10 @@ def run(acc):
     _version = _util.get_last_commit_hash()
     _ioc_prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
     _ioc_prefix += acc.upper() + '-Glob:AP-TuneCorr:'
-    app = _App(acc)
+    if acc.upper() == 'SI':
+        app = _SIApp()
+    else:
+        app = _App(acc)
     dbase = app.pvs_database
     dbase['Version-Cte']['value'] = _version
 
