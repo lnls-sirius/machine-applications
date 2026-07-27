@@ -8,6 +8,7 @@ import os
 # This was making numpy operations very slow in our servers.
 os.environ['OMP_NUM_THREADS'] = '2'
 
+from siriuspy.optics.constants import SI as _SI
 from as_ap_sofb import run
 
 if __name__ == '__main__':
@@ -22,4 +23,4 @@ if __name__ == '__main__':
             "existence of stored beam, the current of the dipoles and the BPM "
             "readings, sending random kicks to the correctors."))
     args = parser.parse_args()
-    run(acc='SI', debug=args.debug, tests=args.tests)
+    run(acc=_SI, debug=args.debug, tests=args.tests)
