@@ -101,7 +101,7 @@ class _PCASDriver(_pcaspy.Driver):
         return True
 
 
-def run(acc='SI', debug=False, tests=False):
+def run(acc, debug=False, tests=False):
     """Start the IOC."""
     _util.configure_log_file(debug=debug)
     _log.info('Starting...')
@@ -116,8 +116,8 @@ def run(acc='SI', debug=False, tests=False):
     db = app.csorb.get_ioc_database()
     db.update({'Version-Cte': {'type': 'string', 'value': __version__}})
     ioc_prefix = _VACA_PREFIX + ('-' if _VACA_PREFIX else '')
-    ioc_prefix += acc.upper() + '-Glob:AP-SOFB:'
-    ioc_name = acc.lower() + '-ap-sofb'
+    ioc_prefix += acc.sector + '-Glob:AP-SOFB:'
+    ioc_name = acc.sector.lower() + '-ap-sofb'
     # check if IOC is already running
     running = _util.check_pv_online(
         pvname=ioc_prefix + sorted(db.keys())[0],
@@ -129,7 +129,7 @@ def run(acc='SI', debug=False, tests=False):
         _log.error(strf)
         return
     _util.print_ioc_banner(
-        ioc_name, db, 'SOFB for ' + acc, __version__, ioc_prefix)
+        ioc_name, db, 'SOFB for ' + acc.sector, __version__, ioc_prefix)
     # create a new simple pcaspy server and driver to respond client's requests
     _log.info('Creating Server.')
     server = _pcaspy.SimpleServer()

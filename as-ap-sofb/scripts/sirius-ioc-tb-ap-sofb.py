@@ -3,6 +3,7 @@
 
 import argparse as _argparse
 
+from siriuspy.optics.constants import TB as _TB
 from as_ap_sofb import run
 
 if __name__ == '__main__':
