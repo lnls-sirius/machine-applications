@@ -49,9 +49,37 @@ class _PCASDriver(_pcaspy.Driver):
 
     def write(self, reason, value):
         """Write IOC pvs according to main application."""
-        if self.app.write(reason, value):
-            return super().write(reason, value)
-        return False
+        if not self._is_valid(reason, value):
+            return False
+        ret = self.app.write(reason, value)
+        old_val = self.getParam(reason)
+        if reason.endswith('-Cmd'):
+            value = old_val + 1
+        if ret:
+            _log.info('YES write %s: %s', reason, str(value))
+        else:
+            _log.warning(
+                'NO write %s: %s current value is %s',
+                reason, str(old_val), str(value))
+            value = old_val
+        self.setParam(reason, value)
+        self.updatePV(reason)
+        return True
+
+    def _is_valid(self, reason, val):
+        if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
+            strf = f'PV {reason:s} is read only.'
+            _log.debug(strf)
+            return False
+        if val is None:
+            msg = 'client tried to set None value. refusing...'
+            _log.error(msg)
+            return False
+        enums = self.getParamInfo(reason, info_keys=('enums', ))['enums']
+        if enums and isinstance(val, int) and val >= len(enums):
+            _log.warning('value %d too large for enum type PV %s', val, reason)
+            return False
+        return True
 
     def update_pv(self, pvname, value, **kwargs):
         """Update PV."""
