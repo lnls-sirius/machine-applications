@@ -13,7 +13,6 @@ from siriuspy.currinfo import BOCurrInfoApp as _BOCurrInfoApp, \
     TSCurrInfoApp as _TSCurrInfoApp
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 
-INTERVAL = 0.5
 STOP_EVENT = False
 
 
@@ -138,7 +137,7 @@ def run(acc):
 
     # main loop
     while not STOP_EVENT:
-        app.process(INTERVAL)
+        app.process()
 
     app.close()
     _log.info('Stoping Server Thread...')
