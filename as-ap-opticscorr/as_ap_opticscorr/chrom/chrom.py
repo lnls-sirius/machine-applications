@@ -36,7 +36,6 @@ def _attribute_access_security_group(server, dbase):
 
 
 class _PCASDriver(_pcaspy.Driver):
-
     def __init__(self, app):
         """Initialize driver."""
         super().__init__()
@@ -76,7 +75,7 @@ class _PCASDriver(_pcaspy.Driver):
             msg = 'client tried to set None value. refusing...'
             _log.error(msg)
             return False
-        enums = self.getParamInfo(reason, info_keys=('enums', ))['enums']
+        enums = self.getParamInfo(reason, info_keys=('enums',))['enums']
         if enums and isinstance(val, int) and val >= len(enums):
             _log.warning('value %d too large for enum type PV %s', val, reason)
             return False
@@ -116,11 +115,12 @@ def run(acc):
 
     # check if another IOC is running
     _util.print_ioc_banner(
-        ioc_name=acc.upper()+'-AP-ChromCorr',
+        ioc_name=acc.upper() + '-AP-ChromCorr',
         db=dbase,
-        description=acc.upper()+'-AP-ChromCorr Soft IOC',
+        description=acc.upper() + '-AP-ChromCorr Soft IOC',
         version=_version,
-        prefix=_ioc_prefix)
+        prefix=_ioc_prefix,
+    )
 
     # create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
