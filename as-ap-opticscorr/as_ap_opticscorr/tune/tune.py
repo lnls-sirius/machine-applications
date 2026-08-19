@@ -56,11 +56,12 @@ class _PCASDriver(_pcaspy.Driver):
         if reason.endswith('-Cmd'):
             value = old_val + 1
         if ret:
-            _log.info('YES write %s: %s', reason, str(value))
+            msg = f'YES write {reason}: {str(value)}'
+            _log.info(msg)
         else:
-            _log.warning(
-                'NO write %s: %s (current value is %s)',
-                reason, str(value), str(old_val))
+            msg = f'NO write {reason}: {str(value)} '
+            msg += f'(current value is {str(old_val)})'
+            _log.warning(msg)
             value = old_val
         self.setParam(reason, value)
         self.updatePV(reason)
