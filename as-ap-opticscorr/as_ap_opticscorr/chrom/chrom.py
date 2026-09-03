@@ -36,7 +36,6 @@ def _attribute_access_security_group(server, dbase):
 
 
 class _PCASDriver(_pcaspy.Driver):
-
     def __init__(self, app):
         """Initialize driver."""
         super().__init__()
@@ -49,9 +48,38 @@ class _PCASDriver(_pcaspy.Driver):
 
     def write(self, reason, value):
         """Write IOC pvs according to main application."""
-        if self.app.write(reason, value):
-            return super().write(reason, value)
-        return False
+        if not self._is_valid(reason, value):
+            return False
+        old_val = self.getParam(reason)
+        ret = self.app.write(reason, value)
+        if reason.endswith('-Cmd'):
+            value = old_val + 1
+        if ret:
+            msg = f'YES write {reason}: {str(value)}'
+            _log.info(msg)
+        else:
+            msg = f'NO write {reason}: {str(value)} '
+            msg += f'(current value is {str(old_val)})'
+            _log.warning(msg)
+            value = old_val
+        self.setParam(reason, value)
+        self.updatePV(reason)
+        return True
+
+    def _is_valid(self, reason, val):
+        if reason.endswith(('-Sts', '-RB', '-Mon', '-Cte')):
+            strf = f'PV {reason:s} is read only.'
+            _log.debug(strf)
+            return False
+        if val is None:
+            msg = 'client tried to set None value. refusing...'
+            _log.error(msg)
+            return False
+        enums = self.getParamInfo(reason, info_keys=('enums',))['enums']
+        if enums and isinstance(val, int) and val >= len(enums):
+            _log.warning('value %d too large for enum type PV %s', val, reason)
+            return False
+        return True
 
     def update_pv(self, pvname, value=None, info=None, field='value', **kws):
         """Update PV."""
@@ -87,11 +115,12 @@ def run(acc):
 
     # check if another IOC is running
     _util.print_ioc_banner(
-        ioc_name=acc.upper()+'-AP-ChromCorr',
+        ioc_name=acc.upper() + '-AP-ChromCorr',
         db=dbase,
-        description=acc.upper()+'-AP-ChromCorr Soft IOC',
+        description=acc.upper() + '-AP-ChromCorr Soft IOC',
         version=_version,
-        prefix=_ioc_prefix)
+        prefix=_ioc_prefix,
+    )
 
     # create a new simple pcaspy server and driver to respond client's requests
     server = _pcaspy.SimpleServer()
