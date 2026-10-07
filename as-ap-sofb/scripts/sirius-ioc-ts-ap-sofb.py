@@ -3,6 +3,7 @@
 
 import argparse as _argparse
 
+from siriuspy.optics.constants import TS as _TS
 from as_ap_sofb import run
 
 if __name__ == '__main__':
@@ -11,4 +12,4 @@ if __name__ == '__main__':
         '-d', '--debug', action='store_true', default=False,
         help="Starts IOC in Debug Mode.")
     args = parser.parse_args()
-    run(acc='TS', debug=args.debug)
+    run(acc=_TS, debug=args.debug)
