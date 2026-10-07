@@ -12,6 +12,7 @@ from siriuspy.namesys import SiriusPVName as _SiriusPVName
 from siriuspy.thread import LoopQueueThread as _LoopQueueThread, \
     RepeaterThread as _RepeaterThread
 
+
 __version__ = _util.get_last_commit_hash()
 
 
@@ -25,7 +26,7 @@ class App:
     Update values and parameters such as alarms.
     """
 
-    def __init__(self, driver, psnames, dbset, prefix):
+    def __init__(self, driver, idnames, dbset, prefix):
         """Create Power Supply controllers."""
         self._driver = driver
 
@@ -34,7 +35,7 @@ class App:
         self._queue_write.start()
 
         # mapping device to bbb
-        self._psnames = psnames
+        self._idnames = idnames
         self._dbset = dbset
         self._prefix = prefix
 
@@ -64,14 +65,14 @@ class App:
         return self._driver
 
     @property
-    def psnames(self):
-        """Return list of psnames."""
-        return self._psnames
+    def idnames(self):
+        """Return list of idnames."""
+        return self._idnames
 
-    def check_connected(self, psname):
+    def check_connected(self, idname):
         """Return connection status."""
-        streconv = self._streconvs[psname]
-        conns = self._connectors[psname]
+        streconv = self._streconvs[idname]
+        conns = self._connectors[idname]
         if not streconv.connected:
             return False
         for conn in conns.values():
@@ -112,20 +113,20 @@ class App:
         for psname in self.psnames:
             self.scan_device(psname)
 
-    def scan_device(self, psname):
+    def scan_device(self, idname):
         """Scan BBB device and update ioc epics DB."""
         # not connected
-        if not self.check_connected(psname):
-            conns = self._connectors[psname]
+        if not self.check_connected(idname):
+            conns = self._connectors[idname]
             for proptype in conns.keys():
-                reason = psname + ':Kx' + proptype
+                reason = idname + ':Kx' + proptype
                 self.driver.setParamStatus(
                     reason, _Alarm.NO_ALARM, _Severity.NO_ALARM)
             return
 
         # all connected, calculate strengths
-        streconv = self._streconvs[psname]
-        conn = self._connectors[psname]
+        streconv = self._streconvs[idname]
+        conn = self._connectors[idname]
         # NOTE: filter out nan limits. request change in ID ioc.
         limits = tuple(filter(lambda x: x == x, conn['-SP'].limits))
         curr0 = conn['-SP'].value
@@ -149,7 +150,7 @@ class App:
 
         # update -SP and -Mon epics database
         for i, proptype in enumerate(conn.keys()):
-            reason = psname + ':Kx' + proptype
+            reason = idname + ':Kx' + proptype
             if slims is None:
                 self.driver.setParamStatus(
                     reason, _Alarm.TIMEOUT_ALARM, _Severity.INVALID_ALARM)
@@ -173,7 +174,7 @@ class App:
     def _create_connectors_and_streconv(self):
         connectors = dict()
         streconv = dict()
-        for psname in self.psnames:
+        for psname in self.idnames:
             connectors[psname] = dict()
             conn = connectors[psname]
             conn['-SP'] = _PSProperty(psname, propty='Phase-SP')

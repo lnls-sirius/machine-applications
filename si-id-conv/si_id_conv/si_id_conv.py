@@ -8,12 +8,17 @@ import traceback as _traceback
 
 import pcaspy as _pcaspy
 import pcaspy.tools as _pcaspy_tools
-from si_id_conv.main import App
+
 from siriuspy import util as _util
 from siriuspy.envars import VACA_PREFIX as _VACA_PREFIX
 from siriuspy.pwrsupply.csdev import \
     get_conv_propty_database as _get_conv_propty_database
 from siriuspy.search import PSSearch as _PSSearch
+
+
+from .csdev import get_propty_database as _get_conv_propty_database
+from .main import App
+
 
 STOP_EVENT = False  # _multiprocessing.Event()
 PCAS_DRIVER = None
@@ -35,17 +40,6 @@ def _stop_now(signum, frame):
     PCAS_DRIVER.app.scan = False
 
 
-def get_database_set(psname):
-    """Return the database set, one for each prefix."""
-    dbase = {}
-    pstype = _PSSearch.conv_psname_2_pstype(psname)
-    propties = _get_conv_propty_database(pstype)
-    for key, value in propties.items():
-        pvname = psname + ':' + key
-        dbase[pvname] = value
-    return dbase
-
-
 def _attribute_access_security_group(server, dbase):
     for key, value in dbase.items():
         if key.endswith(('-RB', '-Sts', '-Cte', '-Mon')):
@@ -56,9 +50,9 @@ def _attribute_access_security_group(server, dbase):
 
 class _PCASDriver(_pcaspy.Driver):
 
-    def __init__(self, psnames, dbset):
+    def __init__(self, idnames, dbset):
         super().__init__()
-        self.app = App(self, psnames, dbset, _PREFIX)
+        self.app = App(self, idnames, dbset, _PREFIX)
 
     def read(self, reason):
         value = self.app.read(reason)
@@ -70,13 +64,13 @@ class _PCASDriver(_pcaspy.Driver):
         return self.app.write(reason, value)
 
 
-def init_pcaspy_driver_and_server(psnames):
+def init_pcaspy_driver_and_server(idnames):
     """Create PCASpy driver."""
     global PCAS_DRIVER
 
     dbset = dict()
-    for psname in psnames:
-        dbase = get_database_set(psname)
+    for idname in idnames:
+        dbase = _get_conv_propty_database(idname)
         dbset.update(dbase)
 
     # check if another instance of this IOC is already running
@@ -94,12 +88,12 @@ def init_pcaspy_driver_and_server(psnames):
     server.createPV(_PREFIX, dbset)
 
     # Create driver to handle requests
-    PCAS_DRIVER = _PCASDriver(psnames, dbset)
+    PCAS_DRIVER = _PCASDriver(idnames, dbset)
 
     return server
 
 
-def run(psnames):
+def run(idnames):
     """Run function."""
     # Define abort function
     _signal.signal(_signal.SIGINT, _stop_now)
@@ -109,7 +103,7 @@ def run(psnames):
     _util.configure_log_file()
 
     # Init PCAS_DRIVER and create server
-    server = init_pcaspy_driver_and_server(psnames)
+    server = init_pcaspy_driver_and_server(idnames)
 
     # Create a new thread responsible for listening for client connections
     thread_server = _pcaspy_tools.ServerThread(server)
