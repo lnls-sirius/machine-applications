@@ -40,7 +40,10 @@ class App:
         self._bbblist = bbblist
         # NOTE: change IOC to accept only one BBB !!!
 
-        idffmode_pvname = self.bbblist[0].psnames[0] + ':IDFFMode-Sts'
+        idffmode_pvname = _SiriusPVName(self.bbblist[0].psnames[0])
+        idffmode_pvname = idffmode_pvname.substitute(
+            propty=idffmode_pvname.propty_name + 'IDFFMode-Sts'
+        )
         if idffmode_pvname in dbset[prefix]:
             self._has_idffmode = True
         else:
@@ -145,7 +148,8 @@ class App:
             self.driver.setParam(reason, value)
             self.driver.updatePV(reason)
 
-        bbb = self._dev2bbb[pvname.device_name]
+        devname, _ = self._split_pvname(pvname)
+        bbb = self._dev2bbb[devname]
         self._queue.put(
             (self._write_operation, (bbb, pvname, value)), block=False)
 
@@ -181,7 +185,8 @@ class App:
 
     def _write_operation(self, bbb, pvname, value):
         # process priority changed PVs
-        priority_pvs = bbb.write(pvname.device_name, pvname.propty, value)
+        devname, propty = self._split_pvname(pvname)
+        priority_pvs = bbb.write(devname, propty, value)
         for reason, val in priority_pvs.items():
             if val is not None:
                 self.driver.setParam(reason, val)
@@ -306,3 +311,21 @@ class App:
             print('new_value : {}'.format(str(new_value)[:1000]))
             print(' !!!')
             return True
+
+    def _split_pvname(self, pvname):
+        if pvname.dis != 'PS':
+            # special case, for power supplies that are not
+            # Magnet Power Supplies (PS discipline)
+            devname, propty = '', ''
+            for name in self.bbblist[0].psnames:
+                if pvname.startswith(name):
+                    devname = name
+                    propty = pvname.split(name)[1]
+                    break
+            if not devname:
+                raise ValueError(
+                    'could not identify a proper device name in pvname'
+                )
+        else:
+            devname, propty = pvname.device_name, pvname.propty
+        return devname, propty
