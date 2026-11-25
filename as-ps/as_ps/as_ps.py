@@ -90,6 +90,14 @@ def run(bbbnames):
     for bbbname in bbbnames:
         bbbname = bbbname.replace('--', ':')
         bbb, dbase = BBBFactory.create(_EthBridgeClient, bbbname=bbbname)
+        if all(_pv.dis != 'PS' for _pv in dbase):
+            # special case, for power supplies that are not
+            # Magnet Power Supplies (PS discipline)
+            props_pv = [k for k in dbase if k.endswith('Properties-Cte')][0]
+            ps_dis = props_pv.split(':')[-1].replace('Properties-Cte', '')
+            dbase[props_pv]['value'] = ' '.join([ps_dis + _prop
+                for _prop in dbase[props_pv]['value'].split(' ')
+            ])
         bbblist.append(bbb)
         dbset.update(dbase)
     dbset = {_PREFIX: dbset}
